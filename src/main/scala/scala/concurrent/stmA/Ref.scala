@@ -66,4 +66,11 @@ object Ref {
   def apply(initialValue: Unit   ): Ref[Unit]    = RefFactory.instance.newRef(initialValue)
 }
 
-trait Ref[A]
+trait Ref[A] extends Source[A] with Sink[A] {
+
+  // read-only operations (covariant) are in Source
+  // write-only operations (contravariant) are in Sink
+  // read+write operations go here 
+
+  def transform(f: A => A)(implicit txn: Txn)
+}
