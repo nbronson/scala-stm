@@ -28,6 +28,8 @@ trait TxnFactory {
   def dynCurrentOrNull: Txn
 
   
-  /** Executes `block` in a transaction. */ 
-  def atomic[Z](block: Txn => Z): Z
+  /** Executes `block` in a transaction.  The implicit `MaybeTxn` may identify
+   *  the parent transaction, if one exists.
+   */
+  def atomic[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
 }
