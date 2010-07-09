@@ -1,0 +1,8 @@
+*.iws
+.idea/workspace.xml
+system.properties
+out/
+target/
+lib_managed/
+src_managed/
+project/boot/
