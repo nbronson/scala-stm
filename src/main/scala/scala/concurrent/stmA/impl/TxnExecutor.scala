@@ -29,7 +29,8 @@ trait TxnExecutor {
   /** Returns a `TxnExecutor` in which the parameter identified by the key has
    *  been set to the value, or throws an `IllegalArgumentException` if the
    *  dynamically configured STM implementation does not have a parameter by
-   *  that name.  This method does not affect the current executor.
+   *  that name or if the value is not of the correct type.  This method does
+   *  not affect the current executor.
    *
    *  The returned value may be saved for reuse, or this method may be used
    *  inline to affect only the execution of a single atomic block.  If the
@@ -39,8 +40,9 @@ trait TxnExecutor {
    *      // only a single attempt will be made
    *    }}}
    *  This code will throw an exception if the underlying STM does not support
-   *  a "maxRetries" parameter.  For configuration parameters that may be
-   *  safely discarded, see `withHint`.
+   *  a "maxRetries" parameter or if "maxRetries" should be specified as a type
+   *  other than `Int`.  For configuration parameters that may be safely
+   *  discarded, see `withHint`.
    *
    *  Both `withConfig` and `withHint` use the same parameter namespace, the
    *  only difference is their operation when an unsupported parameter is
