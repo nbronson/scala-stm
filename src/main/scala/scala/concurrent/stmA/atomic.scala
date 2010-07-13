@@ -2,8 +2,15 @@
 
 package scala.concurrent.stmA
 
-object atomic {
-  import impl.TxnFactory
+import impl.{STMImpl,TxnExecutor}
 
-  def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn) = TxnFactory.instance.atomic(block)
+object atomic extends TxnExecutor {
+
+  // TODO: customize scaladoc for atomic vs TxnExecutor
+
+  def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z = STMImpl.instance.apply(block)
+
+  def configuration: Map[String,Any] = STMImpl.instance.configuration
+
+  def withConfig(param: (String,Any)): TxnExecutor = STMImpl.instance.withConfig(param)
 }

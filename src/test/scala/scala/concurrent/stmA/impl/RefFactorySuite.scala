@@ -5,10 +5,15 @@ package impl
 
 import org.scalatest.FunSuite
 import reflect.ClassManifest
+import java.lang.String
+import collection.immutable.Map
 
 class RefFactorySuite extends FunSuite {
 
-  private case class Fact(expected: String) extends RefFactory {
+  private case class Fact(expected: String) extends STMImpl {
+
+    //////// RefFactory
+
     private def called(w: String) = {
       assert(w === expected)
       null
@@ -24,37 +29,47 @@ class RefFactorySuite extends FunSuite {
     def newRef(v0: Double): Ref[Double] = called("Double")
     def newRef(v0: Unit): Ref[Unit] = called("Unit")
     def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
+
+    //////// TxnContext
+
+    def dynCurrentOrNull: Txn = throw new AbstractMethodError
+
+    //////// TxnExecutor
+
+    def apply[Z](block: (Txn) => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
+    def configuration: Map[String, Any] = throw new AbstractMethodError
+    def withConfig(param: (String,Any)): TxnExecutor = throw new AbstractMethodError
   }
 
   test("signature specialization") {
-    RefFactory.instance = Fact("Boolean")
+    STMImpl.instance = Fact("Boolean")
     Ref(false)
 
-    RefFactory.instance = Fact("Byte")
+    STMImpl.instance = Fact("Byte")
     Ref(0 : Byte)
 
-    RefFactory.instance = Fact("Short")
+    STMImpl.instance = Fact("Short")
     Ref(0 : Short)
 
-    RefFactory.instance = Fact("Char")
+    STMImpl.instance = Fact("Char")
     Ref(0 : Char)
 
-    RefFactory.instance = Fact("Int")
+    STMImpl.instance = Fact("Int")
     Ref(0 : Int)
 
-    RefFactory.instance = Fact("Float")
+    STMImpl.instance = Fact("Float")
     Ref(0 : Float)
 
-    RefFactory.instance = Fact("Long")
+    STMImpl.instance = Fact("Long")
     Ref(0 : Long)
 
-    RefFactory.instance = Fact("Double")
+    STMImpl.instance = Fact("Double")
     Ref(0 : Double)
 
-    RefFactory.instance = Fact("Unit")
+    STMImpl.instance = Fact("Unit")
     Ref(())
 
-    RefFactory.instance = Fact("Any")
+    STMImpl.instance = Fact("Any")
     Ref("abc")
     Ref(null)
     Ref(0.asInstanceOf[AnyRef])
@@ -64,7 +79,7 @@ class RefFactorySuite extends FunSuite {
 
   test("dynamic specialization") {
     def go[T : ClassManifest](v0: T, which: String) {
-      RefFactory.instance = Fact(which)
+      STMImpl.instance = Fact(which)
       Ref(v0)
     }
     
@@ -86,7 +101,7 @@ class RefFactorySuite extends FunSuite {
 
   test("default value specialization") {
     def go[T : ClassManifest](which: String) {
-      RefFactory.instance = Fact(which)
+      STMImpl.instance = Fact(which)
       Ref.make[T]()
     }
 

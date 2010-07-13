@@ -3,10 +3,6 @@
 package scala.concurrent.stmA
 package impl
 
-object RefFactory {
-  var instance: RefFactory = null
-}
-
 trait RefFactory {
   def newRef(v0: Boolean): Ref[Boolean]
   def newRef(v0: Byte):    Ref[Byte]

@@ -3,11 +3,7 @@
 package scala.concurrent.stmA
 package impl
 
-object TxnFactory {
-  var instance: TxnFactory = null
-}
-
-trait TxnFactory {
+trait TxnContext {
 
   // If an STM implementation can locate a dynamically scoped Txn directly,
   // then it should override currentOrNull.  If the dynamic lookup is slower
@@ -15,7 +11,7 @@ trait TxnFactory {
 
   /** Returns the `Txn` active on the current thread, or null if none, possibly
    *  using the statically-bound `MaybeTxn` to reduce the amount of work
-   *  required. 
+   *  required.
    */
   def currentOrNull(implicit mt: MaybeTxn): Txn = mt match {
     case t: Txn => t
@@ -25,11 +21,5 @@ trait TxnFactory {
   /** Returns the `Txn` active on the current thread, or null if none, always
    *  performing a full dynamic lookup.
    */
-  def dynCurrentOrNull: Txn
-
-  
-  /** Executes `block` in a transaction.  The implicit `MaybeTxn` may identify
-   *  the parent transaction, if one exists.
-   */
-  def atomic[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
+  def dynCurrentOrNull: Txn  
 }

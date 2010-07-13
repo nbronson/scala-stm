@@ -2,8 +2,11 @@
 
 package scala.concurrent.stmA
 
+import impl.{RefFactory,STMImpl}
+
 object Ref {
-  import impl._
+
+  private def factory: RefFactory = STMImpl.instance
 
   /** Returns a new `Ref` instance suitable for holding instances of `T`.
    *  If you have an initial value `v0` available, prefer `apply(v0)`.
@@ -20,7 +23,7 @@ object Ref {
       case _: Array[Long]    => apply(0 : Long)
       case _: Array[Double]  => apply(0 : Double)
       case _: Array[Unit]    => apply(())
-      case _: Array[AnyRef]  => RefFactory.instance.newRef(null.asInstanceOf[T])
+      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[T])
     }).asInstanceOf[Ref[T]]
   }
 
@@ -37,7 +40,7 @@ object Ref {
     if (m.isInstanceOf[scala.reflect.AnyValManifest[_]]) {
       newPrimitiveRef(initialValue)
     } else {
-      RefFactory.instance.newRef(initialValue)
+      factory.newRef(initialValue)
     }
   }
 
@@ -55,15 +58,15 @@ object Ref {
     }).asInstanceOf[Ref[T]]
   }
 
-  def apply(initialValue: Boolean): Ref[Boolean] = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Byte   ): Ref[Byte]    = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Short  ): Ref[Short]   = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Char   ): Ref[Char]    = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Int    ): Ref[Int]     = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Long   ): Ref[Long]    = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Float  ): Ref[Float]   = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Double ): Ref[Double]  = RefFactory.instance.newRef(initialValue)
-  def apply(initialValue: Unit   ): Ref[Unit]    = RefFactory.instance.newRef(initialValue)
+  def apply(initialValue: Boolean): Ref[Boolean] = factory.newRef(initialValue)
+  def apply(initialValue: Byte   ): Ref[Byte]    = factory.newRef(initialValue)
+  def apply(initialValue: Short  ): Ref[Short]   = factory.newRef(initialValue)
+  def apply(initialValue: Char   ): Ref[Char]    = factory.newRef(initialValue)
+  def apply(initialValue: Int    ): Ref[Int]     = factory.newRef(initialValue)
+  def apply(initialValue: Long   ): Ref[Long]    = factory.newRef(initialValue)
+  def apply(initialValue: Float  ): Ref[Float]   = factory.newRef(initialValue)
+  def apply(initialValue: Double ): Ref[Double]  = factory.newRef(initialValue)
+  def apply(initialValue: Unit   ): Ref[Unit]    = factory.newRef(initialValue)
 }
 
 trait Ref[A] extends Source[A] with Sink[A] {
