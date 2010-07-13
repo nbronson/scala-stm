@@ -27,7 +27,7 @@ object BasicSyntax {
 
   def overspecifiedSnapshotAttempt = atomic.
           withConfig("maxRetries" -> 1).
-          withHint(("readOnly" -> true), ("readSetSize" -> 4), ("nestingDepth" -> 1)) {
+          withHint("readOnly" -> true, "readSetSize" -> 4, "nestingDepth" -> 1) {
       implicit txn =>
     List(top(), bottom(), left(), right())
   }
