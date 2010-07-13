@@ -38,7 +38,8 @@ trait TxnExecutor {
    *  retries, for example: {{{
    *    atomic.withConfig("maxRetries" -> 1) {
    *      // only a single attempt will be made
-   *    }}}
+   *    }
+   *  }}}
    *  This code will throw an exception if the underlying STM does not support
    *  a "maxRetries" parameter or if "maxRetries" should be specified as a type
    *  other than `Int`.  For configuration parameters that may be safely
@@ -66,7 +67,8 @@ trait TxnExecutor {
    *  implementation: {{{
    *    atomic.withHint("readOnly" -> true) {
    *      // just reads
-   *    }}}
+   *    }
+   *  }}}
    *  This code will work find even if the underlying STM does not support a
    *  "readOnly" configuration parameter.  For configuration parameters that
    *  are not safe to discard, see `withConfig`.
