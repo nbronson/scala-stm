@@ -27,7 +27,7 @@ class RefFactorySuite extends FunSuite {
     def newRef(v0: Long): Ref[Long] = called("Long")
     def newRef(v0: Double): Ref[Double] = called("Double")
     def newRef(v0: Unit): Ref[Unit] = called("Unit")
-    def newRef[T](v0: T)(implicit m: Manifest[T]): Ref[T] = called("Any")
+    def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
 
     //////// TxnContext
 
@@ -88,7 +88,7 @@ class RefFactorySuite extends FunSuite {
   }
 
   test("dynamic specialization") {
-    def go[T : Manifest](v0: T, which: String) {
+    def go[T : ClassManifest](v0: T, which: String) {
       STMImpl.instance = Fact(which)
       Ref(v0)
     }
@@ -110,7 +110,7 @@ class RefFactorySuite extends FunSuite {
   }
 
   test("default value specialization") {
-    def go[T : Manifest](default: T, which: String) {
+    def go[T : ClassManifest](default: T, which: String) {
       STMImpl.instance = Fact(which)
       Ref.make[T]()
       //assert(x.single() == default)
