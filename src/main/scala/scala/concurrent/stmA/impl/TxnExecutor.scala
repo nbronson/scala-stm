@@ -24,7 +24,7 @@ trait TxnExecutor {
    *  `TxnExecutor` instance don't change, but a new instance with changed
    *  parameters can be obtained using either `withConfig` or `withHint`.
    */
-  def configuration: Map[String,Any]
+  def configuration: Map[Symbol,Any]
 
   /** Returns a `TxnExecutor` in which the parameter identified by the key has
    *  been set to the value, or throws an `IllegalArgumentException` if the
@@ -36,22 +36,22 @@ trait TxnExecutor {
    *  inline to affect only the execution of a single atomic block.  If the
    *  underlying STM has a parameter that limits the number of transaction
    *  retries, for example: {{{
-   *    atomic.withConfig("maxRetries" -> 1) {
+   *    atomic.withConfig('maxRetries -> 1) {
    *      // only a single attempt will be made
    *    }
    *  }}}
    *  This code will throw an exception if the underlying STM does not support
-   *  a "maxRetries" parameter or if "maxRetries" should be specified as a type
-   *  other than `Int`.  For configuration parameters that may be safely
+   *  a `'maxRetries` parameter or if `'maxRetries` should be specified as a
+   *  type other than `Int`.  For configuration parameters that may be safely
    *  discarded, see `withHint`.
    *
    *  Both `withConfig` and `withHint` use the same parameter namespace, the
    *  only difference is their operation when an unsupported parameter is
    *  given.
    */
-  def withConfig(p: (String,Any)): TxnExecutor
+  def withConfig(p: (Symbol,Any)): TxnExecutor
 
-  def withConfig(p1: (String,Any), p2: (String,Any), ps: (String,Any)*): TxnExecutor = {
+  def withConfig(p1: (Symbol,Any), p2: (Symbol,Any), ps: (Symbol,Any)*): TxnExecutor = {
     (this.withConfig(p1).withConfig(p2) /: ps) { (e,p) => e.withConfig(p) }
   }
 
@@ -65,25 +65,25 @@ trait TxnExecutor {
    *  underlying STM selects its `Txn` differently for read-only transactions,
    *  for example, a caller might pass the type of transaction to the STM
    *  implementation: {{{
-   *    atomic.withHint("readOnly" -> true) {
+   *    atomic.withHint('readOnly -> true) {
    *      // just reads
    *    }
    *  }}}
    *  This code will work find even if the underlying STM does not support a
-   *  "readOnly" configuration parameter.  For configuration parameters that
+   *  `'readOnly' configuration parameter.  For configuration parameters that
    *  are not safe to discard, see `withConfig`.
    *
    *  Both `withConfig` and `withHint` use the same parameter namespace, the
    *  only difference is their operation when an unsupported parameter is
    *  given.
    */
-  def withHint(p: (String,Any)): TxnExecutor = try {
+  def withHint(p: (Symbol,Any)): TxnExecutor = try {
     withConfig(p)
   } catch {
     case x: IllegalArgumentException => this
   }
 
-  def withHint(p1: (String,Any), p2: (String,Any), ps: (String,Any)*): TxnExecutor = {
+  def withHint(p1: (Symbol,Any), p2: (Symbol,Any), ps: (Symbol,Any)*): TxnExecutor = {
     (this.withHint(p1).withHint(p2) /: ps) { (e,p) => e.withHint(p) }
   }
 }

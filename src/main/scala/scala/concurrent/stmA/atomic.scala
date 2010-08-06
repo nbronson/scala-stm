@@ -10,7 +10,7 @@ object atomic extends TxnExecutor {
 
   def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z = STMImpl.instance.apply(block)
 
-  def configuration: Map[String,Any] = STMImpl.instance.configuration
+  def configuration: Map[Symbol,Any] = STMImpl.instance.configuration
 
-  def withConfig(param: (String,Any)): TxnExecutor = STMImpl.instance.withConfig(param)
+  def withConfig(param: (Symbol,Any)): TxnExecutor = STMImpl.instance.withConfig(param)
 }

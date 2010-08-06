@@ -21,18 +21,18 @@ object BasicSyntax {
     }
   }
 
-  def snapshot = atomic.withHint("readOnly" -> true) { implicit txn =>
+  def snapshot = atomic.withHint('readOnly -> true) { implicit txn =>
     List(top(), bottom(), left(), right())
   }
 
   def overspecifiedSnapshotAttempt = atomic.
-          withConfig("maxRetries" -> 1).
-          withHint("readOnly" -> true, "readSetSize" -> 4, "nestingDepth" -> 1) {
+          withConfig('maxRetries -> 1).
+          withHint('readOnly -> true, 'readSetSize -> 4, 'nestingDepth -> 1) {
       implicit txn =>
     List(top(), bottom(), left(), right())
   }
 
-  val customAtomic = atomic.withConfig("irrevocable" -> true)
+  val customAtomic = atomic.withConfig('irrevocable -> true)
 
   def fireMissileAt(p: Point) { println("launch " + p) }
 

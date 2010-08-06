@@ -36,8 +36,8 @@ class RefFactorySuite extends FunSuite {
     //////// TxnExecutor
 
     def apply[Z](block: (Txn) => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
-    def configuration: Map[String, Any] = throw new AbstractMethodError
-    def withConfig(param: (String,Any)): TxnExecutor = throw new AbstractMethodError
+    def configuration: Map[Symbol, Any] = throw new AbstractMethodError
+    def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
   }
 
   test("signature specialization") {
