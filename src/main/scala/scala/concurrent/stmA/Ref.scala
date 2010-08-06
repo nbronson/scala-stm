@@ -13,7 +13,7 @@ object Ref {
    *  If you have an initial value `v0` available, prefer `apply(v0)`.
    */
   def make[T]()(implicit om: OptManifest[T]): Ref[T] = (om match {
-    case m: Manifest[T] => m.newArray(0).asInstanceOf[AnyRef] match {
+    case m: Manifest[_] => m.newArray(0).asInstanceOf[AnyRef] match {
       // these can be reordered, so long as Unit comes before AnyRef
       case _: Array[Boolean] => apply(false)
       case _: Array[Byte]    => apply(0 : Byte)
@@ -24,7 +24,7 @@ object Ref {
       case _: Array[Long]    => apply(0 : Long)
       case _: Array[Double]  => apply(0 : Double)
       case _: Array[Unit]    => apply(())
-      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[T])(m)
+      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[T])(m.asInstanceOf[Manifest[T]])
     }
     case _ => factory.newRef(null.asInstanceOf[Any])(implicitly[Manifest[Any]])
   }).asInstanceOf[Ref[T]]
@@ -39,8 +39,8 @@ object Ref {
    *  }}}
    */
   def apply[T](initialValue: T)(implicit om: OptManifest[T]): Ref[T] = om match {
-    case m: scala.reflect.AnyValManifest[T] => newPrimitiveRef(initialValue, m)
-    case m: Manifest[T] => factory.newRef(initialValue)(m)
+    case m: AnyValManifest[_] => newPrimitiveRef(initialValue, m.asInstanceOf[AnyValManifest[T]])
+    case m: Manifest[_] => factory.newRef(initialValue)(m.asInstanceOf[Manifest[T]])
     case _ => factory.newRef[Any](initialValue).asInstanceOf[Ref[T]]
   }
 
