@@ -14,6 +14,5 @@ trait RefFactory {
   def newRef(v0: Double):  Ref[Double]
   def newRef(v0: Unit):    Ref[Unit]
 
-  // T is not an AnyVal, but it might be Any
-  def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T]
+  def newRef[T](v0: T)(implicit m: Manifest[T]): Ref[T]
 }

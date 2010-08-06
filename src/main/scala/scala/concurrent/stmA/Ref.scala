@@ -3,6 +3,7 @@
 package scala.concurrent.stmA
 
 import impl.{RefFactory,STMImpl}
+import reflect.{AnyValManifest, OptManifest}
 
 object Ref {
 
@@ -11,9 +12,9 @@ object Ref {
   /** Returns a new `Ref` instance suitable for holding instances of `T`.
    *  If you have an initial value `v0` available, prefer `apply(v0)`.
    */
-  def make[T]()(implicit m: ClassManifest[T]): Ref[T] = {
-    // these can be reordered, so long as Unit comes before AnyRef
-    (m.newArray(0).asInstanceOf[AnyRef] match {
+  def make[T]()(implicit om: OptManifest[T]): Ref[T] = (om match {
+    case m: Manifest[T] => m.newArray(0).asInstanceOf[AnyRef] match {
+      // these can be reordered, so long as Unit comes before AnyRef
       case _: Array[Boolean] => apply(false)
       case _: Array[Byte]    => apply(0 : Byte)
       case _: Array[Short]   => apply(0 : Short)
@@ -23,9 +24,10 @@ object Ref {
       case _: Array[Long]    => apply(0 : Long)
       case _: Array[Double]  => apply(0 : Double)
       case _: Array[Unit]    => apply(())
-      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[T])
-    }).asInstanceOf[Ref[T]]
-  }
+      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[T])(m)
+    }
+    case _ => factory.newRef(null.asInstanceOf[Any])(implicitly[Manifest[Any]])
+  }).asInstanceOf[Ref[T]]
 
   /** Returns a new `Ref` instance with the specified initial value.  The
    *  returned instance is not part of any transaction's read or write set.
@@ -36,16 +38,15 @@ object Ref {
    *    val list2 = Ref[List[String]](Nil)  // creates a Ref[List[String]]
    *  }}}
    */
-  def apply[T](initialValue: T)(implicit m: ClassManifest[T]): Ref[T] = {
-    if (m.isInstanceOf[scala.reflect.AnyValManifest[_]]) {
-      newPrimitiveRef(initialValue)
-    } else {
-      factory.newRef(initialValue)
-    }
+  def apply[T](initialValue: T)(implicit om: OptManifest[T]): Ref[T] = om match {
+    case m: scala.reflect.AnyValManifest[T] => newPrimitiveRef(initialValue, m)
+    case m: Manifest[T] => factory.newRef(initialValue)(m)
+    case _ => factory.newRef[Any](initialValue).asInstanceOf[Ref[T]]
   }
 
-  private def newPrimitiveRef[T](initialValue: T)(implicit m: ClassManifest[T]): Ref[T] = {
+  private def newPrimitiveRef[T](initialValue: T, m: AnyValManifest[T]): Ref[T] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
+      // these can be reordered, so long as Unit comes before AnyRef
       case _: Array[Boolean] => apply(initialValue.asInstanceOf[Boolean])
       case _: Array[Byte]    => apply(initialValue.asInstanceOf[Byte])
       case _: Array[Short]   => apply(initialValue.asInstanceOf[Short])

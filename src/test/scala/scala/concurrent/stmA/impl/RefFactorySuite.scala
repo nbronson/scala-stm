@@ -4,7 +4,6 @@ package scala.concurrent.stmA
 package impl
 
 import org.scalatest.FunSuite
-import reflect.ClassManifest
 import java.lang.String
 import collection.immutable.Map
 
@@ -28,7 +27,7 @@ class RefFactorySuite extends FunSuite {
     def newRef(v0: Long): Ref[Long] = called("Long")
     def newRef(v0: Double): Ref[Double] = called("Double")
     def newRef(v0: Unit): Ref[Unit] = called("Unit")
-    def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
+    def newRef[T](v0: T)(implicit m: Manifest[T]): Ref[T] = called("Any")
 
     //////// TxnContext
 
@@ -77,8 +76,19 @@ class RefFactorySuite extends FunSuite {
     Ref(x)
   }
 
+  test("missing manifest Ref.apply") {
+    STMImpl.instance = Fact("Any")
+
+    def go[T](x: T) = Ref(x)
+
+    go(123)
+    go(1.23)
+    go(null)
+    go("abc")
+  }
+
   test("dynamic specialization") {
-    def go[T : ClassManifest](v0: T, which: String) {
+    def go[T : Manifest](v0: T, which: String) {
       STMImpl.instance = Fact(which)
       Ref(v0)
     }
@@ -100,23 +110,45 @@ class RefFactorySuite extends FunSuite {
   }
 
   test("default value specialization") {
-    def go[T : ClassManifest](which: String) {
+    def go[T : Manifest](default: T, which: String) {
       STMImpl.instance = Fact(which)
       Ref.make[T]()
+      //assert(x.single() == default)
     }
 
-    go[Boolean]("Boolean")
-    go[Byte]("Byte")
-    go[Short]("Short")
-    go[Char]("Char")
-    go[Int]("Int")
-    go[Float]("Float")
-    go[Long]("Long")
-    go[Double]("Double")
-    go[Unit]("Unit")
-    go[String]("Any")
-    go[AnyRef]("Any")
-    go[Null]("Any")
-    go[Any]("Any")
+    go(false, "Boolean")
+    go(0 : Byte, "Byte")
+    go(0 : Short, "Short")
+    go(0 : Char, "Char")
+    go(0 : Int, "Int")
+    go(0 : Float, "Float")
+    go(0 : Long, "Long")
+    go(0 : Double, "Double")
+    go((), "Unit")
+    go[String](null, "Any")
+    go[AnyRef](null, "Any")
+    go[Null](null, "Any")
+    go[Any](null, "Any")
   }
+
+  test("missing manifest Ref.make") {
+    STMImpl.instance = Fact("Any")
+
+    def go[T]() = Ref.make[T]()
+
+    go[Boolean]()
+    go[Byte]()
+    go[Short]()
+    go[Char]()
+    go[Int]()
+    go[Float]()
+    go[Long]()
+    go[Double]()
+    go[Unit]()
+    go[String]()
+    go[AnyRef]()
+    go[Null]()
+    go[Any]()
+  }
+
 }
