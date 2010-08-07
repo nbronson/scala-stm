@@ -15,4 +15,6 @@ object Txn {
   def currentOrNull(implicit mt: MaybeTxn): Txn = STMImpl.instance.currentOrNull
 }
 
-trait Txn extends MaybeTxn
+trait Txn extends MaybeTxn {
+  def retry(): Nothing
+}

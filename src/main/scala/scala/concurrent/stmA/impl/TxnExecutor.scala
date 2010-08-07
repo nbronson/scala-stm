@@ -19,6 +19,43 @@ trait TxnExecutor {
    */
   def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
 
+  /** Pushes an alternative atomic block on the current thread or transaction.
+   *  The next call to `apply` will consider `block` to be an alternative.
+   *  Returns true if this is the first pushed alternative, false otherwise.
+   *  This method is not usually called directly.
+   */
+  def pushAlternative[Z](mt: MaybeTxn, block: Txn => Z): Boolean
+
+  /** Atomically executes a transaction that is composed from `blocks` by
+   *  joining with a left-biased `orAtomic` operator.  This is equivalent to
+   *  {{{
+   *    atomic { implicit t =>
+   *      blocks(0)
+   *    } orAtomic { implicit t =>
+   *      blocks(1)
+   *    } ...
+   *  }}}
+   *
+   *  The first block will be attempted in an optimistic transaction until it
+   *  either succeeds, fails with no retry possible (in which case the causing
+   *  exception will be rethrown), or performs an explicit `retry`.  If a retry
+   *  is performed, then the next block will be attempted in the same fashion.
+   *  If all blocks are explicitly retried then execution resumes at the first
+   *  block, but only after another context has changed some value read by one
+   *  of the attempts.
+   *
+   *  The left-biasing of the `orAtomic` composition guarantees that if the
+   *  first block does not call `retry`, no other blocks will be executed.
+   */
+  def oneOf[Z](blocks: (Txn => Z)*)(implicit mt: MaybeTxn): Z = {
+    blocks.tail.reverseMap { pushAlternative(mt, _) }
+    try {
+      apply(blocks.head)
+    } catch {
+      case AlternativeResult(x) => x.asInstanceOf[Z]
+    }
+  }
+
   /** Returns the parameters of this `TxnExecutor` that are specific to the
    *  currently configured STM implementation.  The parameters of a particular
    *  `TxnExecutor` instance don't change, but a new instance with changed

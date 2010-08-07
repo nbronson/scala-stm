@@ -33,7 +33,7 @@ object BasicSyntax {
   }
 
   val customAtomic = atomic.withConfig('irrevocable -> true)
-
+                                                           
   def fireMissileAt(p: Point) { println("launch " + p) }
 
   def removeCorners = customAtomic { implicit txn =>
@@ -42,4 +42,22 @@ object BasicSyntax {
     for (p <- Set.empty ++ pts; if pts.count(_ == p) > 1)
       fireMissileAt(p)
   }
+
+  def alternatives {
+    val z = atomic { implicit txn =>
+      if (!(left().x < -100)) retry
+      "left"
+    } orAtomic { implicit txn =>
+      if (!(right().x > +100)) retry
+      "right"
+    } orAtomic { implicit txn =>
+      if (!(top().y < -100)) retry
+      "top"
+    } orAtomic { implicit txn =>
+      if (!(bottom().y > +100)) retry
+      "bottom"
+    }
+    println("first out was " + z)
+  }
+  
 }

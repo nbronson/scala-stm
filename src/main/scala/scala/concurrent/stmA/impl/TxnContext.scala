@@ -21,5 +21,5 @@ trait TxnContext {
   /** Returns the `Txn` active on the current thread, or null if none, always
    *  performing a full dynamic lookup.
    */
-  def dynCurrentOrNull: Txn  
+  def dynCurrentOrNull: Txn
 }
