@@ -34,12 +34,11 @@ object atomic extends TxnExecutor {
       // Execution of Delayed.orAtomic proceeds bottom to top, with the upper
       // portions being captured by-name in `above`.  The actual transactional
       // execution is all performed inside the top-most block (the one that
-      // used atomic rather than orAtomic).  If the top block is the one that
-      // succeeds the value is just returned normally.  If one of the other
-      // blocks succeeds we must tunnel the value out with an exception,
-      // because the alternatives may have a wider type than the original
-      // block.  We only catch the exception if we are the bottom-most
-      // alternative, because only it is guaranteed to have been fully widened.
+      // used atomic rather than orAtomic).  If a block other than the top one
+      // is the one that eventually succeeds, we must tunnel the value out with
+      // an exception because the alternatives may have a wider type.  We only
+      // catch the exception if we are the bottom-most alternative, because
+      // only it is guaranteed to have been fully widened.
       if (!STMImpl.instance.pushAlternative(mt, below)) {
         // we're not the bottom
         above
