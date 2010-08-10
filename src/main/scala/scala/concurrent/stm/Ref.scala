@@ -68,9 +68,19 @@ object Ref {
   def apply(initialValue: Float  ): Ref[Float]   = factory.newRef(initialValue)
   def apply(initialValue: Double ): Ref[Double]  = factory.newRef(initialValue)
   def apply(initialValue: Unit   ): Ref[Unit]    = factory.newRef(initialValue)
+
+
+  trait View[A] extends Source.View[A] with Sink.View[A] {
+
+    override def unbind: Ref[A]
+
+    def transform(f: A => A)
+  }
 }
 
 trait Ref[A] extends Source[A] with Sink[A] {
+
+  override def single: Ref.View[A]
 
   // read-only operations (covariant) are in Source
   // write-only operations (contravariant) are in Sink

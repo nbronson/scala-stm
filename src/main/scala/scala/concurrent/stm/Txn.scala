@@ -15,6 +15,13 @@ object Txn {
   def currentOrNull(implicit mt: MaybeTxn): Txn = STMImpl.instance.currentOrNull
 }
 
+/** A `Txn` represents one attempt to execute a top-level atomic block. */
 trait Txn extends MaybeTxn {
+
+  /** Causes the current transaction to roll back.  It will not be retried
+   *  until a write has been performed to some memory location read by this
+   *  transaction.  If an alternative to this atomic block was provided via
+   *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
+   */
   def retry(): Nothing
 }

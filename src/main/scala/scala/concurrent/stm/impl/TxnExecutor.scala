@@ -5,11 +5,8 @@ package impl
 
 trait TxnExecutor {
 
-  /** Executes `block` one or more times until an atomic execution is achieved.
-   *
-   *  If the implicit `MaybeTxn` is `TxnUnknown` then a dynamic search will be
-   *  performed for a parent transaction.  If `mt` is a `Txn` then it will be
-   *  used as the parent.
+  /** Executes `block` one or more times until an atomic execution is achieved,
+   *  buffering and/or locking writes so they are not visible until success.
    *
    *  @param    block code to execute atomically
    *  @tparam   Z the return type of the atomic block
@@ -22,24 +19,34 @@ trait TxnExecutor {
   /** Pushes an alternative atomic block on the current thread or transaction.
    *  The next call to `apply` will consider `block` to be an alternative.
    *  Returns true if this is the first pushed alternative, false otherwise.
-   *  This method is not usually called directly.
+   *  This method is not usually called directly.  Alternative atomic blocks
+   *  are only attempted if the previous alternatives call `retry`.
    */
   def pushAlternative[Z](mt: MaybeTxn, block: Txn => Z): Boolean
 
   /** Atomically executes a transaction that is composed from `blocks` by
-   *  joining with a left-biased `orAtomic` operator.  This is equivalent to
+   *  joining with a left-biased `orAtomic` operator.  The following two
+   *  examples are equivalent.  Using `orAtomic`:
    *  {{{
    *    atomic { implicit t =>
-   *      blocks(0)
+   *      // body A
    *    } orAtomic { implicit t =>
-   *      blocks(1)
+   *      // body B
    *    } ...
+   *  }}}
+   *  Using `oneOf`:
+   *  {{{
+   *    atomic.oneOf( { implicit t: Txn =>
+   *      // body A
+   *    }, { implicit t: Txn =>
+   *      // body B
+   *    } )
    *  }}}
    *
    *  The first block will be attempted in an optimistic transaction until it
    *  either succeeds, fails with no retry possible (in which case the causing
-   *  exception will be rethrown), or performs an explicit `retry`.  If a retry
-   *  is performed, then the next block will be attempted in the same fashion.
+   *  exception will be rethrown), or performs a call to `retry`.  If a retry
+   *  is requested, then the next block will be attempted in the same fashion.
    *  If all blocks are explicitly retried then execution resumes at the first
    *  block, but only after another context has changed some value read by one
    *  of the attempts.
