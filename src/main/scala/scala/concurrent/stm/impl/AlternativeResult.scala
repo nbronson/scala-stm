@@ -1,9 +1,9 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
-package scala.concurrent.stmA
+package scala.concurrent.stm
 package impl
 
 import util.control.ControlThrowable
 
 /** See `atomic.Delayed` */
-private[stmA] case class AlternativeResult(value: Any) extends ControlThrowable
+private[stm] case class AlternativeResult(value: Any) extends ControlThrowable

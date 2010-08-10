@@ -1,6 +1,6 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
-package scala.concurrent.stmA
+package scala.concurrent.stm
 
 import impl.{AlternativeResult, STMImpl, TxnExecutor}
 
@@ -24,7 +24,7 @@ object atomic extends TxnExecutor {
 
   /** Instanced of `atomic.Delayed` delay the execution of an atomic block
    *  until all of the alternatives can be gathered.  There is an implicit
-   *  conversion in the `stmA` package object from any type `A` to a
+   *  conversion in the `stm` package object from any type `A` to a
    *  `Delayed[A]`, which will kick in if there is an attempt to call
    *  `.orAtomic` on a value.
    */

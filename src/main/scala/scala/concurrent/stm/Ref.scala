@@ -1,6 +1,6 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
-package scala.concurrent.stmA
+package scala.concurrent.stm
 
 import impl.{RefFactory,STMImpl}
 import reflect.{AnyValManifest, OptManifest}

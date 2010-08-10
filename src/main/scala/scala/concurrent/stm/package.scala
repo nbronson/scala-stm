@@ -2,11 +2,11 @@
 
 package scala.concurrent
 
-package object stmA {
+package object stm {
 
   /** Equivalent to `implicitly[Txn].retry()`. */
-  def retry(implicit txn: scala.concurrent.stmA.Txn): Nothing = txn.retry()
+  def retry(implicit txn: scala.concurrent.stm.Txn): Nothing = txn.retry()
 
   /** This is the first half of the machinery for implementing `orAtomic`. */
-  implicit def delayAtomic[A](lhs: => A) = new scala.concurrent.stmA.atomic.Delayed(lhs)
+  implicit def delayAtomic[A](lhs: => A) = new scala.concurrent.stm.atomic.Delayed(lhs)
 }
