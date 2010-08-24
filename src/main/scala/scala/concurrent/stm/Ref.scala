@@ -2,12 +2,24 @@
 
 package scala.concurrent.stm
 
-import impl.{RefFactory,STMImpl}
+import impl.{RefFactory, STMImpl}
 import reflect.{AnyValManifest, OptManifest}
 
-object Ref {
+object Ref extends RefCompanion {
 
-  private def factory: RefFactory = STMImpl.instance
+  protected def factory: RefFactory = STMImpl.instance
+
+  trait View[A] extends Source.View[A] with Sink.View[A] {
+
+    override def unbind: Ref[A]
+
+    def transform(f: A => A)
+  }
+}
+
+trait RefCompanion {
+  
+  protected def factory: RefFactory
 
   /** Returns a new `Ref` instance suitable for holding instances of `T`.
    *  If you have an initial value `v0` available, prefer `apply(v0)`.
@@ -68,14 +80,6 @@ object Ref {
   def apply(initialValue: Float  ): Ref[Float]   = factory.newRef(initialValue)
   def apply(initialValue: Double ): Ref[Double]  = factory.newRef(initialValue)
   def apply(initialValue: Unit   ): Ref[Unit]    = factory.newRef(initialValue)
-
-
-  trait View[A] extends Source.View[A] with Sink.View[A] {
-
-    override def unbind: Ref[A]
-
-    def transform(f: A => A)
-  }
 }
 
 trait Ref[A] extends Source[A] with Sink[A] {

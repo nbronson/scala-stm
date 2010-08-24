@@ -9,9 +9,7 @@ import collection.immutable.Map
 
 class RefFactorySuite extends FunSuite {
 
-  private case class Fact(expected: String) extends STMImpl {
-
-    //////// RefFactory
+  private case class Fact(expected: String) extends RefFactory {
 
     private def called(w: String) = {
       assert(w === expected)
@@ -28,59 +26,52 @@ class RefFactorySuite extends FunSuite {
     def newRef(v0: Double): Ref[Double] = called("Double")
     def newRef(v0: Unit): Ref[Unit] = called("Unit")
     def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
+  }
 
-    //////// TxnContext
-
-    def dynCurrentOrNull: Txn = throw new AbstractMethodError
-
-    //////// TxnExecutor
-
-    def apply[Z](block: (Txn) => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
-    def pushAlternative[Z](mt: MaybeTxn, block: (Txn) => Z): Boolean = throw new AbstractMethodError
-    def configuration: Map[Symbol, Any] = throw new AbstractMethodError
-    def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
+  object TestRef extends RefCompanion {
+    var factory: RefFactory = null
   }
 
   test("signature specialization") {
-    STMImpl.instance = Fact("Boolean")
-    Ref(false)
+    TestRef.factory = Fact("Boolean")
+    TestRef(false)
 
-    STMImpl.instance = Fact("Byte")
-    Ref(0 : Byte)
+    TestRef.factory = Fact("Byte")
+    TestRef(0 : Byte)
 
-    STMImpl.instance = Fact("Short")
-    Ref(0 : Short)
+    TestRef.factory = Fact("Short")
+    TestRef(0 : Short)
 
-    STMImpl.instance = Fact("Char")
-    Ref(0 : Char)
+    TestRef.factory = Fact("Char")
+    TestRef(0 : Char)
 
-    STMImpl.instance = Fact("Int")
-    Ref(0 : Int)
+    TestRef.factory = Fact("Int")
+    TestRef(0 : Int)
 
-    STMImpl.instance = Fact("Float")
-    Ref(0 : Float)
+    TestRef.factory = Fact("Float")
+    TestRef(0 : Float)
 
-    STMImpl.instance = Fact("Long")
-    Ref(0 : Long)
+    TestRef.factory = Fact("Long")
+    TestRef(0 : Long)
 
-    STMImpl.instance = Fact("Double")
-    Ref(0 : Double)
+    TestRef.factory = Fact("Double")
+    TestRef(0 : Double)
 
-    STMImpl.instance = Fact("Unit")
-    Ref(())
+    TestRef.factory = Fact("Unit")
+    TestRef(())
 
-    STMImpl.instance = Fact("Any")
-    Ref("abc")
-    Ref(null)
-    Ref(0.asInstanceOf[AnyRef])
+    TestRef.factory = Fact("Any")
+    TestRef("abc")
+    TestRef(null)
+    TestRef(0.asInstanceOf[AnyRef])
     val x: Any = 0
-    Ref(x)
+    TestRef(x)
   }
 
-  test("missing manifest Ref.apply") {
-    STMImpl.instance = Fact("Any")
+  test("missing manifest TestRef.apply") {
+    TestRef.factory = Fact("Any")
 
-    def go[T](x: T) = Ref(x)
+    def go[T](x: T) = TestRef(x)
 
     go(123)
     go(1.23)
@@ -90,8 +81,8 @@ class RefFactorySuite extends FunSuite {
 
   test("dynamic specialization") {
     def go[T : ClassManifest](v0: T, which: String) {
-      STMImpl.instance = Fact(which)
-      Ref(v0)
+      TestRef.factory = Fact(which)
+      TestRef(v0)
     }
     
     go(false, "Boolean")
@@ -112,8 +103,8 @@ class RefFactorySuite extends FunSuite {
 
   test("default value specialization") {
     def go[T : ClassManifest](default: T, which: String) {
-      STMImpl.instance = Fact(which)
-      Ref.make[T]()
+      TestRef.factory = Fact(which)
+      TestRef.make[T]()
       //assert(x.single() == default)
     }
 
@@ -132,10 +123,10 @@ class RefFactorySuite extends FunSuite {
     go[Any](null, "Any")
   }
 
-  test("missing manifest Ref.make") {
-    STMImpl.instance = Fact("Any")
+  test("missing manifest TestRef.make") {
+    TestRef.factory = Fact("Any")
 
-    def go[T]() = Ref.make[T]()
+    def go[T]() = TestRef.make[T]()
 
     go[Boolean]()
     go[Byte]()
