@@ -3,6 +3,18 @@
 package scala.concurrent.stm
 package impl
 
+object TxnExecutor {
+  @volatile private var _default: TxnExecutor = STMImpl.instance
+
+  /** Returns the default `TxnExecutor`. */
+  def default: TxnExecutor = _default
+
+  /** Atomically replaces the default `TxnExecutor` with `f(default)`. */
+  def transformDefault(f: TxnExecutor => TxnExecutor) {
+    synchronized { _default = f(_default) }
+  }
+}
+
 trait TxnExecutor {
 
   /** Executes `block` one or more times until an atomic execution is achieved,
@@ -21,6 +33,10 @@ trait TxnExecutor {
    *  Returns true if this is the first pushed alternative, false otherwise.
    *  This method is not usually called directly.  Alternative atomic blocks
    *  are only attempted if the previous alternatives call `retry`.
+   *
+   *  Note that it is not required that `pushAlternative` be called on the same
+   *  instance of `TxnExecutor` as `apply`, just that they have been derived
+   *  from the same original executor.
    */
   def pushAlternative[Z](mt: MaybeTxn, block: Txn => Z): Boolean
 
@@ -130,4 +146,31 @@ trait TxnExecutor {
   def withHint(p1: (Symbol,Any), p2: (Symbol,Any), ps: (Symbol,Any)*): TxnExecutor = {
     (this.withHint(p1).withHint(p2) /: ps) { (e,p) => e.withHint(p) }
   }
+
+  /** Returns true if `x` should be treated as a transfer of control, rather
+   *  than an error.  Atomic blocks that end with an uncaught control flow
+   *  exception are committed, while atomic blocks that end with an uncaught
+   *  error exception are rolled back.
+   *
+   *  The base implementation of this returns true for instances that implement
+   *  `scala.util.control.ControlThrowable`.
+   */
+  def isControlFlow(x: Throwable): Boolean
+
+  /** Returns a `TxnExecutor e` that is identical to this one, except that
+   *  `e.isControlFlow(x)` will return `pf(x)` if `pf.isDefined(x)`.  For
+   *  exceptions for which `pf` is not defined the decision will be deferred to
+   *  the previous implementation.
+   *
+   *  This function may be combined with `TxnExecutor.transformDefault` to add
+   *  system-wide recognition of a control-transfer exception that does not
+   *  extend `scala.util.control.ControlThrowable`: {{{
+   *    TxnExecutor.transformDefault { e =>
+   *      e.withControlFlowRecognizer {
+   *        case _: DSLNonLocalControlTransferException => true
+   *      }
+   *    }
+   *  }}}
+   */
+  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean])
 }
