@@ -6,9 +6,7 @@ import org.scalatest.FunSuite
 
 class MaybeTxnSuite extends FunSuite {
   test("implicit Txn match") {
-    implicit val txn = new Txn {
-      def retry(): Nothing = throw new AbstractMethodError
-    }
+    implicit val txn: Txn = new ri.StubTxn
 
     assert(implicitly[MaybeTxn] eq txn)
   }
