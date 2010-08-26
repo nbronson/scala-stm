@@ -151,10 +151,10 @@ trait RefCompanion {
   
   protected def factory: RefFactory
 
-  /** Returns a new `Ref` instance suitable for holding instances of `T`.
+  /** Returns a new `Ref` instance suitable for holding instances of `A`.
    *  If you have an initial value `v0` available, prefer `apply(v0)`.
    */
-  def make[T]()(implicit om: OptManifest[T]): Ref[T] = (om match {
+  def make[A]()(implicit om: OptManifest[A]): Ref[A] = (om match {
     case m: ClassManifest[_] => m.newArray(0).asInstanceOf[AnyRef] match {
       // these can be reordered, so long as Unit comes before AnyRef
       case _: Array[Boolean] => apply(false)
@@ -166,10 +166,10 @@ trait RefCompanion {
       case _: Array[Long]    => apply(0 : Long)
       case _: Array[Double]  => apply(0 : Double)
       case _: Array[Unit]    => apply(())
-      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[T])(m.asInstanceOf[ClassManifest[T]])
+      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[A])(m.asInstanceOf[ClassManifest[A]])
     }
     case _ => factory.newRef(null.asInstanceOf[Any])(implicitly[ClassManifest[Any]])
-  }).asInstanceOf[Ref[T]]
+  }).asInstanceOf[Ref[A]]
 
   /** Returns a new `Ref` instance with the specified initial value.  The
    *  returned instance is not part of any transaction's read or write set.
@@ -180,13 +180,13 @@ trait RefCompanion {
    *    val list2 = Ref[List[String]](Nil)  // creates a Ref[List[String]]
    *  }}}
    */
-  def apply[T](initialValue: T)(implicit om: OptManifest[T]): Ref[T] = om match {
-    case m: AnyValManifest[_] => newPrimitiveRef(initialValue, m.asInstanceOf[AnyValManifest[T]])
-    case m: ClassManifest[_] => factory.newRef(initialValue)(m.asInstanceOf[ClassManifest[T]])
-    case _ => factory.newRef[Any](initialValue).asInstanceOf[Ref[T]]
+  def apply[A](initialValue: A)(implicit om: OptManifest[A]): Ref[A] = om match {
+    case m: AnyValManifest[_] => newPrimitiveRef(initialValue, m.asInstanceOf[AnyValManifest[A]])
+    case m: ClassManifest[_] => factory.newRef(initialValue)(m.asInstanceOf[ClassManifest[A]])
+    case _ => factory.newRef[Any](initialValue).asInstanceOf[Ref[A]]
   }
 
-  private def newPrimitiveRef[T](initialValue: T, m: AnyValManifest[T]): Ref[T] = {
+  private def newPrimitiveRef[A](initialValue: A, m: AnyValManifest[A]): Ref[A] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
       // these can be reordered, so long as Unit comes before AnyRef
       case _: Array[Boolean] => apply(initialValue.asInstanceOf[Boolean])
@@ -198,7 +198,7 @@ trait RefCompanion {
       case _: Array[Long]    => apply(initialValue.asInstanceOf[Long])
       case _: Array[Double]  => apply(initialValue.asInstanceOf[Double])
       case _: Array[Unit]    => apply(initialValue.asInstanceOf[Unit])
-    }).asInstanceOf[Ref[T]]
+    }).asInstanceOf[Ref[A]]
   }
 
   def apply(initialValue: Boolean): Ref[Boolean] = factory.newRef(initialValue)
