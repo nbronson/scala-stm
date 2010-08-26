@@ -1,10 +1,10 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
 package scala.concurrent.stm
-package impl
 
+/** `object TxnExecutor` manages the system-wide default `TxnExecutor`. */
 object TxnExecutor {
-  @volatile private var _default: TxnExecutor = STMImpl.instance
+  @volatile private var _default: TxnExecutor = impl.STMImpl.instance
 
   /** Returns the default `TxnExecutor`. */
   def default: TxnExecutor = _default
@@ -15,6 +15,13 @@ object TxnExecutor {
   }
 }
 
+/** A `TxnExecutor` is responsible for executing atomic blocks transactionally
+ *  using a set of configuration parameters.  Configuration changes are made by
+ *  constructing a new `TxnExecutor` using `withConfig` or `withHint`.  The
+ *  new executor may be used immediately, saved and used multiple times, or
+ *  registered as the new system-wide default using
+ *  `TxnExecutor.transformDefault`.
+ */
 trait TxnExecutor {
 
   /** Executes `block` one or more times until an atomic execution is achieved,
@@ -27,18 +34,6 @@ trait TxnExecutor {
    *  @usecase  def atomic[Z](block: Txn => Z): Z
    */
   def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
-
-  /** Pushes an alternative atomic block on the current thread or transaction.
-   *  The next call to `apply` will consider `block` to be an alternative.
-   *  Returns true if this is the first pushed alternative, false otherwise.
-   *  This method is not usually called directly.  Alternative atomic blocks
-   *  are only attempted if the previous alternatives call `retry`.
-   *
-   *  Note that it is not required that `pushAlternative` be called on the same
-   *  instance of `TxnExecutor` as `apply`, just that they have been derived
-   *  from the same original executor.
-   */
-  def pushAlternative[Z](mt: MaybeTxn, block: Txn => Z): Boolean
 
   /** Atomically executes a transaction that is composed from `blocks` by
    *  joining with a left-biased `orAtomic` operator.  The following two
@@ -75,9 +70,21 @@ trait TxnExecutor {
     try {
       apply(blocks.head)
     } catch {
-      case AlternativeResult(x) => x.asInstanceOf[Z]
+      case impl.AlternativeResult(x) => x.asInstanceOf[Z]
     }
   }
+
+  /** Pushes an alternative atomic block on the current thread or transaction.
+   *  The next call to `apply` will consider `block` to be an alternative.
+   *  Returns true if this is the first pushed alternative, false otherwise.
+   *  This method is not usually called directly.  Alternative atomic blocks
+   *  are only attempted if the previous alternatives call `retry`.
+   *
+   *  Note that it is not required that `pushAlternative` be called on the same
+   *  instance of `TxnExecutor` as `apply`, just that they have been derived
+   *  from the same original executor.
+   */
+  def pushAlternative[Z](mt: MaybeTxn, block: Txn => Z): Boolean
 
   /** Returns the parameters of this `TxnExecutor` that are specific to the
    *  currently configured STM implementation.  The parameters of a particular

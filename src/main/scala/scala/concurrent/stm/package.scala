@@ -3,9 +3,11 @@
 package scala.concurrent
 
 package object stm {
-  import scala.concurrent.stm.impl.TxnExecutor
 
-  def atomic: TxnExecutor = TxnExecutor.default 
+  /** Atomically executes atomic blocks using the default `TxnExecutor`.  See
+   *  `TxnExecutor.apply`.
+   */
+  def atomic: scala.concurrent.stm.TxnExecutor = scala.concurrent.stm.TxnExecutor.default
 
   /** Equivalent to `implicitly[Txn].retry`. */
   def retry(implicit txn: scala.concurrent.stm.Txn): Nothing = txn.retry

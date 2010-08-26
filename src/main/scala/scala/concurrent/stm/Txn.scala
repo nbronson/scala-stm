@@ -114,7 +114,8 @@ object Txn {
    *  uses exceptions for control flow, however, this design may lead to
    *  unexpected behavior.  The `TxnExecutor` object's `isControlFlow` method
    *  is used to distinguish exceptions representing control flow transfers
-   *  from those used to represent error conditions.
+   *  from those used to represent error conditions.  See
+   *  `TxnExecutor.transformDefault` to change the default rules.
    */
   case class UncaughtExceptionCause(x: Throwable) extends RollbackCause
 

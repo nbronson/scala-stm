@@ -32,7 +32,7 @@ class StubSTMImpl extends impl.STMImpl {
   def apply[Z](block: (Txn) => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
   def pushAlternative[Z](mt: MaybeTxn, block: (Txn) => Z): Boolean = throw new AbstractMethodError
   def configuration: Map[Symbol, Any] = throw new AbstractMethodError
-  def withConfig(param: (Symbol,Any)): impl.TxnExecutor = throw new AbstractMethodError
+  def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
   def isControlFlow(x: Throwable): Boolean = throw new AbstractMethodError
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]) = throw new AbstractMethodError
 }
