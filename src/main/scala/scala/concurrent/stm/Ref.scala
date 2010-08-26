@@ -9,6 +9,15 @@ object Ref extends RefCompanion {
 
   protected def factory: RefFactory = STMImpl.instance
 
+  /** `Ref.View` provides access to the contents of a `Ref` without requiring
+   *  that an implicit `Txn` be available.  When called from within the
+   *  dynamic scope of a transaction, `View`'s methods operate as part of that
+   *  transaction.  When there is no transaction active `View`'s methods are
+   *  still atomic, but only for the duration of the method call.
+   *
+   *  A mental model of `View` is that `view.foo(args)` acts like
+   *  `atomic { implicit t => view.ref.foo(args) }`.
+   */
   trait View[A] extends Source.View[A] with Sink.View[A] {
 
     /** Returns a `Ref` that accesses the same memory location as this view.
@@ -17,22 +26,23 @@ object Ref extends RefCompanion {
      *  `==`) to the original.
      *  @return a `Ref` that accesses the same memory location as this view.
      */
-    override def unbind: Ref[A]
+    override def ref: Ref[A]
 
     /** Works like `set(v)`, but returns the old value.  This is an
      *  atomic swap, equivalent to atomically performing a `get`
      *  followed by `set(v)`.
-     *  @return the previous value of the viewed `Ref`.
+     *  @return the previous value held by `ref`.
      */
     def swap(v: A): A
 
     /** Equivalent to atomically executing
      *  `(if (before == get) { set(after); true } else false)`, but may be more
      *  efficient, especially if there is no enclosing atomic block.
-     *  @param before a value to compare against the current `Ref` contents.
-     *  @param after a value to store in the `Ref` if `before` was equal to the
-     *      previous cell contents.
-     *  @return true if `before` was equal to the previous value of the bound
+     *  @param before a value to compare against the `ref`'s contents using the
+     *      value's `==` method.
+     *  @param after a value to store if `before` was equal to the previous
+     *      contents.
+     *  @return true if `before` was equal to the previous value of the viewed
      *      `Ref`, false otherwise.
      */
     def compareAndSet(before: A, after: A): Boolean
@@ -40,12 +50,12 @@ object Ref extends RefCompanion {
     /** Equivalent to atomically executing
      *  `(if (before eq get) { set(after); true } else false)`, but may be more
      *  efficient, especially if there is no enclosing atomic block.
-     *  @param before a reference whose identity will be compared against the
-     *      current `Ref` contents.
-     *  @param after a value to store in the `Ref` if `before` has the same
-     *      reference identity as the previous cell contents.
-     *  @return true if `before` has the same reference identity as the
-     *      previous value of the bound `Ref`, false otherwise.
+     *  @param before a value to compare against the `ref`'s contents using
+     *      reference identity equality (`eq`).
+     *  @param after a value to store if `before` was `eq` to the previous
+     *      contents.
+     *  @return true if `before` was `eq` to the previous value of the viewed
+     *      `Ref`, false otherwise.
      */
     def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean
 
@@ -62,31 +72,18 @@ object Ref extends RefCompanion {
      *  if the return value is not needed, since it gives the STM more
      *  flexibility to avoid transaction conflicts.
      *  @param f a function that is safe to call multiple times, and safe to
-     *      call later during the enclosing atomic block, if any.
+     *      call later during any enclosing atomic block.
      *  @return the previous value of the viewed `Ref`.
      */
     def getAndTransform(f: A => A): A
-
-    /** Either atomically transforms this reference without blocking and
-     *  returns true, or returns false.  `transform` is to `tryTransform` as
-     *  `set` is to `trySet`.  If this method is called inside an atomic block
-     *  a true return value does not necessarily mean that `f` has already been
-     *  called, just that the transformation will definitely be performed in
-     *  the outer transaction if it commits.
-     *  @param f a function that is safe to call multiple times, and safe to
-     *      call later during the enclosing atomic block, if any.
-     *  @return true if the function was (or will be) applied, false if it was
-     *      not.
-     */
-    def tryTransform(f: A => A): Boolean
 
     /** Atomically replaces the value ''v'' stored in the `Ref` with
      *  `pf`(''v'') if `pf.isDefinedAt`(''v''), returning true, otherwise
      *  leaves the element unchanged and returns false.  `pf.apply` and
      *  `pf.isDefinedAt` might be invoked multiple times by the STM, and might
-     *  be called later in the enclosing atomic block, if any.
+     *  be called later in any enclosing atomic block.
      *  @param pf a partial function that is safe to call multiple times, and
-     *      safe to call later in the enclosing atomic block, if any.
+     *      safe to call later during any enclosing atomic block.
      *  @return `pf.isDefinedAt``(''v''), where ''v'' is the element held by
      *      this `Ref` on entry.
      */
@@ -94,44 +91,43 @@ object Ref extends RefCompanion {
 
     /** Transforms the value stored in the `Ref` by incrementing it.
      *
-     *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-     *  `Numeric[A]` instance if `A` is a primitive type.'''
+     *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+     *  instance if `A` is a primitive type.'''
      *
-     *  @param rhs the quantity by which to increment the value of `unbind`.
+     *  @param rhs the quantity by which to increment the value of `ref`.
      */
     def += (rhs: A)(implicit num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
 
     /** Transforms the value stored in the `Ref` by decrementing it.
      *
-     *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-     *  `Numeric[A]` instance if `A` is a primitive type.'''
+     *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+     *  instance if `A` is a primitive type.'''
      *
-     *  @param rhs the quantity by which to decrement the value of `unbind`.
+     *  @param rhs the quantity by which to decrement the value of `ref`.
      */
     def -= (rhs: A)(implicit num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
 
     /** Transforms the value stored in the `Ref` by multiplying it.
      *
-     *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-     *  `Numeric[A]` instance if `A` is a primitive type.'''
+     *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+     *  instance if `A` is a primitive type.'''
      *
-     *  @param rhs the quantity by which to multiple the value of `unbind`.
+     *  @param rhs the quantity by which to multiple the value of `ref`.
      */
     def *= (rhs: A)(implicit num: Numeric[A]) { transform { v => num.times(v, rhs) } }
 
-    /** Transforms the value stored in the `Ref` by performing a division on
-     *  it, throwing away the remainder if division is not exact for instances
-     *  of `A`.  The careful reader will note that division is actually
-     *  provided by either an implicit `Fractional[A]` or an implicit
-     *  `Integral[A]`, it is not defined on `Numeric[A]`.  Due to problems
-     *  overloading based on the available implicits this method accepts any
+    /** Transforms the value stored in `ref` by performing a division on it,
+     *  throwing away the remainder if division is not exact for instances of
+     *  type `A`.  The careful reader will note that division is actually
+     *  provided by `Fractional[A]` or `Integral[A]`, it is not defined on
+     *  `Numeric[A]`.  To avoid compile-time ambiguity this method accepts a
      *  `Numeric[A]` and assumes that it can be converted at runtime into
-     *  exactly one of the two previous types.
+     *  either a `Fractional[A]` or an `Integral[A]`.
      *
-     *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-     *  `Integral[A]` instance if `A` is a primitive type.'''
+     *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+     *  instance if `A` is a primitive type.'''
      *
-     *  @param rhs the quantity by which to divide the value of `unbind`.
+     *  @param rhs the quantity by which to divide the value of `ref`.
      */
     def /= (rhs: A)(implicit num: Numeric[A]) {
       num match {
@@ -216,6 +212,14 @@ trait RefCompanion {
 
 trait Ref[A] extends Source[A] with Sink[A] {
 
+  /** Returns a `Ref.View` that allows access to the contents of this `Ref`
+   *  without requiring that a `Txn` be available.  Each operation on the view
+   *  will act as if it is performed in its own "single-operation" atomic
+   *  block, nesting into an existing transaction if one is active.
+   *
+   *  A mental model of this method is that `ref.single.foo(args)` acts like
+   *  `atomic { implicit t => ref.foo(args) }`.
+   */
   override def single: Ref.View[A]
 
   // read-only operations (covariant) are in Source
@@ -252,8 +256,8 @@ trait Ref[A] extends Source[A] with Sink[A] {
 
   /** Transforms the value stored in the `Ref` by incrementing it.
    *
-   *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-   *  `Numeric[A]` instance if `A` is a primitive type.'''
+   *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+   *  instance if `A` is a primitive type.'''
    *
    *  @param rhs the quantity by which to increment the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
@@ -261,8 +265,8 @@ trait Ref[A] extends Source[A] with Sink[A] {
 
   /** Transforms the value stored in the `Ref` by decrementing it.
    *
-   *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-   *  `Numeric[A]` instance if `A` is a primitive type.'''
+   *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+   *  instance if `A` is a primitive type.'''
    *
    *  @param rhs the quantity by which to decrement the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
@@ -270,25 +274,24 @@ trait Ref[A] extends Source[A] with Sink[A] {
 
   /** Transforms the value stored in the `Ref` by multiplying it.
    *
-   *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-   *  `Numeric[A]` instance if `A` is a primitive type.'''
+   *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+   *  instance if `A` is a primitive type.'''
    *
    *  @param rhs the quantity by which to multiply the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
   def *= (rhs: A)(implicit txn: Txn, num: Numeric[A]) { transform { v => num.times(v, rhs) } }
 
-  /** Transforms the value stored in the `Ref` by performing a division on
-   *  it, throwing away the remainder if division is not exact for instances
-   *  of `A`.  The careful reader will note that division is actually
-   *  provided by either an implicit `Fractional[A]` or an implicit
-   *  `Integral[A]`, it is not defined on `Numeric[A]`.  Due to problems
-   *  overloading based on the available implicits this method accepts any
+  /** Transforms the value stored the `Ref` by performing a division on it,
+   *  throwing away the remainder if division is not exact for instances of
+   *  type `A`.  The careful reader will note that division is actually
+   *  provided by `Fractional[A]` or `Integral[A]`, it is not defined on
+   *  `Numeric[A]`.  To avoid compile-time ambiguity this method accepts a
    *  `Numeric[A]` and assumes that it can be converted at runtime into
-   *  exactly one of the two previous types.
+   *  either a `Fractional[A]` or an `Integral[A]`.
    *
-   *  '''Note: Some `Ref` implementations may choose to ignore the passed-in
-   *  `Integral[A]` instance if `A` is a primitive type.'''
+   *  '''Note: Implementations may choose to ignore the provided `Numeric[A]`
+   *  instance if `A` is a primitive type.'''
    *
    *  @param rhs the quantity by which to divide the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
