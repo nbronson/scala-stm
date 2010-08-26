@@ -186,7 +186,7 @@ trait Txn extends MaybeTxn {
    *  transaction.  If an alternative to this atomic block was provided via
    *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
    */
-  def retry(): Nothing = forceRollback(ExplicitRetryCause)
+  def retry: Nothing = forceRollback(ExplicitRetryCause)
 
   /** Causes this transaction to fail with the specified cause, when called
    *  from the thread running the transaction.  If the transaction is already
@@ -251,6 +251,8 @@ trait Txn extends MaybeTxn {
    *  - during each partial or complete rollback, applicable after-rollback and
    *    after-completion handlers will be invoked in the reverse order of their
    *    registration.
+   *  @throws IllegalStateException if this transaction's status is `Committed`
+   *      or `RolledBack`.
    */
   def afterRollback(handler: Txn => Unit)
 

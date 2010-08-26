@@ -7,8 +7,8 @@ package object stm {
 
   def atomic: TxnExecutor = TxnExecutor.default 
 
-  /** Equivalent to `implicitly[Txn].retry()`. */
-  def retry(implicit txn: scala.concurrent.stm.Txn): Nothing = txn.retry()
+  /** Equivalent to `implicitly[Txn].retry`. */
+  def retry(implicit txn: scala.concurrent.stm.Txn): Nothing = txn.retry
 
   /** This is the first half of the machinery for implementing `orAtomic`. */
   implicit def delayAtomic[A](lhs: => A) = new scala.concurrent.stm.DelayedAtomicBlock(lhs)
