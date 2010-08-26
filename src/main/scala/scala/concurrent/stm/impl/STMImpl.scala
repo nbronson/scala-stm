@@ -12,4 +12,9 @@ private[stm] object STMImpl {
   val instance: STMImpl = instanceClass.newInstance.asInstanceOf[STMImpl]
 }
 
+/** `STMImpl` gathers all of the functionality required to plug an STM
+ *  implementation into `scala.concurrent.stm`.  Set the JVM system
+ *  property "scala.stm.impl" to the name of a class that implements
+ *  `STMImpl` to use that implementation. 
+ */
 trait STMImpl extends RefFactory with TxnContext with TxnExecutor

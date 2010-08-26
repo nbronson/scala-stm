@@ -5,6 +5,9 @@ package scala.concurrent.stm
 import impl.{RefFactory, STMImpl}
 import reflect.{AnyValManifest, OptManifest}
 
+/** `object Ref` contains factory methods that allocate an STM-managed memory
+ *  location and return a `Ref` instance that provides access to that location.
+ */
 object Ref extends RefCompanion {
 
   protected def factory: RefFactory = STMImpl.instance
@@ -149,8 +152,9 @@ trait RefCompanion {
   
   protected def factory: RefFactory
 
-  /** Returns a new `Ref` instance suitable for holding instances of `A`.
-   *  If you have an initial value `v0` available, prefer `apply(v0)`.
+  /** Returns a `Ref` instance that manages a newly allocated memory location
+   *  holding values of type `A`.  If you have an initial value `v0` available,
+   *  `Ref(v0)` should be preferred.
    */
   def make[A]()(implicit om: OptManifest[A]): Ref[A] = (om match {
     case m: ClassManifest[_] => m.newArray(0).asInstanceOf[AnyRef] match {
@@ -169,8 +173,9 @@ trait RefCompanion {
     case _ => factory.newRef(null.asInstanceOf[Any])(implicitly[ClassManifest[Any]])
   }).asInstanceOf[Ref[A]]
 
-  /** Returns a new `Ref` instance with the specified initial value.  The
-   *  returned instance is not part of any transaction's read or write set.
+  /** Returns a `Ref` instance that manages a newly allocated memory location,
+   *  initializing it to hold `initialValue`.  The returned `Ref` is not part
+   *  of any transaction's read or write set.
    *
    *  Example: {{{
    *    val x = Ref("initial") // creates a Ref[String]
@@ -210,6 +215,44 @@ trait RefCompanion {
   def apply(initialValue: Unit   ): Ref[Unit]    = factory.newRef(initialValue)
 }
 
+/** Provides access to a single element of type ''A''.  Accesses are
+ *  performed as part of a ''memory transaction'' that comprises all of the
+ *  operations of an atomic block and any nested blocks.  Single-operation
+ *  memory transactions may be performed without an explicit atomic block using
+ *  the `Ref.View` returned from `single`.  The software transactional memory
+ *  performs concurrency control to make sure that all committed transactions
+ *  are linearizable.  Reads and writes performed by a successful transaction
+ *  return the same values as if they were executed instantaneously at the
+ *  transaction's commit (linearization) point.
+ *
+ *  The static scope of an atomic block is defined by access to an implicit
+ *  `Txn` passed to the block by the STM.  Atomic blocks nest, so to
+ *  participate in an atomic block for which the `Txn` is not conveniently
+ *  available, just create a new atomic block using {{{
+ *    atomic { implicit t =>
+ *      // the body
+ *    }
+ *  }}}
+ *  In the static scope of an atomic block reads and writes of a `Ref`
+ *  are performed by `x.get` and `x.set(v)`, or more concisely by `x()` and
+ *  `x() = v`. `x.single` returns a `Ref.View` that will dynamically resolve
+ *  the current scope during each method call, automatically creating a
+ *  single-operation atomic block if no transaction is active.
+ *
+ *  It is possible for separate `Ref` instances to refer to the same element;
+ *  in this case they will compare equal.  (As an example, a transactional
+ *  array class might store elements in an array and create `Ref`s on demand.)
+ *  `Ref`s may be provided for computed values, such as the emptiness of a
+ *  queue, to allow  conditional retry and waiting on semantic properties.
+ *
+ *  To perform an access outside a transaction, use the view returned by
+ *  `single`.  Each access through the returned view will act as if it was
+ *  performed in its own single-operation transaction, dynamically nesting into
+ *  an active atomic block as appropriate.
+ *
+ *  `Ref`'s companion object contains factory methods that create `Ref`
+ *  instances paired with a single STM-managed memory location.
+ */
 trait Ref[A] extends Source[A] with Sink[A] {
 
   /** Returns a `Ref.View` that allows access to the contents of this `Ref`

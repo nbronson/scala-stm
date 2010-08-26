@@ -5,5 +5,5 @@ package impl
 
 import util.control.ControlThrowable
 
-/** See `atomic.Delayed` */
+/** See `DelayedAtomicBlock` */
 private[stm] case class AlternativeResult(value: Any) extends ControlThrowable

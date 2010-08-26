@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 package impl
 
+/** `RefFactory` is responsible for creating concrete `Ref` instances. */ 
 trait RefFactory {
   def newRef(v0: Boolean): Ref[Boolean]
   def newRef(v0: Byte):    Ref[Byte]

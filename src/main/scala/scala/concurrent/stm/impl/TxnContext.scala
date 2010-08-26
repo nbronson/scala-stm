@@ -2,7 +2,11 @@
 
 package scala.concurrent.stm
 package impl
-
+ 
+/** `TxnContext` captures the implementation-specific functionality of locating
+ *  the `Txn` dynamically bound to the current `Thread`.  Users should use the
+ *  lookup methods provided by `object Txn`.
+ */
 trait TxnContext {
 
   // If an STM implementation can locate a dynamically scoped Txn directly,
