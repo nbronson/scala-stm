@@ -135,8 +135,10 @@ object Ref extends RefCompanion {
      */
     def /= (rhs: A)(implicit num: Numeric[A]) {
       num match {
-        case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
-        case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
+        //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
+        case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }
+        //case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
+        case numI: Integral[_] => transform { v => numI.asInstanceOf[Integral[A]].quot(v, rhs) }
       }
     }
   }
@@ -293,8 +295,10 @@ trait Ref[A] extends Source[A] with Sink[A] {
    */
   def /= (rhs: A)(implicit txn: Txn, num: Numeric[A]) {
     num match {
-      case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
-      case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
+      //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
+      case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }
+      //case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
+      case numI: Integral[_] => transform { v => numI.asInstanceOf[Integral[A]].quot(v, rhs) }
     }
   }
 }
