@@ -178,11 +178,17 @@ trait Txn extends MaybeTxn {
   //////////// status
 
   /** Returns a snapshot of the transaction's current status.  The status may
-   *  change due to the actions of a concurrent thread.
+   *  change due to the actions of a concurrent thread.  This method may be
+   *  called from any thread.
    */
   def status: Status
 
-  /** Causes the current transaction to roll back.  It will not be retried
+  /** Returns the number of nested atomic blocks in this `Txn`.  A value of 0
+   *  indicates a top-level atomic block.
+   */
+  def nestingLevel: Int
+
+  /**Causes the current transaction to roll back.  It will not be retried
    *  until a write has been performed to some memory location read by this
    *  transaction.  If an alternative to this atomic block was provided via
    *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.

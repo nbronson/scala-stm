@@ -7,6 +7,7 @@ import concurrent.stm.Txn._
 
 class StubTxn extends Txn {
   def status: Status = throw new AbstractMethodError
+  def nestingLevel: Int = throw new AbstractMethodError
   def forceRollback(cause: RollbackCause): Nothing = throw new AbstractMethodError
   def requestRollback(cause: RollbackCause): Status = throw new AbstractMethodError
 
