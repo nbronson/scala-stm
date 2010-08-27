@@ -33,7 +33,10 @@ trait TxnExecutor {
    *            concurrency attempt
    *  @usecase  def atomic[Z](block: Txn => Z): Z
    */
-  def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
+  final def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z = runAtomically(block)
+
+  // Performs the work of apply, while resulting in a more readable stack trace.
+  protected def runAtomically[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
 
   /** Atomically executes a transaction that is composed from `blocks` by
    *  joining with a left-biased `orAtomic` operator.  The following two
