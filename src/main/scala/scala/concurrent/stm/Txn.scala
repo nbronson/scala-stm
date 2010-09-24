@@ -188,30 +188,46 @@ trait Txn extends MaybeTxn {
    */
   def nestingLevel: Int
 
-  /**Causes the current transaction to roll back.  It will not be retried
+  /** Causes the current transaction to roll back.  It will not be retried
    *  until a write has been performed to some memory location read by this
    *  transaction.  If an alternative to this atomic block was provided via
    *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
    */
-  def retry: Nothing = forceRollback(ExplicitRetryCause)
+  def retry: Nothing = forceRollback(nestingLevel, ExplicitRetryCause)
 
-  /** Causes this transaction to fail with the specified cause, when called
-   *  from the thread running the transaction.  If the transaction is already
-   *  rolled back then this method does nothing.  Throws an
-   *  `IllegalStateException` if the transaction is already committed.  This
-   *  method may only be called by the thread executing the transaction; use
-   *  `requestRollback` if you wish to doom a transaction running on another
-   *  thread.
+  /** Causes the specified `invalidNestingLevel` to be rolled back due to the
+   *  specified `cause`.  If `invalidNestingLevel` is 0 then the entire
+   *  transaction is guaranteed to be rolled back, otherwise either a a
+   *  partial or complete rollback may occur.  After a partial rollback
+   *  `nestingLevel` will be less than `invalidNestingLevel`.
+   *
+   *  To roll back just the current nesting level of `txn`, use {{{
+   *    txn.forceRollback(txn.nestingLevel, cause)
+   *  }}}
+   *  To roll back the entire transaction `txn`, use {{{
+   *    txn.forceRollback(0, cause)
+   *  }}}
+   *
+   *  If the invalid nesting level is already doomed then this method does not
+   *  change the cause.  Throws an `IllegalStateException` if the transaction
+   *  is already committed.  This method may only be called by the thread
+   *  executing the transaction; use `requestRollback` if you wish to doom a
+   *  transaction running on another thread.
    *  @throws IllegalStateException if `status` is `Committed` or if called
-   *      from a thread that is not attached to the transaction
+   *      from a thread that is not attached to the transaction.
+   *  @throws IllegalArgumentException if `invalidNestinglevel` is less than
+   *      zero.
    */
-  def forceRollback(cause: RollbackCause): Nothing
+  def forceRollback(invalidNestingLevel: Int, cause: RollbackCause): Nothing
 
   /** If the transaction is either `Active` or `Preparing`, marks it for
    *  rollback, otherwise it does not affect the transaction.  Returns the
    *  transaction status after the attempt.  The returned status will be one
    *  of `Prepared`, `Committed`, or `RolledBack`.  Regardless of the status,
    *  this method does not throw an exception.
+   *
+   *  Unlike `forceRollback`, this method may be called from any thread.  Note
+   *  that there is no facility for remotely triggering a partial rollback.
    */
   def requestRollback(cause: RollbackCause): Status
 
@@ -225,53 +241,64 @@ trait Txn extends MaybeTxn {
    *    be rolled back;
    *  - if a handler is registered in a nested context that is rolled back, it
    *    might not be executed even though the `Txn` is eventually committed;
-   *  - it is okay to call `beforeCommit` from inside `handler`; and
+   *  - it is okay to call `beforeCommit` from inside `handler`, the
+   *    reentrantly added handler will be invoked before commit is begun;
    *  - before-commit callbacks will be executed in the same order that they
-   *    were registered.
+   *    were registered; and
+   *  - handlers may only be registered while the transaction has the status
+   *    `Active`.
    *  @throws IllegalStateException if this transaction is not active.
    */
-  def beforeCommit(handler: Txn => Unit)
+  def beforeCommit(handler: => Unit)
 
   /** Arranges for `handler` to be executed as soon as possible after the `Txn`
    *  is committed, if the current nested context participates in the top-level
    *  commit.  Subtleties:
-   *  - the handler can't access `Ref`s using the committed `Txn`, but it can
-   *    create a new atomic block;
+   *  - the handler can't access `Ref`s using the committed `Txn` (it can
+   *    use a new top-level atomic block or `.single`);
    *  - the handler runs after all locks have been released by the `Txn`, so
    *    any values read or written in the transaction might already have been
-   *    changed by another thread before the handler is executed; and
+   *    changed by another thread before the handler is executed;
    *  - after-commit callbacks and after-completion callbacks will be executed
-   *    in the same order that they were registered.
+   *    in the same order that they were registered; and
+   *  - handlers may be registered while the transaction's status is `Active`,
+   *    `Preparing` or `Prepared`.
    *  @throws IllegalStateException if this transaction's status is `Committed`
    *      or `RolledBack`.
    */
-  def afterCommit(handler: Txn => Unit)
+  def afterCommit(handler: => Unit)
 
   /** Arranges for `handler` to be executed as soon as possible after the
    *  current nested context is rolled back or the top-level `Txn` is rolled
    *  back.  Subtleties:
-   *  - in the case of a partial rollback, the `Txn` will still be `Active`;
-   *  - in the case of a partial rollback, the handler will be run after the
-   *    invalid nesting levels are popped;
+   *  - in the case of a partial rollback, the `Txn` may still be `Active`;
+   *  - in the case of a partial rollback, the nesting level will be decreased
+   *    before the handlers are run;
    *  - in the case of a top-level rollback, the handlers will be run before an
-   *    attempt is made to retry the atomic block in a new `Txn`; and
+   *    attempt is made to retry the atomic block in a new `Txn`;
    *  - during each partial or complete rollback, applicable after-rollback and
    *    after-completion handlers will be invoked in the reverse order of their
-   *    registration.
+   *    registration;
+   *  - handlers may be registered while the transaction's status is `Active`,
+   *    `Preparing` or `Prepared`; and
+   *  - if a handler is registered during a partial rollback from inside an 
+   *    after-rollback or after-completion handler, the newly registered
+   *    handler won't be invoked unless the parent nesting level is later
+   *    rolled back.
    *  @throws IllegalStateException if this transaction's status is `Committed`
    *      or `RolledBack`.
    */
-  def afterRollback(handler: Txn => Unit)
+  def afterRollback(handler: => Unit)
 
   /** Arranges for `handler` to be called as both an after-commit and
-   *  after-rollback handler, but may be more efficient.
+   *  after-rollback handler.
    *
    *  Equivalent to: {{{
    *     txn.afterCommit(handler)
    *     txn.afterRollback(handler)
    *  }}}
    */
-  def afterCompletion(handler: Txn => Unit)
+  def afterCompletion(handler: => Unit)
 
 
   // TODO: nesting lifecycle?
