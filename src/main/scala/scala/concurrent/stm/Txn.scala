@@ -25,19 +25,24 @@ object Txn {
   /** `Status` instances that are terminal states. */
   sealed abstract class CompletedStatus extends Status
 
-  /** The `Status` for a `Txn` in which `Ref` reads and writes may still be
+  /** The `Status` for a `Txn` in which `Ref` reads and writes may currently be
    *  performed.
    */
   case object Active extends Status
 
+  /** The `Status` for a `Txn` that may become `Active` again after a child
+   *  transaction is completed.
+   */
+  case object AwaitingChild extends Status
+
   /** The `Status` for a nested `Txn` that has been committed into its parent,
-   *  but for which the root `Txn` is still active.  After-commit handlers
-   *  won't be invoked until (and unless) the root `Txn` commits.    No
+   *  but for which the root `Txn` has not yet completed.  After-commit
+   *  handlers won't be invoked until (and unless) the root `Txn` commits.  No
    *  `Ref` reads or writes are allowed in this `Txn` (although they may be
    *  allowed in one of the parent transactions), and no additional
    *  before-commit handlers or external resources may be registered.
    */
-  case object AwaitingParentCommit extends Status
+  case object AwaitingParent extends Status
 
   /** The `Status` for a `Txn` that is part of a family of transactions
    *  attempting a top-level commit, but that might still commit or roll back.
@@ -221,9 +226,9 @@ trait Txn extends MaybeTxn {
 
   /** Causes this transaction to be rolled back due to the specified `cause`.
    *  If this transaction is a nested context that has already been committed
-   *  into its parent (`status` of `AwaitingParentCommit`, `Preparing`, or
-   *  `Prepared`) then rolling it back might require rolling back some of the
-   *  enclosing contexts as well.
+   *  into its parent (`status` of `AwaitingParent`, `Preparing` or `Prepared`)
+   *  then rolling it back might require rolling back some of the enclosing
+   *  contexts as well.
    *
    *  To roll back just the current nested `txn`, use {{{
    *    txn.forceRollback(cause)
@@ -243,7 +248,7 @@ trait Txn extends MaybeTxn {
    */
   def forceRollback(cause: RollbackCause): Nothing
 
-  /** If the transaction is either `Active`, `AwaitingParentCommit`, or
+  /** If the transaction is `Active`, `AwaitingChild`, `AwaitingParent` or
    *  `Preparing`, marks it for rollback, otherwise does nothing.  Returns the
    *  transaction status after the attempt.  The returned status will be one
    *  of `Prepared`, `Committed`, or `RolledBack`.  Regardless of the status,
@@ -286,7 +291,7 @@ trait Txn extends MaybeTxn {
    *  - after-commit callbacks and after-completion callbacks will be executed
    *    in the same order that they were registered; and
    *  - handlers may be registered while the transaction's status is `Active`,
-   *    `AwaitingParentCommit`, `Preparing`, or `Prepared`.
+   *    `AwaitingParent`, `Preparing`, or `Prepared`.
    *  @throws IllegalStateException if this transaction's status is `Committed`
    *      or `RolledBack`.
    */
@@ -304,7 +309,7 @@ trait Txn extends MaybeTxn {
    *    after-completion handlers will be invoked in the reverse order of their
    *    registration; and
    *  - handlers may be registered while the transaction's status is `Active`,
-   *    `AwaitingParentCommit`, `Preparing`, or `Prepared`.
+   *    `AwaitingParent`, `Preparing`, or `Prepared`.
    *  @throws IllegalStateException if this transaction's status is `Committed`
    *      or `RolledBack`.
    */
@@ -321,9 +326,6 @@ trait Txn extends MaybeTxn {
   def afterCompletion(handler: => Unit)
 
 
-  // TODO: afterNestedCommit?
-
-  
   //////////// external resource integration
 
   /** Adds an external resource to the transaction that will participate in a
