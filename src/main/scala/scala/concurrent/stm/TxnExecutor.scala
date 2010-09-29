@@ -77,11 +77,12 @@ trait TxnExecutor {
     }
   }
 
-  /** Pushes an alternative atomic block on the current thread or transaction.
+  /** (rare) Associates an alternative atomic block with the current thread.
    *  The next call to `apply` will consider `block` to be an alternative.
-   *  Returns true if this is the first pushed alternative, false otherwise.
-   *  This method is not usually called directly.  Alternative atomic blocks
-   *  are only attempted if the previous alternatives call `retry`.
+   *  Multiple alternatives may be associated before calling `apply`.  Returns
+   *  true if this is the first pushed alternative, false otherwise.  This
+   *  method is not usually called directly.  Alternative atomic blocks are
+   *  only attempted if the previous alternatives call `retry`.
    *
    *  Note that it is not required that `pushAlternative` be called on the same
    *  instance of `TxnExecutor` as `apply`, just that they have been derived
@@ -174,7 +175,9 @@ trait TxnExecutor {
    *
    *  This function may be combined with `TxnExecutor.transformDefault` to add
    *  system-wide recognition of a control-transfer exception that does not
-   *  extend `scala.util.control.ControlThrowable`: {{{
+   *  extend `scala.util.control.ControlThrowable`.  For example, to modify the
+   *  default behavior of all `TxnExecutor.isControlFlow` calls to accept
+   *  `DSLNonLocalControlTransferException`: {{{
    *    TxnExecutor.transformDefault { e =>
    *      e.withControlFlowRecognizer {
    *        case _: DSLNonLocalControlTransferException => true

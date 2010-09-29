@@ -25,37 +25,48 @@ object Txn {
   /** `Status` instances that are terminal states. */
   sealed abstract class CompletedStatus extends Status
 
-  /** The `Status` for a `Txn` for which `Ref` reads and writes may still be
-   *  performed (possibly after a partial rollback).
+  /** The `Status` for a `Txn` in which `Ref` reads and writes may still be
+   *  performed.
    */
   case object Active extends Status
 
-  /** The `Status` for a `Txn` that is in the process of attempting a top-level
-   *  commit, but that has not yet decided whether to commit or roll back.  No
-   *  `Ref` reads or writes are allowed, and no additional before-commit
+  /** The `Status` for a nested `Txn` that has been committed into its parent,
+   *  but for which the root `Txn` is still active.  After-commit handlers
+   *  won't be invoked until (and unless) the root `Txn` commits.    No
+   *  `Ref` reads or writes are allowed in this `Txn` (although they may be
+   *  allowed in one of the parent transactions), and no additional
+   *  before-commit handlers or external resources may be registered.
+   */
+  case object AwaitingParentCommit extends Status
+
+  /** The `Status` for a `Txn` that is part of a family of transactions
+   *  attempting a top-level commit, but that might still commit or roll back.
+   *  No `Ref` reads or writes are allowed, and no additional before-commit
    *  handlers or external resources may be registered.
    */
   case object Preparing extends Status
 
-  /** The `Status` for a `Txn` that has successfully acquired all write
-   *  permissions necessary, and that has delegated the final commit decision
-   *  to an external decider.
+  /** The `Status` for a `Txn` that is part of a family of transactions that
+   *  has successfully acquired all write permissions necessary to perform a
+   *  top-level commit, and that has delegated the final commit decision to
+   *  an external decider.
    */
   case object Prepared extends Status
 
-  /** The `Status` for a `Txn` that is being or has been completely cancelled.
-   *  None of the `Ref` writes made during any of the nested contexts of the
-   *  `Txn` will ever be visible to other transactions.  The atomic block will
-   *  be automatically retried using a fresh `Txn` if `cause` is a
-   *  `TransientRollbackCause`, unless some sort of retry threshold has been
-   *  reached.
+  /** The `Status` for a `Txn` that is being or has been cancelled.  None of
+   *  the `Ref` writes made during this transaction or in any child context
+   *  of this transaction will be visible to other threads.  The atomic block
+   *  will be automatically retried if no outer atomic block is not active, if
+   *  `cause` is a `TransientRollbackCause`, and if no retry thresholds have
+   *  been exceeded.
    */
   case class RolledBack(cause: RollbackCause) extends CompletedStatus
 
-  /** The `Status` for a `Txn` that was successful.  All `Ref` reads and writes
-   *  made through the `Txn` will appear to have occurred at a single point in
-   *  the past.  External resource cleanup and after-commit callbacks may still
-   *  be running for the `Txn`.
+  /** The `Status` for a `Txn` that is part of a family of transactions that
+   *  was successful.  All `Ref` reads and writes made through the `Txn` and
+   *  its `Committed` child transactions will appear to have occurred at a
+   *  single point in time.  External resource cleanup and after-commit
+   *  callbacks may still be running.
    */
   case object Committed extends CompletedStatus
 
@@ -128,34 +139,35 @@ object Txn {
    *  resource is informed of the decision.
    */
   trait ExternalResource {
-    /** Called during the `Preparing` state, returns true if this resource
-     *  agrees to commit.  If it has already been determined that a transaction
-     *  will roll back, then this method won't be called.  All locks or other
-     *  resources required to complete the commit must be acquired during this
-     *  callback, or else this method must return false.  The consensus
-     *  decision will be delivered via a subsequent call to `performCommit` or
-     *  `performRollback`.  `performRollback` will be called on every external
-     *  resource registered in a `Txn`, whether or not its `prepare` method was
-     *  called.
+    /** Called while `txn`'s status is `Preparing`, returns true if this
+     *  resource agrees to commit.  Only guaranteed to be called for
+     *  transactions that enter the `Prepared` or `Committed` state.
      *
-     *  If an external resource is registered in a nested transaction context
-     *  that is partially rolled back, then its `performRollback` will be
-     *  called even if the top-level `Txn` eventually commits.
-     *
+     *  All locks or other resources required to complete the commit must be
+     *  acquired during this callback, or else this method must return false.
      *  The resource may call `txn.forceRollback` instead of returning false,
      *  if that is more convenient.
      *
-     *  If this method throws an exception, the transaction will be rolled back
-     *  with a `CallbackExceptionCause`, which will not result in automatic
-     *  retry, and which will cause the exception to be rethrown after rollback
-     *  is complete.
+     *  If this method throws an exception, the top-level root transaction and
+     *  all of its preparing children will be rolled back with a
+     *  `CallbackExceptionCause`, no retry will be performed, and the exception
+     *  will be rethrown after rollback is complete.
      */
     def prepare(txn: Txn): Boolean
 
-    /** Called during the `Committed` state. */
+    /** Called during the `Committed` state.  Either `performCommit` or
+     *  `performRollback` is guaranteed to be called for each registered
+     *  external resource.  Note that `performCommit` won't be called until the
+     *  top-level (non-nested) `Txn` commits.
+     */
     def performCommit(txn: Txn)
 
-    /** Called during the `RolledBack` state. */
+    /** Called during the `RolledBack` state.  Either `performCommit` or
+     *  `performRollback` is guaranteed to be called for each registered
+     *  external resource.  `performRollback` will be called as soon as
+     *  rollback is inevitable for `txn`, regardless of the status of the
+     *  top-level root transaction.
+     */
     def performRollback(txn: Txn)
   }
 
@@ -176,7 +188,9 @@ object Txn {
   }
 }
 
-/** A `Txn` represents one attempt to execute a top-level atomic block. */
+/** A `Txn` represents one attempt to execute a top-level or nested atomic
+ *  block.
+ */
 trait Txn extends MaybeTxn {
   import Txn._
 
@@ -188,64 +202,69 @@ trait Txn extends MaybeTxn {
    */
   def status: Status
 
-  /** Returns the number of nested atomic blocks in this `Txn`.  A value of 0
-   *  indicates a top-level atomic block.
+  /** Returns the nearest enclosing transaction, or `None` if this is a
+   *  top-level transaction.
    */
-  def nestingLevel: Int
+  def parent: Option[Txn]
+
+  /** Returns the outermost enclosing transaction, or this instance if this is
+   *  a top-level transaction.  `txn.parent.isEmpty == (txn.root == txn)`
+   */
+  def root: Txn
 
   /** Causes the current transaction to roll back.  It will not be retried
    *  until a write has been performed to some memory location read by this
    *  transaction.  If an alternative to this atomic block was provided via
    *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
    */
-  def retry: Nothing = forceRollback(nestingLevel, ExplicitRetryCause)
+  def retry: Nothing = forceRollback(ExplicitRetryCause)
 
-  /** Causes the specified `invalidNestingLevel` to be rolled back due to the
-   *  specified `cause`.  If `invalidNestingLevel` is 0 then the entire
-   *  transaction is guaranteed to be rolled back, otherwise either a a
-   *  partial or complete rollback may occur.  After a partial rollback
-   *  `nestingLevel` will be less than `invalidNestingLevel`.
+  /** Causes this transaction to be rolled back due to the specified `cause`.
+   *  If this transaction is a nested context that has already been committed
+   *  into its parent (`status` of `AwaitingParentCommit`, `Preparing`, or
+   *  `Prepared`) then rolling it back might require rolling back some of the
+   *  enclosing contexts as well.
    *
-   *  To roll back just the current nesting level of `txn`, use {{{
-   *    txn.forceRollback(txn.nestingLevel, cause)
+   *  To roll back just the current nested `txn`, use {{{
+   *    txn.forceRollback(cause)
    *  }}}
-   *  To roll back the entire transaction `txn`, use {{{
-   *    txn.forceRollback(0, cause)
+   *  To roll back the entire top-level transaction family that contains `txn`,
+   *  use {{{
+   *    txn.root.forceRollback(cause)
    *  }}}
    *
-   *  If the invalid nesting level is already doomed then this method does not
-   *  change the cause.  Throws an `IllegalStateException` if the transaction
-   *  is already committed.  This method may only be called by the thread
+   *  If the transaction already has a status of `RolledBack` then this method
+   *  does nothing.  Throws an `IllegalStateException` if the transaction is
+   *  already committed.  This method may only be called by the thread
    *  executing the transaction; use `requestRollback` if you wish to doom a
    *  transaction running on another thread.
    *  @throws IllegalStateException if `status` is `Committed` or if called
    *      from a thread that is not attached to the transaction.
-   *  @throws IllegalArgumentException if `invalidNestinglevel` is less than
-   *      zero.
    */
-  def forceRollback(invalidNestingLevel: Int, cause: RollbackCause): Nothing
+  def forceRollback(cause: RollbackCause): Nothing
 
-  /** If the transaction is either `Active` or `Preparing`, marks it for
-   *  rollback, otherwise it does not affect the transaction.  Returns the
+  /** If the transaction is either `Active`, `AwaitingParentCommit`, or
+   *  `Preparing`, marks it for rollback, otherwise does nothing.  Returns the
    *  transaction status after the attempt.  The returned status will be one
    *  of `Prepared`, `Committed`, or `RolledBack`.  Regardless of the status,
    *  this method does not throw an exception.
    *
    *  Unlike `forceRollback`, this method may be called from any thread.  Note
-   *  that there is no facility for remotely triggering a partial rollback.
+   *  that there is no facility for remotely triggering a rollback during the
+   *  `Prepared` state.
    */
   def requestRollback(cause: RollbackCause): Status
 
 
   //////////// life-cycle callbacks
 
-  /** Arranges for `handler` to be executed as late as possible while the `Txn`
-   *  is still `Active`, if the current nested context participates in the
-   *  top-level commit.  Subtleties:
+  /** Arranges for `handler` to be executed as late as possible while the root
+   *  `Txn` is still `Active`, if the current transaction participates in the
+   *  top-level commit.  The `Txn` passed to the handler will be the active
+   *  `root` transaction, which may still be used for performing reads and
+   *  writes.  Subtleties:
    *  - it is possible that after `handler` is run the transaction might still
    *    be rolled back;
-   *  - if a handler is registered in a nested context that is rolled back, it
-   *    might not be executed even though the `Txn` is eventually committed;
    *  - it is okay to call `beforeCommit` from inside `handler`, the
    *    reentrantly added handler will be invoked before commit is begun;
    *  - before-commit callbacks will be executed in the same order that they
@@ -254,7 +273,7 @@ trait Txn extends MaybeTxn {
    *    `Active`.
    *  @throws IllegalStateException if this transaction is not active.
    */
-  def beforeCommit(handler: => Unit)
+  def beforeCommit(handler: Txn => Unit)
 
   /** Arranges for `handler` to be executed as soon as possible after the `Txn`
    *  is committed, if the current nested context participates in the top-level
@@ -267,29 +286,25 @@ trait Txn extends MaybeTxn {
    *  - after-commit callbacks and after-completion callbacks will be executed
    *    in the same order that they were registered; and
    *  - handlers may be registered while the transaction's status is `Active`,
-   *    `Preparing` or `Prepared`.
+   *    `AwaitingParentCommit`, `Preparing`, or `Prepared`.
    *  @throws IllegalStateException if this transaction's status is `Committed`
    *      or `RolledBack`.
    */
   def afterCommit(handler: => Unit)
 
-  /** Arranges for `handler` to be executed as soon as possible after the
-   *  current nested context is rolled back or the top-level `Txn` is rolled
-   *  back.  Subtleties:
-   *  - in the case of a partial rollback, the `Txn` may still be `Active`;
-   *  - in the case of a partial rollback, the nesting level will be decreased
-   *    before the handlers are run;
-   *  - in the case of a top-level rollback, the handlers will be run before an
-   *    attempt is made to retry the atomic block in a new `Txn`;
+  /** Arranges for `handler` to be executed as soon as possible after this
+   *  `Txn` is rolled back.  Subtleties:
+   *  - in the case of a partial rollback, the top-level root `Txn` may still
+   *    be `Active`;
+   *  - in the case of a partial rollback, `Txn.current` will return the active
+   *    parent `Txn` if called from the handler;
+   *  - the handlers will be run before an attempt is made to retry the atomic
+   *    block in a new `Txn`;
    *  - during each partial or complete rollback, applicable after-rollback and
    *    after-completion handlers will be invoked in the reverse order of their
-   *    registration;
+   *    registration; and
    *  - handlers may be registered while the transaction's status is `Active`,
-   *    `Preparing` or `Prepared`; and
-   *  - if a handler is registered during a partial rollback from inside an 
-   *    after-rollback or after-completion handler, the newly registered
-   *    handler won't be invoked unless the parent nesting level is later
-   *    rolled back.
+   *    `AwaitingParentCommit`, `Preparing`, or `Prepared`.
    *  @throws IllegalStateException if this transaction's status is `Committed`
    *      or `RolledBack`.
    */
@@ -306,7 +321,7 @@ trait Txn extends MaybeTxn {
   def afterCompletion(handler: => Unit)
 
 
-  // TODO: nesting lifecycle?
+  // TODO: afterNestedCommit?
 
   
   //////////// external resource integration
@@ -324,10 +339,11 @@ trait Txn extends MaybeTxn {
 
   /** Delegates final decision of the outcome of this transaction to `decider`,
    *  assuming that all reads, writes, and external resources are valid.  This
-   *  method can succeed at most once per `Txn`.
+   *  method can succeed with at most one value per top-level `Txn`.
    *  @throws IllegalStateException if this transaction's status is not
    *      `Active` or `Preparing`, or if `setExternalDecider` was previously
-   *      called for this `Txn`.
+   *      called with a different value for any `Txn` that has the same `root`
+   *      as this `Txn`.
    */
   def setExternalDecider(decider: ExternalDecider)
 }

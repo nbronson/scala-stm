@@ -108,7 +108,7 @@ trait Source[+A] {
 
   /** Returns the same value as `get`, but allows the caller to determine
    *  whether `txn` should be rolled back if another thread changes the value
-   *  of this `Ref` before `txn` is complete.  If `ref.relaxedGet(equiv)`
+   *  of this `Ref` before `txn` is committed.  If `ref.relaxedGet(equiv)`
    *  returns `v0` in `txn`, another context changes `ref` to `v1`, and
    *  `equiv(v0, v1) == true`, then `txn` won't be required to roll back (at
    *  least not due to this read).  If additional changes are made to `ref`

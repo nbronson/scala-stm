@@ -227,7 +227,7 @@ trait RefCompanion {
  *
  *  The static scope of an atomic block is defined by access to an implicit
  *  `Txn` passed to the block by the STM.  Atomic blocks nest, so to
- *  participate in an atomic block for which the `Txn` is not conveniently
+ *  participate in an atomic block for which a `Txn` is not conveniently
  *  available, just create a new atomic block using {{{
  *    atomic { implicit t =>
  *      // the body
