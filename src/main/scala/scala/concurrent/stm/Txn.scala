@@ -70,7 +70,8 @@ object Txn {
 
   /** The `RollbackCause` for a `Txn` whose optimistic execution was invalid,
    *  and that should be retried.  The specific situations in which an
-   *  optimistic failure can occur are algorithm-specific, but may include:
+   *  optimistic failure can occur are specific to the STM algorithm, but may
+   *  include:
    *  - the STM detected that the value returned by a previous read in this
    *    `Txn` is no longer valid;
    *  - a cyclic dependency has occurred and this `Txn` must be rolled back to
@@ -81,10 +82,10 @@ object Txn {
    *    or
    *  - no apparent reason (*).
    *
-   *  (*) - STMs may perform validation, conflict detection and deadlock cycle
+   *  (*) - Some STMs perform validation, conflict detection and deadlock cycle
    *  breaking using algorithms that are conservative approximations.  This
    *  means that any particular attempt to execute an atomic block (one `Txn`)
-   *  might fail spuriously, so long as overall progress is made.
+   *  might fail spuriously.
    *
    *  @param category an STM-specific label for the reason behind this
    *                  optimistic failure. The set of possible categories is
@@ -136,6 +137,10 @@ object Txn {
      *  `performRollback`.  `performRollback` will be called on every external
      *  resource registered in a `Txn`, whether or not its `prepare` method was
      *  called.
+     *
+     *  If an external resource is registered in a nested transaction context
+     *  that is partially rolled back, then its `performRollback` will be
+     *  called even if the top-level `Txn` eventually commits.
      *
      *  The resource may call `txn.forceRollback` instead of returning false,
      *  if that is more convenient.
