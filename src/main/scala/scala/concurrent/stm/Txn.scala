@@ -39,7 +39,7 @@ object Txn {
    *  but whose parent's status is still `Active`, `AwaitingChild` or
    *  `MergedWithParent`.  If the parent transaction is rolled back, the status
    *  for all of its nested transactions will also be an instance of
-   *  `Rolledback`.
+   *  `RolledBack`.
    */
   case object MergedWithParent extends Status
 
@@ -82,6 +82,11 @@ object Txn {
    *  should be made to execute the underlying atomic block.
    */
   sealed abstract class TransientRollbackCause extends RollbackCause
+
+  /** `RollbackCause`s for which the failure is permanent and no attempt should
+   *  be made to retry the underlying atomic block.
+   */
+  sealed abstract class PermanentRollbackCause extends RollbackCause
 
   /** The `RollbackCause` for a `Txn` whose optimistic execution was invalid,
    *  and that should be retried.  The specific situations in which an
@@ -133,10 +138,96 @@ object Txn {
    *  from those used to represent error conditions.  See
    *  `TxnExecutor.transformDefault` to change the default rules.
    */
-  case class UncaughtExceptionCause(x: Throwable) extends RollbackCause
+  case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
 
-  //////////// external transactional resources
+  //////////// explicit retry and rollback
+
+  // These are methods of the Txn object because it is generally only correct
+  // to call them for the current transaction.  Methods to add lifecycle
+  // callbacks are also object methods for the same reason.
+
+  /** Causes the current transaction to roll back.  It will not be retried
+   *  until a write has been performed to some memory location read by this
+   *  transaction.  If an alternative to this atomic block was provided via
+   *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
+   *  @throws IllegalStateException if the transaction is not active.
+   */
+  def retry(implicit txn: Txn): Nothing = rollback(ExplicitRetryCause)
+
+  /** Causes the current transaction to be rolled back due to the specified
+   *  `cause`.  Use `t.requestRollback(cause)` to roll back a transaction `t`
+   *  that may be attached to another thread.  If this transaction is a nested
+   *  context that has already been committed into its parent (`status` of
+   *  `MergedWithParent`, `Preparing` or `Prepared`) then this method will act
+   *  on some or all of the enclosing transactions.
+   *
+   *  If the transaction already has a status of `RolledBack` then this method
+   *  does nothing.  Throws an `IllegalStateException` if the transaction is
+   *  already committed.  This method may only be called by the thread
+   *  executing the transaction; use `t.requestRollback(cause)` if you wish to
+   *  doom a transaction `t` running on another thread.
+   *  @throws IllegalStateException if `status` is `Committed` or if called
+   *      from a thread that is not attached to the transaction.
+   */
+  def rollback(cause: RollbackCause)(implicit txn: Txn): Nothing = txn.rollback(cause)
+
+
+  //////////// life-cycle callbacks
+
+  /** Arranges for `handler` to be executed as late as possible while the
+   *  current transaction is still `Active`, if the current transaction
+   *  eventually participates in the top-level commit.  The `Txn` passed to the
+   *  handler will be the active root transaction, which may be used for
+   *  performing reads, writes and additional nested transactions from inside
+   *  the handler.  Details:
+   *  - it is possible that after `handler` is run the transaction tree might
+   *    still be rolled back;
+   *  - it is okay to call `beforeCommit` from inside `handler`, the
+   *    reentrantly added handler will be included in this before-commit phase;
+   *    and
+   *  - before-commit handlers will be executed in their registration order.
+   */
+  def beforeCommit(handler: Txn => Unit)(implicit txn: Txn) { txn.beforeCommit(handler) }
+
+  /** Arranges for `handler` to be executed as soon as possible after the
+   *  current transaction is committed.  Details:
+   *  - no transaction will be active while the handler is run, but it may
+   *    access `Ref`s using a new top-level atomic block or `.single`;
+   *  - the handler runs after all internal locks have been released, so any
+   *    values read or written in the transaction might already have been
+   *    changed by another thread before the handler is executed;
+   *  - handlers will be executed in their registration order; and
+   *  - handlers may be registered during the `Preparing` and `Prepared`
+   *    states.
+   */
+  def afterCommit(handler: Status => Unit)(implicit txn: Txn) { txn.afterCommit(handler) }
+
+  /** Arranges for `handler` to be executed as soon as possible after the
+   *  current `Txn` is rolled back.  Details:
+   *  - the handler will be executed immediately during a partial rollback that
+   *    includes the current `Txn`, even if the parent is not rolled back;
+   *  - the handler will be run before an attempt is made (if any) to retry the
+   *    atomic block in a new `Txn`;
+   *  - handlers will be invoked in the reverse of their registration order;
+   *    and
+   *  - handlers may be registered while `status` is `Active`, `Preparing` or
+   *    `Prepared`.
+   */
+  def afterRollback(handler: Status => Unit)(implicit txn: Txn) { txn.afterRollback(handler) }
+
+  /** Arranges for `handler` to be called as both an after-commit and
+   *  after-rollback handler.
+   *
+   *  Equivalent to: {{{
+   *     afterCommit(handler)
+   *     afterRollback(handler)
+   *  }}}
+   */
+  def afterCompletion(handler: Status => Unit)(implicit txn: Txn) { txn.afterCompletion(handler) }
+
+
+  //////////// external resource integration
 
   /** `ExternalResource`s participate in a two-phase commit.  Each resource is
    *  given the opportunity to veto commit.  After a decision is made each
@@ -177,6 +268,18 @@ object Txn {
     def performRollback(txn: Txn)
   }
 
+  /** Adds an external resource to the current transaction that will
+   *  participate in a two-phase commit protocol.  If two external resources
+   *  have different `order`s then the one with the smaller order will be
+   *  invoked first, otherwise the one registered earlier will be invoked
+   *  first.
+   *  @throws IllegalStateException if this transaction is not active.
+   */
+  def addExternalResource(res: ExternalResource, order: Int)(implicit txn: Txn) { txn.addExternalResource(res, order) }
+
+  /** Adds an external resource with the default order of 0. */
+  def addExternalResource(res: ExternalResource)(implicit txn: Txn) { addExternalResource(res, 0) }
+
   /** An `ExternalDecider` is given the final control over the decision of
    *  whether or not to commit a `Txn`, which allows transactions to be
    *  integrated with a single non-transactional resource.  `shouldCommit` will
@@ -192,6 +295,16 @@ object Txn {
      */
     def shouldCommit(txn: Txn): Boolean
   }
+
+  /** Delegates final decision of the outcome of the current transaction to
+   *  `decider` (if it hasn't been rolled back for some other reason first).
+   *  This method can succeed with at most one value per top-level `Txn`.
+   *  @throws IllegalStateException if the current transaction's status is not
+   *      `Active` or `Preparing`, or if `setExternalDecider` was previously
+   *      called with a different value for any `Txn` that has the same `root`
+   *      as this `Txn` and that has not rolled back.
+   */
+  def setExternalDecider(decider: ExternalDecider)(implicit txn: Txn) { txn.setExternalDecider(decider) }
 }
 
 /** A `Txn` represents one attempt to execute a top-level or nested atomic
@@ -199,14 +312,6 @@ object Txn {
  */
 trait Txn extends MaybeTxn {
   import Txn._
-
-  //////////// status
-
-  /** Returns a snapshot of the transaction's current status.  The status may
-   *  change due to the actions of a concurrent thread.  This method may be
-   *  called from any thread.
-   */
-  def status: Status
 
   /** Returns the nearest enclosing transaction, if any. */
   def parent: Option[Txn]
@@ -216,127 +321,34 @@ trait Txn extends MaybeTxn {
    */
   def root: Txn
 
-  /** Causes the current transaction to roll back.  It will not be retried
-   *  until a write has been performed to some memory location read by this
-   *  transaction.  If an alternative to this atomic block was provided via
-   *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
+  /** Returns a snapshot of the transaction's current status.  The status may
+   *  change to `Txn.RolledBack` due to the actions of a concurrent thread.
+   *  This method may be called from any thread.
    */
-  def retry: Nothing = forceRollback(ExplicitRetryCause)
+  def status: Status
 
-  /** Causes this transaction to be rolled back due to the specified `cause`.
-   *  If this transaction is a nested context that has already been committed
-   *  into its parent (`status` of `MergedWithParent`, `Preparing` or
-   *  `Prepared`) then this method will act on some or all of the enclosing
-   *  transactions.
+  /** Attempts to cause a transaction running on another thread to be marked
+   *  for rollback, possibly also rolling back some or all of the enclosing
+   *  transactions.  Returns the transaction status after the attempt.  The
+   *  returned status will be one of `Prepared`, `Committed` or `RolledBack`.
+   *  Regardless of the status, this method does not throw an exception.
    *
-   *  To roll back just the current nested `txn`, use {{{
-   *    txn.forceRollback(cause)
-   *  }}}
-   *  To roll back the entire top-level transaction tree that contains `txn`,
-   *  use {{{
-   *    txn.root.forceRollback(cause)
-   *  }}}
-   *
-   *  If the transaction already has a status of `RolledBack` then this method
-   *  does nothing.  Throws an `IllegalStateException` if the transaction is
-   *  already committed.  This method may only be called by the thread
-   *  executing the transaction; use `requestRollback` if you wish to doom a
-   *  transaction running on another thread.
-   *  @throws IllegalStateException if `status` is `Committed` or if called
-   *      from a thread that is not attached to the transaction.
-   */
-  def forceRollback(cause: RollbackCause): Nothing
-
-  /** Attempts to cause this transaction to be marked for rollback, possibly
-   *  also rolling back some or all of the enclosing transactions.  Returns the
-   *  transaction status after the attempt.  The returned status will be one
-   *  of `Prepared`, `Committed` or `RolledBack`.  Regardless of the status,
-   *  this method does not throw an exception.
-   *
-   *  Unlike `forceRollback`, this method may be called from any thread.  Note
-   *  that there is no facility for remotely triggering a rollback during the
-   *  `Prepared` state.
+   *  Unlike `Txn.rollback(cause)`, this method may be called from any thread.
+   *  Note that there is no facility for remotely triggering a rollback during
+   *  the `Prepared` state, as the `ExplicitDecider` is given the final choice.
    */
   def requestRollback(cause: RollbackCause): Status
 
 
-  //////////// life-cycle callbacks
+  //////////// methods only appropriate for the current Txn
 
-  /** Arranges for `handler` to be executed as late as possible while the root
-   *  `Txn` is still `Active`, if the current transaction participates in the
-   *  top-level commit.  The `Txn` passed to the handler will be the active
-   *  `root` transaction, which may still be used for performing reads, writes
-   *  and nested transactions.  Details:
-   *  - it is possible that after `handler` is run the transaction might still
-   *    be rolled back;
-   *  - it is okay to call `beforeCommit` from inside `handler`, the
-   *    reentrantly added handler will be included in this before-commit phase;
-   *  - before-commit handlers will be executed in their registration order;
-   *    and
-   *  - handlers may only be registered while the `status` is `Active`.
-   *  @throws IllegalStateException if this transaction is not active.
-   */
-  def beforeCommit(handler: Txn => Unit)
+  // The user-visible versions of these methods are in the Txn object.
 
-  /** Arranges for `handler` to be executed as soon as possible after the `Txn`
-   *  is committed.  Subtleties:
-   *  - the handler can't access `Ref`s using the committed `Txn` (it can
-   *    use a new top-level atomic block or `.single`);
-   *  - the handler runs after all locks have been released by the `Txn`, so
-   *    any values read or written in the transaction might already have been
-   *    changed by another thread before the handler is executed;
-   *  - handlers will be executed in their registration order; and
-   *  - handlers may be registered while `status` is `Active`, `Preparing` or
-   *    `Prepared`.
-   *  @throws IllegalStateException if this transaction's status is not
-   *      `Active`, `Preparing` or `Prepared`.
-   */
-  def afterCommit(handler: Status => Unit)
-
-  /** Arranges for `handler` to be executed as soon as possible after this
-   *  `Txn` is rolled back.  Subtleties:
-   *  - the handler will be run before an attempt is made (if any) to retry the
-   *    atomic block in a new `Txn`;
-   *  - handlers will be invoked in the reverse of their registration order;
-   *    and
-   *  - handlers may be registered while `status` is `Active`, `Preparing` or
-   *    `Prepared`.
-   *  @throws IllegalStateException if this transaction's status is not
-   *      `Active`, `Preparing` or `Prepared`.
-   */
-  def afterRollback(handler: Status => Unit)
-
-  /** Arranges for `handler` to be called as both an after-commit and
-   *  after-rollback handler.
-   *
-   *  Equivalent to: {{{
-   *     txn.afterCommit(handler)
-   *     txn.afterRollback(handler)
-   *  }}}
-   */
-  def afterCompletion(handler: Status => Unit)
-
-
-  //////////// external resource integration
-
-  /** Adds an external resource to the transaction that will participate in a
-   *  two-phase commit protocol.  If two external resources have different
-   *  `order`s then the one with the smaller order will be invoked first,
-   *  otherwise the one registered earlier will be invoked first.
-   *  @throws IllegalStateException if this transaction is not active.
-   */
-  def addExternalResource(res: ExternalResource, order: Int)
-  
-  /** Adds an external resource with the default order of 0. */
-  def addExternalResource(res: ExternalResource) { addExternalResource(res, 0) }
-
-  /** Delegates final decision of the outcome of this transaction to `decider`,
-   *  assuming that all reads, writes, and external resources are valid.  This
-   *  method can succeed with at most one value per top-level `Txn`.
-   *  @throws IllegalStateException if this transaction's status is not
-   *      `Active` or `Preparing`, or if `setExternalDecider` was previously
-   *      called with a different value for any `Txn` that has the same `root`
-   *      as this `Txn` and that has not rolled back.
-   */
-  def setExternalDecider(decider: ExternalDecider)
+  protected def rollback(cause: RollbackCause): Nothing
+  protected def beforeCommit(handler: Txn => Unit)
+  protected def afterCommit(handler: Status => Unit)
+  protected def afterRollback(handler: Status => Unit)
+  protected def afterCompletion(handler: Status => Unit)
+  protected def addExternalResource(res: ExternalResource, order: Int)
+  protected def setExternalDecider(decider: ExternalDecider)
 }
