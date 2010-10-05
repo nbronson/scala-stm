@@ -156,17 +156,9 @@ object Txn {
   def retry(implicit txn: Txn): Nothing = rollback(ExplicitRetryCause)
 
   /** Causes the current transaction to be rolled back due to the specified
-   *  `cause`.  Use `t.requestRollback(cause)` to roll back a transaction `t`
-   *  that may be attached to another thread.  If this transaction is a nested
-   *  context that has already been committed into its parent (`status` of
-   *  `MergedWithParent`, `Preparing` or `Prepared`) then this method will act
-   *  on some or all of the enclosing transactions.
-   *
-   *  If the transaction already has a status of `RolledBack` then this method
-   *  does nothing.  Throws an `IllegalStateException` if the transaction is
-   *  already committed.  This method may only be called by the thread
-   *  executing the transaction; use `t.requestRollback(cause)` if you wish to
-   *  doom a transaction `t` running on another thread.
+   *  `cause`.  This method may only be called by the thread executing the
+   *  transaction; use `t.requestRollback(cause)` if you wish to doom a
+   *  transaction `t` running on another thread.
    *  @throws IllegalStateException if `status` is `Committed` or if called
    *      from a thread that is not attached to the transaction.
    */
@@ -227,7 +219,7 @@ object Txn {
   def afterCompletion(handler: Status => Unit)(implicit txn: Txn) { txn.afterCompletion(handler) }
 
 
-  //////////// external resource integration
+  //////////// external resource integration (two-phase commit)
 
   /** `ExternalResource`s participate in a two-phase commit.  Each resource is
    *  given the opportunity to veto commit.  After a decision is made each
