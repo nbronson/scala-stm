@@ -11,11 +11,8 @@ object Txn {
    *  the transaction context `t`, `None` otherwise.  If an implicit `Txn` is
    *  available it is used, otherwise a dynamic lookup is performed.
    */
-  def current(implicit mt: MaybeTxn): Option[Txn] = Option(currentOrNull)
-
-  /** Equivalent to `current getOrElse null`. */
-  def currentOrNull(implicit mt: MaybeTxn): Txn = STMImpl.instance.currentOrNull
-
+  def current(implicit mt: MaybeTxn): Option[Txn] = STMImpl.instance.current
+  
 
   //////////// status
 
@@ -180,13 +177,7 @@ object Txn {
   /** Returns `Some(nl)` if `nl` is the current nesting level of the current
    *  `Txn`, `None` otherwise.
    */
-  def currentLevel(implicit mt: MaybeTxn): Option[NestingLevel] = Option(currentLevelOrNull)
-
-  /** Equivalent to `currentLevel getOrElse null`. */
-  def currentLevelOrNull(implicit mt: MaybeTxn): NestingLevel = {
-    val txn = currentOrNull
-    if (txn == null) null else txn.currentLevel
-  }
+  def currentLevel(implicit mt: MaybeTxn): Option[NestingLevel] = current map { _.currentLevel }
 
   /** Returns the root `NestingLevel` of the current transaction. */
   def rootLevel(implicit txn: Txn): NestingLevel = txn.rootLevel
