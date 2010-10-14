@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 
 object MaybeTxn {
-  implicit val unknown = TxnUnknown  
+  implicit val unknown = TxnUnknown
 }
 
 /** `MaybeTxn` allows lookup of the implicit `Txn` instance without failing if

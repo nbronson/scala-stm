@@ -6,19 +6,14 @@ package ri
 import concurrent.stm.Txn._
 
 class StubTxn extends Txn {
-  def parent: Option[Txn] = throw new AbstractMethodError
-  def root: Txn = throw new AbstractMethodError
-
-  def status: Status = throw new AbstractMethodError
-  def requestRollback(cause: RollbackCause): Status = throw new AbstractMethodError
-
-  protected def rollback(cause: RollbackCause): Nothing = throw new AbstractMethodError
-
-  protected def beforeCommit(handler: Txn => Unit) = throw new AbstractMethodError
-  protected def afterCommit(handler: Status => Unit) = throw new AbstractMethodError
-  protected def afterRollback(handler: Status => Unit) = throw new AbstractMethodError
-  protected def afterCompletion(handler: Status => Unit) = throw new AbstractMethodError
-
-  protected def addExternalResource(res: ExternalResource, order: Int) = throw new AbstractMethodError
-  protected def setExternalDecider(decider: ExternalDecider) = throw new AbstractMethodError
+  def rootLevel: NestingLevel = throw new AbstractMethodError
+  def currentLevel: NestingLevel = throw new AbstractMethodError
+  def rollback(cause: RollbackCause): Nothing = throw new AbstractMethodError
+  def beforeCommit(handler: Txn => Unit) = throw new AbstractMethodError
+  def whilePreparing(handler: TxnLifecycle => Unit) = throw new AbstractMethodError
+  def whileCommitting(handler: => Unit) = throw new AbstractMethodError
+  def afterCommit(handler: Status => Unit) = throw new AbstractMethodError
+  def afterRollback(handler: Status => Unit) = throw new AbstractMethodError
+  def afterCompletion(handler: Status => Unit) = throw new AbstractMethodError
+  def setExternalDecider(decider: ExternalDecider) = throw new AbstractMethodError
 }
