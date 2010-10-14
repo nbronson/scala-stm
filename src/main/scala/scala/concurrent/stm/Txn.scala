@@ -145,9 +145,6 @@ object Txn {
   // TODO: documentation
   trait NestingLevel {
 
-    /** Returns the transaction that includes this nesting level. */
-    def txn: Txn
-
     /** Returns a unique identifier of this `NestingLevel` instance. */
     def id: Long
 
