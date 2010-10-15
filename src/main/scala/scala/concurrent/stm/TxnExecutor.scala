@@ -31,12 +31,12 @@ trait TxnExecutor {
    *  @tparam   Z the return type of the atomic block
    *  @return   the value returned from `block` after a successful optimistic
    *            concurrency attempt
-   *  @usecase  def atomic[Z](block: Txn => Z): Z
+   *  @usecase  def atomic[Z](block: InTxn => Z): Z
    */
-  final def apply[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z = runAtomically(block)
+  final def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = runAtomically(block)
 
   // Performs the work of apply, while resulting in a more readable stack trace.
-  protected def runAtomically[Z](block: Txn => Z)(implicit mt: MaybeTxn): Z
+  protected def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z
 
   /** Atomically executes a transaction that is composed from `blocks` by
    *  joining with a left-biased `orAtomic` operator.  The following two
@@ -50,9 +50,9 @@ trait TxnExecutor {
    *  }}}
    *  Using `oneOf`:
    *  {{{
-   *    atomic.oneOf( { implicit t: Txn =>
+   *    atomic.oneOf( { implicit t: InTxn =>
    *      // body A
-   *    }, { implicit t: Txn =>
+   *    }, { implicit t: InTxn =>
    *      // body B
    *    } )
    *  }}}
@@ -68,7 +68,7 @@ trait TxnExecutor {
    *  The left-biasing of the `orAtomic` composition guarantees that if the
    *  first block does not call `retry`, no other blocks will be executed.
    */
-  def oneOf[Z](blocks: (Txn => Z)*)(implicit mt: MaybeTxn): Z = {
+  def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = {
     blocks.tail.reverseMap { pushAlternative(mt, _) }
     try {
       apply(blocks.head)
@@ -88,7 +88,7 @@ trait TxnExecutor {
    *  instance of `TxnExecutor` as `apply`, just that they have been derived
    *  from the same original executor.
    */
-  def pushAlternative[Z](mt: MaybeTxn, block: Txn => Z): Boolean
+  def pushAlternative[Z](mt: MaybeTxn, block: InTxn => Z): Boolean
 
   /** Returns the parameters of this `TxnExecutor` that are specific to the
    *  currently configured STM implementation.  The parameters of a particular
@@ -133,9 +133,9 @@ trait TxnExecutor {
    *
    *  The returned value may be saved for reuse, or this method may be used
    *  inline to affect only the execution of a single atomic block.  If the
-   *  underlying STM selects its `Txn` differently for read-only transactions,
-   *  for example, a caller might pass the type of transaction to the STM
-   *  implementation: {{{
+   *  underlying STM optimizes its data structures differently for read-only
+   *  transactions, for example, a caller might pass the type of transaction to
+   *  the STM implementation: {{{
    *    atomic.withHint('readOnly -> true) {
    *      // just reads
    *    }

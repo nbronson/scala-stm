@@ -13,7 +13,7 @@ object Ref extends RefCompanion {
   protected def factory: RefFactory = STMImpl.instance
 
   /** `Ref.View` provides access to the contents of a `Ref` without requiring
-   *  that an implicit `Txn` be available.  When called from within the
+   *  that an implicit `InTxn` be available.  When called from within the
    *  dynamic scope of a transaction, `View`'s methods operate as part of that
    *  transaction.  When there is no transaction active `View`'s methods are
    *  still atomic, but only for the duration of the method call.
@@ -226,8 +226,8 @@ trait RefCompanion {
  *  transaction's commit (linearization) point.
  *
  *  The static scope of an atomic block is defined by access to an implicit
- *  `Txn` passed to the block by the STM.  Atomic blocks nest, so to
- *  participate in an atomic block for which a `Txn` is not conveniently
+ *  `InTxn` passed to the block by the STM.  Atomic blocks nest, so to
+ *  participate in an atomic block for which a `InTxn` is not conveniently
  *  available, just create a new atomic block using {{{
  *    atomic { implicit t =>
  *      // the body
@@ -256,7 +256,7 @@ trait RefCompanion {
 trait Ref[A] extends Source[A] with Sink[A] {
 
   /** Returns a `Ref.View` that allows access to the contents of this `Ref`
-   *  without requiring that a `Txn` be available.  Each operation on the view
+   *  without requiring that a `InTxn` be available.  Each operation on the view
    *  will act as if it is performed in its own "single-operation" atomic
    *  block, nesting into an existing transaction if one is active.
    *
@@ -273,7 +273,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *  @return the previous value of this `Ref`, as observed by `txn`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def swap(v: A)(implicit txn: Txn): A
+  def swap(v: A)(implicit txn: InTxn): A
 
   /** Transforms the value referenced by this `Ref` by applying the function
    *  `f`.  Acts like `ref.set(f(ref.get))`, but the execution of `f` may be
@@ -282,7 +282,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *      call later during the transaction.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def transform(f: A => A)(implicit txn: Txn)
+  def transform(f: A => A)(implicit txn: InTxn)
 
   /** Transforms the value ''v'' referenced by this `Ref` by to
    *  `pf.apply`(''v''), but only if `pf.isDefinedAt`(''v'').  Returns true if
@@ -295,7 +295,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *      before transformation (if any).
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def transformIfDefined(pf: PartialFunction[A,A])(implicit txn: Txn): Boolean
+  def transformIfDefined(pf: PartialFunction[A,A])(implicit txn: InTxn): Boolean
 
   /** Transforms the value stored in the `Ref` by incrementing it.
    *
@@ -304,7 +304,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *
    *  @param rhs the quantity by which to increment the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def += (rhs: A)(implicit txn: Txn, num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
+  def += (rhs: A)(implicit txn: InTxn, num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
 
   /** Transforms the value stored in the `Ref` by decrementing it.
    *
@@ -313,7 +313,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *
    *  @param rhs the quantity by which to decrement the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def -= (rhs: A)(implicit txn: Txn, num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
+  def -= (rhs: A)(implicit txn: InTxn, num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
 
   /** Transforms the value stored in the `Ref` by multiplying it.
    *
@@ -323,7 +323,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *  @param rhs the quantity by which to multiply the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def *= (rhs: A)(implicit txn: Txn, num: Numeric[A]) { transform { v => num.times(v, rhs) } }
+  def *= (rhs: A)(implicit txn: InTxn, num: Numeric[A]) { transform { v => num.times(v, rhs) } }
 
   /** Transforms the value stored the `Ref` by performing a division on it,
    *  throwing away the remainder if division is not exact for instances of
@@ -339,7 +339,7 @@ trait Ref[A] extends Source[A] with Sink[A] {
    *  @param rhs the quantity by which to divide the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def /= (rhs: A)(implicit txn: Txn, num: Numeric[A]) {
+  def /= (rhs: A)(implicit txn: InTxn, num: Numeric[A]) {
     num match {
       //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
       case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }

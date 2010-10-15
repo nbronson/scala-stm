@@ -25,12 +25,12 @@ class StubSTMImpl extends impl.STMImpl {
 
   //////// TxnContext
 
-  def current(implicit mt: MaybeTxn): Option[Txn] = throw new AbstractMethodError
+  def current(implicit mt: MaybeTxn): Option[InTxn] = throw new AbstractMethodError
 
   //////// TxnExecutor
 
-  protected def runAtomically[Z](block: (Txn) => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
-  def pushAlternative[Z](mt: MaybeTxn, block: (Txn) => Z): Boolean = throw new AbstractMethodError
+  protected def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
+  def pushAlternative[Z](mt: MaybeTxn, block: InTxn => Z): Boolean = throw new AbstractMethodError
   def configuration: Map[Symbol, Any] = throw new AbstractMethodError
   def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
   def isControlFlow(x: Throwable): Boolean = throw new AbstractMethodError

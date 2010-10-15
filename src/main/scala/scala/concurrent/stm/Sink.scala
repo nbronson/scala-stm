@@ -51,7 +51,7 @@ trait Sink[-A] {
    *  }}}
    *  @param v a value to store in the `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def update(v: A)(implicit txn: Txn) { set(v) }
+  def update(v: A)(implicit txn: InTxn) { set(v) }
 
   /** Performs a transactional write.  The new value will not be visible by
    *  any other threads until (and unless) `txn` successfully commits.
@@ -59,5 +59,5 @@ trait Sink[-A] {
    *  @param v a value to store in the `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def set(v: A)(implicit txn: Txn)
+  def set(v: A)(implicit txn: InTxn)
 }

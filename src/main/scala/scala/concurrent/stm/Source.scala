@@ -18,7 +18,7 @@ object Source {
     def ref: Source[A]
 
     /** Performs an atomic read of the value in `ref`.  If an atomic block is
-     *  active (see `Txn.current`) then the read will be performed as part of
+     *  active (see `InTxn.current`) then the read will be performed as part of
      *  the transaction, otherwise it will act as if it was performed inside a
      *  new atomic block.  Equivalent to `get`.
      *  @return the value of the `Ref` as observed by the current context.
@@ -30,21 +30,21 @@ object Source {
      */
     def get: A
 
-    /** Acts like `Source.getWith(f)` if there is an active `Txn`, otherwise
-     *  just returns `f(get)`.
+    /** Acts like `Source.getWith(f)` if there is an active transaction,
+     *  otherwise just returns `f(get)`.
      *  @param f an idempotent function.
      *  @return the result of applying `f` to the value contained in `ref`.
      */
     def getWith[Z](f: A => Z): Z = f(relaxedGet({ f(_) == f(_) }))
 
-    /** Acts like `Source.relaxedGet(equiv)` if there is an active `Txn`,
+    /** Acts like `Source.relaxedGet(equiv)` if there is an active transaction,
      *  otherwise just returns `get`.
      *  @param equiv an equivalence function that returns true if a transaction
      *      that observed the first argument will still complete correctly,
      *      where the second argument is the actual value that should have been
      *      observed.
      *  @return a value of the `Ref`, not necessary consistent with the rest of
-     *      the reads performed by the active `Txn`, if any.
+     *      the reads performed by the active transaction, if any.
      */
     def relaxedGet(equiv: (A, A) => Boolean): A
 
@@ -87,7 +87,7 @@ trait Source[+A] {
    *  @return the value of the `Ref` as observed by `txn`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def apply()(implicit txn: Txn): A = get
+  def apply()(implicit txn: InTxn): A = get
   
   /** Performs a transactional read and checks that it is consistent with all
    *  reads already made by `txn`.  Equivalent to `apply()`, which is more
@@ -96,7 +96,7 @@ trait Source[+A] {
    *  @return the value of the `Ref` as observed by `txn`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def get(implicit txn: Txn): A
+  def get(implicit txn: InTxn): A
 
   /** Returns `f(get)`, possibly reevaluating `f` to avoid rollback if a
    *  conflicting change is made but the old and new values are equal after
@@ -104,7 +104,7 @@ trait Source[+A] {
    *  @param f an idempotent function.
    *  @return the result of applying `f` to the value contained in this `Ref`.
    */
-  def getWith[Z](f: A => Z)(implicit txn: Txn): Z = f(relaxedGet({ f(_) == f(_) }))
+  def getWith[Z](f: A => Z)(implicit txn: InTxn): Z = f(relaxedGet({ f(_) == f(_) }))
 
   /** Returns the same value as `get`, but allows the caller to determine
    *  whether `txn` should be rolled back if another thread changes the value
@@ -134,5 +134,5 @@ trait Source[+A] {
    *  @return a value of the `Ref`, not necessary consistent with the rest of
    *      the reads performed by `txn`.
    */
-  def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: Txn): A
+  def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn): A
 }

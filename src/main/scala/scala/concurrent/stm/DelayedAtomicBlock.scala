@@ -11,7 +11,7 @@ package scala.concurrent.stm
 class DelayedAtomicBlock[A](above: => A) {
 
   /** See `atomic.oneOf`. */
-  def orAtomic[B >: A](below: Txn => B)(implicit mt: MaybeTxn): B = {
+  def orAtomic[B >: A](below: InTxn => B)(implicit mt: MaybeTxn): B = {
     // Execution of Delayed.orAtomic proceeds bottom to top, with the upper
     // portions being captured by-name in `above`.  The actual transactional
     // execution is all performed inside the top-most block (the one that
@@ -33,4 +33,3 @@ class DelayedAtomicBlock[A](above: => A) {
     }
   }
 }
-

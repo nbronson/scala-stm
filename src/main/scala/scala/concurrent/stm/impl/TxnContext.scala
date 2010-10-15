@@ -4,14 +4,13 @@ package scala.concurrent.stm
 package impl
  
 /** `TxnContext` captures the implementation-specific functionality of locating
- *  the `Txn` dynamically bound to the current `Thread`.  Users should use the
+ *  the `InTxn` dynamically bound to the current `Thread`.  Users should use the
  *  lookup methods provided by `object Txn`.
  */
 trait TxnContext {
 
-  /** Returns the `Txn` active on the current thread, or null if none, possibly
-   *  using the statically-bound `MaybeTxn` to reduce the amount of work
-   *  required.
+  /** Returns `Some(txn)` if `txn` is the `InTxn` active on the current thread,
+   *  `None` otherwise.
    */
-  def current(implicit mt: MaybeTxn): Option[Txn]
+  def current(implicit mt: MaybeTxn): Option[InTxn]
 }

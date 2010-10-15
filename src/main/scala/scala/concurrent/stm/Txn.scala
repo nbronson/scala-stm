@@ -5,13 +5,13 @@ package scala.concurrent.stm
 object Txn {
   import impl.STMImpl
 
-  //////////// dynamic Txn binding
+  //////////// dynamic InTxn binding
 
   /** Returns `Some(t)` if called from inside the static or dynamic scope of
-   *  the transaction context `t`, `None` otherwise.  If an implicit `Txn` is
+   *  the transaction context `t`, `None` otherwise.  If an implicit `InTxn` is
    *  available it is used, otherwise a dynamic lookup is performed.
    */
-  def current(implicit mt: MaybeTxn): Option[Txn] = STMImpl.instance.current
+  def current(implicit mt: MaybeTxn): Option[InTxn] = STMImpl.instance.current
   
 
   //////////// status
@@ -93,8 +93,8 @@ object Txn {
    *    nesting level is no longer valid;
    *  - a cyclic dependency has occurred and this nesting level must be rolled
    *    back to avoid deadlock;
-   *  - a `Txn` with a higher priority wanted to write to a `Ref` written by
-   *    this `Txn`;
+   *  - a transaction with a higher priority wanted to write to a `Ref` written
+   *    by this transaction;
    *  - the STM decided to switch execution strategies for this atomic block;
    *    or
    *  - no apparent reason (*).
@@ -139,7 +139,7 @@ object Txn {
 
   //////////// reification of a single execution attempt
 
-  // TODO: documentation
+  // TODO: documentation + think more about name?
   trait NestingLevel {
 
     /** Returns a unique identifier of this `NestingLevel` instance. */
@@ -149,8 +149,8 @@ object Txn {
     def parent: Option[NestingLevel]
 
     /** Returns the outermost enclosing nested transaction context, or this
-     *  instance if it is the outermost nesting level.  Equal to `txn.root`.
-     *  Always, `a.parent.isEmpty == (a.root == a)`.
+     *  instance if it is the outermost nesting level.  It is always true that
+     *  `a.parent.isEmpty == (a.root == a)`.
      */
     def root: NestingLevel
 
@@ -175,19 +175,19 @@ object Txn {
 
 
   /** Returns `Some(nl)` if `nl` is the current nesting level of the current
-   *  `Txn`, `None` otherwise.
+   *  transaction, `None` otherwise.
    */
   def currentLevel(implicit mt: MaybeTxn): Option[NestingLevel] = current map { _.currentLevel }
 
   /** Returns the root `NestingLevel` of the current transaction. */
-  def rootLevel(implicit txn: Txn): NestingLevel = txn.rootLevel
+  def rootLevel(implicit txn: InTxn): NestingLevel = txn.rootLevel
 
 
   //////////// explicit retry and rollback
 
   // These are methods of the Txn object because it is generally only correct
   // to call them inside the static context of an atomic block.  If they were
-  // methods on the Txn instance, then users might expect to be able to call
+  // methods on the InTxn instance, then users might expect to be able to call
   // them from any thread.  Methods to add lifecycle callbacks are also object
   // methods for the same reason.
 
@@ -197,7 +197,7 @@ object Txn {
    *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
    *  @throws IllegalStateException if the transaction is not active.
    */
-  def retry(implicit txn: Txn): Nothing = rollback(ExplicitRetryCause)
+  def retry(implicit txn: InTxn): Nothing = rollback(ExplicitRetryCause)
 
   /** Causes the current nesting level to be rolled back due to the specified
    *  `cause`.  This method may only be called by the thread executing the
@@ -206,7 +206,7 @@ object Txn {
    *  @throws IllegalStateException if the current transaction has already
    *      decided to commit.
    */
-  def rollback(cause: RollbackCause)(implicit tl: TxnLifecycle): Nothing = tl.rollback(cause)
+  def rollback(cause: RollbackCause)(implicit txn: InTxnEnd): Nothing = txn.rollback(cause)
 
 
   //////////// life-cycle callbacks
@@ -222,7 +222,7 @@ object Txn {
    *    and
    *  - before-commit handlers will be executed in their registration order.
    */
-  def beforeCommit(handler: Txn => Unit)(implicit txn: Txn) { txn.beforeCommit(handler) }
+  def beforeCommit(handler: InTxn => Unit)(implicit txn: InTxn) { txn.beforeCommit(handler) }
 
   /** (rare) Arranges for `handler` to be called after the `Ref` reads and
    *  writes have been checked for serializability, but before the decision has
@@ -234,7 +234,7 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `Preparing`, `Prepared, `RolledBack` or `Committed`.
    */
-  def whilePreparing(handler: TxnLifecycle => Unit)(implicit tl: TxnLifecycle) { tl.whilePreparing(handler) }
+  def whilePreparing(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd) { txn.whilePreparing(handler) }
 
   /** (rare) Arranges for `handler` to be called after (if) it has been decided
    *  that the current transaction will commit, but before the writes made by
@@ -247,7 +247,7 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `RolledBack` or `Committed`.
    */
-  def whileCommitting(handler: => Unit)(implicit tl: TxnLifecycle) { tl.whileCommitting(handler) }
+  def whileCommitting(handler: => Unit)(implicit txn: InTxnEnd) { txn.whileCommitting(handler) }
 
   /** Arranges for `handler` to be executed as soon as possible after the
    *  current transaction is committed.  Details:
@@ -260,7 +260,7 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `RolledBack` or `Committed`.
    */
-  def afterCommit(handler: Status => Unit)(implicit tl: TxnLifecycle) { tl.afterCommit(handler) }
+  def afterCommit(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCommit(handler) }
 
   /** Arranges for `handler` to be executed as soon as possible after the
    *  current `NestingLevel` is rolled back.  Details:
@@ -272,7 +272,7 @@ object Txn {
    *  - handlers may be registered while the current transaction is `Active`,
    *    `Preparing` or `Prepared`.
    */
-  def afterRollback(handler: Status => Unit)(implicit tl: TxnLifecycle) { tl.afterRollback(handler) }
+  def afterRollback(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterRollback(handler) }
 
   /** Arranges for `handler` to be called as both an after-commit and
    *  after-rollback handler.
@@ -282,23 +282,27 @@ object Txn {
    *     afterRollback(handler)
    *  }}}
    */
-  def afterCompletion(handler: Status => Unit)(implicit tl: TxnLifecycle) { tl.afterCompletion(handler) }
+  def afterCompletion(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCompletion(handler) }
 
 
   /** An `ExternalDecider` is given the final control over the decision of
-   *  whether or not to commit a `Txn`, which allows transactions to be
-   *  integrated with a single non-transactional resource.  `shouldCommit` will
-   *  only be called if a `Txn` has successfully acquired all necessary write
-   *  locks, prepared all external resources, and validated all of its reads.
-   *  The decider may then attempt a non-transactional operation whose outcome
-   *  is uncertain, and based on the outcome may directly cause the `Txn` to
+   *  whether or not to commit a transaction, which allows two-phase commit to
+   *  be integrated with a single non-transactional resource.  `shouldCommit`
+   *  will only be called if a `InTxn` has successfully called all of its
+   *  before-commit handlers, acquired all necessary write locks, validated all
+   *  of its reads and called all of its while-preparing handlers.  The decider
+   *  may then attempt a non-transactional operation whose outcome is
+   *  uncertain, and based on the outcome may directly cause the transaction to
    *  commit or roll back.
    */
   trait ExternalDecider {
-    /** Should return true if the transaction `txn` should commit.  On entry `txn`'s status
-     *  will be `Prepared`.
+    /** Should return true if the end-of-life transaction `txn` should commit,
+     *  false if it should roll back.  `Txn.rollback` may also be used to
+     *  initiate a rollback if that is more convenient.  Called while the
+     *  status is `Prepared`.  This method may not access any `Ref`s, even via
+     *  `Ref.single`.
      */
-    def shouldCommit(txn: Txn): Boolean
+    def shouldCommit(txn: InTxnEnd): Boolean
   }
 
   /** (rare) Delegates final decision of the outcome of the transaction to
@@ -310,34 +314,5 @@ object Txn {
    *      called in this transaction, `d != decider`, and the nesting level
    *      from which `setExternalDecider(d)` was called has not rolled back.
    */
-  def setExternalDecider(decider: ExternalDecider)(implicit tl: TxnLifecycle) { tl.setExternalDecider(decider) }
+  def setExternalDecider(decider: ExternalDecider)(implicit txn: InTxnEnd) { txn.setExternalDecider(decider) }
 }
-
-/** The presence of an implicit `TxnLifecycle` instance grants the caller
- *  permission to register transaction lifecycle callbacks via methods on
- *  `object Txn`.
- */
-trait TxnLifecycle extends MaybeTxn {
-  import Txn._
-
-  // The user-visible versions of these methods are in the Txn object.
-
-  protected[stm] def rootLevel: NestingLevel
-  protected[stm] def currentLevel: NestingLevel
-  protected[stm] def rollback(cause: RollbackCause): Nothing
-  protected[stm] def beforeCommit(handler: Txn => Unit)
-  protected[stm] def whilePreparing(handler: TxnLifecycle => Unit)
-  protected[stm] def whileCommitting(handler: => Unit)
-  protected[stm] def afterCommit(handler: Status => Unit)
-  protected[stm] def afterRollback(handler: Status => Unit)
-  protected[stm] def afterCompletion(handler: Status => Unit)
-  protected[stm] def setExternalDecider(decider: ExternalDecider)
-}
-
-/** The presence of an implicit `Txn` instance grants the caller permission to
- *  perform transactional reads and writes on `Ref` instances, and to register
- *  transaction lifecycle callbacks via methods on the companion `object Txn`.
- *  `Txn` instances themselves may be reused, see `Txn.NestingLevel` if you
- *  need an instance that tracks individual execution attempts.
- */
-trait Txn extends TxnLifecycle

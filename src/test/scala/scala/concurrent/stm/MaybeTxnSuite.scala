@@ -5,8 +5,8 @@ package scala.concurrent.stm
 import org.scalatest.FunSuite
 
 class MaybeTxnSuite extends FunSuite {
-  test("implicit Txn match") {
-    implicit val txn: Txn = new ri.StubTxn
+  test("implicit InTxn match") {
+    implicit val txn: InTxn = new ri.StubInTxn
 
     assert(implicitly[MaybeTxn] eq txn)
   }
@@ -19,9 +19,12 @@ class MaybeTxnSuite extends FunSuite {
     assert(context eq TxnUnknown)
   }
 
-  test("Txn is found") {
+  test("InTxn is found") {
     atomic { t0 =>
       implicit val t = t0
+      assert(context eq t)
+    }
+    atomic { implicit t =>
       assert(context eq t)
     }
   }
@@ -66,23 +69,21 @@ class MaybeTxnSuite extends FunSuite {
   }
 
   test("Static vs dynamic lookup") {
-    implicit var t0: Txn = null
-    atomic { t =>
+    implicit var t0: InTxn = null
+    val n0 = atomic { t =>
       t0 = t
       assert(Txn.current === Some(t))
-      assert(Txn.currentOrNull eq t)
-      assert(impl.STMImpl.instance.dynCurrentOrNull eq t)
+      assert(impl.STMImpl.instance.current === Some(t))
+      Txn.rootLevel
     }
-    assert(t0.status === Txn.Committed)
+    assert(n0.status === Txn.Committed)
     assert(Txn.current === Some(t0))
-    assert(Txn.currentOrNull eq t0)
-    assert(impl.STMImpl.instance.dynCurrentOrNull eq null)
+    assert(impl.STMImpl.instance.current === None)
     atomic { t =>
       assert(t0 ne t)
-      assert(t.status === Txn.Active)
+      assert(Txn.rootLevel(t).status === Txn.Active)
       assert(Txn.current === Some(t0))
-      assert(Txn.currentOrNull eq t0)
-      assert(impl.STMImpl.instance.dynCurrentOrNull eq t)
+      assert(impl.STMImpl.instance.current === Some(t))
     }
   }
 }
