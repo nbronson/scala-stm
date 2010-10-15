@@ -11,7 +11,7 @@ class StubInTxn extends InTxn {
   def rollback(cause: RollbackCause): Nothing = throw new AbstractMethodError
   def beforeCommit(handler: InTxn => Unit) = throw new AbstractMethodError
   def whilePreparing(handler: InTxnEnd => Unit) = throw new AbstractMethodError
-  def whileCommitting(handler: => Unit) = throw new AbstractMethodError
+  def whileCommitting(handler: InTxnEnd => Unit) = throw new AbstractMethodError
   def afterCommit(handler: Status => Unit) = throw new AbstractMethodError
   def afterRollback(handler: Status => Unit) = throw new AbstractMethodError
   def afterCompletion(handler: Status => Unit) = throw new AbstractMethodError

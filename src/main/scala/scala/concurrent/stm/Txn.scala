@@ -2,6 +2,11 @@
 
 package scala.concurrent.stm
 
+/** The `Txn` object provides methods that operate on the current transaction
+ *  context.  These methods are only valid within an atomic block or a
+ *  transaction life-cycle handler, which is checked at compile time by
+ *  requiring that an implicit `InTxn` or `InTxnEnd` be available.
+ */
 object Txn {
   import impl.STMImpl
 
@@ -22,21 +27,11 @@ object Txn {
   /** `Status` instances that are terminal states. */
   sealed abstract class CompletedStatus extends Status
 
-  /** The `Status` for a transaction attempt in which `Ref` reads and writes
-   *  may currently be performed.
+  /** The `Status` for a transaction attempt that may perform `Ref` reads and
+   *  writes, that is waiting for a child nesting level to complete, or that
+   *  has been merged into an `Active` parent nesting level.
    */
   case object Active extends Status
-
-  /** The `Status` for a transaction nesting level that may become `Active`
-   *  again after a child transaction is completed.
-   */
-  case object AwaitingChild extends Status
-
-  /** The `Status` for a `NestingLevel` that has been committed into its parent
-   *  and whose parent's status is still `Active`, `AwaitingChild` or
-   *  `MergedWithParent`.
-   */
-  case object MergedWithParent extends Status
 
   /** The `Status` for a `NestingLevel` that is part of an attempted top-level
    *  commit for which the outcome is uncertain.  No `Ref` reads or writes are
@@ -137,58 +132,12 @@ object Txn {
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
 
-  //////////// reification of a single execution attempt
-
-  // TODO: documentation + think more about name?
-  trait NestingLevel {
-
-    /** Returns a unique identifier of this `NestingLevel` instance. */
-    def id: Long
-
-    /** Returns the nearest enclosing nesting level, if any. */
-    def parent: Option[NestingLevel]
-
-    /** Returns the outermost enclosing nested transaction context, or this
-     *  instance if it is the outermost nesting level.  It is always true that
-     *  `a.parent.isEmpty == (a.root == a)`.
-     */
-    def root: NestingLevel
-
-    /** Returns a snapshot of this nesting level's current status.  The status
-     *  may change to `Txn.RolledBack` due to the actions of a concurrent
-     *  thread.  This method may be called from any thread.
-     */
-    def status: Status
-
-    /** Requests that a transaction attempt be marked for rollback, possibly
-     *  also rolling back some or all of the enclosing nesting levels.  Returns
-     *  the resulting status, which will be one of `Prepared`, `Committed` or
-     *  `RolledBack`.  Regardless of the status, this method does not throw an
-     *  exception.
-     *
-     *  Unlike `Txn.rollback(cause)`, this method may be called from any thread.
-     *  Note that there is no facility for remotely triggering a rollback during
-     *  the `Prepared` state, as the `ExplicitDecider` is given the final choice.
-     */
-    def requestRollback(cause: RollbackCause): Status
-  }
-
-
-  /** Returns `Some(nl)` if `nl` is the current nesting level of the current
-   *  transaction, `None` otherwise.
-   */
-  def currentLevel(implicit mt: MaybeTxn): Option[NestingLevel] = current map { _.currentLevel }
-
-  /** Returns the root `NestingLevel` of the current transaction. */
-  def rootLevel(implicit txn: InTxn): NestingLevel = txn.rootLevel
-
-
   //////////// explicit retry and rollback
 
   // These are methods of the Txn object because it is generally only correct
   // to call them inside the static context of an atomic block.  If they were
   // methods on the InTxn instance, then users might expect to be able to call
-  // them from any thread.  Methods to add lifecycle callbacks are also object
+  // them from any thread.  Methods to add life-cycle callbacks are also object
   // methods for the same reason.
 
   /** Causes the current nesting level to roll back.  It will not be retried
@@ -201,8 +150,9 @@ object Txn {
 
   /** Causes the current nesting level to be rolled back due to the specified
    *  `cause`.  This method may only be called by the thread executing the
-   *  transaction; use `t.rootLevel.requestRollback(cause)` if you wish to doom
-   *  a transaction `t` running on another thread.
+   *  transaction; obtain a `NestingLevel` instance `n` and call
+   *  `n.requestRollback(cause)` if you wish to doom a transaction from another
+   *  thread.
    *  @throws IllegalStateException if the current transaction has already
    *      decided to commit.
    */
@@ -231,8 +181,8 @@ object Txn {
    *  `Preparing` state it might obstruct other transactions.  Details:
    *  - the handler must not access any `Ref`s, even using `Ref.single`;
    *  - handlers will be executed in their registration order; and
-   *  - handlers may be registered so long as the current transaction status is
-   *    not `Preparing`, `Prepared, `RolledBack` or `Committed`.
+   *  - handlers may be registered while the transaction is active, or from a
+   *    while-preparing callback during the `Preparing` phase.
    */
   def whilePreparing(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd) { txn.whilePreparing(handler) }
 
@@ -247,10 +197,11 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `RolledBack` or `Committed`.
    */
-  def whileCommitting(handler: => Unit)(implicit txn: InTxnEnd) { txn.whileCommitting(handler) }
+  def whileCommitting(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd) { txn.whileCommitting(handler) }
 
   /** Arranges for `handler` to be executed as soon as possible after the
-   *  current transaction is committed.  Details:
+   *  current transaction is committed, if this nesting level is part of the
+   *  overall transaction commit.  Details:
    *  - no transaction will be active while the handler is run, but it may
    *    access `Ref`s using a new top-level atomic block or `.single`;
    *  - the handler runs after all internal locks have been released, so any
@@ -263,14 +214,14 @@ object Txn {
   def afterCommit(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCommit(handler) }
 
   /** Arranges for `handler` to be executed as soon as possible after the
-   *  current `NestingLevel` is rolled back.  Details:
+   *  current nesting level is rolled back.  Details:
    *  - the handler will be executed immediately during a partial rollback that
-   *    includes the current `NestingLevel`;
+   *    includes the current nesting level;
    *  - the handler will be run before any additional attempts to execute the
    *    atomic block;
    *  - handlers will be run in the reverse of their registration order; and
-   *  - handlers may be registered while the current transaction is `Active`,
-   *    `Preparing` or `Prepared`.
+   *  - handlers may be registered so long as the current transaction status is
+   *    not `RolledBack` or `Committed`.
    */
   def afterRollback(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterRollback(handler) }
 
@@ -310,7 +261,7 @@ object Txn {
    *  commit.  This method can succeed with at most one value per top-level
    *  transaction.
    *  @throws IllegalStateException if the current transaction's status is not
-   *      `Active` or `Preparing`, or if `setExternalDecider(d)` was previously
+   *      `Active` or `Preparing`; or if `setExternalDecider(d)` was previously
    *      called in this transaction, `d != decider`, and the nesting level
    *      from which `setExternalDecider(d)` was called has not rolled back.
    */
