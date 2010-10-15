@@ -16,8 +16,8 @@ object Txn {
    *  the transaction context `t`, `None` otherwise.  If an implicit `InTxn` is
    *  available it is used, otherwise a dynamic lookup is performed.
    */
-  def current(implicit mt: MaybeTxn): Option[InTxn] = STMImpl.instance.current
-  
+  def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = STMImpl.instance.findCurrent
+
 
   //////////// status
 
@@ -253,7 +253,7 @@ object Txn {
      *  status is `Prepared`.  This method may not access any `Ref`s, even via
      *  `Ref.single`.
      */
-    def shouldCommit(txn: InTxnEnd): Boolean
+    def shouldCommit(implicit txn: InTxnEnd): Boolean
   }
 
   /** (rare) Delegates final decision of the outcome of the transaction to

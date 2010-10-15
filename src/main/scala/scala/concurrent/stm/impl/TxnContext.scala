@@ -12,5 +12,5 @@ trait TxnContext {
   /** Returns `Some(txn)` if `txn` is the `InTxn` active on the current thread,
    *  `None` otherwise.
    */
-  def current(implicit mt: MaybeTxn): Option[InTxn]
+  def findCurrent(implicit mt: MaybeTxn): Option[InTxn]
 }

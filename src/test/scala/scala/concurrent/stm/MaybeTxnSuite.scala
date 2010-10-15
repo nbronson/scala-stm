@@ -72,18 +72,18 @@ class MaybeTxnSuite extends FunSuite {
     implicit var t0: InTxn = null
     val n0 = atomic { t =>
       t0 = t
-      assert(Txn.current === Some(t))
-      assert(impl.STMImpl.instance.current === Some(t))
+      assert(Txn.findCurrent === Some(t))
+      assert(impl.STMImpl.instance.findCurrent === Some(t))
       Txn.rootLevel
     }
     assert(n0.status === Txn.Committed)
-    assert(Txn.current === Some(t0))
-    assert(impl.STMImpl.instance.current === None)
+    assert(Txn.findCurrent === Some(t0))
+    assert(impl.STMImpl.instance.findCurrent === None)
     atomic { t =>
       assert(t0 ne t)
       assert(Txn.rootLevel(t).status === Txn.Active)
-      assert(Txn.current === Some(t0))
-      assert(impl.STMImpl.instance.current === Some(t))
+      assert(Txn.findCurrent === Some(t0))
+      assert(impl.STMImpl.instance.findCurrent === Some(t))
     }
   }
 }
