@@ -14,10 +14,14 @@ object BasicSyntax {
 
   def updateExtremes(p: Point) {
     atomic { implicit txn =>
-      if (p.x < left().x) left() = p
-      if (p.x > right().x) right() = p
-      if (p.y < top().y) top() = p
-      if (p.y > bottom().y) bottom() = p
+      if (p.x < left().x)
+        left() = p
+      if (p.x > right().x)
+        right() = p
+      if (p.y < top().y)
+        top() = p
+      if (p.y > bottom().y)
+        bottom() = p
     }
   }
 
@@ -45,16 +49,20 @@ object BasicSyntax {
 
   def alternatives {
     val z = atomic { implicit txn =>
-      if (!(left().x < -100)) retry
+      if (!(left().x < -100))
+        retry
       "left"
     } orAtomic { implicit txn =>
-      if (!(right().x > +100)) retry
+      if (!(right().x > +100))
+        retry
       "right"
     } orAtomic { implicit txn =>
-      if (!(top().y < -100)) retry
+      if (!(top().y < -100))
+        retry
       "top"
     } orAtomic { implicit txn =>
-      if (!(bottom().y > +100)) retry
+      if (!(bottom().y > +100))
+        retry
       "bottom"
     }
     println("first out was " + z)
