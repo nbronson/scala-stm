@@ -132,6 +132,11 @@ object Txn {
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
 
+  /** Returns the status of the current nesting level of the current
+   *  transaction, equivalent to `NestingLevel.current.status`.
+   */
+  def status(implicit txn: InTxnEnd): Status = txn.status
+
   //////////// explicit retry and rollback
 
   // These are methods of the Txn object because it is generally only correct

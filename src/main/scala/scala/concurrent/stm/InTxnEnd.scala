@@ -13,6 +13,7 @@ trait InTxnEnd extends MaybeTxn {
 
   // The user-visible versions of these methods are in the Txn object.
 
+  protected[stm] def status: Status
   protected[stm] def rootLevel: NestingLevel
   protected[stm] def currentLevel: NestingLevel
   protected[stm] def rollback(cause: RollbackCause): Nothing

@@ -6,6 +6,7 @@ package ri
 class StubInTxn extends InTxn {
   import concurrent.stm.Txn._
 
+  def status: Status = throw new AbstractMethodError
   def rootLevel: NestingLevel = throw new AbstractMethodError
   def currentLevel: NestingLevel = throw new AbstractMethodError
   def rollback(cause: RollbackCause): Nothing = throw new AbstractMethodError

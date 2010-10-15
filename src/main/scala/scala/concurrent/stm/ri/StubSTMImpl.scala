@@ -25,7 +25,7 @@ class StubSTMImpl extends impl.STMImpl {
 
   //////// TxnContext
 
-  def current(implicit mt: MaybeTxn): Option[InTxn] = throw new AbstractMethodError
+  def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = throw new AbstractMethodError
 
   //////// TxnExecutor
 
