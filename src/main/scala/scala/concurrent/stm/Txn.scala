@@ -21,53 +21,52 @@ object Txn {
 
   //////////// status
 
-  /** The current state of a single attempt to execute an atomic block. */
+  /** The current state of an attempt to execute an atomic block. */
   sealed abstract class Status
 
   /** `Status` instances that are terminal states. */
   sealed abstract class CompletedStatus extends Status
 
-  /** The `Status` for a transaction attempt that may perform `Ref` reads and
-   *  writes, that is waiting for a child nesting level to complete, or that
-   *  has been merged into an `Active` parent nesting level.
+  /** The `Status` for a transaction nesting level that may perform `Ref` reads
+   *  and writes, that is waiting for a child nesting level to complete, or
+   *  that has been merged into an `Active` parent nesting level.
    */
   case object Active extends Status
 
-  /** The `Status` for a `NestingLevel` that is part of an attempted top-level
-   *  commit for which the outcome is uncertain.  No `Ref` reads or writes are
-   *  allowed, and no additional before-commit handlers may be registered.
+  /** The `Status` for the nesting levels of a transaction that are attempting
+   *  to commit, but for which the outcome is uncertain.
    */
   case object Preparing extends Status
 
-  /** The `Status` for a `NestingLevel` that is part of an attempted top-level
-   *  commit that has successfully acquired all write permissions necessary to
-   *  succeed, and that has delegated the final commit decision to an external
-   *  decider.
+  /** The `Status` for the nesting levels of a transaction that has
+   *  successfully acquired all write permissions necessary to succeed, and
+   *  that has delegated the final commit decision to an external decider.
    */
   case object Prepared extends Status
 
-  /** The `Status` for a `NestingLevel` that has decided to commit, but whose
-   *  `Ref` writes are not yet visible to other threads.
+  /** The `Status` for the nesting levels of a transaction that has decided to 
+   *  commit, but whose `Ref` writes are not yet visible to other threads.
    */
   case object Committing extends Status
 
-  /** The `Status` for a `NestingLevel` that has successfully been committed.
-   *  All `Ref` reads and writes made through this `NestingLevel` and its
-   *  committed child nesting levels will have appeared to have occurred at a
-   *  single point in time.  After-commit callbacks may still be running.
+  /** The `Status` for the nesting levels of a transaction that has been
+   *  committed.  After-commit callbacks may still be running.
    */
   case object Committed extends CompletedStatus
 
-  /** The `Status` for a `NestingLevel` that is being or has been cancelled.
-   *  None of the `Ref` writes made during this nesting level or in any child
-   *  nesting level will ever be visible to other threads.  The atomic block
-   *  will be automatically retried if `cause` is a `TransientRollbackCause`,
-   *  unless STM-specific retry thresholds are exceeded.
+  /** The `Status` for an atomic block execution attempt that is being or that
+   *  has been cancelled.  None of the `Ref` writes made during this nesting
+   *  level or in any child nesting level will ever be visible to other
+   *  threads.  The atomic block will be automatically retried if `cause` is a
+   *  `TransientRollbackCause`, unless STM-specific retry thresholds are
+   *  exceeded.
    */
   case class RolledBack(cause: RollbackCause) extends CompletedStatus
 
 
-  /** A record of the reason that a `NestingLevel` was rolled back. */
+  /** A record of the reason that a atomic block execution attempt was rolled
+   *  back.
+   */
   sealed abstract class RollbackCause
 
   /** `RollbackCause`s for which the failure is transient and another attempt
