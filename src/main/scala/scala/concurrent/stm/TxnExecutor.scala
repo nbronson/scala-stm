@@ -163,8 +163,8 @@ trait TxnExecutor {
    *  exception are committed, while atomic blocks that end with an uncaught
    *  error exception are rolled back.
    *
-   *  The base implementation of this returns true for instances that implement
-   *  `scala.util.control.ControlThrowable`.
+   *  The default implementation of this returns true for instances that 
+   *  implement `scala.util.control.ControlThrowable`.
    */
   def isControlFlow(x: Throwable): Boolean
 

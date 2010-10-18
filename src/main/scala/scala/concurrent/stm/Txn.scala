@@ -14,7 +14,7 @@ object Txn {
 
   /** Returns `Some(t)` if called from inside the static or dynamic scope of
    *  the transaction context `t`, `None` otherwise.  If an implicit `InTxn` is
-   *  available it is used, otherwise a dynamic lookup is performed.
+   *  available it may be used.
    */
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = STMImpl.instance.findCurrent
 

@@ -15,5 +15,8 @@ trait RefFactory {
   def newRef(v0: Double):  Ref[Double]
   def newRef(v0: Unit):    Ref[Unit]
 
+  /** `T` will not be one of the primitive types (for which a `newRef`
+   *  specialization exists).
+   */ 
   def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T]
 }

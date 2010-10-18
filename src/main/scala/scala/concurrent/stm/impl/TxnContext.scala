@@ -9,8 +9,8 @@ package impl
  */
 trait TxnContext {
 
-  /** Returns `Some(txn)` if `txn` is the `InTxn` active on the current thread,
-   *  `None` otherwise.
+  /** Returns `Some(txn)` if `txn` is the `InTxn` active or in the process of
+   *  committing on the current thread, `None` otherwise.
    */
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn]
 }
