@@ -22,37 +22,56 @@ object Txn {
   //////////// status
 
   /** The current state of an attempt to execute an atomic block. */
-  sealed abstract class Status
+  sealed abstract class Status {
 
-  /** `Status` instances that are terminal states. */
-  sealed abstract class CompletedStatus extends Status
+    /** True for `Committing`, `Committed` and `RolledBack`. */
+    def decided: Boolean
+
+    /** True for `Committed` and `RolledBack`. */
+    def completed: Boolean
+  }
 
   /** The `Status` for a transaction nesting level that may perform `Ref` reads
    *  and writes, that is waiting for a child nesting level to complete, or
    *  that has been merged into an `Active` parent nesting level.
    */
-  case object Active extends Status
+  case object Active extends Status {
+    def decided = false
+    def completed = false
+  }
 
   /** The `Status` for the nesting levels of a transaction that are attempting
    *  to commit, but for which the outcome is uncertain.
    */
-  case object Preparing extends Status
+  case object Preparing extends Status {
+    def decided = false
+    def completed = false
+  }
 
   /** The `Status` for the nesting levels of a transaction that has
    *  successfully acquired all write permissions necessary to succeed, and
    *  that has delegated the final commit decision to an external decider.
    */
-  case object Prepared extends Status
+  case object Prepared extends Status {
+    def decided = false
+    def completed = false
+  }
 
   /** The `Status` for the nesting levels of a transaction that has decided to 
    *  commit, but whose `Ref` writes are not yet visible to other threads.
    */
-  case object Committing extends Status
+  case object Committing extends Status {
+    def decided = true
+    def completed = false
+  }
 
   /** The `Status` for the nesting levels of a transaction that has been
    *  committed.  After-commit callbacks may still be running.
    */
-  case object Committed extends CompletedStatus
+  case object Committed extends Status {
+    def decided = true
+    def completed = true
+  }
 
   /** The `Status` for an atomic block execution attempt that is being or that
    *  has been cancelled.  None of the `Ref` writes made during this nesting
@@ -61,7 +80,10 @@ object Txn {
    *  `TransientRollbackCause`, unless STM-specific retry thresholds are
    *  exceeded.
    */
-  case class RolledBack(cause: RollbackCause) extends CompletedStatus
+  case class RolledBack(cause: RollbackCause) extends Status {
+    def decided = true
+    def completed = true
+  }
 
 
   /** A record of the reason that a atomic block execution attempt was rolled

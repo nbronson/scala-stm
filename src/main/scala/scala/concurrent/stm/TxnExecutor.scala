@@ -2,6 +2,8 @@
 
 package scala.concurrent.stm
 
+import concurrent.stm.Txn.Status
+
 /** `object TxnExecutor` manages the system-wide default `TxnExecutor`. */
 object TxnExecutor {
   @volatile private var _default: TxnExecutor = impl.STMImpl.instance
@@ -13,6 +15,10 @@ object TxnExecutor {
   def transformDefault(f: TxnExecutor => TxnExecutor) {
     synchronized { _default = f(_default) }
   }
+
+  val DefaultPostDecisionExceptionHandler = { (status: Txn.Status, x: Throwable) =>
+    new Exception("status=" + status, x).printStackTrace()
+  }
 }
 
 /** A `TxnExecutor` is responsible for executing atomic blocks transactionally
@@ -23,7 +29,6 @@ object TxnExecutor {
  *  `TxnExecutor.transformDefault`.
  */
 trait TxnExecutor {
-
   /** Executes `block` one or more times until an atomic execution is achieved,
    *  buffering and/or locking writes so they are not visible until success.
    *
@@ -163,7 +168,7 @@ trait TxnExecutor {
    *  exception are committed, while atomic blocks that end with an uncaught
    *  error exception are rolled back.
    *
-   *  The default implementation of this returns true for instances that 
+   *  All implementations of this method must return true for instances that
    *  implement `scala.util.control.ControlThrowable`.
    */
   def isControlFlow(x: Throwable): Boolean
@@ -185,5 +190,18 @@ trait TxnExecutor {
    *    }
    *  }}}
    */
-  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean])
+  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor
+
+  /** Returns a function that records, reports or discards exceptions that were
+   *  thrown from a while-committing, after-commit or after-rollback life-cycle
+   *  callback.
+   */
+  def postDecisionFailureHandler: (Txn.Status, Throwable) => Unit
+
+  /** Returns a `TxnExecutor e` that is identical to this one, except that
+   *  `e.postDecisionFailureHandler` will return `handler`.  This function may
+   *  be called from inside a function passed to `TxnExecutor.transformDefault`
+   *  to change the system-wide post-decision failure handler.
+   */
+  def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor
 }

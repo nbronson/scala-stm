@@ -4,6 +4,7 @@ package scala.concurrent.stm
 package ri
 
 import java.lang.Throwable
+import concurrent.stm.Txn.Status
 
 class StubSTMImpl extends impl.STMImpl {
   {
@@ -34,5 +35,7 @@ class StubSTMImpl extends impl.STMImpl {
   def configuration: Map[Symbol, Any] = throw new AbstractMethodError
   def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
   def isControlFlow(x: Throwable): Boolean = throw new AbstractMethodError
-  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]) = throw new AbstractMethodError
+  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = throw new AbstractMethodError
+  def postDecisionFailureHandler: (Status, Throwable) => Unit = throw new AbstractMethodError
+  def withPostDecisionFailureHandler(handler: (Status, Throwable) => Unit): TxnExecutor = throw new AbstractMethodError
 }
