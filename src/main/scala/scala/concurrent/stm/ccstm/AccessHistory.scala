@@ -2,11 +2,17 @@
 
 package scala.concurrent.stm.ccstm
 
+import annotation.tailrec
+
 private[impl] object AccessHistory {
-  class UndoLog {
-    var prevLog: UndoLog = null
+  abstract class UndoLog[U <: UndoLog] {
+    def prevLog: U
     var prevReadCount = 0
     var prevWriteThreshold = 0
+
+    @tailrec final def readLocate(index: Int): U = {
+      if (index >= prevReadCount) this else prevLog.readLocate(i)
+    }
 
     private var _logSize = 0
     private var _indices: Array[Int] = null
@@ -44,42 +50,36 @@ private[impl] object AccessHistory {
 /** The `AccessHistory` includes the read set and the write buffer for all
  *  transaction levels that have not been rolled back.
  */
-private[impl] class AccessHistory {
-  import AccessHistory.UndoLog
+private[impl] class AccessHistory[U <: AccessHistory.UndoLog] {
 
-  private var _undoLog: UndoLog = null
+  protected def undoLog: U
 
-  protected def pushAccessHistory(top: UndoLog) {
-    top.prevLog = _undoLog
-    _undoLog = top
+  protected def checkpointAccessHistory() {
     checkpointReadSet()
     checkpointWriteBuffer()
   }
 
   protected def mergeAccessHistory() {
     mergeWriteBuffer()
-    _undoLog = top._undoLog
   }
 
   /** Releases locks for discarded handles */
-  protected def popAccessHistory(slot: CCSTM.Slot) {
+  protected def rollbackAccessHistory(slot: CCSTM.Slot) {
     rollbackReadSet()
     rollbackWriteBuffer(slot)
-    _undoLog = top._undoLog
   }
 
   /** Does not release locks */
   protected def resetAccessHistory() {
     resetReadSet()
     resetWriteBuffer()
-    _undoLog = null
   }
 
   /** Adds to `accum` all handles that were read during this nesting level, and
    *  all handles written in the current level but not in a parent.
    */
   protected def accumulateRetrySet(accum: ReadSetBuilder) {
-    accumulateReads(acum)
+    accumulateReads(accum)
     accumulateWrites(accum)
   }
 
@@ -110,16 +110,16 @@ private[impl] class AccessHistory {
     _rVersions = java.util.Arrays.copyOf(_rVersions, _rVersions.length * 2)
   }
 
-  final protected def releaseRead(i: Int) {
-    _rHandles(i) = null
-  }
+//  final protected def releaseRead(i: Int) {
+//    _rHandles(i) = null
+//  }
 
   private def checkpointReadSet() {
-    _undoLog.prevReadCount = _rCount
+    undoLog.prevReadCount = _rCount
   }
 
   private def rollbackReadSet() {
-    val n = _undoLog.prevReadCount
+    val n = undoLog.prevReadCount
     java.util.Arrays.fill(_rHandles, n, _rCount, null)
     _rCount = n
   }
@@ -137,14 +137,15 @@ private[impl] class AccessHistory {
   }
 
   private def accumulateReads(accum: ReadSetBuilder) {
-    var i = _undoLog.prevReadCount
+    var i = undoLog.prevReadCount
     while (i < _rCount) {
       accum.add(_rHandles(i), _rVersions(i))
       i += 1
     }
   }
 
-  
+  protected def readLocate(index: Int): U = undoLog.readLocate(index)
+
 
   //////////// write buffer
 
@@ -259,7 +260,7 @@ private[impl] class AccessHistory {
       //assert(!freshOwner)
       // hit, update an existing entry, optionally with undo
       if (i < _wUndoThreshold)
-        _undoLog.logWrite(i, getWriteSpecValue(i))
+        undoLog.logWrite(i, getWriteSpecValue(i))
       setSpecValue(i, value)
     } else {
       // miss, create a new entry
@@ -295,7 +296,7 @@ private[impl] class AccessHistory {
       // hit, undo log entry is required to capture the potential reads that
       // won't be recorded in this nested txn's read set
       if (i < _wUndoThreshold)
-        _undoLog.logWrite(i, getWriteSpecValue(i))
+        undoLog.logWrite(i, getWriteSpecValue(i))
       return i
     } else {
       // miss, create a new entry using the existing data value
@@ -347,17 +348,17 @@ private[impl] class AccessHistory {
   //////// nesting management and visitation
 
   private def checkpointWriteBuffer() {
-    _undoLog.prevWriteThreshold = _wUndoThreshold
+    undoLog.prevWriteThreshold = _wUndoThreshold
     _wUndoThreshold = _wCount
   }
 
   private def mergeWriteBuffer() {
-    _wUndoThreshold = _undoLog.prevWriteThreshold
+    _wUndoThreshold = undoLog.prevWriteThreshold
   }
 
   private def rollbackWriteBuffer(slot: CCSTM.Slot) {
     // restore the specValue-s modified in pre-existing write buffer entries
-    _undoLog.undoWrites(this)
+    undoLog.undoWrites(this)
 
     var i = _wCount - 1
     val e = _wUndoThreshold
@@ -395,7 +396,7 @@ private[impl] class AccessHistory {
     }
 
     // revert to previous context
-    _wUndoThreshold = _undoLog.prevWriteThreshold
+    _wUndoThreshold = undoLog.prevWriteThreshold
   }
 
   private def resetWriteBuffer() {

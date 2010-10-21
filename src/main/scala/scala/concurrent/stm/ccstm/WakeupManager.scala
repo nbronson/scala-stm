@@ -98,7 +98,7 @@ private[impl] final class WakeupManager(numChannels: Int, numSources: Int) {
 
     def await() { await(null) }
 
-    def await(currentTxn: TxnLevel) {
+    def await(currentTxn: TxnLevelImpl) {
       if (!_triggered) {
         if (null != currentTxn)
           currentTxn.checkAccess()

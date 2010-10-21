@@ -255,8 +255,9 @@ object CCSTM extends GV6 {
           } else if (owningRoot.base == TxnBase.current) {
             // We are in an escaped context and are waiting for a txn that is
             // attached to this thread.  Big trouble!
+            assert(false) // CCSTM on top of scala-stm doesn't have escaped contexts, this shouldn't happen
             owningRoot.requestRollback(
-                Txn.OptimisticFailureCause(Symbol("non-txn write defeated escaped txn"), Some(handle)))
+                Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
           }
           owningRoot.awaitCompletedOrDoomed()
         }
@@ -281,5 +282,5 @@ object CCSTM extends GV6 {
  *  with the Scala STM API.
  */
 class CCSTM extends impl.STMImpl with CCSTMRefs.Factory {
-
+  def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = Option(InTxnImpl.currentOrNull)
 }

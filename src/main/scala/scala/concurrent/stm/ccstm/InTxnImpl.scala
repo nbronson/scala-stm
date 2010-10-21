@@ -3,35 +3,37 @@
 package scala.concurrent.stm
 package ccstm
 
+object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
-class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHistory with skel.AbstractInTxn {
+  override def initialValue = new InTxnImpl
+
+  def currentOrNull: InTxnImpl = {
+    val existing = get
+    if (existing != null && existing.currentLevel != null)
+      existing
+    else
+      null
+  }
+}
+
+class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
 
   //////////////// per-transaction state
 
-  private var _root: TxnLevelImpl = null
+  private var _executor: TxnExecutor = null
+  private var _barging: Boolean = false
   private var _slot: Slot = 0
-
-  private[ccstm] var _retrySet: ReadSetBuilder = null
+  private var _rootLevel: TxnLevelImpl = null
+  private var _currentLevel: TxnLevelImpl = null
 
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
-   *  of a txn.  It would be okay for it to monotonically increase, so long as
-   *  there is no change of the current txn's priority between the priority
-   *  check on conflict and any subsequent waiting that occurs.
+   *  of a rootLevel.  It would be okay for it to monotonically increase, so
+   *  long as there is no change of the current txn's priority between the
+   *  priority check on conflict and any subsequent waiting that occurs.
    */
-  private var priority: Int = 0
-
-  // TODO: move this
-  {
-    priority = CCSTM.hash(this, 0)
-    attach(ctx)
-    _callbacks = ctx.takeCallbacks()
-    _readSet = ctx.takeReadSet()
-    _writeBuffer = ctx.takeWriteBuffer()
-    _strongRefSet = ctx.takeStrongRefSet()
-    _slot = slotManager.assign(this, ctx.preferredSlot)
-  }
+  private var _priority: Int = 0
 
   /** The read version of this transaction.  It is guaranteed that all values
    *  read by this transaction have a version number less than or equal to this
@@ -47,7 +49,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     ("InTxnImpl@" + hashCode.toHexString + "(" + status +
             ", slot=" + _slot +
             ", priority=" + priority +
-            ", readSet.size=" + (if (null == _readSet) "discarded" else _readSet.size.toString) +
+            ", readSetSize=" + (if (null == _readSet) "discarded" else _readSet.size.toString) +
             ", writeBuffer.size=" + (if (null == _writeBuffer) "discarded" else _writeBuffer.size.toString) +
             ", retrySet.size=" + (if (null == _retrySet) "N/A" else _retrySet.size.toString) +
             ", readVersion=0x" + _readVersion.toHexString +
@@ -79,12 +81,12 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     // we check the oldest reads first, so that we roll back all intervening
     // invalid nesting levels
     var i = 0
-    while (i < _readSet.indexEnd) {
-      val h = _readSet.handle(i)
-      if (null != h) {
-        val problem = checkRead(h, _readSet.version(i))
+    while (i < readCount) {
+      val h = readHandle(i)
+      if (h != null) {
+        val problem = checkRead(h, readVersion(i))
         if (problem != null) {
-          forceRollbackLocal(_readSet.nestingLevel(i), InvalidReadCause(h, problem))
+          readLocate(i).requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
           return false
         }
       }
@@ -94,18 +96,18 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
   }
 
   /** Returns the name of the problem on failure, null on success. */ 
-  private def checkRead(handle: Handle[_], ver: CCSTM.Version, index: Int): String = {
+  private def checkRead(handle: Handle[_], ver: CCSTM.Version, index: Int): Symbol = {
     (while (true) {
       val m1 = handle.meta
       if (!changing(m1) || owner(m1) == _slot) {
         if (version(m1) != ver)
-          return "version changed"
+          return 'version_changed
         // okay
         return null
       } else if (owner(m1) == NonTxnSlot) {
         // non-txn updates don't set changing unless they will install a new
         // value, so we are the only party that can yield
-        return "pending non-txn write"
+        return 'pending_nontxn_write
       } else {
         // Either this txn or the owning txn must roll back.  We choose to
         // give precedence to the owning txn, as it is the writer and is
@@ -126,7 +128,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
           val m2 = handle.meta
           if (changing(m2) && owner(m2) == owner(m1)) {
             if (s.mightCommit)
-              return "pending commit"
+              return 'pending_commit
 
             stealHandle(handle, m2, o)
           }
@@ -141,43 +143,42 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
    *  rolled back, or it is safe to wait for `currentOwner` to be `Committed`
    *  or doomed.  
    */
-  private[impl] def resolveWriteWriteConflict(currentOwner: InTxnImpl, contended: AnyRef) {
+  private[impl] def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
     // if write is not allowed, throw an exception of some sort
     checkAccess()
 
     // TODO: boost our priority if we have written?
 
     // This test is _almost_ symmetric.  Tie goes to neither.
-    if (this.priority <= currentOwner.priority) {
-      resolveAsWWLoser(currentOwner, contended, false, "owner has higher priority")
+    if (this._priority <= owningRoot.txn._priority) {
+      resolveAsWWLoser(owningRoot, contended, false, 'owner_has_priority)
     } else {
       // This will resolve the conflict regardless of whether it succeeds or fails.
-      val s = currentOwner.requestRollback(WriteConflictCause(contended, "steal from existing owner"))
-      if ((s ne Committed) && s.mightCommit) {
-        // s is either Preparing or Committing, so currentOwner's priority is
-        // effectively infinite
-        assert((s eq Preparing) || (s eq Committing))
-        val msg = if (s eq Preparing) "owner is preparing" else "owner is committing"
-        resolveAsWWLoser(currentOwner, contended, true, msg)
+      val s = owningRoot.requestRollback(Txn.OptimisticFailureCause('steal_from_lower_priority, Some(contended)))
+      if (s == Preparing || s == Committing) {
+        // owner can't be remotely canceled
+        val msg = if (s == Preparing) 'owner_is_preparing else 'owner_is_committing
+        resolveAsWWLoser(owningRoot, contended, true, msg)
       }
     }
   }
 
-  private def resolveAsWWLoser(currentOwner: InTxnImpl, contended: AnyRef, ownerIsCommitting: Boolean, msg: String) {
-    if (!shouldWaitAsWWLoser(currentOwner, ownerIsCommitting)) {
+  private def resolveAsWWLoser(owningRoot: TxnLevelImpl, contended: AnyRef, ownerIsCommitting: Boolean, msg: Symbol) {
+    if (!shouldWaitAsWWLoser(owningRoot, ownerIsCommitting)) {
       // The failed write is in the current nesting level, so we only need to
       // invalidate one nested atomic block.  Nothing will get better for us
       // until the current owner completes or this txn has a higher priority,
-      // however. 
-      forceRollbackLocal(nestingLevel, WriteConflictCause(contended, msg))
+      // however.
+      _currentLevel.requestRollback(Txn.OptimisticFailureCause(msg, Some(contended)))
       throw RollbackError
     }
   }
 
-  private def shouldWaitAsWWLoser(currentOwner: InTxnImpl, ownerIsCommitting: Boolean): Boolean = {
-    // If we haven't performed any writes, there is no point in not waiting.
-    if (_writeBuffer.isEmpty && !writeResourcesPresent)
-      return true
+  private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
+    // TODO: reenable if we can compute writeResourcesPresent?
+//    // If we haven't performed any writes, there is no point in not waiting.
+//    if (writeCount == 0 && !writeResourcesPresent)
+//      return true
 
     // If the current owner is in the process of committing then we should
     // wait, because we can't succeed until their commit is done.  This means
@@ -190,7 +191,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     // We know that priority <= currentOwner.priority, because we're the loser.
     // If the priorities match exactly (unlikely but possible) then we can't
     // have both losers wait or we will get a deadlock.
-    if (priority == currentOwner.priority)
+    if (_priority == owningRoot.txn._priority)
       return false
 
     // Now we're in heuristic territory, waiting or rolling back are both
@@ -201,7 +202,20 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     // just blind optimism.  This also guarantees that doomed transactions
     // never block anybody, because barging txns effectively have visible
     // readers.
-    return barging
+    return _barging
+  }
+
+  //////////////// begin + commit
+
+  // TODO: move this
+  {
+    priority = CCSTM.hash(this, 0)
+    attach(ctx)
+    _callbacks = ctx.takeCallbacks()
+    _readSet = ctx.takeReadSet()
+    _writeBuffer = ctx.takeWriteBuffer()
+    _strongRefSet = ctx.takeStrongRefSet()
+    _slot = slotManager.assign(this, ctx.preferredSlot)
   }
 
 //  private[ccstm] def retryImpl(): Nothing = {
@@ -472,12 +486,15 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     }
   }
 
-  //////////////// miscellaneous
+  //////////////// status checks
 
-  private[ccstm] def addReferenceImpl(ptr: AnyRef) {
-    _strongRefSet += ptr
+  private def checkAccess() {
+    // TODO: optimize to remove a layer of indirection?
+    val cur = _currentLevel
+    if (cur == null)
+      throw new IllegalStateException("no active transaction")
+    cur.checkAccess()
   }
-  
 
   //////////////// lock management - similar to NonTxn but we also check for remote rollback
 
@@ -514,7 +531,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     if (owner(m1) == _slot) {
       // Self-owned.  This particular ref+offset might not be in the write
       // buffer, but it's definitely not in anybody else's.
-      return _writeBuffer.get(handle)
+      return stableGet(handle)
     }
 
     var m0 = 0L
@@ -532,7 +549,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
 
     // Stable read.  The second read of handle.meta is required for
     // opacity, and it also enables the read-only commit optimization.
-    _readSet.add(handle, version(m1))
+    recordRead(handle, version(m1))
     return value
   }
 
@@ -587,7 +604,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     var m1 = handle.meta
     var v: T = null.asInstanceOf[T]
     val rec = (if (owner(m1) == _slot) {
-      v = _writeBuffer.get(handle)
+      v = stableGet(handle)
       true
     } else {
       var m0 = 0L
@@ -633,7 +650,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     checkAccess()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
-    _writeBuffer.put(handle, f, v)
+    put(handle, f, v)
 
     // This might not be a blind write, because meta might be shared with other
     // values that are subsequently read by the transaction.  We don't need to
@@ -653,7 +670,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     checkAccess()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
-    val v0 = _writeBuffer.swap(handle, f, v)
+    val v0 = swap(handle, f, v)
     if (f)
       revalidateIfRequired(version(mPrev))
     v0
@@ -664,13 +681,13 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
 
     val m0 = handle.meta
     if (owner(m0) == _slot) {
-      _writeBuffer.put(handle, false, v)
+      put(handle, false, v)
       return true
     }
 
     if (!tryAcquireOwnership(handle, m0))
       return false
-    _writeBuffer.put(handle, true, v)
+    put(handle, true, v)
     revalidateIfRequired(version(m0))
     return true
   }
@@ -679,7 +696,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     checkAccess()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
-    val v = _writeBuffer.allocatingGet(handle, f)
+    val v = allocatingGet(handle, f)
     if (f)
       revalidateIfRequired(version(mPrev))
     v
@@ -703,7 +720,7 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
     checkAccess()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
-    val v0 = _writeBuffer.getAndTransform(handle, f, func)
+    val v0 = getAndTransform(handle, f, func)
     if (f)
       revalidateIfRequired(version(mPrev))
     v0
@@ -714,13 +731,13 @@ class InTxnImpl(barging: Boolean, val executor: TxnExecutor) extends AccessHisto
 
     val m0 = handle.meta
     if (owner(m0) == _slot) {
-      _writeBuffer.getAndTransform(handle, false, f)
+      getAndTransform(handle, false, f)
       return true
     }
 
     if (!tryAcquireOwnership(handle, m0))
       return false
-    _writeBuffer.getAndTransform(handle, true, f)
+    getAndTransform(handle, true, f)
     revalidateIfRequired(version(m0))
     return true
   }
