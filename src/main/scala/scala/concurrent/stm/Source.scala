@@ -18,9 +18,9 @@ object Source {
     def ref: Source[A]
 
     /** Performs an atomic read of the value in `ref`.  If an atomic block is
-     *  active (see `InTxn.current`) then the read will be performed as part of
-     *  the transaction, otherwise it will act as if it was performed inside a
-     *  new atomic block.  Equivalent to `get`.
+     *  active (see `Txn.findCurrent`) then the read will be performed as part
+     *  of the transaction, otherwise it will act as if it was performed inside
+     *  a new atomic block.  Equivalent to `get`.
      *  @return the value of the `Ref` as observed by the current context.
      */
     def apply(): A = get
@@ -30,14 +30,14 @@ object Source {
      */
     def get: A
 
-    /** Acts like `Source.getWith(f)` if there is an active transaction,
-     *  otherwise just returns `f(get)`.
+    /** Acts like `ref.getWith(f)` if there is an active transaction, otherwise
+     *  just returns `f(get)`.
      *  @param f an idempotent function.
      *  @return the result of applying `f` to the value contained in `ref`.
      */
     def getWith[Z](f: A => Z): Z = f(relaxedGet({ f(_) == f(_) }))
 
-    /** Acts like `Source.relaxedGet(equiv)` if there is an active transaction,
+    /** Acts like `ref.relaxedGet(equiv)` if there is an active transaction,
      *  otherwise just returns `get`.
      *  @param equiv an equivalence function that returns true if a transaction
      *      that observed the first argument will still complete correctly,
@@ -59,7 +59,7 @@ object Source {
      *  }}}
      *
      *  If you want to wait for a predicate that involves more than one `Ref`
-     *  then use `retry` (from the `stm` package object) directly.
+     *  then use `retry` directly.
      *  @param f a predicate that is safe to evaluate multiple times.
      */
     def retryUntil(f: A => Boolean)
