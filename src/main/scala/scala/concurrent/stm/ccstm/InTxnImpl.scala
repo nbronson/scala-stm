@@ -7,12 +7,19 @@ object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
   override def initialValue = new InTxnImpl
 
-  def currentOrNull: InTxnImpl = {
-    val existing = get
-    if (existing != null && existing.currentLevel != null)
-      existing
-    else
-      null
+  def apply()(implicit mt: MaybeTxn): InTxnImpl = mt match {
+    case x: InTxnImpl => x
+    case _ => get // this will create one
+  }
+
+  def dynCurrentOrNull: InTxnImpl = {
+    val x = get
+    if (x.currentLevel != null) x else null
+  }
+
+  def currentOrNull(implicit mt: MaybeTxn) = {
+    val x = apply()
+    if (x.currentLevel != null) x else null
   }
 }
 
@@ -20,13 +27,20 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
 
+  //////////////// pre-transaction state
+
+  private var _alternatives: List[InTxn => Any] = Nil
+
+  def pushAlternative(block: InTxn => Any) { _alternatives ::= block }
+  def takeAlternatives(): List[InTxn => Any] = { val z = _alternatives ; _alternatives = Nil ; z }
+
   //////////////// per-transaction state
 
   private var _executor: TxnExecutor = null
   private var _barging: Boolean = false
   private var _slot: Slot = 0
   private var _rootLevel: TxnLevelImpl = null
-  private var _currentLevel: TxnLevelImpl = null
+  var _currentLevel: TxnLevelImpl = null
 
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
@@ -56,6 +70,45 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
             (if (barging) ", barging" else "") + ")")
   }
 
+  //////////////// High-level behaviors
+
+  def atomic[Z](exec: TxnExecutor, block: InTxn => Z, consecutiveFailures: Int): Z = {
+    begin(exec, consecutiveFailures > 2)
+    var nonLocalReturn: Throwable = null
+    var result: Z = null.asInstanceOf[Z]
+    try {
+      result = block(txn)
+    } catch {
+      case RollbackError =>
+      case x if executor.isControlFlow(x) => nonLocalReturn = x
+      case x => currentLevel.requestRollback(Txn.UncaughtExceptionCause(x))
+    }
+    val s = complete()
+    if (s == Txn.Committed) {
+      // success, return value is either the result or a control transfer
+      if (nonLocalReturn != null)
+        throw nonLocalReturn
+      result
+    } else {
+      // rollback, throw an exception if there is no retry
+      s.asInstanceOf[Txn.RolledBack].cause match {
+        case Txn.UncaughtExceptionCause(x) => throw x
+        case Txn.ExplicitRetryCause => {
+          // if a nested transaction does a retry with no alternatives, then
+          // it is equivalent to retrying the outer txn
+          if (currentLevel != null)
+            currentLevel.requestRollback(Txn.ExplicitRetryCause)
+          _currentLevel.checkAccess()
+          takeRetrySet().awaitRetry()
+          atomic(exec, block, 0)
+        }
+        case Txn.OptimisticFailureCause(_) => {
+          _currentLevel.checkAccess()
+          atomic(exec, block, 1 + consecutiveFailures)
+        }
+      }
+    }
+  }
 
   //////////////// Implementation
 
@@ -92,6 +145,7 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
       }
       i += 1
     }
+    if (_currentLevel.)
     return readResourcesValidate()
   }
 
@@ -207,43 +261,86 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
 
   //////////////// begin + commit
 
-  // TODO: move this
-  {
-    priority = CCSTM.hash(this, 0)
-    attach(ctx)
-    _callbacks = ctx.takeCallbacks()
-    _readSet = ctx.takeReadSet()
-    _writeBuffer = ctx.takeWriteBuffer()
-    _strongRefSet = ctx.takeStrongRefSet()
-    _slot = slotManager.assign(this, ctx.preferredSlot)
+  def begin(barge: Boolean) {
+    if (_currentLevel == null)
+      topLevelBegin(barge)
+    else
+      nestedBegin()
   }
 
-//  private[ccstm] def retryImpl(): Nothing = {
-//    // writeBuffer entries must be conservatively considered to also be reads
-//    _writeBuffer.accumulateLevel(_readSet)
-//
-//    forceRollbackLocal(new ExplicitRetryCause(_readSet.clone))
-//    throw RollbackError
-//  }
+  private def nestedBegin() {
+    val child = new TxnLevelImpl(this, _currentLevel)
+
+    // link to child races with remote rollback
+    if (!_currentLevel.pushIfActive(child))
+      throw RollbackError
+
+    // success
+    _currentLevel = child
+    checkpointAccessHistory()
+  }
+
+  private def topLevelBegin(barge: Boolean) {
+    _barging = barge
+    _currentLevel = new TxnLevelImpl(this, null)
+    _priority = CCSTM.hash(_currentLevel, 0)
+    // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
+    _slot = slotManager.assign(_currentLevel, _slot)
+  }
+
+  def complete(): Txn.Status = {
+    if (_currentLevel.par == null)
+      topLevelComplete()
+    else
+      nestedComplete()
+  }
+
+  /** This gives the current level's status during a commit. */
+  private def commitStatus: Status = _currentLevel.localStatus.asInstanceOf[Status]
+
+  private def nestedComplete(): Txn.Status = {
+    val child = _currentLevel
+    val result = (if (child.attemptMerge()) {
+      // child was successfully merged
+      child.mergeIntoParent()
+      mergeAccessHistory()
+
+      Txn.Active
+    } else {
+      val s = commitStatus
+
+      // we must accumulate the retry set before rolling back the access history
+      if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
+        accumulateRetrySet(_explicitRetrySet)
+
+      // release the locks before the callbacks
+      rollbackAccessHistory(_slot)
+      if (child.hasAfterRollback)
+        child.afterRollback.fire(s)
+      s
+    })
+
+    // unlinking the child must be performed regardless of success or failure
+    _currentLevel = child.par
+
+    result
+  }
 
   private[ccstm] def topLevelComplete(): Status = {
     try {
-      val s = status
-      if (s.mustRollBack || !callBefore())
+      val s = commitStatus
+      if (s.isInstanceOf[RolledBack] || !callBefore())
         return completeRollback()
 
-      if (_writeBuffer.size == 0 && !writeResourcesPresent) {
+      if (writeCount == 0 && !writeResourcesPresent) {
         // read-only transactions are easy to commit, because all of the reads
         // are already guaranteed to be consistent
-        if (s != Active(0, 0) || !_statusCAS(s, Committed)) {
-          // remote requestRollback got us at the last moment
-          assert(_status.isInstanceOf[RollingBack])
-          _status = Rolledback(status.rollbackCause)
-        }
-        return _status
+        if (!_currentLevel.statusCAS(Active, Committed))
+          return completeRollback()
+        return Committed
       }
 
-      if (s != Active(0, 0) || !_statusCAS(s, Preparing) || !acquireLocks())
+      if (!_currentLevel.statusCAS(Active, Preparing) || !acquireLocks())
         return completeRollback()
 
       // this is our linearization point
@@ -257,93 +354,68 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
       if (!writeResourcesPrepare())
         return completeRollback()
 
-      if (_externalDecider != null) {
+      if (externalDecider != null) {
         // external decider doesn't have to content with cancel by other threads
-        if (!_statusCAS(Preparing, Prepared) || !consultExternalDecider())
+        if (!_currentLevel.statusCAS(Preparing, Prepared) || !consultExternalDecider())
           return completeRollback()
 
-        assert(_status eq Preparing)
-        _status = Committing
+        assert(commitStatus == Preparing)
+        _currentLevel.localStatus = Committing
       } else {
         // attempt to decide commit
-        if (!_statusCAS(Preparing, Committing))
+        if (!_currentLevel.statusCAS(Preparing, Committing))
           return completeRollback()
       }
 
       commitWrites(cv)
-      writeResourcesPerformCommit()
-      _status = Committed
+      if (_currentLevel.hasWhileCommitting)
+        _currentLevel.whileCommitting.fire(this)
+      _currentLevel.localStatus = Committed
 
       return Committed
       
     } finally {
-      // disassociate the InTxnImpl before the callbacks, so that they can run a InTxnImpl
-      val ctx = ThreadContext.get
-      val readSetSize = _readSet.indexEnd
-      val writeBufferSize = _writeBuffer.size
-      ctx.put(_readSet, _writeBuffer, _strongRefSet, _slot)
-      _readSet = null
-      _writeBuffer = null
+      val s = commitStatus
+      val cur = _currentLevel
+
+      // detach the level before the after-completion callbacks, so that they
+      // can run a new transaction
       slotManager.release(_slot)
-      detach(ctx)
+      _currentLevel = null
+      resetAccessHistory()
 
       // we might have gotten part-way through a retry/orAtomic tree and then
       // gotten a non-restartable failure, make sure we don't pin the retry set
       if (_retrySet != null && _status != InTxnImpl.Rolledback(ExplicitRetryCause))
         _retrySet = null
 
-      // after-commit or after-rollback
-      callAfter(readSetSize, writeBufferSize)
-
-      ctx.putCallbacks(_callbacks)
-      _callbacks = null
+      s match {
+        case Committed if cur.hasAfterCommit => cur.afterCommit.fire(s)
+        case RolledBack(_) if cur.hasAfterRollback => cur.afterRollback.fire(s)
+        case _ =>
+      }
     }
-  }
-
-  private[ccstm] def takeRetrySet(): ReadSet = {
-    val z = _retrySet
-    _retrySet = null
-    z
   }
 
   private def completeRollback(): Status = {
-    rollbackWrites()
-    writeResourcesPerformRollback()
-    _status = Rolledback(status.rollbackCause)
+    assert(_currentLevel.par == null)
 
-    return _status
-  }
+    // TODO: explicit retry
 
-  private def rollbackWrites() {
-    assert(_status.isInstanceOf[RollingBack])
-
-    var i = _writeBuffer.size
-    while (i > 0) {
-      rollbackWrite(_writeBuffer.getHandle(i))
-      i -= 1
-    }
-  }
-
-  private def rollbackWrite(handle: Handle[_]) {
-    var m = handle.meta
-    while (owner(m) == _slot) {
-      // we must use CAS because there can be concurrent pendingWaiter adds
-      // and concurrent "helpers" that release the lock
-      if (handle.metaCAS(m, withRollback(m)))
-        return
-      m = handle.meta
-    }
+    rollbackAccessHistory(_slot)
+    commitStatus
+    s
   }
 
   private def acquireLocks(): Boolean = {
     var wakeups = 0L
-    var i = _writeBuffer.size
-    while (i > 0) {
-      if (!acquireLock(_writeBuffer.getHandle(i)))
+    var i = writeCount - 1
+    while (i >= 0) {
+      if (!acquireLock(getWriteHandle(i)))
         return false
       i -= 1
     }
-    return _status == Preparing
+    return commitStatus == Preparing
   }
 
   private def acquireLock(handle: Handle[_]): Boolean = {
@@ -362,17 +434,13 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   }
 
   private def commitWrites(cv: Long) {
-    if (_writeBuffer.isEmpty) {
-      return
-    }
-
     var wakeups = 0L
-    var i = _writeBuffer.size
-    while (i > 0) {
-      val handle = _writeBuffer.getHandle(i).asInstanceOf[Handle[Any]]
+    var i = writeCount - 1
+    while (i >= 0) {
+      val handle = getWriteHandle(i).asInstanceOf[Handle[Any]]
 
       // update the value
-      handle.data = _writeBuffer.getSpecValue[Any](i)
+      handle.data = getWriteSpecValue[Any](i)
 
       // note that we accumulate wakeup entries for each ref and offset, even
       // if they share metadata
@@ -382,108 +450,19 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
 
       assert(owner(m) == _slot)
 
-      // release the lock, clear the PW bit, and update the version if this was
-      // the entry that actually acquired ownership
-      if (_writeBuffer.wasFreshOwner(i))
+      // release the lock, clear the PW bit, and update the version, but only
+      // if this was the entry that actually acquired ownership
+      if (wasWriteFreshOwner(i))
         handle.meta = withCommit(m, cv)
 
+      // because we release when we find the original owner, it is important
+      // that we traverse in reverse order.  There are no duplicates
       i -= 1
     }
 
     // unblock anybody waiting on a value change that has just occurred
     if (wakeups != 0L)
       wakeupManager.trigger(wakeups)
-  }
-
-  private[ccstm] def forceRollbackImpl(cause: RollbackCause) {
-    if (InTxnImpl.dynCurrentOrNull ne this)
-      throw new IllegalStateException("forceRollback may only be called on InTxnImpl's thread, use requestRollback instead")
-    forceRollbackLocal(cause)
-  }
-
-  /** Does the work of `forceRollback` without the thread identity check. */
-  private[ccstm] def forceRollbackLocal(invalidNestingLevel: Int, cause: RollbackCause) {
-    // TODO: partial rollback
-    var s = _status
-    while (!s.mustRollBack) {
-      if (s.mustCommit)
-        throw new IllegalStateException("forceRollback after commit is inevitable")
-
-      assert(s.isInstanceOf[Active] || (s eq Preparing))
-      _statusCAS(s, RollingBack(cause))
-      s = _status
-    }
-  }
-
-  private[ccstm] def requestRollbackImpl(cause: RollbackCause): Status = {
-    var s = _status
-    while (s.remotelyCancellable) {
-      assert(s.isInstanceOf[Active] || (s eq Preparing))
-      _statusCAS(s, RollingBack(cause))
-      s = _status
-    }
-    s
-  }
-
-  private[ccstm] def explicitlyValidateReadsImpl() {
-    revalidate(0)
-  }
-
-
-  //////////////// partial commit and rollback
-
-  private[ccstm] def nestedBegin() {
-    _status match {
-      case s @ InTxnImpl.Active(d, v, null) if d == v && _statusCAS(s, InTxnImpl.Active(d + 1, d + 1, null)) => // success
-      case _ => throw RollbackError
-    }
-  }
-
-  private[ccstm] def nestedComplete(): InTxnImpl.RetryCause = {
-    _status match {
-      case s @ InTxnImpl.Active(d, v, null) if d == v && _statusCAS(s, InTxnImpl.Active(d - 1, d - 1, null)) => {
-        // success
-        _readSet.popWithNestedCommit()
-        _writeBuffer.popWithNestedCommit()
-        _callbacks.popWithNestedCommit()
-        null
-      }
-      case _ => nestedRollback()
-    }
-  }
-
-  private def nestedRollback(): InTxnImpl.RetryCause = {
-    _status match {
-      case s @ InTxnImpl.Active(depth, validDepth, cause) => {
-        assert(validDepth < depth)
-        val cascadingCause = if (validDepth == depth - 1) null else cause
-        assert(cascadingCause != ExplicitRetryCause)
-
-        // failed CAS means someone else doomed us, no retry needed
-        _statusCAS(s, InTxnImpl.Active(depth - 1, validDepth, cascadingCause))
-
-        if (cause == ExplicitRetryCause) {
-          // The retry set includes both reads and writes.  We don't need to
-          // include writes that were also performed in a parent txn.
-          if (_retrySet == null)
-            _retrySet = new ReadSetBuilder()
-          _readSet.accumulateLevel(_retrySet)
-          _writeBuffer.accumulateLevel(_retrySet)
-        }
-      }
-      case InTxnImpl.Rolledback(cause) =>
-    }
-
-    _readSet.popWithNestedRollback()
-    _writeBuffer.popWithNestedRollback()
-
-    // this calls the handlers for this nesting level
-    _callbacks.popWithNestedRollback(this)
-
-    _status match {
-      case InTxnImpl.Active(_, _, cause) => cause
-      case InTxnImpl.Rolledback(cause) => cause
-    }
   }
 
   //////////////// status checks

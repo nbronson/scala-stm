@@ -3,6 +3,9 @@
 package scala.concurrent.stm
 package ccstm
 
+import util.control.ControlThrowable
+import concurrent.stm.Txn.Status
+
 
 /** An STM implementation that uses a TL2-style timestamp system, but that
  *  performs eager acquisition of write locks and that revalidates the
@@ -278,9 +281,21 @@ object CCSTM extends GV6 {
   }
 }
 
+object DefaultControlFlowTest extends PartialFunction[Throwable, Boolean] {
+  def isDefinedAt(x: Throwable): Boolean = true
+  def apply(x: Throwable): Boolean = x.isInstanceOf[ControlThrowable]
+}
+
+object DefaultPostDecisionFailureHandler extends ((Txn.Status, Throwable) => Unit) {
+  def apply(status: Status, x: Throwable) {
+    new Exception("status=" + status, x).printStackTrace()
+  }
+}
+
 /** This is the class that is dynamically instantiated by name to couple CCSTM
  *  with the Scala STM API.
  */
-class CCSTM extends impl.STMImpl with CCSTMRefs.Factory {
+class CCSTM extends CCSTMExecutor(DefaultControlFlowTest, DefaultPostDecisionFailureHandler)
+        with impl.STMImpl with CCSTMRefs.Factory {
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = Option(InTxnImpl.currentOrNull)
 }

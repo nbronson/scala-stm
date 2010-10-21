@@ -53,8 +53,26 @@ class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
     localStatusUpdater.compareAndSet(this, Txn.Active, child)
   }
 
-  def popIfActive(child: TxnLevelImpl) {
-    localStatusUpdater.compareAndSet(this, child, Txn.Active)
+  def statusCAS(v0: Txn.Status, v1: Txn.Status): Boolean = {
+    localStatusUpdater.compareAndSet(this, v0, v1)
+  }
+
+  def attemptMerge(): Boolean = {
+    // First we need to set the current state to forwarding.  Regardless of
+    // whether or not this fails we still need to unlink the parent.
+    localStatusUpdater.compareAndSet(this, Txn.Active, null)
+
+    // We must use CAS to unlink ourselves from our parent, because we race
+    // with remote cancels.
+    localStatusUpdater.compareAndSet(par, this, Txn.Active)
+
+    if (localStatus == null) {
+      // merge the handlers from AbstractTxnLevel
+      mergeIntoParent()
+      true
+    } else {
+      false
+    }
   }
 
   def requestRollback(cause: Txn.RollbackCause): Txn.Status = rollbackImpl(Txn.RolledBack(cause))
