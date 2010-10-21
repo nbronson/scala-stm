@@ -3,14 +3,16 @@
 package scala.concurrent.stm
 package skel
 
-abstract class AbstractNestingLevel(val txn: InTxn, val par: AbstractNestingLevel) extends NestingLevel {
+trait AbstractNestingLevel extends NestingLevel {
   import Txn._
+
+  def txn: InTxn
+  def par: AbstractNestingLevel
 
   def parent: Option[NestingLevel] = Option(par)
 
-  val root: NestingLevel = if (par == null) this else par.root
-
   private var _beforeCommit: SuccessCallbackList[InTxn] = null
+  private var _whileValidating: SuccessCallbackList[InTxn] = null
   private var _whilePreparing: SuccessCallbackList[InTxnEnd] = null
   private var _whileCommitting: SuccessCallbackList[InTxnEnd] = null
   private var _afterCommit: SuccessCallbackList[Txn.Status] = null
@@ -22,6 +24,14 @@ abstract class AbstractNestingLevel(val txn: InTxn, val par: AbstractNestingLeve
     if (_beforeCommit == null)
       _beforeCommit = new SuccessCallbackList[InTxn](this)
     _beforeCommit
+  }
+
+  def hasWhileValidating = _whileValidating != null && !_whileValidating.isEmpty
+
+  def whileValidating: SuccessCallbackList[InTxn] = {
+    if (_whileValidating == null)
+      _whileValidating = new SuccessCallbackList[InTxn](this)
+    _whileValidating
   }
 
   def hasWhilePreparing = _whilePreparing != null && !_whilePreparing.isEmpty
@@ -60,6 +70,8 @@ abstract class AbstractNestingLevel(val txn: InTxn, val par: AbstractNestingLeve
   def mergeIntoParent() {
     if (hasBeforeCommit)
       par.beforeCommit ++= beforeCommit
+    if (hasWhileValidating)
+      par.whileValidating ++= whileValidating
     if (hasWhilePreparing)
       par.whilePreparing ++= whilePreparing
     if (hasWhileCommitting)

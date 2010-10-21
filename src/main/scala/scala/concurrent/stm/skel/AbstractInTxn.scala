@@ -5,7 +5,7 @@ package skel
 
 import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
 
-abstract class AbstractInTxn(val executor: TxnExecutor) extends InTxn {
+trait AbstractInTxn extends InTxn {
 
   //////////// interface for concrete implementations
 
@@ -19,6 +19,7 @@ abstract class AbstractInTxn(val executor: TxnExecutor) extends InTxn {
 
   def rootLevel: NestingLevel = currentLevel.root
   def beforeCommit(handler: InTxn => Unit) { currentLevel.beforeCommit += handler }
+  def whileValidating(handler: InTxn => Unit) { currentLevel.whileValidating += handler }
   def whilePreparing(handler: InTxnEnd => Unit) { currentLevel.whilePreparing += handler }
   def whileCommitting(handler: InTxnEnd => Unit) { currentLevel.whileCommitting += handler }
   def afterCommit(handler: Status => Unit) { currentLevel.afterCommit += handler }
@@ -40,7 +41,7 @@ abstract class AbstractInTxn(val executor: TxnExecutor) extends InTxn {
       _decider = decider
       // if this nesting level rolls back then the decider should be unregistered
       afterRollback { status =>
-        assert(_decider == null || (_decider eq decider))
+        assert(_decider eq decider)
         _decider = null
       }
     }
