@@ -5,7 +5,7 @@ package scala.concurrent.stm.ccstm
 
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
 
-private[impl] final class WakeupManager(numChannels: Int, numSources: Int) {
+private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   import CCSTM.hash
 
   def this() = this(64, 512)

@@ -3,7 +3,10 @@
 package scala.concurrent.stm
 package ccstm
 
-object InTxnImpl extends ThreadLocal[InTxnImpl] {
+import annotation.tailrec
+import skel.AbstractNestingLevel
+
+private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
   override def initialValue = new InTxnImpl
 
@@ -23,7 +26,7 @@ object InTxnImpl extends ThreadLocal[InTxnImpl] {
   }
 }
 
-class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
+private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
 
@@ -40,7 +43,7 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   private var _barging: Boolean = false
   private var _slot: Slot = 0
   private var _rootLevel: TxnLevelImpl = null
-  var _currentLevel: TxnLevelImpl = null
+  private var _currentLevel: TxnLevelImpl = null
 
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
@@ -72,7 +75,7 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
 
   //////////////// High-level behaviors
 
-  def atomic[Z](exec: TxnExecutor, block: InTxn => Z, consecutiveFailures: Int): Z = {
+  @tailrec final def atomic[Z](exec: TxnExecutor, block: InTxn => Z, consecutiveFailures: Int): Either[Z,ReadSetBuilder] = {
     begin(exec, consecutiveFailures > 2)
     var nonLocalReturn: Throwable = null
     var result: Z = null.asInstanceOf[Z]
@@ -109,6 +112,20 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
       }
     }
   }
+
+  def rollback(cause: RollbackCause): Nothing = {
+    _currentLevel.forceRollback(cause)
+    throw RollbackError
+  }
+
+  def status: Status = _currentLevel.status
+
+  def executor: TxnExecutor = _executor
+
+  def undoLog: TxnLevelImpl = _currentLevel
+
+  override def currentLevel: TxnLevelImpl = _currentLevel
+
 
   //////////////// Implementation
 
@@ -165,8 +182,8 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
       } else {
         // Either this txn or the owning txn must roll back.  We choose to
         // give precedence to the owning txn, as it is the writer and is
-        // Validating.  There's a bit of trickiness since o may not be the
-        // owning transaction, it may be a new txn that reused the same
+        // trying to commit.  There's a bit of trickiness since o may not be
+        // the owning transaction, it may be a new txn that reused the same
         // slot.  If the actual owning txn committed then the version
         // number will have changed, which we will detect on the next pass
         // (because we aren't incrementing i, so we will revisit this
@@ -178,7 +195,7 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
         // slot and we can avoid the spurious rollback.
         val o = slotManager.lookup(owner(m1))
         if (null != o) {
-          val s = o._status
+          val s = o.status
           val m2 = handle.meta
           if (changing(m2) && owner(m2) == owner(m1)) {
             if (s.mightCommit)
@@ -261,9 +278,9 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
 
   //////////////// begin + commit
 
-  def begin(barge: Boolean) {
+  def begin(exec: TxnExecutor, barge: Boolean) {
     if (_currentLevel == null)
-      topLevelBegin(barge)
+      topLevelBegin(exec, barge)
     else
       nestedBegin()
   }
@@ -280,7 +297,8 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
     checkpointAccessHistory()
   }
 
-  private def topLevelBegin(barge: Boolean) {
+  private def topLevelBegin(exec: TxnExecutor, barge: Boolean) {
+    _executor = exec 
     _barging = barge
     _currentLevel = new TxnLevelImpl(this, null)
     _priority = CCSTM.hash(_currentLevel, 0)
@@ -311,7 +329,7 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
 
       // we must accumulate the retry set before rolling back the access history
       if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
-        accumulateRetrySet(_explicitRetrySet)
+        accumulateRetrySet()
 
       // release the locks before the callbacks
       rollbackAccessHistory(_slot)
@@ -382,12 +400,8 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
       // can run a new transaction
       slotManager.release(_slot)
       _currentLevel = null
+      _executor = null
       resetAccessHistory()
-
-      // we might have gotten part-way through a retry/orAtomic tree and then
-      // gotten a non-restartable failure, make sure we don't pin the retry set
-      if (_retrySet != null && _status != InTxnImpl.Rolledback(ExplicitRetryCause))
-        _retrySet = null
 
       s match {
         case Committed if cur.hasAfterCommit => cur.afterCommit.fire(s)
@@ -400,10 +414,13 @@ class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   private def completeRollback(): Status = {
     assert(_currentLevel.par == null)
 
-    // TODO: explicit retry
+    val s = commitStatus
+
+    // we must accumulate the retry set before rolling back the access history
+    if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
+      accumulateRetrySet()
 
     rollbackAccessHistory(_slot)
-    commitStatus
     s
   }
 

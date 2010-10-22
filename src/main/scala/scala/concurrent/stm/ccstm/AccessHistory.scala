@@ -4,7 +4,7 @@ package scala.concurrent.stm.ccstm
 
 import annotation.tailrec
 
-private[impl] object AccessHistory {
+private[ccstm] object AccessHistory {
   abstract class UndoLog[U <: UndoLog] {
     def prevLog: U
     var prevReadCount = 0
@@ -50,7 +50,7 @@ private[impl] object AccessHistory {
 /** The `AccessHistory` includes the read set and the write buffer for all
  *  transaction levels that have not been rolled back.
  */
-private[impl] class AccessHistory[U <: AccessHistory.UndoLog] {
+private[ccstm] class AccessHistory[U <: AccessHistory.UndoLog] {
 
   protected def undoLog: U
 

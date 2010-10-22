@@ -4,7 +4,7 @@ package scala.concurrent.stm
 package ccstm
 
 /** The default implementation of `Ref`'s operations. */
-trait RefOps[T] extends Ref[T] {
+private[ccstm] trait RefOps[T] extends Ref[T] {
 
   private def impl(implicit txn: InTxn): InTxnImpl = txn.asInstanceOf[InTxnImpl]
 

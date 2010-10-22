@@ -3,9 +3,7 @@
 package scala.concurrent.stm
 package ccstm
 
-// ViewOps
-
-class ViewOps[T] extends Ref.View[T] {
+private[ccstm] class ViewOps[T] extends Ref.View[T] {
   
   def handle: Handle[T]
 

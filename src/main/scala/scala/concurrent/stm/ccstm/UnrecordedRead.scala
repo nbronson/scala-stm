@@ -28,7 +28,7 @@ package scala.concurrent.stm.ccstm
  *
  *  @author Nathan Bronson
  */
-trait UnrecordedRead[+T] {
+private[ccstm] trait UnrecordedRead[+T] {
 
   /** Returns the value observed by this `UnrecordedRead`, regardless of
    *  whether it is still valid.

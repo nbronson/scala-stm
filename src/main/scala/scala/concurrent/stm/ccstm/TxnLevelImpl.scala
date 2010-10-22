@@ -6,13 +6,13 @@ package ccstm
 import annotation.tailrec
 import java.util.concurrent.atomic.{AtomicLong, AtomicReferenceFieldUpdater}
 
-object TxnLevelImpl {
+private[ccstm] object TxnLevelImpl {
   val nextId = new AtomicLong
 
   val localStatusUpdater = new TxnLevelImpl(null, null).newLocalStatusUpdater
 }
 
-class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
+private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
         extends skel.AbstractNestingLevel with AccessHistory.UndoLog[TxnLevelImpl] {
   import TxnLevelImpl._
 
@@ -75,7 +75,16 @@ class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
     }
   }
 
-  def requestRollback(cause: Txn.RollbackCause): Txn.Status = rollbackImpl(Txn.RolledBack(cause))
+  def forceRollback(cause: Txn.RollbackCause) {
+    val s = rollbackImpl(Txn.RolledBack(cause))
+    assert(s.isInstanceOf[Txn.RolledBack])
+  }
+
+  def requestRollback(cause: Txn.RollbackCause): Txn.Status = {
+    if (cause == Txn.ExplicitRetryCause)
+      throw new IllegalArgumentException("explicit retry is not available via requestRollback")
+    rollbackImpl(Txn.RolledBack(cause))
+  }
 
   @tailrec final def rollbackImpl(rb: Txn.RolledBack): Txn.Status = localStatus match {
     case null => {

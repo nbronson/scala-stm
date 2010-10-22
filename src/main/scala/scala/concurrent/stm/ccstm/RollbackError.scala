@@ -11,6 +11,6 @@ import scala.util.control.ControlThrowable
  *
  *  @author Nathan Bronson
  */
-object RollbackError extends Error with ControlThrowable {
+private[ccstm] object RollbackError extends Error with ControlThrowable {
   override def fillInStackTrace(): Throwable = this
 }

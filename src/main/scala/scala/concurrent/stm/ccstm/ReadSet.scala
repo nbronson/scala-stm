@@ -5,9 +5,9 @@ package scala.concurrent.stm.ccstm
 import annotation.tailrec
 
 /** A read set representation. */
-private[impl] class ReadSet(size: Int,
-                            handles: Array[Handle[_]],
-                            versions: Array[CCSTM.Version]) {
+private[ccstm] class ReadSet(size: Int,
+                             handles: Array[Handle[_]],
+                             versions: Array[CCSTM.Version]) {
   import CCSTM._
 
   def awaitRetry() {

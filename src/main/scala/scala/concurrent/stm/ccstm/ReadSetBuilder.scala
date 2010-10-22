@@ -5,7 +5,7 @@ package scala.concurrent.stm.ccstm
 import annotation.tailrec
 
 
-private[impl] final class ReadSetBuilder {
+private[ccstm] final class ReadSetBuilder {
   private var _size = 0
   private var _handles = new Array[Handle[_]](maxSizeForCap(InitialCap) + 1)
   private var _versions = new Array[CCSTM.Version](maxSizeForCap(InitialCap) + 1)

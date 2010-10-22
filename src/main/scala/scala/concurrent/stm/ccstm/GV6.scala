@@ -5,7 +5,7 @@ package scala.concurrent.stm.ccstm
 import java.util.concurrent.atomic.AtomicLong
 
 
-private[impl] trait GV6 {
+private[ccstm] trait GV6 {
 
   /** The global timestamp.  We use TL2's GV6 scheme to avoid the need to
    *  increment this during every transactional commit.  Non-transactional
@@ -15,7 +15,7 @@ private[impl] trait GV6 {
    *  writes), but it means we must always validate transactions that are not
    *  read-only.
    */
-  private[impl] val globalVersion = new AtomicLong(1)
+  val globalVersion = new AtomicLong(1)
 
   /** The approximate ratio of the number of commits to the number of
    *  increments of `globalVersion`, as in TL2's GV6 scheme.  If
@@ -49,7 +49,7 @@ private[impl] trait GV6 {
    *  than the value of `globalVersion` on entry.  May increase
    *  `globalVersion`.
    */
-  private[impl] def nonTxnWriteVersion(prevVersion: Long): Long = {
+  def nonTxnWriteVersion(prevVersion: Long): Long = {
     val g = globalVersion.get
     val result = math.max(g, prevVersion) + 1
     if (result > g + nonTxnSilentRunAhead) {
@@ -59,12 +59,12 @@ private[impl] trait GV6 {
   }
 
   /** Returns a version to use for reading in a new transaction. */
-  private[impl] def freshReadVersion: Long = globalVersion.get
+  def freshReadVersion: Long = globalVersion.get
 
   /** Guarantees that `globalVersion.get` is &ge;
    *  `minRV`, and returns `globalVersion.get`.
    */
-  private[impl] def freshReadVersion(minRV: Long): Long = {
+  def freshReadVersion(minRV: Long): Long = {
     var g = globalVersion.get
     while (g < minRV) {
       if (globalVersion.compareAndSet(g, minRV)) {
@@ -79,7 +79,7 @@ private[impl] trait GV6 {
   /** Returns a value that is greater than `gvSnap` and greater than
    *  `readVersion`, possibly increasing `globalVersion`.
    */
-  private[impl] def freshCommitVersion(readVersion: Long, gvSnap: Long): Long = {
+  def freshCommitVersion(readVersion: Long, gvSnap: Long): Long = {
     val result = math.max(readVersion, gvSnap) + 1
     if (silentCommitRatio <= 1 || silentCommitRand.nextInt <= silentCommitCutoff) {
       globalVersion.compareAndSet(gvSnap, result)

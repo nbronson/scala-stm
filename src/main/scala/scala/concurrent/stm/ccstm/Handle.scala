@@ -9,7 +9,7 @@ package scala.concurrent.stm.ccstm
  *  in comparisons using `eq` or `ne` (no methods of `ref` will ever be
  *  invoked).  Metadata may be shared between multiple locations.
  */
-abstract class Handle[T] {
+private[ccstm] abstract class Handle[T] {
   def meta: Long
   def meta_=(v: Long)
   def metaCAS(before: Long, after: Long): Boolean

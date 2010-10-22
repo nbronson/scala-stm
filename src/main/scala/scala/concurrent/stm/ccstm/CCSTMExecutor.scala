@@ -3,10 +3,24 @@
 package scala.concurrent.stm
 package ccstm
 
-import concurrent.stm.Txn.Status
+import scala.util.control.ControlThrowable
+
+object CCSTMExecutor {
+  val DefaultControlFlowTest = new PartialFunction[Throwable, Boolean] {
+    def isDefinedAt(x: Throwable): Boolean = true
+    def apply(x: Throwable): Boolean = x.isInstanceOf[ControlThrowable]
+  }
+
+  val DefaultPostDecisionFailureHandler = { (status: Txn.Status, x: Throwable) =>
+    new Exception("status=" + status, x).printStackTrace()
+  }
+}
 
 class CCSTMExecutor(val controlFlowTest: PartialFunction[Throwable, Boolean],
-                    val postDecisionFailureHandler: (Status, Throwable) => Unit) extends TxnExecutor {
+                    val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit) extends TxnExecutor {
+  import CCSTMExecutor._
+
+  def this() = this(DefaultControlFlowTest, DefaultPostDecisionFailureHandler)
 
   def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z =
       InTxnImpl().atomic(block)
@@ -26,6 +40,6 @@ class CCSTMExecutor(val controlFlowTest: PartialFunction[Throwable, Boolean],
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor =
       new CCSTMExecutor(pf orElse controlFlowTest, postDecisionFailureHandler)
 
-  def withPostDecisionFailureHandler(handler: (Status, Throwable) => Unit): TxnExecutor =
+  def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor =
       new CCSTMExecutor(controlFlowTest, handler)
 }
