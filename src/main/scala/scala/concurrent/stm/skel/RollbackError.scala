@@ -11,6 +11,6 @@ import util.control.ControlThrowable
  *
  *  @author Nathan Bronson
  */
-private[ccstm] object RollbackError extends Error with ControlThrowable {
+private[stm] object RollbackError extends Error with ControlThrowable {
   override def fillInStackTrace(): Throwable = this
 }

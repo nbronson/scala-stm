@@ -5,13 +5,13 @@ package scala.concurrent.stm.ccstm
 import annotation.tailrec
 
 private[ccstm] object AccessHistory {
-  abstract class UndoLog[U <: UndoLog] {
-    def prevLog: U
+  abstract class UndoLog {
+    def par: UndoLog
     var prevReadCount = 0
     var prevWriteThreshold = 0
 
-    @tailrec final def readLocate(index: Int): U = {
-      if (index >= prevReadCount) this else prevLog.readLocate(i)
+    @tailrec final def readLocate(index: Int): UndoLog = {
+      if (index >= prevReadCount) this else par.readLocate(index)
     }
 
     private var _logSize = 0
@@ -21,8 +21,8 @@ private[ccstm] object AccessHistory {
     final def logWrite(i: Int, v: AnyRef) {
       if (_indices == null || _logSize == _indices.length)
         grow()
-      _indices(size) = i
-      _prevValues(size) = v
+      _indices(_logSize) = i
+      _prevValues(_logSize) = v
       _logSize += 1
     }
 
@@ -31,9 +31,14 @@ private[ccstm] object AccessHistory {
         _indices = new Array[Int](16)
         _prevValues = new Array[AnyRef](16)
       } else {
-        _indices = java.util.Arrays.copyOf(_indices, _indices.length * 2)
-        _prevValues = java.util.Arrays.copyOf(_prevValues, _prevValues.length * 2)
+        _indices = copyTo(_indices, new Array[Int](_indices.length * 2))
+        _prevValues = copyTo(_prevValues, new Array[AnyRef](_prevValues.length * 2))
       }
+    }
+
+    @inline private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
+      System.arraycopy(src, 0, dst, 0, src.length)
+      dst
     }
 
     final def undoWrites(hist: AccessHistory) {
@@ -50,9 +55,9 @@ private[ccstm] object AccessHistory {
 /** The `AccessHistory` includes the read set and the write buffer for all
  *  transaction levels that have not been rolled back.
  */
-private[ccstm] class AccessHistory[U <: AccessHistory.UndoLog] {
+private[ccstm] class AccessHistory {
 
-  protected def undoLog: U
+  protected def undoLog: AccessHistory.UndoLog
 
   protected def checkpointAccessHistory() {
     checkpointReadSet()
@@ -106,8 +111,13 @@ private[ccstm] class AccessHistory[U <: AccessHistory.UndoLog] {
   }
 
   private def growReadSet() {
-    _rHandles = java.util.Arrays.copyOf(_rHandles, _rHandles.length * 2)
-    _rVersions = java.util.Arrays.copyOf(_rVersions, _rVersions.length * 2)
+    _rHandles = copyTo(_rHandles, new Array[Handle[_]](_rHandles.length * 2))
+    _rVersions = copyTo(_rVersions, new Array[CCSTM.Version](_rVersions.length * 2))
+  }
+
+  @inline private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
+    System.arraycopy(src, 0, dst, 0, src.length)
+    dst
   }
 
 //  final protected def releaseRead(i: Int) {
@@ -120,18 +130,18 @@ private[ccstm] class AccessHistory[U <: AccessHistory.UndoLog] {
 
   private def rollbackReadSet() {
     val n = undoLog.prevReadCount
-    java.util.Arrays.fill(_rHandles, n, _rCount, null)
+    java.util.Arrays.fill(_rHandles.asInstanceOf[Array[AnyRef]], n, _rCount, null)
     _rCount = n
   }
 
   private def resetReadSet() {
-    if (_rHandles.length > MaxRetainedCapacity) {
+    if (_rHandles.length > MaxRetainedReadCapacity) {
       // avoid staying very large
       _rHandles = new Array[Handle[_]](InitialReadCapacity)
       _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
     } else {
       // allow GC of old handles
-      java.util.Arrays.fill(_rHandles, 0, _rCount, null)
+      java.util.Arrays.fill(_rHandles.asInstanceOf[Array[AnyRef]], 0, _rCount, null)
     }
     _rCount = 0
   }
@@ -144,7 +154,7 @@ private[ccstm] class AccessHistory[U <: AccessHistory.UndoLog] {
     }
   }
 
-  protected def readLocate(index: Int): U = undoLog.readLocate(index)
+  protected def readLocate(index: Int): AccessHistory.UndoLog = undoLog.readLocate(index)
 
 
   //////////// write buffer
@@ -326,8 +336,8 @@ private[ccstm] class AccessHistory[U <: AccessHistory.UndoLog] {
     _wCapacity *= 2
     if (_wCapacity > _wDispatch.length) {
       // we actually need to reallocate
-      _wAnys = java.util.Arrays.copyOf(_wAnys, bucketAnysLen(_wCapacity))
-      _wInts = java.util.Arrays.copyOf(_wInts, bucketIntsLen(_wCapacity))
+      _wAnys = copyTo(_wAnys, new Array[AnyRef](bucketAnysLen(_wCapacity)))
+      _wInts = copyTo(_wInts, new Array[Int](bucketIntsLen(_wCapacity)))
       _wDispatch = new Array[Int](_wCapacity)
     }
     rebuildDispatch()

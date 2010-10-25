@@ -48,7 +48,7 @@ private[ccstm] object FastSimpleRandom {
     x
   }
 
-  private[impl] def step(x: Long) = x * 2862933555777941757L + 3037000493L
+  private def step(x: Long) = x * 2862933555777941757L + 3037000493L
   
   private def extract(x: Long) = (x >> 30).asInstanceOf[Int]
 

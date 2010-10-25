@@ -18,9 +18,8 @@ object CCSTMExecutor {
 
 class CCSTMExecutor(val controlFlowTest: PartialFunction[Throwable, Boolean],
                     val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit) extends TxnExecutor {
-  import CCSTMExecutor._
 
-  def this() = this(DefaultControlFlowTest, DefaultPostDecisionFailureHandler)
+  def this() = this(CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
 
   def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z =
       InTxnImpl().atomic(block)
@@ -33,7 +32,7 @@ class CCSTMExecutor(val controlFlowTest: PartialFunction[Throwable, Boolean],
 
   // no configuration is possible
   def configuration: Map[Symbol, Any] = Map.empty
-  def withConfig(p: (Symbol, Any)): TxnExecutor = throw IllegalArgumentException
+  def withConfig(p: (Symbol, Any)): TxnExecutor = throw new IllegalArgumentException
 
   def isControlFlow(x: Throwable): Boolean = controlFlowTest(x) // safe because default accepts everything
   

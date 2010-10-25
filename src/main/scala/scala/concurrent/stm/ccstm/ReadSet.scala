@@ -39,10 +39,10 @@ private[ccstm] class ReadSet(size: Int,
   }
 
   @tailrec private def addPendingWakeup(handle: Handle[_], ver: CCSTM.Version): Boolean = {
-    val m = h.meta
+    val m = handle.meta
     if (changing(m) || version(m) != ver)
       false // handle has already changed
-    else if (pendingWakeups(m) || h.metaCAS(m, withPendingWakeups(m)))
+    else if (pendingWakeups(m) || handle.metaCAS(m, withPendingWakeups(m)))
       true // already has pending wakeup, or CAS to add it was successful
     else
       addPendingWakeup(handle, ver) // try again

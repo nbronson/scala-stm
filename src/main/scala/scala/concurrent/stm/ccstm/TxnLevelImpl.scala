@@ -5,6 +5,7 @@ package ccstm
 
 import annotation.tailrec
 import java.util.concurrent.atomic.{AtomicLong, AtomicReferenceFieldUpdater}
+import ccstm.AccessHistory.UndoLog
 
 private[ccstm] object TxnLevelImpl {
   val nextId = new AtomicLong
@@ -13,7 +14,7 @@ private[ccstm] object TxnLevelImpl {
 }
 
 private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
-        extends skel.AbstractNestingLevel with AccessHistory.UndoLog[TxnLevelImpl] {
+        extends skel.AbstractNestingLevel with AccessHistory.UndoLog {
   import skel.RollbackError
   import TxnLevelImpl._
 

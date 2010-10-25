@@ -138,7 +138,7 @@ private[ccstm] object CCSTM extends GV6 {
   //////////////// lock release helping
 
   def stealHandle(handle: Handle[_], m0: Meta, owningRoot: TxnLevelImpl) {
-    assert(owningRoot.status.isInstanceOf[Txn.RollingBack])
+    assert(owningRoot.status.isInstanceOf[Txn.RolledBack])
 
     // We can definitely make forward progress below at the expense of a
     // couple of extra CAS, so it is not useful for us to do a big spin with
@@ -182,7 +182,7 @@ private[ccstm] object CCSTM extends GV6 {
    *  blocking and `currentTxn.resolveWriteWriteConflict` will be
    *  called before waiting for a transaction.
    */
-  private[impl] def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
+  def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     if (owner(m0) == NonTxnSlot)
       weakAwaitNonTxnUnowned(handle, m0, currentTxn)
     else
@@ -204,7 +204,7 @@ private[ccstm] object CCSTM extends GV6 {
         return
 
       if (null != currentTxn)
-        currentTxn.checkAccess()
+        currentTxn.requireActive()
     }
 
     // to wait for a non-txn owner, we use pendingWakeups
@@ -239,7 +239,7 @@ private[ccstm] object CCSTM extends GV6 {
           return
 
         if (null != currentTxn)
-          currentTxn.checkAccess()
+          currentTxn.requireActive()
       }
     }
 
@@ -248,10 +248,10 @@ private[ccstm] object CCSTM extends GV6 {
     val owningRoot = slotManager.beginLookup(owningSlot)
     try {
       if (null != owningRoot && owningSlot == owner(handle.meta)) {
-        if (!owningRoot.completedOrDoomed) {
+        if (!owningRoot.status.completed) {
           if (null != currentTxn) {
-            currentTxn.resolveWriteWriteConflict(owningRoot, handle)
-          } else if (owningRoot.base == TxnBase.current) {
+            currentTxn.txn.resolveWriteWriteConflict(owningRoot, handle)
+          } else if (owningRoot.txn == InTxnImpl.get) {
             // We are in an escaped context and are waiting for a txn that is
             // attached to this thread.  Big trouble!
             assert(false) // CCSTM on top of scala-stm doesn't have escaped contexts, this shouldn't happen
@@ -266,7 +266,7 @@ private[ccstm] object CCSTM extends GV6 {
         var m = 0L
         do {
           m = handle.meta
-          assert(ownerAndVersion(m) != ownerAndVersion(m0) || owningRoot.status.mustRollBack)
+          assert(ownerAndVersion(m) != ownerAndVersion(m0) || owningRoot.status.isInstanceOf[Txn.RolledBack])
         } while (ownerAndVersion(m) == ownerAndVersion(m0) && !handle.metaCAS(m, withRollback(m)))
 
         // no longer locked, or steal succeeded

@@ -21,7 +21,7 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
   def currentOrNull(implicit mt: MaybeTxn) = active(apply())
 }
 
-private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
+private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
   import skel.RollbackError
@@ -30,8 +30,17 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
 
   private var _alternatives: List[InTxn => Any] = Nil
 
-  def pushAlternative(block: InTxn => Any) { _alternatives ::= block }
-  def takeAlternatives(): List[InTxn => Any] = { val z = _alternatives ; _alternatives = Nil ; z }
+  def pushAlternative(block: InTxn => Any): Boolean = {
+    val z = _alternatives.isEmpty
+    _alternatives ::= block
+    z
+  }
+
+  def takeAlternatives(): List[InTxn => Any] = {
+    val z = _alternatives
+    _alternatives = Nil
+    z
+  }
 
   //////////////// per-transaction state
 
@@ -56,15 +65,15 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
    *  `globalVersion.get`, must never decrease, and each time it is
    *  changed the read set must be revalidated.  Lazily assigned.
    */
-  private[impl] var _readVersion: Version = freshReadVersion
+  private var _readVersion: Version = freshReadVersion
 
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" + status +
             ", slot=" + _slot +
-            ", priority=" + priority +
-            ", readSetSize=" + (if (null == _readSet) "discarded" else _readSet.size.toString) +
-            ", writeBuffer.size=" + (if (null == _writeBuffer) "discarded" else _writeBuffer.size.toString) +
-            ", retrySet.size=" + (if (null == _retrySet) "N/A" else _retrySet.size.toString) +
+            ", priority=" + _priority +
+            ", readCount=" + readCount  +
+            ", writeCount=" + writeCount +
+            //TODO", retrySet.size=" + (if (null == _retrySet) "N/A" else _retrySet.size.toString) +
             ", readVersion=0x" + _readVersion.toHexString +
             (if (barging) ", barging" else "") + ")")
   }
@@ -223,7 +232,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       if (h != null) {
         val problem = checkRead(h, readVersion(i))
         if (problem != null) {
-          readLocate(i).requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
+          readLocate(i).asInstanceOf[NestingLevel].requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
           return false
         }
       }
@@ -282,7 +291,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
    *  rolled back, or it is safe to wait for `currentOwner` to be `Committed`
    *  or doomed.  
    */
-  private[impl] def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
+  def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
     // if write is not allowed, throw an exception of some sort
     checkAccess()
 

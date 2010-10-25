@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package ccstm
 
-private[ccstm] class ViewOps[T] extends Ref.View[T] {
+private[ccstm] trait ViewOps[T] extends Ref.View[T] {
   
   def handle: Handle[T]
 
@@ -11,13 +11,13 @@ private[ccstm] class ViewOps[T] extends Ref.View[T] {
     case null => NonTxn.get(handle)
     case txn => txn.get(handle)
   }
-  def getWith[Z](f: (T) => Z): Z = InTxnImpl.dynCurrentOrNull match {
+  def getWith[Z](f: T => Z): Z = InTxnImpl.dynCurrentOrNull match {
     case null => f(NonTxn.get(handle))
     case txn => txn.getWith(handle, f)
   }
   def retryUntil(f: T => Boolean): Unit = InTxnImpl.dynCurrentOrNull match {
-    case null => NonTxn.await(handle, pred)
-    case txn => if (!pred(txn.get(handle))) txn.retry
+    case null => NonTxn.await(handle, f)
+    case txn => if (!f(txn.get(handle))) txn.retry
   }
   def set(v: T): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.set(handle, v)

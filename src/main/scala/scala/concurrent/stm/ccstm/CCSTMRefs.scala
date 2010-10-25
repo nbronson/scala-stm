@@ -88,7 +88,7 @@ object CCSTMRefs {
   private class GenericRef[A](var data: A) extends BaseRef[A] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = genericUpdater.compareAndSet(this, m0, m1)
-    def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[GenericRef], "meta")
+    def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[GenericRef[_]], "meta")
   }
 
 }

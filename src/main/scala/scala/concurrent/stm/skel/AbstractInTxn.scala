@@ -48,12 +48,12 @@ trait AbstractInTxn extends InTxn {
   private var _decider: ExternalDecider = null
   protected def externalDecider = _decider
 
-  protected val beforeCommitList = new CallbackList[InTxn => Unit]
-  protected val whileValidatingList = new CallbackList[NestingLevel => Unit]
-  protected val whilePreparingList = new CallbackList[InTxnEnd => Unit]
-  protected val whileCommittingList = new CallbackList[InTxnEnd => Unit]
-  protected val afterCommitList = new CallbackList[Status => Unit]
-  protected val afterRollbackList = new CallbackList[Status => Unit]
+  protected val beforeCommitList = new CallbackList[InTxn]
+  protected val whileValidatingList = new CallbackList[NestingLevel]
+  protected val whilePreparingList = new CallbackList[InTxnEnd]
+  protected val whileCommittingList = new CallbackList[InTxnEnd]
+  protected val afterCommitList = new CallbackList[Status]
+  protected val afterRollbackList = new CallbackList[Status]
 
   protected def checkpointCallbacks() {
     val level = currentLevel

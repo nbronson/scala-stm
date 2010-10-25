@@ -8,7 +8,12 @@ import annotation.tailrec
 
 class CallbackList[A] private (private var _size: Int,
                                private var _data: Array[A => Unit]) {
-  def this() = this(0, new Array[A => Unit](InitialCapacity))
+  def this() = this(0, null)
+
+  {
+    if (_data == null)
+      _data = new Array[A => Unit](InitialCapacity)
+  }
 
   private def InitialCapacity = 16
   private def MaxEmptyCapacity = 8192
