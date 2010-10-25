@@ -77,13 +77,13 @@ class MaybeTxnSuite extends FunSuite {
       NestingLevel.root
     }
     assert(n0.status === Txn.Committed)
-    assert(Txn.findCurrent === Some(t0))
+    assert(Txn.findCurrent === None)
     assert(impl.STMImpl.instance.findCurrent === None)
     atomic { t =>
-      assert(t0 ne t)
+      assert(NestingLevel.current(t) != n0)
       assert(NestingLevel.root(t).status === Txn.Active)
       assert(Txn.status === Txn.Active)
-      assert(Txn.findCurrent === Some(t0))
+      assert(Txn.findCurrent === Some(t))
       assert(impl.STMImpl.instance.findCurrent === Some(t))
     }
   }

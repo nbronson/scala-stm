@@ -113,7 +113,8 @@ class IsolatedRefSuite extends FunSuite {
     for (outerLevels <- 0 until 2;
          innerLevels <- 0 until 2;
          refFactory <- List(PrimitiveFactory, KnownGenericFactory, UnknownGenericFactory);
-         viewFactory <- List(FreshSingleAccess, ReuseSingleAccess, RefAccess)) {
+         viewFactory <- List(FreshSingleAccess, ReuseSingleAccess, RefAccess);
+         if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
       test("outer=" + outerLevels + ", inner=" + innerLevels + ", " +
               refFactory + ", " + viewFactory + ": " + name) {
         val ref = refFactory(v0)

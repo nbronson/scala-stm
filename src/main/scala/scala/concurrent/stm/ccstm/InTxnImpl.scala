@@ -196,7 +196,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
     fireWhileValidating()
     
-    _currentLevel.localStatus eq Txn.Active
+    !_currentLevel.localStatus.isInstanceOf[RolledBack]
   }
 
   /** Returns the name of the problem on failure, null on success. */ 
@@ -273,7 +273,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // invalidate one nested atomic block.  Nothing will get better for us
       // until the current owner completes or this txn has a higher priority,
       // however.
-      _currentLevel.requestRollback(Txn.OptimisticFailureCause(msg, Some(contended)))
+      _currentLevel.forceRollback(Txn.OptimisticFailureCause(msg, Some(contended)))
       throw RollbackError
     }
   }
@@ -325,10 +325,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def nestedBegin(child: TxnLevelImpl) {
     // link to child races with remote rollback
-    if (!_currentLevel.pushIfActive(child))
+    if (!_currentLevel.pushIfActive(child)) {
+      assert(_currentLevel.status.isInstanceOf[RolledBack])
+      // null localStatus will forward to parent's status
+      child.localStatus = null
       throw RollbackError
+    }
 
-    // success
+    // successfully begun
     _currentLevel = child
     checkpointCallbacks()
     checkpointAccessHistory()
@@ -358,7 +362,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // child was successfully merged
       mergeAccessHistory()
 
-      Txn.Active
+      Committed
     } else {
       val s = commitStatus
 
@@ -456,7 +460,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       if (s eq Committed)
         afterCommitList.fire(cur, s)
-      s
     }
   }
 
