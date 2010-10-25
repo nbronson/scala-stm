@@ -14,6 +14,7 @@ private[ccstm] object TxnLevelImpl {
 
 private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
         extends skel.AbstractNestingLevel with AccessHistory.UndoLog[TxnLevelImpl] {
+  import skel.RollbackError
   import TxnLevelImpl._
 
   lazy val id = nextId.incrementAndGet
@@ -37,15 +38,15 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
     case _ => Txn.Active
   }
 
-  def checkAccess() {
+  def requireActive() {
     if (localStatus ne Txn.Active)
-      slowCheckAccess()
+      slowRequireActive()
   }
 
-  private def slowCheckAccess() {
-    localStatus match {
+  private def slowRequireActive() {
+    status match {
       case Txn.RolledBack(_) => throw RollbackError
-      case _ => throw new IllegalStateException(status.toString)
+      case s => throw new IllegalStateException(s.toString)
     }
   }
 

@@ -1,8 +1,8 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
-package scala.concurrent.stm.ccstm
+package scala.concurrent.stm.skel
 
-import scala.util.control.ControlThrowable
+import util.control.ControlThrowable
 
 
 /** A reusable exception instance, thrown by CCSTM when a transaction is doomed

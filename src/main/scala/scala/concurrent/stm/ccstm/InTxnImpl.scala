@@ -4,7 +4,6 @@ package scala.concurrent.stm
 package ccstm
 
 import annotation.tailrec
-import skel.AbstractNestingLevel
 
 private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
@@ -15,20 +14,17 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
     case _ => get // this will create one
   }
 
-  def dynCurrentOrNull: InTxnImpl = {
-    val x = get
-    if (x.currentLevel != null) x else null
-  }
+  private def active(txn: InTxnImpl): InTxnImpl = if (txn.currentLevel != null) txn else null
 
-  def currentOrNull(implicit mt: MaybeTxn) = {
-    val x = apply()
-    if (x.currentLevel != null) x else null
-  }
+  def dynCurrentOrNull: InTxnImpl = active(get)
+
+  def currentOrNull(implicit mt: MaybeTxn) = active(apply())
 }
 
 private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
+  import skel.RollbackError
 
   //////////////// pre-transaction state
 
@@ -75,6 +71,85 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
 
   //////////////// High-level behaviors
 
+  def status: Status = _currentLevel.status
+  def executor: TxnExecutor = _executor
+  def undoLog: TxnLevelImpl = _currentLevel
+  override def currentLevel: TxnLevelImpl = _currentLevel
+
+  /** There are N ways that a single attempt can complete:
+   *  - block returns normally, level commits;
+   *  - block returns normally, level rolls back due to handler exception;
+   *  - block throws a control flow exception, level commits;
+   *  - block throws a control flow  */
+
+  /** Throws `RollbackError` on failure that should be retried. */
+  def attempt[Z](exec: TxnExecutor, barge: Boolean, level: TxnLevelImpl, block: InTxn => Z): Z = {
+    begin(exec, barge, level)
+    try {
+      try {
+        block(txn)
+      } catch {
+        case x if x != RollbackError && !executor.isControlFlow(x) => {
+          level.forceRollback(Txn.UncaughtExceptionCause(x))
+          throw RollbackError
+        }
+      }
+    } finally {
+      if (complete() != Txn.Committed)
+        throw RollbackError
+    }
+  }
+
+  def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    (while (true) {
+      val level = new TxnLevelImpl(this, _currentLevel)
+      try {
+        return attempt(exec, barge, level, block)
+      } catch {
+        case RollbackError =>
+      }
+      level.status.asInstanceOf[RolledBack].cause match {
+        case UncaughtExceptionCause(x) => throw x
+        case ExplicitRetryCause => {
+          if (_currentLevel != null) {
+            // nested retry with no alternatives propagates to the parent txn
+            _currentLevel.forceRollback(ExplicitRetryCause)
+            throw RollbackError
+          } else {
+            // top-level retry
+          }
+        }
+      }
+    }).asInstanceOf[Nothing]
+  }
+
+//  {{
+//      // success, return value is either the result or a control transfer
+//      if (nonLocalReturn != null)
+//        throw nonLocalReturn
+//      result
+//    } else {
+//      // rollback, throw an exception if there is no retry
+//      s.asInstanceOf[Txn.RolledBack].cause match {
+//        case Txn.UncaughtExceptionCause(x) => throw x
+//        case Txn.ExplicitRetryCause => {
+//          // if a nested transaction does a retry with no alternatives, then
+//          // it is equivalent to retrying the outer txn
+//          if (currentLevel != null)
+//            currentLevel.requestRollback(Txn.ExplicitRetryCause)
+//          _currentLevel.checkAccess()
+//          takeRetrySet().awaitRetry()
+//          atomic(exec, block, 0)
+//        }
+//        case Txn.OptimisticFailureCause(_) => {
+//          _currentLevel.checkAccess()
+//          atomic(exec, block, 1 + consecutiveFailures)
+//        }
+//      }
+//    }
+//
+//  }
+
   @tailrec final def atomic[Z](exec: TxnExecutor, block: InTxn => Z, consecutiveFailures: Int): Either[Z,ReadSetBuilder] = {
     begin(exec, consecutiveFailures > 2)
     var nonLocalReturn: Throwable = null
@@ -118,14 +193,6 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
     throw RollbackError
   }
 
-  def status: Status = _currentLevel.status
-
-  def executor: TxnExecutor = _executor
-
-  def undoLog: TxnLevelImpl = _currentLevel
-
-  override def currentLevel: TxnLevelImpl = _currentLevel
-
 
   //////////////// Implementation
 
@@ -162,8 +229,9 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       }
       i += 1
     }
-    if (_currentLevel.)
-    return readResourcesValidate()
+    fireWhileValidating()
+    
+    _currentLevel.localStatus eq Txn.Active
   }
 
   /** Returns the name of the problem on failure, null on success. */ 
@@ -245,11 +313,14 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
     }
   }
 
+  private def writeResourcesPresent: Boolean = {
+    !whilePreparingList.isEmpty || !whileCommittingList.isEmpty || externalDecider != null
+  }
+
   private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
-    // TODO: reenable if we can compute writeResourcesPresent?
-//    // If we haven't performed any writes, there is no point in not waiting.
-//    if (writeCount == 0 && !writeResourcesPresent)
-//      return true
+    // If we haven't performed any writes, there is no point in not waiting.
+    if (writeCount == 0 && !writeResourcesPresent)
+      return true
 
     // If the current owner is in the process of committing then we should
     // wait, because we can't succeed until their commit is done.  This means
@@ -294,6 +365,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
 
     // success
     _currentLevel = child
+    checkpointCallbacks()
     checkpointAccessHistory()
   }
 
@@ -320,7 +392,6 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
     val child = _currentLevel
     val result = (if (child.attemptMerge()) {
       // child was successfully merged
-      child.mergeIntoParent()
       mergeAccessHistory()
 
       Txn.Active
@@ -333,8 +404,8 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
 
       // release the locks before the callbacks
       rollbackAccessHistory(_slot)
-      if (child.hasAfterRollback)
-        child.afterRollback.fire(s)
+      val handlers = rollbackCallbacks()
+      fireAfterRollback(handlers, s)
       s
     })
 
@@ -342,6 +413,24 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
     _currentLevel = child.par
 
     result
+  }
+
+  private def fireAfterRollback(handlers: Seq[Status => Unit], s: Status) {
+    var i = handlers.size - 1
+    while (i >= 0) {
+      try {
+        handlers(i)(s)
+      } catch {
+        case x => {
+          try {
+            executor.postDecisionFailureHandler(s, x)
+          } catch {
+            case xx => xx.printStackTrace()
+          }
+        }
+      }
+      i -= 1
+    }
   }
 
   private[ccstm] def topLevelComplete(): Status = {
@@ -369,7 +458,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       if (!revalidateImpl())
         return completeRollback()
 
-      if (!writeResourcesPrepare())
+      if (!whilePreparingList.fire(_currentLevel, this))
         return completeRollback()
 
       if (externalDecider != null) {
@@ -386,8 +475,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       }
 
       commitWrites(cv)
-      if (_currentLevel.hasWhileCommitting)
-        _currentLevel.whileCommitting.fire(this)
+      whileCommittingList.fire(_currentLevel, this)
       _currentLevel.localStatus = Committed
 
       return Committed
@@ -396,18 +484,16 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       val s = commitStatus
       val cur = _currentLevel
 
-      // detach the level before the after-completion callbacks, so that they
+      // detach the level before the after-commit callbacks, so that they
       // can run a new transaction
       slotManager.release(_slot)
       _currentLevel = null
       _executor = null
       resetAccessHistory()
 
-      s match {
-        case Committed if cur.hasAfterCommit => cur.afterCommit.fire(s)
-        case RolledBack(_) if cur.hasAfterRollback => cur.afterRollback.fire(s)
-        case _ =>
-      }
+      if (s eq Committed)
+        afterCommitList.fire(this, s)
+      s
     }
   }
 
@@ -421,6 +507,8 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       accumulateRetrySet()
 
     rollbackAccessHistory(_slot)
+    val handlers = rollbackCallbacks()
+    fireAfterRollback(handlers, s)
     s
   }
 
@@ -484,12 +572,14 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
 
   //////////////// status checks
 
-  private def checkAccess() {
+  private def checkAccess() { requireActive() }
+
+  override protected def requireActive() {
     // TODO: optimize to remove a layer of indirection?
     val cur = _currentLevel
     if (cur == null)
       throw new IllegalStateException("no active transaction")
-    cur.checkAccess()
+    cur.requireActive()
   }
 
   //////////////// lock management - similar to NonTxn but we also check for remote rollback
@@ -556,10 +646,15 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
     val u = unrecordedRead(handle)
     val result = f(u.value)
     if (!u.recorded) {
-      val callback = new InTxnImpl.ReadResource {
+      val callback = new Function[NestingLevel, Unit] {
         var _latestRead = u
 
-        def valid(t: InTxnImpl): Boolean = {
+        def apply(level: NestingLevel) {
+          if (!isValid)
+            level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
+        }
+
+        private def isValid: Boolean = {
           if (_latestRead == null || _latestRead.stillValid)
             return true
 
@@ -585,10 +680,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
       // moving its virtual snapshot forward.  This means that the
       // unrecorded read that initialized u is consistent with all of the
       // reads performed so far.
-      whilePreparing { _ =>
-        
-      }
-      addReadResource(callback, 0, false)
+      whileValidating(callback)
     }
 
     return result
@@ -742,11 +834,16 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
     val u = unrecordedRead(handle)
     if (!pf.isDefinedAt(u.value)) {
       // make sure it stays undefined
-      if (!u.recorded) {
-        val callback = new InTxnImpl.ReadResource {
+      if (!u.recorded) {        
+        val callback = new Function[NestingLevel, Unit] {
           var _latestRead = u
 
-          def valid(t: InTxnImpl) = {
+          def apply(level: NestingLevel) {
+            if (!isValid)
+              level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
+          }
+
+          private def isValid: Boolean = {
             if (!_latestRead.stillValid) {
               // if defined after reread then return false==invalid
               _latestRead = unrecordedRead(handle)
@@ -756,7 +853,7 @@ private[ccstm] class InTxnImpl extends AccessHistory[TxnLevelImpl] with skel.Abs
             }
           }
         }
-        addReadResource(callback, 0, false)
+        whileValidating(callback)
       }
       false
     } else {

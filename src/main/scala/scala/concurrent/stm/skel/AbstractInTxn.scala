@@ -4,30 +4,111 @@ package scala.concurrent.stm
 package skel
 
 import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
+import collection.mutable.ArrayBuffer
+
+object AbstractInTxn {
+  abstract class SuccessCallback[A, B] {
+    protected def buffer(owner: A): ArrayBuffer[B => Unit]
+
+    def add(owner: A, handler: B => Unit) { }
+  }
+}
 
 trait AbstractInTxn extends InTxn {
-
-  //////////// interface for concrete implementations
-
-  private var _decider: ExternalDecider = null
-
-  def externalDecider = _decider
+  import Txn._
 
   override def currentLevel: AbstractNestingLevel
 
-  //////////// implementation of InTxn functionality
+  //////////// implementation of functionality for the InTxn implementer
 
-  def rootLevel: NestingLevel = currentLevel.root
-  def beforeCommit(handler: InTxn => Unit) { currentLevel.beforeCommit += handler }
-  def whileValidating(handler: InTxn => Unit) { currentLevel.whileValidating += handler }
-  def whilePreparing(handler: InTxnEnd => Unit) { currentLevel.whilePreparing += handler }
-  def whileCommitting(handler: InTxnEnd => Unit) { currentLevel.whileCommitting += handler }
-  def afterCommit(handler: Status => Unit) { currentLevel.afterCommit += handler }
-  def afterRollback(handler: Status => Unit) { currentLevel.afterRollback += handler }
+  protected def requireActive() {
+    currentLevel.status match {
+      case Active =>
+      case RolledBack(_) => throw RollbackError
+      case s => throw new IllegalStateException(s.toString)
+    }
+  }
+
+  protected def requireNotDecided() {
+    currentLevel.status match {
+      case s if !s.decided =>
+      case RolledBack(_) => throw RollbackError
+      case s => throw new IllegalStateException(s.toString)
+    }
+  }
+
+  protected def requireNotCompleted() {
+    currentLevel.status match {
+      case s if !s.completed =>
+      case RolledBack(_) => throw RollbackError
+      case s => throw new IllegalStateException(s.toString)
+    }
+  }
+
+  private var _decider: ExternalDecider = null
+  protected def externalDecider = _decider
+
+  protected val beforeCommitList = new CallbackList[InTxn => Unit]
+  protected val whileValidatingList = new CallbackList[NestingLevel => Unit]
+  protected val whilePreparingList = new CallbackList[InTxnEnd => Unit]
+  protected val whileCommittingList = new CallbackList[InTxnEnd => Unit]
+  protected val afterCommitList = new CallbackList[Status => Unit]
+  protected val afterRollbackList = new CallbackList[Status => Unit]
+
+  protected def checkpointCallbacks() {
+    val level = currentLevel
+    level._beforeCommitSize = beforeCommitList.size
+    level._whileValidatingSize = whileValidatingList.size
+    level._whilePreparingSize = whilePreparingList.size
+    level._whileCommittingSize = whileCommittingList.size
+    level._afterCommitSize = afterCommitList.size
+    level._afterRollbackSize = afterRollbackList.size
+  }
+
+  protected def rollbackCallbacks(): Seq[Status => Unit] = {
+    val level = currentLevel
+    beforeCommitList.size = level._beforeCommitSize
+    whileValidatingList.size = level._whileValidatingSize
+    whilePreparingList.size = level._whilePreparingSize
+    whileCommittingList.size = level._whileCommittingSize
+    afterCommitList.size = level._afterCommitSize
+    afterRollbackList.truncate(level._afterRollbackSize)
+  }
+
+  protected def fireWhileValidating() {
+    var level = currentLevel
+    var i = whileValidatingList.size - 1
+    while (i >= 0) {
+      while (level._whileValidatingSize > i)
+        level = level.par
+      if (level.status != Txn.Active) {
+        // skip the remaining handlers for this level
+        i = level._whileValidatingSize
+      } else {
+        try {
+          whileValidatingList(i)(level)
+        } catch {
+          case x => level.requestRollback(UncaughtExceptionCause(x))
+        }
+      }
+      i -= 1
+    }
+  }
+
+  //////////// implementation of functionality for the InTxn user
+
+  override def rootLevel: AbstractNestingLevel = currentLevel.root
+  def beforeCommit(handler: InTxn => Unit) { requireActive() ; beforeCommitList += handler }
+  def whileValidating(handler: NestingLevel => Unit) { requireActive() ; whileValidatingList += handler }
+  def whilePreparing(handler: InTxnEnd => Unit) { requireNotDecided() ; whilePreparingList += handler }
+  def whileCommitting(handler: InTxnEnd => Unit) { requireNotCompleted() ; whileCommittingList += handler }
+  def afterCommit(handler: Status => Unit) { requireNotCompleted() ; afterCommitList += handler }
+  def afterRollback(handler: Status => Unit) { requireNotCompleted() ; afterRollbackList += handler }
 
   def afterCompletion(handler: Status => Unit) {
-    afterCommit(handler)
-    afterRollback(handler)
+    requireNotCompleted()
+    afterCommitList += handler
+    afterRollbackList += handler
   }
 
   def setExternalDecider(decider: ExternalDecider) {
