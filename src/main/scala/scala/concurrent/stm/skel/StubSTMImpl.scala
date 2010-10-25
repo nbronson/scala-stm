@@ -1,7 +1,7 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
 package scala.concurrent.stm
-package ri
+package skel
 
 import java.lang.Throwable
 import concurrent.stm.Txn.Status

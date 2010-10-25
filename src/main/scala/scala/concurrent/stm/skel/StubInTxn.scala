@@ -1,7 +1,7 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
 package scala.concurrent.stm
-package ri
+package skel
 
 class StubInTxn extends InTxn {
   import concurrent.stm.Txn._
