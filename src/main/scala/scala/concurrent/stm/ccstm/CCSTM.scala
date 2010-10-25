@@ -138,7 +138,6 @@ private[ccstm] object CCSTM extends GV6 {
   //////////////// lock release helping
 
   def stealHandle(handle: Handle[_], m0: Meta, owningRoot: TxnLevelImpl) {
-    assert(owningRoot.status.isInstanceOf[Txn.RolledBack])
 
     // We can definitely make forward progress below at the expense of a
     // couple of extra CAS, so it is not useful for us to do a big spin with
@@ -258,7 +257,7 @@ private[ccstm] object CCSTM extends GV6 {
             owningRoot.requestRollback(
                 Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
           }
-          owningRoot.awaitCompletedOrDoomed()
+          owningRoot.awaitCompleted()
         }
 
         // we've already got the beginLookup, so no need to do a standalone

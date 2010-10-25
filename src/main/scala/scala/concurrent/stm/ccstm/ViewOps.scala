@@ -17,7 +17,7 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] {
   }
   def retryUntil(f: T => Boolean): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.await(handle, f)
-    case txn => if (!f(txn.get(handle))) txn.retry
+    case txn => if (!f(txn.get(handle))) Txn.retry(txn)
   }
   def set(v: T): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.set(handle, v)

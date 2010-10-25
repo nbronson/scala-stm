@@ -75,7 +75,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
             ", writeCount=" + writeCount +
             //TODO", retrySet.size=" + (if (null == _retrySet) "N/A" else _retrySet.size.toString) +
             ", readVersion=0x" + _readVersion.toHexString +
-            (if (barging) ", barging" else "") + ")")
+            (if (_barging) ", barging" else "") + ")")
   }
 
   //////////////// High-level behaviors
@@ -146,12 +146,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 //          // it is equivalent to retrying the outer txn
 //          if (currentLevel != null)
 //            currentLevel.requestRollback(Txn.ExplicitRetryCause)
-//          _currentLevel.checkAccess()
+//          _currentLevel.requireActive()
 //          takeRetrySet().awaitRetry()
 //          atomic(exec, block, 0)
 //        }
 //        case Txn.OptimisticFailureCause(_) => {
-//          _currentLevel.checkAccess()
+//          _currentLevel.requireActive()
 //          atomic(exec, block, 1 + consecutiveFailures)
 //        }
 //      }
@@ -185,12 +185,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           // it is equivalent to retrying the outer txn
           if (currentLevel != null)
             currentLevel.requestRollback(Txn.ExplicitRetryCause)
-          _currentLevel.checkAccess()
+          requireActive()
           takeRetrySet().awaitRetry()
           atomic(exec, block, 0)
         }
-        case Txn.OptimisticFailureCause(_) => {
-          _currentLevel.checkAccess()
+        case Txn.OptimisticFailureCause(_, _) => {
+          _currentLevel.requireActive()
           atomic(exec, block, 1 + consecutiveFailures)
         }
       }
@@ -244,7 +244,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   /** Returns the name of the problem on failure, null on success. */ 
-  private def checkRead(handle: Handle[_], ver: CCSTM.Version, index: Int): Symbol = {
+  private def checkRead(handle: Handle[_], ver: CCSTM.Version): Symbol = {
     (while (true) {
       val m1 = handle.meta
       if (!changing(m1) || owner(m1) == _slot) {
@@ -275,7 +275,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           val s = o.status
           val m2 = handle.meta
           if (changing(m2) && owner(m2) == owner(m1)) {
-            if (s.mightCommit)
+            if (!s.isInstanceOf[Txn.RolledBack])
               return 'pending_commit
 
             stealHandle(handle, m2, o)
@@ -293,7 +293,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
     // if write is not allowed, throw an exception of some sort
-    checkAccess()
+    requireActive()
 
     // TODO: boost our priority if we have written?
 
@@ -444,8 +444,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private[ccstm] def topLevelComplete(): Status = {
     try {
-      val s = commitStatus
-      if (s.isInstanceOf[RolledBack] || !callBefore())
+      if (!beforeCommitList.fire(_currentLevel, this))
         return completeRollback()
 
       if (writeCount == 0 && !writeResourcesPresent) {
@@ -475,7 +474,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         if (!_currentLevel.statusCAS(Preparing, Prepared) || !consultExternalDecider())
           return completeRollback()
 
-        assert(commitStatus == Preparing)
         _currentLevel.localStatus = Committing
       } else {
         // attempt to decide commit
@@ -501,9 +499,19 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       resetAccessHistory()
 
       if (s eq Committed)
-        afterCommitList.fire(this, s)
+        afterCommitList.fire(s, this)
       s
     }
+  }
+
+  private def consultExternalDecider(): Boolean = {
+    try {
+      if (!externalDecider.shouldCommit(this))
+        _currentLevel.forceRollback(OptimisticFailureCause('external_decision, None))
+    } catch {
+      case x => _currentLevel.forceRollback(UncaughtExceptionCause(x))
+    }
+    commitStatus eq Prepared
   }
 
   private def completeRollback(): Status = {
@@ -581,8 +589,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// status checks
 
-  private def checkAccess() { requireActive() }
-
   override protected def requireActive() {
     // TODO: optimize to remove a layer of indirection?
     val cur = _currentLevel
@@ -594,7 +600,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// lock management - similar to NonTxn but we also check for remote rollback
 
   private def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
-    CCSTM.weakAwaitUnowned(handle, m0, this)
+    CCSTM.weakAwaitUnowned(handle, m0, _currentLevel)
   }
 
   /** Returns the pre-acquisition metadata. */
@@ -618,9 +624,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// barrier implementations
   
   def get[T](handle: Handle[T]): T = {
-    if (barging) return readForWrite(handle)
+    if (_barging)
+      return readForWrite(handle)
 
-    checkAccess()
+    requireActive()
 
     var m1 = handle.meta
     if (owner(m1) == _slot) {
@@ -649,7 +656,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def getWith[T,Z](handle: Handle[T], f: T => Z): Z = {
-    if (barging)
+    if (_barging)
       return f(readForWrite(handle))
 
     val u = unrecordedRead(handle)
@@ -696,7 +703,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def unrecordedRead[T](handle: Handle[T]): UnrecordedRead[T] = {
-    checkUnrecordedRead()
+    requireNotDecided()
 
     var m1 = handle.meta
     var v: T = null.asInstanceOf[T]
@@ -708,18 +715,18 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       do {
         m0 = m1
         while (changing(m0)) {
-          if (_status eq InTxnImpl.Preparing) {
+          if (status != Active) {
             // can't wait
-            forceRollbackLocal(InTxnImpl.InvalidReadCause(handle, "contended unrecordedRead while validating"))
+            _currentLevel.forceRollback(OptimisticFailureCause('late_invalid_unrecordedRead, Some(handle)))
             throw RollbackError
           }
           weakAwaitUnowned(handle, m0)
           m0 = handle.meta
         }
         if (version(m0) > _readVersion) {
-          if (_status eq InTxnImpl.Preparing) {
+          if (status != Active) {
             // can't wait
-            forceRollbackLocal(InTxnImpl.InvalidReadCause(handle, "unrecordedRead of future value while validating"))
+            _currentLevel.forceRollback(OptimisticFailureCause('late_invalid_unrecordedRead, Some(handle)))
             throw RollbackError
           }
           revalidate(version(m0))
@@ -744,7 +751,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def freshOwner(mPrev: Meta) = owner(mPrev) == UnownedSlot
 
   def set[T](handle: Handle[T], v: T) {
-    checkAccess()
+    requireActive()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
     put(handle, f, v)
@@ -764,7 +771,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
   
   def swap[T](handle: Handle[T], v: T): T = {
-    checkAccess()
+    requireActive()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
     val v0 = swap(handle, f, v)
@@ -774,7 +781,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def trySet[T](handle: Handle[T], v: T): Boolean = {
-    checkAccess()
+    requireActive()
 
     val m0 = handle.meta
     if (owner(m0) == _slot) {
@@ -790,7 +797,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def readForWrite[T](handle: Handle[T]): T = {
-    checkAccess()
+    requireActive()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
     val v = allocatingGet(handle, f)
@@ -814,7 +821,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def getAndTransform[T](handle: Handle[T], func: T => T): T = {
-    checkAccess()
+    requireActive()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
     val v0 = getAndTransform(handle, f, func)
@@ -824,7 +831,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def tryTransform[T](handle: Handle[T], f: T => T): Boolean = {
-    checkAccess()
+    requireActive()
 
     val m0 = handle.meta
     if (owner(m0) == _slot) {

@@ -3,9 +3,8 @@
 package scala.concurrent.stm
 package ccstm
 
-import annotation.tailrec
+import scala.annotation.tailrec
 import java.util.concurrent.atomic.{AtomicLong, AtomicReferenceFieldUpdater}
-import ccstm.AccessHistory.UndoLog
 
 private[ccstm] object TxnLevelImpl {
   val nextId = new AtomicLong
@@ -14,13 +13,13 @@ private[ccstm] object TxnLevelImpl {
 }
 
 private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
-        extends skel.AbstractNestingLevel with AccessHistory.UndoLog {
+        extends AccessHistory.UndoLog with skel.AbstractNestingLevel {
   import skel.RollbackError
   import TxnLevelImpl._
 
   lazy val id = nextId.incrementAndGet
 
-  val root = if (par == null) this else par.root
+  val root: TxnLevelImpl = if (par == null) this else par.root
 
   /** If this is the current level of txn, then `localStatus` will be
    *  `Txn.Active`.  Once it is merged into the parent then the local status
@@ -29,7 +28,37 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
    */
   @volatile var localStatus: AnyRef = Txn.Active
 
-  def newLocalStatusUpdater: AtomicReferenceFieldUpdater[AnyRef] = {
+  @volatile var waiters = false
+
+  private def notifyCompleted() {
+    if (waiters)
+      synchronized { notifyAll() }
+  }
+
+  def awaitCompleted() {
+    if (par != null)
+      throw new IllegalStateException("awaitCompleted() is only supported for root levels")
+
+    waiters = true
+
+    var interrupted = false
+    try {
+      synchronized {
+        while (!status.completed) {
+          try {
+            wait
+          } catch {
+            case _: InterruptedException => interrupted = true
+          }
+        }
+      }
+    } finally {
+      if (interrupted)
+        Thread.currentThread.interrupt()
+    }
+  }
+
+  def newLocalStatusUpdater: AtomicReferenceFieldUpdater[TxnLevelImpl, AnyRef] = {
     AtomicReferenceFieldUpdater.newUpdater(classOf[TxnLevelImpl], classOf[AnyRef], "localStatus")
   }
 
@@ -56,25 +85,22 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
   }
 
   def statusCAS(v0: Txn.Status, v1: Txn.Status): Boolean = {
-    localStatusUpdater.compareAndSet(this, v0, v1)
+    val f = localStatusUpdater.compareAndSet(this, v0, v1)
+    if (f && v1.completed)
+      notifyCompleted()
+    f
   }
 
   def attemptMerge(): Boolean = {
     // First we need to set the current state to forwarding.  Regardless of
     // whether or not this fails we still need to unlink the parent.
-    localStatusUpdater.compareAndSet(this, Txn.Active, null)
+    val f = localStatusUpdater.compareAndSet(this, Txn.Active, null)
 
     // We must use CAS to unlink ourselves from our parent, because we race
     // with remote cancels.
     localStatusUpdater.compareAndSet(par, this, Txn.Active)
 
-    if (localStatus == null) {
-      // merge the handlers from AbstractTxnLevel
-      mergeIntoParent()
-      true
-    } else {
-      false
-    }
+    f
   }
 
   def forceRollback(cause: Txn.RollbackCause) {
@@ -104,6 +130,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
     }
     case before if localStatusUpdater.compareAndSet(this, before, rb) => {
       // success!
+      notifyCompleted()
       rb
     }
     case _ => {

@@ -31,7 +31,7 @@ class CallbackList[A] private (private var _size: Int,
       // permanently increase the memory footprint of this thread
       reset()
     } else {
-      java.util.Arrays.fill(_data, newSize, _size, null)
+      java.util.Arrays.fill(_data.asInstanceOf[Array[AnyRef]], newSize, _size, null)
       _size = newSize
     }
   }
