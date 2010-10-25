@@ -22,10 +22,10 @@ class CCSTMExecutor(val controlFlowTest: PartialFunction[Throwable, Boolean],
   def this() = this(CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
 
   def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z =
-      InTxnImpl().atomic(block)
+      InTxnImpl().atomic(this, block)
 
   override def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z =
-      InTxnImpl().atomicOneOf(blocks)
+      InTxnImpl().atomicOneOf(this, blocks)
 
   def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean =
       InTxnImpl().pushAlternative(block)

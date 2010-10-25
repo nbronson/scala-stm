@@ -5,7 +5,7 @@ package impl
 
 private[stm] object STMImpl {
 
-  private def instanceClassName: String = System.getProperty("scala.stm.impl", "scala.concurrent.stm.ri.StubSTMImpl")
+  private def instanceClassName: String = System.getProperty("scala.stm.impl", "scala.concurrent.stm.ccstm.CCSTM")
 
   private def instanceClass = Class.forName(instanceClassName)
 

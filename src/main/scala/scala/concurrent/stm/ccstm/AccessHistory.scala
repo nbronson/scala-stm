@@ -55,7 +55,7 @@ private[ccstm] object AccessHistory {
 /** The `AccessHistory` includes the read set and the write buffer for all
  *  transaction levels that have not been rolled back.
  */
-private[ccstm] class AccessHistory {
+private[ccstm] abstract class AccessHistory {
 
   protected def undoLog: AccessHistory.UndoLog
 
@@ -83,7 +83,7 @@ private[ccstm] class AccessHistory {
   /** Adds to `accum` all handles that were read during this nesting level, and
    *  all handles written in the current level but not in a parent.
    */
-  protected def accumulateRetrySet(accum: ReadSetBuilder) {
+  protected def accumulateAccessHistoryRetrySet(accum: ReadSetBuilder) {
     accumulateReads(accum)
     accumulateWrites(accum)
   }

@@ -35,6 +35,7 @@ class IsolatedRefSuite extends FunSuite {
     implicit def txn = Txn.findCurrent.get
 
     def get: A = ref.get
+    def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
     def retryUntil(f: A => Boolean) { if (!f(get)) retry }
     def set(v: A) { ref.set(v) }
@@ -62,6 +63,7 @@ class IsolatedRefSuite extends FunSuite {
     protected def view: Ref.View[A]
 
     def get: A = wrap { view.get }
+    def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
     def retryUntil(f: (A) => Boolean) { wrap { view.retryUntil(f) } }
     def set(v: A) { wrap { view.set(v) } }

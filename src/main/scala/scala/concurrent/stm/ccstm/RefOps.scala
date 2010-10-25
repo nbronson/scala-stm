@@ -15,9 +15,7 @@ private[ccstm] trait RefOps[T] extends Ref[T] {
 
   def get(implicit txn: InTxn): T = impl.get(handle)
   def getWith[Z](f: (T) => Z)(implicit txn: InTxn): Z = impl.getWith(handle, f)
-
-  // TODO
-  def relaxedGet(equiv: (T, T) => Boolean)(implicit txn: InTxn): T = throw new UnsupportedOperationException
+  def relaxedGet(equiv: (T, T) => Boolean)(implicit txn: InTxn): T = impl.relaxedGet(handle, equiv)
 
   //////////////// Sink stuff
 

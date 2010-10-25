@@ -35,7 +35,7 @@ object Source {
      *  @param f an idempotent function.
      *  @return the result of applying `f` to the value contained in `ref`.
      */
-    def getWith[Z](f: A => Z): Z = f(relaxedGet({ f(_) == f(_) }))
+    def getWith[Z](f: A => Z): Z
 
     /** Acts like `ref.relaxedGet(equiv)` if there is an active transaction,
      *  otherwise just returns `get`.
@@ -101,10 +101,13 @@ trait Source[+A] {
   /** Returns `f(get)`, possibly reevaluating `f` to avoid rollback if a
    *  conflicting change is made but the old and new values are equal after
    *  application of `f`.  Requires that `f(x) == f(y)` if `x == y`.
+   *
+   *  `getWith(f)` is equivalent to `f(relaxedGet({ f(_) == f(_) }))`, although
+   *  perhaps more efficient.
    *  @param f an idempotent function.
    *  @return the result of applying `f` to the value contained in this `Ref`.
    */
-  def getWith[Z](f: A => Z)(implicit txn: InTxn): Z = f(relaxedGet({ f(_) == f(_) }))
+  def getWith[Z](f: A => Z)(implicit txn: InTxn): Z
 
   /** Returns the same value as `get`, but allows the caller to determine
    *  whether `txn` should be rolled back if another thread changes the value

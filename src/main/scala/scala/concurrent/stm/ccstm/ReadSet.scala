@@ -48,7 +48,7 @@ private[ccstm] class ReadSet(size: Int,
       addPendingWakeup(handle, ver) // try again
   }
 
-  def stillValid: Boolean = {
+  private def stillValid: Boolean = {
     var i = size - 1
     while (i >= 0) {
       val m = handles(i).meta
