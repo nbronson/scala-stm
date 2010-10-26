@@ -3,29 +3,6 @@
 package scala.concurrent.stm
 package ccstm
 
-/** An STM implementation that uses a TL2-style timestamp system, but that
- *  performs eager acquisition of write locks and that revalidates the
- *  transaction to extend the read version, rather than rolling back.  Values
- *  are stored separately from version metadata, so metadata may be shared
- *  between multiple data slots.  Speculative values are stored in a separate
- *  write buffer, but since write permission is acquired eagerly the write
- *  permission bit is used to gate lookup in the write buffer.  (Write buffer
- *  lookups may miss only if metadata is shared.)
- * 
- *  Metadata is a 64 bit long, of which 1 bit records whether any pending
- *  wakeups should be triggered if the associated data is changed, 11 bits
- *  record the write permission owner (0 means no owner, 1 means non-txn
- *  owner), 1 bit flags values that are committing and may not be accessed, and
- *  51 bits record the version number.  2^51 is a bit more than 2*10^15.  On a
- *  hypothetical computer that could perform a non-transactional write in 10
- *  nanoseconds (each of which requires at least 2 atomic CAS-s), version
- *  numbers would not overflow for 250 days of continuous writes.  For
- *  reference my laptop, a Core2 Duo @ 2.8 Ghz, requires 45 nanoseconds for 
- *  that write (even with a very large ccstm.nontxn.runahead value).  A dual-
- *  socket 2.66 Ghz Xeon X5550 can perform it in 35 nanoseconds.
- *
- *  @author Nathan Bronson
- */
 private[ccstm] object CCSTM extends GV6 {
 
   /** The number of times to spin tightly when waiting for a condition to
@@ -276,8 +253,11 @@ private[ccstm] object CCSTM extends GV6 {
   }
 }
 
-/** This is the class that is dynamically instantiated by name to couple CCSTM
- *  with the Scala STM API.
+/** A library-only STM implementation that is based on the SwissTM algorithm.
+ *  The algorithm has been extended to reduce the overhead of non-transactional
+ *  accesses, and to support partial rollback.
+ *
+ *  @author Nathan Bronson
  */
 class CCSTM extends CCSTMExecutor with impl.STMImpl with CCSTMRefs.Factory {
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = Option(InTxnImpl.currentOrNull)

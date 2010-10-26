@@ -5,6 +5,11 @@ package scala.concurrent.stm.ccstm
 
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
 
+/** Provides a service that extends the paradigm of wait+notifyAll to allow
+ *  bulk wait and bulk notification; also does not require that the waiter and
+ *  the notifier share an object reference.  There is a chance of a false
+ *  positive.
+ */
 private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   import CCSTM.hash
 
@@ -53,7 +58,8 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   private def trigger(channel: Int) {
     val i = channel * ChannelSpacing
     val e = events.get(i)
-    if (null != e && events.compareAndSet(i, e, null)) e.trigger
+    if (e != null && events.compareAndSet(i, e, null))
+      e.trigger
   }
 
   /** See `trigger`. */
@@ -69,9 +75,11 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     val i = channel * ChannelSpacing
     (while (true) {
       val existing = events.get(i)
-      if (null != existing) return existing
+      if (null != existing)
+        return existing
       val fresh = new Event(channel)
-      if (events.compareAndSet(i, null, fresh)) return fresh
+      if (events.compareAndSet(i, null, fresh))
+        return fresh
     }).asInstanceOf[Nothing]
   }
 
@@ -89,7 +97,8 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
         val i = hash(ref, offset) & (numSources - 1)
         var p = pending.get(i)
         while((p & mask) == 0 && !pending.compareAndSet(i, p, p | mask)) {
-          if (_triggered) return false
+          if (_triggered)
+            return false
           p = pending.get(i)
         }
         return true

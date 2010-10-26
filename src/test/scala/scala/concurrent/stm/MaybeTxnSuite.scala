@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 
 class MaybeTxnSuite extends FunSuite {
   test("implicit InTxn match") {
-    implicit val txn: InTxn = new ri.StubInTxn
+    implicit val txn: InTxn = new skel.StubInTxn
 
     assert(implicitly[MaybeTxn] eq txn)
   }

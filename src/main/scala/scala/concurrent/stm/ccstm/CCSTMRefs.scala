@@ -5,7 +5,8 @@ package ccstm
 
 import java.util.concurrent.atomic.AtomicLongFieldUpdater
 
-object CCSTMRefs {
+private[ccstm] object CCSTMRefs {
+  
   trait Factory extends impl.RefFactory {
     def newRef(v0: Boolean): Ref[Boolean] = new BooleanRef(v0)
     def newRef(v0: Byte): Ref[Byte] = new ByteRef(v0)
@@ -16,7 +17,7 @@ object CCSTMRefs {
     def newRef(v0: Long): Ref[Long] = new LongRef(v0)
     def newRef(v0: Double): Ref[Double] = new DoubleRef(v0)
     def newRef(v0: Unit): Ref[Unit] = new GenericRef(v0)
-    def newRef[T](v0: T)(implicit m: _root_.scala.Predef.ClassManifest[T]): Ref[T] = new GenericRef(v0)
+    def newRef[T : ClassManifest](v0: T): Ref[T] = new GenericRef(v0)
   }
 
   private abstract class BaseRef[A] extends Handle[A] with RefOps[A] with ViewOps[A] {
@@ -26,6 +27,11 @@ object CCSTMRefs {
     def metaOffset: Int = 0
     def offset: Int = 0
   }
+
+  // Every call to AtomicLongFieldUpdater checks the receiver's type with
+  // receiver.getClass().isInstanceOf(declaringClass).  This means that there
+  // is a substantial performance benefit to putting the meta field in the
+  // concrete leaf classes instead of the abstract base class. 
 
   private val booleanUpdater = (new BooleanRef(false)).newMetaUpdater
   private val byteUpdater = (new ByteRef(0 : Byte)).newMetaUpdater
@@ -90,5 +96,4 @@ object CCSTMRefs {
     def metaCAS(m0: Long, m1: Long) = genericUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[GenericRef[_]], "meta")
   }
-
 }

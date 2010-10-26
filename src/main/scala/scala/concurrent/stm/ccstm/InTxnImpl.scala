@@ -3,7 +3,6 @@
 package scala.concurrent.stm
 package ccstm
 
-import annotation.tailrec
 
 private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
@@ -21,6 +20,9 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
   def currentOrNull(implicit mt: MaybeTxn) = active(apply())
 }
 
+/** In CCSTM there is one `InTxnImpl` per thread, and it is reused across all
+ *  transactions.
+ */
 private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
@@ -75,7 +77,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
             ", priority=" + _priority +
             ", readCount=" + readCount  +
             ", writeCount=" + writeCount +
-            //TODO", retrySet.size=" + (if (null == _retrySet) "N/A" else _retrySet.size.toString) +
+            ", retrySet.size=" + (if (_retrySet == null) "N/A" else _retrySet.size.toString) +
             ", readVersion=0x" + _readVersion.toHexString +
             (if (_barging) ", barging" else "") + ")")
   }

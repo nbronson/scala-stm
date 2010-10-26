@@ -6,8 +6,9 @@ package scala.concurrent.stm.ccstm
 import java.util.concurrent.atomic.AtomicReferenceArray
 
 
-/** This class manages a mapping from active InTxnImpl to a bounded integral range.
- *  This allows transaction identities to be packed into metadata.
+/** This class manages a mapping from active transaction to a bounded integral
+ *  range, so that transaction identities to be packed into some of the bits of
+ *  an integral value.
  */
 private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots: Int) {
 

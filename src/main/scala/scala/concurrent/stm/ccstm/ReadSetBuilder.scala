@@ -5,6 +5,9 @@ package scala.concurrent.stm.ccstm
 import annotation.tailrec
 
 
+/** This is basically a specialized builder for a map from `Handle` to
+ *  `Version`. 
+ */
 private[ccstm] final class ReadSetBuilder {
   private var _size = 0
   private var _handles = new Array[Handle[_]](maxSizeForCap(InitialCap) + 1)
@@ -15,13 +18,15 @@ private[ccstm] final class ReadSetBuilder {
   private def InitialCap = 16
   private def maxSizeForCap(cap: Int) = cap - (cap / 4)
 
-  def add(handle: Handle[_], version: CCSTM.Version): Unit = {
+  def size = _size
+
+  def add(handle: Handle[_], version: CCSTM.Version) {
     val slot = CCSTM.hash(handle.ref, handle.offset) & (_dispatch.length - 1)
     addImpl(slot, _dispatch(slot), handle, version)
   }
 
   @tailrec
-  private def addImpl(slot: Int, i: Int, handle: Handle[_], version: CCSTM.Version): Unit = {
+  private def addImpl(slot: Int, i: Int, handle: Handle[_], version: CCSTM.Version) {
     if (i == 0)
       append(slot, handle, version)
     else if (!hEq(_handles(i - 1), handle))
@@ -29,7 +34,7 @@ private[ccstm] final class ReadSetBuilder {
     // else it is a duplicate
   }
 
-  private def append(slot: Int, handle: Handle[_], version: CCSTM.Version): Unit = {
+  private def append(slot: Int, handle: Handle[_], version: CCSTM.Version) {
     val i = _size + 1
     _size = i
     _handles(i - 1) = handle
@@ -40,7 +45,7 @@ private[ccstm] final class ReadSetBuilder {
       grow()
   }
 
-  private def grow(): Unit = {
+  private def grow() {
     // store the current contents
     val s = _size
     val hh = _handles

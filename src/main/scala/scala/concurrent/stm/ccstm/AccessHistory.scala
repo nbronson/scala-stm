@@ -5,8 +5,40 @@ package scala.concurrent.stm.ccstm
 import annotation.tailrec
 
 private[ccstm] object AccessHistory {
+
+  /** The operations provided by the read set functionality of an
+   *  `AccessHistory`.
+   */
+  trait ReadSet {
+    protected def readCount: Int
+    protected def readHandle(i: Int): Handle[_]
+    protected def readVersion(i: Int): CCSTM.Version
+    protected def recordRead(handle: Handle[_], version: CCSTM.Version)
+    protected def readLocate(index: Int): AccessHistory.UndoLog
+  }
+
+  /** The operations provided by the write buffer functionality of an 
+   *  `AccessHistory`.
+   */
+  trait WriteBuffer {
+    protected def writeCount: Int
+    protected def getWriteHandle(i: Int): Handle[_]
+    protected def getWriteSpecValue[T](i: Int): T
+    protected def wasWriteFreshOwner(i: Int): Boolean
+    protected def stableGet[T](handle: Handle[T]): T
+    protected def put[T](handle: Handle[T], freshOwner: Boolean, value: T)
+    protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T
+    protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T
+    protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
+  }
+
+  /** Holds the write buffer undo log for a particular nesting level.  This is
+   *  exposed as an abstract class so that the different parts of the STM that
+   *  have per-nesting level objects can share a single instance.
+   */
   abstract class UndoLog {
     def par: UndoLog
+
     var prevReadCount = 0
     var prevWriteThreshold = 0
 
@@ -18,7 +50,7 @@ private[ccstm] object AccessHistory {
     private var _indices: Array[Int] = null
     private var _prevValues: Array[AnyRef] = null
 
-    final def logWrite(i: Int, v: AnyRef) {
+    def logWrite(i: Int, v: AnyRef) {
       if (_indices == null || _logSize == _indices.length)
         grow()
       _indices(_logSize) = i
@@ -36,12 +68,12 @@ private[ccstm] object AccessHistory {
       }
     }
 
-    @inline private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
+    private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
       System.arraycopy(src, 0, dst, 0, src.length)
       dst
     }
 
-    final def undoWrites(hist: AccessHistory) {
+    def undoWrites(hist: AccessHistory) {
       // it is important to apply in reverse order
       var i = _logSize - 1
       while (i >= 0) {
@@ -52,10 +84,26 @@ private[ccstm] object AccessHistory {
   }
 }
 
-/** The `AccessHistory` includes the read set and the write buffer for all
- *  transaction levels that have not been rolled back.
+/** `AccessHistory` includes the read set and the write buffer for all
+ *  transaction levels that have not been rolled back.  The read set is a
+ *  linear log that contains duplicates, rollback consists of truncating the
+ *  read log.  The write buffer is a hash table in which the entries are
+ *  addressed by index, rather than by Java reference.  Indices are allocated
+ *  sequentially, so a high-water mark (_wUndoThreshold) can differentiate
+ *  between entries that can be discarded on a partial rollback and those that
+ *  need to be reverted to a previous value.  An undo log is maintained for
+ *  writes to entries from enclosing nesting levels, but it is expected that
+ *  common usage will be handled mostly using the high-water mark.
+ *
+ *  It is intended that this class can be extended by the actual `InTxn`
+ *  implementation to reduce levels of indirection during barriers.  This is a
+ *  bit clumsy, and results in verbose method names to differentiate between
+ *  overlapping operations.  Please look away as the sausage is made.  To help
+ *  tame the mess the read set and write buffer interfaces are separated into
+ *  traits housed in the companion object.  This doesn't actually increase
+ *  modularity, but makes it easier to see what is going on.
  */
-private[ccstm] abstract class AccessHistory {
+private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with AccessHistory.WriteBuffer {
 
   protected def undoLog: AccessHistory.UndoLog
 
@@ -97,11 +145,11 @@ private[ccstm] abstract class AccessHistory {
   private var _rHandles = new Array[Handle[_]](InitialReadCapacity)
   private var _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
 
-  final protected def readCount = _rCount
-  final protected def readHandle(i: Int): Handle[_] = _rHandles(i)
-  final protected def readVersion(i: Int): CCSTM.Version = _rVersions(i)
+  protected def readCount = _rCount
+  protected def readHandle(i: Int): Handle[_] = _rHandles(i)
+  protected def readVersion(i: Int): CCSTM.Version = _rVersions(i)
 
-  final protected def recordRead(handle: Handle[_], version: CCSTM.Version) {
+  protected def recordRead(handle: Handle[_], version: CCSTM.Version) {
     val i = _rCount
     if (i == _rHandles.length)
       growReadSet()
@@ -226,12 +274,12 @@ private[ccstm] abstract class AccessHistory {
 
   //////// bulk access
 
-  final protected def writeCount = _wCount
+  protected def writeCount = _wCount
 
   //////// reads
 
   /** Reads a handle that is owned by this InTxnImpl family. */
-  final protected def stableGet[T](handle: Handle[T]): T = {
+  protected def stableGet[T](handle: Handle[T]): T = {
     val i = find(handle)
     if (i >= 0) {
       // hit
@@ -261,7 +309,7 @@ private[ccstm] abstract class AccessHistory {
 
   //////// writes
 
-  final protected def put[T](handle: Handle[T], freshOwner: Boolean, value: T) {
+  protected def put[T](handle: Handle[T], freshOwner: Boolean, value: T) {
     val ref = handle.ref
     val offset = handle.offset
     val slot = computeSlot(ref, offset)
@@ -278,18 +326,18 @@ private[ccstm] abstract class AccessHistory {
     }
   }
 
-  final protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T = {
+  protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T = {
     return getWriteSpecValue[T](findOrAllocate(handle, freshOwner))
   }
 
-  final protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T = {
+  protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T = {
     val i = findOrAllocate(handle, freshOwner)
     val before = getWriteSpecValue[T](i)
     setSpecValue(i, value)
     return before
   }
 
-  final protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T = {
+  protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T = {
     val i = findOrAllocate(handle, freshOwner)
     val before = getWriteSpecValue[T](i)
     setSpecValue(i, func(before))

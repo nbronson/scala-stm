@@ -5,39 +5,36 @@ package ccstm
 
 import scala.util.control.ControlThrowable
 
-object CCSTMExecutor {
-  val DefaultControlFlowTest = new PartialFunction[Throwable, Boolean] {
-    def isDefinedAt(x: Throwable): Boolean = true
-    def apply(x: Throwable): Boolean = x.isInstanceOf[ControlThrowable]
-  }
+private[ccstm] object CCSTMExecutor {
+  val DefaultControlFlowTest = { x: Throwable => x.isInstanceOf[ControlThrowable] }
 
   val DefaultPostDecisionFailureHandler = { (status: Txn.Status, x: Throwable) =>
     new Exception("status=" + status, x).printStackTrace()
   }
 }
 
-class CCSTMExecutor(val controlFlowTest: PartialFunction[Throwable, Boolean],
-                    val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit) extends TxnExecutor {
+private[ccstm] class CCSTMExecutor(val controlFlowTest: Throwable => Boolean,
+                                   val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit) extends TxnExecutor {
 
   def this() = this(CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
 
-  def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z =
-      InTxnImpl().atomic(this, block)
+  def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
 
-  override def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z =
-      InTxnImpl().atomicOneOf(this, blocks)
+  override def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = InTxnImpl().atomicOneOf(this, blocks)
 
-  def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean =
-      InTxnImpl().pushAlternative(block)
+  def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean = InTxnImpl().pushAlternative(block)
 
-  // no configuration is possible
+  // CCSTM has no configuration at the moment
   def configuration: Map[Symbol, Any] = Map.empty
+
   def withConfig(p: (Symbol, Any)): TxnExecutor = throw new IllegalArgumentException
 
-  def isControlFlow(x: Throwable): Boolean = controlFlowTest(x) // safe because default accepts everything
+  def isControlFlow(x: Throwable): Boolean = controlFlowTest(x)
   
-  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor =
-      new CCSTMExecutor(pf orElse controlFlowTest, postDecisionFailureHandler)
+  def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = {
+    val chained = { x: Throwable => if (pf.isDefinedAt(x)) pf(x) else controlFlowTest(x) }
+    new CCSTMExecutor(chained, postDecisionFailureHandler)
+  }
 
   def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor =
       new CCSTMExecutor(controlFlowTest, handler)

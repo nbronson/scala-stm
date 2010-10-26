@@ -103,6 +103,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
     f
   }
 
+  /** Must be called from the transaction's thread. */
   def forceRollback(cause: Txn.RollbackCause) {
     val s = rollbackImpl(Txn.RolledBack(cause))
     assert(s.isInstanceOf[Txn.RolledBack])
@@ -114,7 +115,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
     rollbackImpl(Txn.RolledBack(cause))
   }
 
-  @tailrec final def rollbackImpl(rb: Txn.RolledBack): Txn.Status = localStatus match {
+  @tailrec private def rollbackImpl(rb: Txn.RolledBack): Txn.Status = localStatus match {
     case null => {
       // already merged with parent, roll back both
       par.rollbackImpl(rb)

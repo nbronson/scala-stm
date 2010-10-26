@@ -3,7 +3,8 @@
 package scala.concurrent.stm
 package ccstm
 
-private[ccstm] trait ViewOps[T] extends Ref.View[T] {
+/** The default implementation of `Ref.View`'s operations in CCSTM. */
+private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
   
   def handle: Handle[T]
 
