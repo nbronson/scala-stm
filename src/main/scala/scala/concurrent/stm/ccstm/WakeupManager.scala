@@ -48,10 +48,12 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     var channel = 0
     var w = wakeups
     while (w != 0) {
-      val s = java.lang.Long.numberOfTrailingZeros(w) + 1
+      val s = java.lang.Long.numberOfTrailingZeros(w)
       w >>>= s
       channel += s
-      trigger(channel - 1)
+      trigger(channel)
+      w >>>= 1
+      channel += 1
     }
   }
 
