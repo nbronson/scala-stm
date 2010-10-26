@@ -262,7 +262,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   @inline final protected def getWriteHandle(i: Int) = _wAnys(handleI(i)).asInstanceOf[Handle[_]]
   @inline final protected def getWriteSpecValue[T](i: Int) = _wAnys(specValueI(i)).asInstanceOf[T]
   @inline private def getOffset(i: Int) = _wInts(offsetI(i))
-  @inline private def getNext(i: Int): Int = _wInts(nextI(i)) >>> 1
+  @inline private def getNext(i: Int): Int = _wInts(nextI(i)) >> 1
   @inline final protected def wasWriteFreshOwner(i: Int): Boolean = (_wInts(nextI(i)) & 1) != 0
 
   @inline private def setRef(i: Int, r: AnyRef) { _wAnys(refI(i)) = r }
