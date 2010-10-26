@@ -84,7 +84,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// High-level behaviors
 
-  def status: Status = _currentLevel.status
+  def status: Status = _currentLevel.statusAsCurrent
   def executor: TxnExecutor = _executor
   def undoLog: TxnLevelImpl = _currentLevel
   override def currentLevel: TxnLevelImpl = _currentLevel
@@ -198,7 +198,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
     fireWhileValidating()
     
-    !_currentLevel.localStatus.isInstanceOf[RolledBack]
+    !this.status.isInstanceOf[RolledBack]
   }
 
   /** Returns the name of the problem on failure, null on success. */ 
@@ -328,9 +328,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def nestedBegin(child: TxnLevelImpl) {
     // link to child races with remote rollback
     if (!_currentLevel.pushIfActive(child)) {
-      assert(_currentLevel.status.isInstanceOf[RolledBack])
+      assert(this.status.isInstanceOf[RolledBack])
       // null localStatus will forward to parent's status
-      child.localStatus = null
+      child.status = this.status
       throw RollbackError
     }
 
@@ -355,9 +355,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       nestedComplete()
   }
 
-  /** This gives the current level's status during a commit. */
-  private def commitStatus: Status = _currentLevel.localStatus.asInstanceOf[Status]
-
   private def nestedComplete(): Txn.Status = {
     val child = _currentLevel
     val result = (if (child.attemptMerge()) {
@@ -366,7 +363,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       Committed
     } else {
-      val s = commitStatus
+      val s = this.status
 
       // we must accumulate the retry set before rolling back the access history
       if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
@@ -435,7 +432,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         if (!_currentLevel.statusCAS(Preparing, Prepared) || !consultExternalDecider())
           return completeRollback()
 
-        _currentLevel.localStatus = Committing
+        _currentLevel.status = Committing
       } else {
         // attempt to decide commit
         if (!_currentLevel.statusCAS(Preparing, Committing))
@@ -444,12 +441,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       commitWrites(cv)
       whileCommittingList.fire(_currentLevel, this)
-      _currentLevel.localStatus = Committed
+      _currentLevel.status = Committed
 
       return Committed
       
     } finally {
-      val s = commitStatus
+      val s = this.status
       val cur = _currentLevel
 
       // detach the level before the after-commit callbacks, so that they
@@ -472,13 +469,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     } catch {
       case x => _currentLevel.forceRollback(UncaughtExceptionCause(x))
     }
-    commitStatus eq Prepared
+    this.status eq Prepared
   }
 
   private def completeRollback(): Status = {
     assert(_currentLevel.par == null)
 
-    val s = commitStatus
+    val s = this.status
 
     // we must accumulate the retry set before rolling back the access history
     if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
@@ -510,7 +507,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         return false
       i -= 1
     }
-    return commitStatus == Preparing
+    return this.status eq Preparing
   }
 
   private def acquireLock(handle: Handle[_]): Boolean = {
