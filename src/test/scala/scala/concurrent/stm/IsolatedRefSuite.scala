@@ -1,9 +1,8 @@
+/* scala-stm - (c) 2010, LAMP/EPFL */
+
 package scala.concurrent.stm
 
-import java.util.IdentityHashMap
-
 import org.scalatest.FunSuite
-import concurrent.stm.Ref.View
 
 
 /** Performs single-threaded tests of `Ref`. */
@@ -76,21 +75,21 @@ class IsolatedRefSuite extends FunSuite {
   }
 
   object FreshSingleAccess extends ((Ref[Int], Int) => Ref.View[Int]) {
-    def apply(ref: Ref[Int], innerDepth: Int): View[Int] = new TestingView[Int](innerDepth, ref) {
+    def apply(ref: Ref[Int], innerDepth: Int): Ref.View[Int] = new TestingView[Int](innerDepth, ref) {
       protected def view = ref.single
     }
     override def toString = "FreshSingle"
   }
 
   object ReuseSingleAccess extends ((Ref[Int], Int) => Ref.View[Int]) {
-    def apply(ref: Ref[Int], innerDepth: Int): View[Int] = new TestingView[Int](innerDepth, ref) {
+    def apply(ref: Ref[Int], innerDepth: Int): Ref.View[Int] = new TestingView[Int](innerDepth, ref) {
       protected val view = ref.single
     }
     override def toString = "ReuseSingle"
   }
 
   object RefAccess extends ((Ref[Int], Int) => Ref.View[Int]) {
-    def apply(ref: Ref[Int], innerDepth: Int): View[Int] = new TestingView[Int](innerDepth, ref) {
+    def apply(ref: Ref[Int], innerDepth: Int): Ref.View[Int] = new TestingView[Int](innerDepth, ref) {
       protected val view = new DynamicView[Int](ref)
     }
     override def toString = "Ref"

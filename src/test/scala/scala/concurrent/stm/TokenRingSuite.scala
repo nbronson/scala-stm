@@ -1,0 +1,75 @@
+/* scala-stm - (c) 2010, LAMP/EPFL */
+
+package scala.concurrent.stm
+
+import java.util.concurrent.CyclicBarrier
+import org.scalatest.FunSuite
+
+
+/** This test uses the transactional retry mechanism to pass a token around a
+ *  ring of threads.  When there are two threads this is a ping-pong test.  A
+ *  separate `Ref` is used for each handoff.
+ */
+class TokenRingSuite extends FunSuite {
+  test("small non-txn threesome") { tokenRing(3, 10000, false) }
+  test("small txn threesome") { tokenRing(3, 1000, true) }
+
+  test("non-txn ping-pong" /* , ExhaustiveTest */) { tokenRing(2, 1000000, false) }
+  test("non-txn threesome" /* , ExhaustiveTest */) { tokenRing(3, 1000000, false) }
+  test("non-txn large ring" /* , ExhaustiveTest */) { tokenRing(32, 10000, false) }
+  test("txn ping-pong" /* , ExhaustiveTest */) { tokenRing(2, 100000, true) }
+  test("txn threesome" /* , ExhaustiveTest */) { tokenRing(3, 100000, true) }
+  test("txn large ring" /* , ExhaustiveTest */) { tokenRing(32, 10000, true) }
+
+  def tokenRing(ringSize: Int, handoffsPerThread: Int, useTxns: Boolean) {
+    val ready = Array.tabulate(ringSize)(i => Ref(i == 0))
+    val threads = new Array[Thread](ringSize - 1)
+    val barrier = new CyclicBarrier(ringSize, new Runnable {
+      var start = 0L
+      def run {
+        val now = System.currentTimeMillis
+        if (start == 0) {
+          start = now
+        } else {
+          val elapsed = now - start
+          val handoffs = handoffsPerThread * ringSize
+          println("tokenRing(" + ringSize + "," + handoffsPerThread + "," + useTxns +
+            ")  total_elapsed=" + elapsed + " msec,  throughput=" +
+            (handoffs * 1000L) / elapsed + " handoffs/sec,  latency=" +
+            (elapsed * 1000000L) / handoffs + " nanos/handoff")
+        }
+      }
+    })
+
+    for (index <- 0 until ringSize) {
+      val work = new Runnable {
+        def run {
+          val next = (index + 1) % ringSize
+          barrier.await
+          for (h <- 0 until handoffsPerThread) {
+            if (!useTxns) {
+              ready(index).single retryUntil { _ == true }
+              ready(index).single() = false
+              ready(next).single() = true
+            } else {
+              atomic { implicit t =>
+                if (ready(index).get == false) retry
+                ready(index)() = false
+                ready(next)() = true
+              }
+            }
+          }
+          barrier.await
+        }
+      }
+      if (index < ringSize - 1) {
+        threads(index) = new Thread(work, "worker " + index)
+        threads(index).start
+      } else {
+        work.run
+      }
+    }
+
+    for (t <- threads) t.join
+  }
+}
