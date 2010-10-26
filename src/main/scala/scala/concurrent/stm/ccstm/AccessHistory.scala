@@ -197,7 +197,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   private def accumulateReads(accum: ReadSetBuilder) {
     var i = undoLog.prevReadCount
     while (i < _rCount) {
-      accum.add(_rHandles(i), _rVersions(i))
+      accum += (_rHandles(i), _rVersions(i))
       i += 1
     }
   }
@@ -479,7 +479,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     var i = _wCount - 1
     while (i >= _wUndoThreshold) {
       val h = getWriteHandle(i)
-      accum.add(h, CCSTM.version(h.meta))
+      accum += (h, CCSTM.version(h.meta))
       i -= 1
     }
   }

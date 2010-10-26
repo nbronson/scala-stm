@@ -96,7 +96,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  - block throws a control flow  */
 
   /** On commit, either returns a Z or throws the control-flow exception from
-   *  the committed attempted; on rollback, throws `RollbackError`.
+   *  the committed attempted; on rollback, throws an exception on a permanent
+   *  rollback or `RollbackError` on a transient rollback.
    */
   def attempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
     begin(exec, prevFailures, level)
@@ -110,50 +111,69 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
       }
     } finally {
-      if (complete() != Txn.Committed)
-        throw RollbackError
+      complete() match {
+        case Txn.RolledBack(Txn.UncaughtExceptionCause(x)) => throw x
+        case Txn.RolledBack(_) => throw RollbackError
+        case _ =>
+      }
     }
   }
 
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
-    var prevFailures = 0
-    (while (true) {
-      if (_currentLevel != null)
-        _currentLevel.requireActive()
-
-      val level = new TxnLevelImpl(this, _currentLevel)
-      try {
-        // successful attempt either returns a Z or throws a control-flow exception
-        return attempt(exec, prevFailures, level, block)
-      } catch {
-        case RollbackError =>
-      }
-
-      level.status.asInstanceOf[RolledBack].cause match {
-        case UncaughtExceptionCause(x) => {
-          // this is failure atomicity, roll back and rethrow
-          throw x
-        }
-        case ExplicitRetryCause => {
-          if (_currentLevel != null) {
-            // nested retry with no alternatives propagates to the parent txn,
-            // retry set accumulates
-            _currentLevel.forceRollback(ExplicitRetryCause)
-            throw RollbackError
-          } else {
-            // top-level retry
-            takeRetrySet().result().awaitRetry()
-            prevFailures = 0
-          }
-        }
-        case OptimisticFailureCause(_, _) => {
-          prevFailures += 1
-        }
-      }
-    }).asInstanceOf[Nothing]
+    if (!_alternatives.isEmpty) {
+      val z = atomicOneOf(exec, block :: takeAlternatives())
+      throw new impl.AlternativeResult(z)
+    } else {
+      atomicOneOf(exec, Seq(block))
+    }
   }
 
-  def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = throw new AbstractMethodError
+  def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
+    if (!_alternatives.isEmpty)
+      throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
+
+    (while (true) {
+      var rsSum: ReadSetBuilder = null
+
+      for (block <- blocks) {
+        var prevFailures = 0
+        var level: TxnLevelImpl = null
+        do {
+          // fail back to parent if it has been rolled back
+          if (_currentLevel != null)
+            _currentLevel.requireActive()
+
+          level = new TxnLevelImpl(this, _currentLevel)
+          try {
+            // successful attempt or permanent rollback either returns a Z or
+            // throws an exception != RollbackError
+            return attempt(exec, prevFailures, level, block)
+          } catch {
+            case RollbackError =>
+          }
+          prevFailures += 1
+        } while (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
+
+        val rs = takeRetrySet()
+        if (rsSum != null)
+          rsSum ++= rs
+        else
+          rsSum = rs
+      }
+
+      // we're out of alternatives
+      
+      if (_currentLevel != null) {
+        // retry the parent, including the sum of all of these retry sets
+        _retrySet = rsSum
+        _currentLevel.forceRollback(ExplicitRetryCause)
+        throw RollbackError
+      }
+
+      // top-level retry after waiting for something to change
+      rsSum.result().awaitRetry()
+    }).asInstanceOf[Nothing]
+  }
 
   def rollback(cause: RollbackCause): Nothing = {
     _currentLevel.forceRollback(cause)
