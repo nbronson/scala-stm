@@ -18,5 +18,8 @@ trait RefFactory {
   /** `T` will not be one of the primitive types (for which a `newRef`
    *  specialization exists).
    */ 
-  def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T]
+  def newRef[A : ClassManifest](v0: A): Ref[A]
+
+  def newTArray[A : ClassManifest](length: Int): TArray[A]
+  def newTArray[A : ClassManifest](data: Traversable[A]): TArray[A]
 }

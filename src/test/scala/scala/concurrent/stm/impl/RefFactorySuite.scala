@@ -5,27 +5,26 @@ package impl
 
 import org.scalatest.FunSuite
 import java.lang.String
-import collection.immutable.Map
 
 class RefFactorySuite extends FunSuite {
 
-  private case class Fact(expected: String) extends RefFactory {
+  private case class Fact(expected: String) extends skel.StubSTMImpl with RefFactory {
 
     private def called(w: String) = {
       assert(w === expected)
       null
     }
 
-    def newRef(v0: Boolean): Ref[Boolean] = called("Boolean")
-    def newRef(v0: Byte): Ref[Byte] = called("Byte")
-    def newRef(v0: Short): Ref[Short] = called("Short")
-    def newRef(v0: Char): Ref[Char] = called("Char")
-    def newRef(v0: Int): Ref[Int] = called("Int")
-    def newRef(v0: Float): Ref[Float] = called("Float")
-    def newRef(v0: Long): Ref[Long] = called("Long")
-    def newRef(v0: Double): Ref[Double] = called("Double")
-    def newRef(v0: Unit): Ref[Unit] = called("Unit")
-    def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
+    override def newRef(v0: Boolean): Ref[Boolean] = called("Boolean")
+    override def newRef(v0: Byte): Ref[Byte] = called("Byte")
+    override def newRef(v0: Short): Ref[Short] = called("Short")
+    override def newRef(v0: Char): Ref[Char] = called("Char")
+    override def newRef(v0: Int): Ref[Int] = called("Int")
+    override def newRef(v0: Float): Ref[Float] = called("Float")
+    override def newRef(v0: Long): Ref[Long] = called("Long")
+    override def newRef(v0: Double): Ref[Double] = called("Double")
+    override def newRef(v0: Unit): Ref[Unit] = called("Unit")
+    override def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
   }
 
   object TestRef extends RefCompanion {

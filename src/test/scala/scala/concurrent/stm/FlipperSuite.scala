@@ -15,7 +15,7 @@ class FlipperSuite extends FunSuite {
   val DEFAULT_THREAD_COUNT = 4
   val DEFAULT_WORD_COUNT = 4096
   val DEFAULT_FLIP_PROB = 0.5f
-  val DEFAULT_REF_FACTORY = () => Ref(0)
+  val DEFAULT_REF_ARRAY_FACTORY = { (n: Int) => (Array.tabulate[Ref[Int]](n) { _ => Ref(0) }) : IndexedSeq[Ref[Int]] }
 
   test("small flipper test") {
     Config(
@@ -26,7 +26,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT / 2,
       DEFAULT_FLIP_PROB,
       0,
-      DEFAULT_REF_FACTORY).runTest
+      DEFAULT_REF_ARRAY_FACTORY).runTest
   }
 
   test("default flipper test") {
@@ -38,7 +38,19 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT,
       DEFAULT_FLIP_PROB,
       0,
-      DEFAULT_REF_FACTORY).runTest
+      DEFAULT_REF_ARRAY_FACTORY).runTest
+  }
+
+  test("default flipper test w/TArray") {
+    Config(
+      DEFAULT_SYNC_COUNT,
+      DEFAULT_TRANS_COUNT,
+      DEFAULT_INSTR_COUNT,
+      DEFAULT_THREAD_COUNT,
+      DEFAULT_WORD_COUNT,
+      DEFAULT_FLIP_PROB,
+      0,
+      { (n: Int) => TArray[Int](n).refs }).runTest
   }
 
   test("random flipper test") {
@@ -51,7 +63,7 @@ class FlipperSuite extends FunSuite {
         DEFAULT_WORD_COUNT,
         DEFAULT_FLIP_PROB,
         System.currentTimeMillis + System.nanoTime,
-        DEFAULT_REF_FACTORY).runTest
+        DEFAULT_REF_ARRAY_FACTORY).runTest
     }
   }
 
@@ -62,7 +74,7 @@ class FlipperSuite extends FunSuite {
                     wordCount: Int,
                     flipProb: Float,
                     randSeed: Long,
-                    refFactory: () => Ref[Int]) {
+                    refArrayFactory: Int => IndexedSeq[Ref[Int]]) {
 
     private val len = syncCount*transCount*instrCount*threadCount
     private val rand = new java.util.Random(randSeed)
@@ -95,7 +107,7 @@ class FlipperSuite extends FunSuite {
   }
 
   abstract class FlipperTask(val config: Config,
-                             val A: Array[Ref[Int]],
+                             val A: IndexedSeq[Ref[Int]],
                              val P: Array[Ref[Boolean]],
                              val computeP: Boolean,
                              val id: Int,
@@ -152,8 +164,8 @@ class FlipperSuite extends FunSuite {
     A
   }
 
-  def computeParallelTxn(config: Config, P: Array[Ref[Boolean]]): Array[Ref[Int]] = {
-    val A = Array.tabulate[Ref[Int]](config.wordCount) { _ => config.refFactory() }
+  def computeParallelTxn(config: Config, P: Array[Ref[Boolean]]): IndexedSeq[Ref[Int]] = {
+    val A = config.refArrayFactory(config.wordCount)
     for (sync <- 0 until config.syncCount) {
       val tasks = (for (thread <- 0 until config.threadCount) yield {
         new FlipperTask(config, A, P, false, thread, sync) {

@@ -22,7 +22,10 @@ class StubSTMImpl extends impl.STMImpl {
   def newRef(v0: Long): Ref[Long] = throw new AbstractMethodError
   def newRef(v0: Double): Ref[Double] = throw new AbstractMethodError
   def newRef(v0: Unit): Ref[Unit] = throw new AbstractMethodError
-  def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = throw new AbstractMethodError
+  def newRef[A : ClassManifest](v0: A): Ref[A] = throw new AbstractMethodError
+
+  def newTArray[A : ClassManifest](length: Int): TArray[A] = throw new AbstractMethodError
+  def newTArray[A : ClassManifest](data: Traversable[A]): TArray[A] = throw new AbstractMethodError
 
   //////// TxnContext
 

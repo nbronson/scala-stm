@@ -12,7 +12,7 @@ class HistogramSuite extends FunSuite {
                                           (1000000, "1M", List[Tag](/*ExhaustiveTest*/)))) {
     for (buckets <- List(1, 30, 10000)) {
       for (threads <- List(1, 2, 4, 8, 16, 32, 64, 128, 256, 512) if (threads <= 2*Runtime.getRuntime.availableProcessors)) {
-        for (useTArray <- List(false /*, true */)) {
+        for (useTArray <- List(false, true)) {
           val str = ("" + buckets + " buckets, " + threads + " threads, " +
                   (if (useTArray) "TArray[Int]" else "Array[Ref[Int]]"))
           addTest("single-op-txn, " + str + ", " + name, groups:_*) {
@@ -42,8 +42,7 @@ class HistogramSuite extends FunSuite {
                 samplesPerTxn: Int) {
 
     val buckets: IndexedSeq[Ref[Int]] = (if (useTArray) {
-      // TArray[Int](bucketCount).refs
-      throw new UnsupportedOperationException
+      TArray[Int](bucketCount).refs
     } else {
       Array.tabulate(bucketCount)({ _ => Ref(0)})
     })

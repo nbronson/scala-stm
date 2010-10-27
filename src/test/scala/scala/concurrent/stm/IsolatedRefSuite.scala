@@ -27,6 +27,11 @@ class IsolatedRefSuite extends FunSuite {
     override def toString = "UnknownGeneric"
   }
 
+  object ArrayElementFactory extends (Int => Ref[Int]) {
+    def apply(v0: Int) = (TArray[Int]((v0 - 5) until (v0 + 5))).refs(5)
+    override def toString = "ArrayElement"
+  }
+
 
   // This implements Ref.View, but requires a surrounding InTxn context and
   // forwards to Ref's methods.
@@ -111,7 +116,7 @@ class IsolatedRefSuite extends FunSuite {
   private def createTests(name: String, v0: Int)(block: (() => Ref.View[Int]) => Unit) {
     for (outerLevels <- 0 until 2;
          innerLevels <- 0 until 2;
-         refFactory <- List(PrimitiveFactory, KnownGenericFactory, UnknownGenericFactory);
+         refFactory <- List(PrimitiveFactory, KnownGenericFactory, UnknownGenericFactory, ArrayElementFactory);
          viewFactory <- List(FreshSingleAccess, ReuseSingleAccess, RefAccess);
          if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
       test("outer=" + outerLevels + ", inner=" + innerLevels + ", " +
