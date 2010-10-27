@@ -66,7 +66,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  `globalVersion.get`, must never decrease, and each time it is
    *  changed the read set must be revalidated.  Lazily assigned.
    */
-  private var _readVersion: Version = freshReadVersion
+  private var _readVersion: Version = 0
 
   private var _retrySet: ReadSetBuilder = null
 
@@ -399,9 +399,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def topLevelBegin(exec: TxnExecutor, child: TxnLevelImpl) {
     _executor = exec 
     _currentLevel = child
-    _priority = CCSTM.hash(_currentLevel, 0)
+    //_priority = CCSTM.hash(_currentLevel, 0)
+    // TODO: compute priority lazily, only if needed
+    _priority = FastSimpleRandom.nextInt() // CCSTM.hash(_currentLevel, 0)
     // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
     _slot = slotManager.assign(_currentLevel, _slot)
+    _readVersion = freshReadVersion
   }
 
   def complete(): Txn.Status = {
@@ -453,16 +456,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def attemptTopLevelComplete(): Boolean = {
-    if (!beforeCommitList.fire(_currentLevel, this))
+    val root = _currentLevel
+
+    if (!beforeCommitList.fire(root, this))
       return false
 
-    if (writeCount == 0 && !writeResourcesPresent) {
       // read-only transactions are easy to commit, because all of the reads
       // are already guaranteed to be consistent
-      return _currentLevel.statusCAS(Active, Committed)
-    }
+    if (writeCount == 0 && !writeResourcesPresent)
+      return root.statusCAS(Active, Committed)
 
-    if (!_currentLevel.statusCAS(Active, Preparing) || !acquireLocks())
+    if (!root.statusCAS(Active, Preparing) || !acquireLocks())
       return false
 
     // this is our linearization point
@@ -473,24 +477,24 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (!revalidateImpl())
       return false
 
-    if (!whilePreparingList.fire(_currentLevel, this))
+    if (!whilePreparingList.fire(root, this))
       return false
 
     if (externalDecider != null) {
       // external decider doesn't have to content with cancel by other threads
-      if (!_currentLevel.statusCAS(Preparing, Prepared) || !consultExternalDecider())
+      if (!root.statusCAS(Preparing, Prepared) || !consultExternalDecider())
         return false
 
-      _currentLevel.status = Committing
+      root.status = Committing
     } else {
       // attempt to decide commit
-      if (!_currentLevel.statusCAS(Preparing, Committing))
+      if (!root.statusCAS(Preparing, Committing))
         return false
     }
 
     commitWrites(cv)
-    whileCommittingList.fire(_currentLevel, this)
-    _currentLevel.status = Committed
+    // TODO: handle exceptions and don't recheck status for: whileCommittingList.fire(root, this)
+    root.status = Committed
 
     return true
   }
