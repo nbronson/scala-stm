@@ -222,7 +222,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   // speculative value for a bucket with an index less than this threshold are
   // logged to allow partial rollback.  Buckets with an index greater than the
   // undoThreshold can be discarded during rollback.  This means that despite
-  // nesting, each <ref,offset> key is stored at most once in the write buffer.
+  // nesting, each <base,offset> key is stored at most once in the write buffer.
 
   /** The maximum index for which undo entries are required. */
   private var _wUndoThreshold = 0
@@ -291,18 +291,18 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def find(handle: Handle[_]): Int = {
-    val ref = handle.ref
+    val base = handle.base
     val offset = handle.offset
-    find(ref, offset, computeSlot(ref, offset))
+    find(base, offset, computeSlot(base, offset))
   }
 
-  private def computeSlot(ref: AnyRef, offset: Int): Int = {
-    if (_wCapacity == InitialWriteCapacity) 0 else CCSTM.hash(ref, offset) & (_wCapacity - 1)
+  private def computeSlot(base: AnyRef, offset: Int): Int = {
+    if (_wCapacity == InitialWriteCapacity) 0 else CCSTM.hash(base, offset) & (_wCapacity - 1)
   }
 
-  private def find(ref: AnyRef, offset: Int, slot: Int): Int = {
+  private def find(base: AnyRef, offset: Int, slot: Int): Int = {
     var i = _wDispatch(slot)
-    while (i >= 0 && ((ref ne getRef(i)) || offset != getOffset(i)))
+    while (i >= 0 && ((base ne getRef(i)) || offset != getOffset(i)))
       i = getNext(i)
     i
   }
@@ -310,10 +310,10 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   //////// writes
 
   protected def put[T](handle: Handle[T], freshOwner: Boolean, value: T) {
-    val ref = handle.ref
+    val base = handle.base
     val offset = handle.offset
-    val slot = computeSlot(ref, offset)
-    val i = find(ref, offset, slot)
+    val slot = computeSlot(base, offset)
+    val i = find(base, offset, slot)
     if (i >= 0) {
       //assert(!freshOwner)
       // hit, update an existing entry, optionally with undo
@@ -322,7 +322,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       setSpecValue(i, value)
     } else {
       // miss, create a new entry
-      append(ref, offset, handle, freshOwner, value, slot)
+      append(base, offset, handle, freshOwner, value, slot)
     }
   }
 
@@ -345,10 +345,10 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def findOrAllocate(handle: Handle[_], freshOwner: Boolean): Int = {
-    val ref = handle.ref
+    val base = handle.base
     val offset = handle.offset
-    val slot = computeSlot(ref, offset)
-    val i = find(ref, offset, slot)
+    val slot = computeSlot(base, offset)
+    val i = find(base, offset, slot)
     if (i >= 0) {
       //assert(!freshOwner) // TODO: remove
       // hit, undo log entry is required to capture the potential reads that
@@ -358,13 +358,13 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       return i
     } else {
       // miss, create a new entry using the existing data value
-      return append(ref, offset, handle, freshOwner, handle.data, slot)
+      return append(base, offset, handle, freshOwner, handle.data, slot)
     }
   }
 
-  private def append(ref: AnyRef, offset: Int, handle: Handle[_], freshOwner: Boolean, value: Any, slot: Int): Int = {
+  private def append(base: AnyRef, offset: Int, handle: Handle[_], freshOwner: Boolean, value: Any, slot: Int): Int = {
     val i = _wCount
-    setRef(i, ref)
+    setRef(i, base)
     setSpecValue(i, value)
     setHandle(i, handle)
     setOffset(i, offset)

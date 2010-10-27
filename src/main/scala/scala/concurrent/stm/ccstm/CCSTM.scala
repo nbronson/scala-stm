@@ -27,14 +27,14 @@ private[ccstm] object CCSTM extends GV6 {
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
   val wakeupManager = new WakeupManager // default size
 
-  /** Hashes `ref` with `offset`, mixing the resulting bits.  This hash
+  /** Hashes `base` with `offset`, mixing the resulting bits.  This hash
    *  function is chosen so that it is suitable as a basis for hopscotch
    *  hashing (among other purposes).
-   *  @throw NullPointerException if `ref` is null. 
+   *  @throw NullPointerException if `base` is null.
    */
-  def hash(ref: AnyRef, offset: Int): Int = {
-    if (null == ref) throw new NullPointerException
-    var h = System.identityHashCode(ref) ^ (0x40108097 * offset)
+  def hash(base: AnyRef, offset: Int): Int = {
+    if (null == base) throw new NullPointerException
+    var h = System.identityHashCode(base) ^ (0x40108097 * offset)
     h ^= (h >>> 20) ^ (h >>> 12)
     h ^= (h >>> 7) ^ (h >>> 4)
     h
@@ -185,7 +185,7 @@ private[ccstm] object CCSTM extends GV6 {
 
     // to wait for a non-txn owner, we use pendingWakeups
     val event = wakeupManager.subscribe
-    event.addSource(handle.ref, handle.metaOffset)
+    event.addSource(handle.base, handle.metaOffset)
     do {
       val m = handle.meta
       if (ownerAndVersion(m) != ownerAndVersion(m0))

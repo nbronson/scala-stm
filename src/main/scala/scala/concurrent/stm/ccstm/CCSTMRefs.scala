@@ -18,12 +18,15 @@ private[ccstm] object CCSTMRefs {
     def newRef(v0: Double): Ref[Double] = new DoubleRef(v0)
     def newRef(v0: Unit): Ref[Unit] = new GenericRef(v0)
     def newRef[T : ClassManifest](v0: T): Ref[T] = new GenericRef(v0)
+    def newTArray[A: ClassManifest](length: Int): TArray[A] = new TArrayImpl[A](length)
+    def newTArray[A: ClassManifest](data: Traversable[A]): TArray[A] = new TArrayImpl[A](data)
   }
 
   private abstract class BaseRef[A] extends Handle[A] with RefOps[A] with ViewOps[A] {
-    def ref: Ref[A] = this
-    def single: Ref.View[A] = this
     def handle: Handle[A] = this
+    def single: Ref.View[A] = this
+    def ref: Ref[A] = this
+    def base: AnyRef = this
     def metaOffset: Int = 0
     def offset: Int = 0
   }

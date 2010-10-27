@@ -590,11 +590,11 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // update the value
       handle.data = getWriteSpecValue[Any](i)
 
-      // note that we accumulate wakeup entries for each ref and offset, even
+      // note that we accumulate wakeup entries for each base and offset, even
       // if they share metadata
       val m = handle.meta
       if (pendingWakeups(m))
-        wakeups |= wakeupManager.prepareToTrigger(handle.ref, handle.offset)
+        wakeups |= wakeupManager.prepareToTrigger(handle.base, handle.offset)
 
       assert(owner(m) == _slot)
 
@@ -657,7 +657,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     var m1 = handle.meta
     if (owner(m1) == _slot) {
-      // Self-owned.  This particular ref+offset might not be in the write
+      // Self-owned.  This particular base+offset might not be in the write
       // buffer, but it's definitely not in anybody else's.
       return stableGet(handle)
     }
@@ -836,7 +836,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     // We must put something in the buffer before calling revalidate in case we
     // roll back, so that the ownership gets released.
     //
-    // If not f, then this was already self-owned.  This particular ref+offset
+    // If not f, then this was already self-owned.  This particular base+offset
     // might not be in the write buffer, but it's definitely not in anybody
     // else's.
     if (f)

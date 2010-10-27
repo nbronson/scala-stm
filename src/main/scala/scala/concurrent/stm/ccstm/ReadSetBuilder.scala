@@ -21,7 +21,7 @@ private[ccstm] final class ReadSetBuilder {
   def size = _size
 
   def += (handle: Handle[_], version: CCSTM.Version) {
-    val slot = CCSTM.hash(handle.ref, handle.offset) & (_dispatch.length - 1)
+    val slot = CCSTM.hash(handle.base, handle.offset) & (_dispatch.length - 1)
     addImpl(slot, _dispatch(slot), handle, version)
   }
 
@@ -63,12 +63,12 @@ private[ccstm] final class ReadSetBuilder {
     var i = 0
     while (i < s) {
       val h = hh(i)
-      append(CCSTM.hash(h.ref, h.offset) & (c - 1), h, vv(i))
+      append(CCSTM.hash(h.base, h.offset) & (c - 1), h, vv(i))
       i += 1
     }
   }
 
-  private def hEq(a: Handle[_], b: Handle[_]) = (a eq b) || ((a.ref eq b.ref) && (a.offset == b.offset))
+  private def hEq(a: Handle[_], b: Handle[_]) = (a eq b) || ((a.base eq b.base) && (a.offset == b.offset))
 
   def ++= (rhs: ReadSetBuilder) {
     var i = rhs.size - 1

@@ -37,7 +37,7 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
 
   override def hashCode: Int = {
     val h = handle
-    CCSTM.hash(h.ref, h.offset)
+    CCSTM.hash(h.base, h.offset)
   }
 
   override def equals(rhs: Any): Boolean = {
@@ -45,7 +45,7 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
       case r: RefOps[_] => {
         val h1 = handle
         val h2 = r.handle
-        (h1.ref eq h2.ref) && (h1.offset == h2.offset)
+        (h1.base eq h2.base) && (h1.offset == h2.offset)
       }
       case r: Ref[_] => {
         // give the rhs the opportunity to compare itself to us

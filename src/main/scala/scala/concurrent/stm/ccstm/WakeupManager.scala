@@ -28,8 +28,8 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
    *  Multiple return values may be passed to a single invocation of
    *  `trigger` by merging them with bitwise-OR.
    */
-  def prepareToTrigger(ref: AnyRef, offset: Int): Long = {
-    val i = hash(ref, offset) & (numSources - 1)
+  def prepareToTrigger(base: AnyRef, offset: Int): Long = {
+    val i = hash(base, offset) & (numSources - 1)
     var z = 0L
     do {
       z = pending.get(i)
@@ -92,11 +92,11 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     def triggered = _triggered
 
     /** Returns false if triggered. */
-    def addSource(ref: AnyRef, offset: Int): Boolean = {
+    def addSource(base: AnyRef, offset: Int): Boolean = {
       if (_triggered) {
         return false
       } else {
-        val i = hash(ref, offset) & (numSources - 1)
+        val i = hash(base, offset) & (numSources - 1)
         var p = pending.get(i)
         while((p & mask) == 0 && !pending.compareAndSet(i, p, p | mask)) {
           if (_triggered)

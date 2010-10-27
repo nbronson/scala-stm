@@ -41,7 +41,7 @@ private[ccstm] object NonTxn {
 
   private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta) {
     val event = wakeupManager.subscribe
-    event.addSource(handle.ref, handle.metaOffset)
+    event.addSource(handle.base, handle.metaOffset)
     do {
       val m = handle.meta
       if (version(m) != version(m0) || changing(m)) {
@@ -113,7 +113,7 @@ private[ccstm] object NonTxn {
     // can just assume that it's true.
     if (pendingWakeups(m0) || !handle.metaCAS(m0, withCommit(m0, newVersion))) {
       handle.meta = withCommit(withPendingWakeups(m0), newVersion)
-      val r = handle.ref
+      val r = handle.base
 
       // we notify on offset for threads that are waiting for handle to change
       val o1 = handle.offset
