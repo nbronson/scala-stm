@@ -49,7 +49,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private var _executor: TxnExecutor = null
   private var _barging: Boolean = false
   private var _slot: Slot = 0
-  private var _rootLevel: TxnLevelImpl = null
   private var _currentLevel: TxnLevelImpl = null
 
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
@@ -100,6 +99,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  rollback or `RollbackError` on a transient rollback.
    */
   def attempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
+    var bug3965check = true
     begin(exec, prevFailures, level)
     try {
       try {
@@ -111,6 +111,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
       }
     } finally {
+      assert(bug3965check)
+      bug3965check = false
       complete() match {
         case Txn.RolledBack(Txn.UncaughtExceptionCause(x)) => throw x
         case Txn.RolledBack(_) => throw RollbackError
@@ -124,8 +126,42 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       val z = atomicOneOf(exec, block :: takeAlternatives())
       throw new impl.AlternativeResult(z)
     } else {
-      atomicOneOf(exec, Seq(block))
+      atomicImpl(exec, block)
     }
+  }
+
+  def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    (while (true) {
+      var prevFailures = 0
+      var level: TxnLevelImpl = null
+      do {
+        // fail back to parent if it has been rolled back
+        if (_currentLevel != null)
+          _currentLevel.requireActive()
+
+        level = new TxnLevelImpl(this, _currentLevel)
+        try {
+          // successful attempt or permanent rollback either returns a Z or
+          // throws an exception != RollbackError
+          return attempt(exec, prevFailures, level, block)
+        } catch {
+          case RollbackError =>
+        }
+        prevFailures += 1
+      } while (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
+      level = null
+
+      // we're out of alternatives
+
+      if (_currentLevel != null) {
+        // retry the parent
+        _currentLevel.forceRollback(ExplicitRetryCause)
+        throw RollbackError
+      }
+
+      // top-level retry after waiting for something to change
+      takeRetrySet().result().awaitRetry()
+    }).asInstanceOf[Nothing]
   }
 
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
@@ -377,10 +413,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def nestedComplete(): Txn.Status = {
     val child = _currentLevel
-    val result = (if (child.attemptMerge()) {
+    if (child.attemptMerge()) {
       // child was successfully merged
       mergeAccessHistory()
-
+      _currentLevel = child.par
       Committed
     } else {
       val s = this.status
@@ -389,97 +425,74 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
         accumulateRetrySet()
 
-      // release the locks before the callbacks
+      // callbacks must be last, because they might throw an exception
       rollbackAccessHistory(_slot)
       val handlers = rollbackCallbacks()
-      fireAfterRollback(handlers, s)
+      _currentLevel = child.par
+      fireAfterCompletion(handlers, s)
       s
-    })
-
-    // unlinking the child must be performed regardless of success or failure
-    _currentLevel = child.par
-
-    result
-  }
-
-  private def fireAfterRollback(handlers: Seq[Status => Unit], s: Status) {
-    var i = handlers.size - 1
-    while (i >= 0) {
-      try {
-        handlers(i)(s)
-      } catch {
-        case x => {
-          try {
-            executor.postDecisionFailureHandler(s, x)
-          } catch {
-            case xx => xx.printStackTrace()
-          }
-        }
-      }
-      i -= 1
     }
   }
 
-  private[ccstm] def topLevelComplete(): Status = {
-    try {
-      if (!beforeCommitList.fire(_currentLevel, this))
-        return completeRollback()
+  private def topLevelComplete(): Status = {
+    val committed = attemptTopLevelComplete()
+    val s = if (committed) Committed else this.status
 
-      if (writeCount == 0 && !writeResourcesPresent) {
-        // read-only transactions are easy to commit, because all of the reads
-        // are already guaranteed to be consistent
-        if (!_currentLevel.statusCAS(Active, Committed))
-          return completeRollback()
-        return Committed
-      }
+    if (!committed) {
+      if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
+        accumulateRetrySet()
 
-      if (!_currentLevel.statusCAS(Active, Preparing) || !acquireLocks())
-        return completeRollback()
-
-      // this is our linearization point
-      val cv = freshCommitVersion(_readVersion, globalVersion.get)
-
-      // if the reads are still valid, then they were valid at the linearization
-      // point
-      if (!revalidateImpl())
-        return completeRollback()
-
-      if (!whilePreparingList.fire(_currentLevel, this))
-        return completeRollback()
-
-      if (externalDecider != null) {
-        // external decider doesn't have to content with cancel by other threads
-        if (!_currentLevel.statusCAS(Preparing, Prepared) || !consultExternalDecider())
-          return completeRollback()
-
-        _currentLevel.status = Committing
-      } else {
-        // attempt to decide commit
-        if (!_currentLevel.statusCAS(Preparing, Committing))
-          return completeRollback()
-      }
-
-      commitWrites(cv)
-      whileCommittingList.fire(_currentLevel, this)
-      _currentLevel.status = Committed
-
-      return Committed
-      
-    } finally {
-      val s = this.status
-      val cur = _currentLevel
-
-      // detach the level before the after-commit callbacks, so that they
-      // can run a new transaction
-      slotManager.release(_slot)
-      _currentLevel = null
-      _executor = null
-      _barging = false
-      resetAccessHistory()
-
-      if (s eq Committed)
-        afterCommitList.fire(cur, s)
+      // this releases the locks
+      rollbackAccessHistory(_slot)
     }
+
+    val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
+    detach()
+    fireAfterCompletion(handlers, s)
+    s
+  }
+
+  private def attemptTopLevelComplete(): Boolean = {
+    if (!beforeCommitList.fire(_currentLevel, this))
+      return false
+
+    if (writeCount == 0 && !writeResourcesPresent) {
+      // read-only transactions are easy to commit, because all of the reads
+      // are already guaranteed to be consistent
+      return _currentLevel.statusCAS(Active, Committed)
+    }
+
+    if (!_currentLevel.statusCAS(Active, Preparing) || !acquireLocks())
+      return false
+
+    // this is our linearization point
+    val cv = freshCommitVersion(_readVersion, globalVersion.get)
+
+    // if the reads are still valid, then they were valid at the linearization
+    // point
+    if (!revalidateImpl())
+      return false
+
+    if (!whilePreparingList.fire(_currentLevel, this))
+      return false
+
+    if (externalDecider != null) {
+      // external decider doesn't have to content with cancel by other threads
+      if (!_currentLevel.statusCAS(Preparing, Prepared) || !consultExternalDecider())
+        return false
+
+      _currentLevel.status = Committing
+    } else {
+      // attempt to decide commit
+      if (!_currentLevel.statusCAS(Preparing, Committing))
+        return false
+    }
+
+    commitWrites(cv)
+    whileCommittingList.fire(_currentLevel, this)
+    _currentLevel.status = Committed
+
+    return true
   }
 
   private def consultExternalDecider(): Boolean = {
@@ -492,19 +505,39 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     this.status eq Prepared
   }
 
-  private def completeRollback(): Status = {
-    assert(_currentLevel.par == null)
+  private def detach() {
+    slotManager.release(_slot)
+    _currentLevel = null
+    _executor = null
+    _barging = false
+    resetAccessHistory()
+  }
 
-    val s = this.status
+  private def fireAfterCompletion(handlers: Seq[Status => Unit], s: Status) {
+    if (!handlers.isEmpty) {
+      val inOrder = if (s eq Committed) handlers else handlers.view.reverse
+      var failure: Option[Throwable] = None
+      for (h <- inOrder)
+        failure = fireAfter(h, s) orElse failure
+      for (f <- failure)
+        throw f
+    }
+  }
 
-    // we must accumulate the retry set before rolling back the access history
-    if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
-      accumulateRetrySet()
-
-    rollbackAccessHistory(_slot)
-    val handlers = rollbackCallbacks()
-    fireAfterRollback(handlers, s)
-    s
+  private def fireAfter(handler: Status => Unit, s: Status): Option[Throwable] = {
+    try {
+      handler(s)
+      None
+    } catch {
+      case x => {
+        try {
+          executor.postDecisionFailureHandler(s, x)
+          None
+        } catch {
+          case xx => Some(xx)
+        }
+      }
+    }
   }
 
   private def accumulateRetrySet() {
@@ -520,7 +553,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def acquireLocks(): Boolean = {
-    var wakeups = 0L
     var i = writeCount - 1
     while (i >= 0) {
       if (!acquireLock(getWriteHandle(i)))
@@ -664,7 +696,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           if (_latestRead == null || _latestRead.stillValid)
             return true
 
-          var m1 = handle.meta
+          val m1 = handle.meta
           if (owner(m1) == _slot) {
             // We know that our original read did not come from the write
             // buffer, because !u.recorded.  That means that to redo this
@@ -711,7 +743,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           if (_latestRead == null || _latestRead.stillValid)
             return true
 
-          var m1 = handle.meta
+          val m1 = handle.meta
           if (owner(m1) == _slot) {
             // We know that our original read did not come from the write
             // buffer, because !u.recorded.  That means that to redo this

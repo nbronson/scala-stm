@@ -17,7 +17,7 @@ object TxnExecutor {
   }
 
   val DefaultPostDecisionExceptionHandler = { (status: Txn.Status, x: Throwable) =>
-    new Exception("status=" + status, x).printStackTrace()
+    throw x
   }
 }
 

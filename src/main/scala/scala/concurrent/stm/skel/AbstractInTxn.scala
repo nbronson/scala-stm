@@ -65,6 +65,7 @@ trait AbstractInTxn extends InTxn {
     level._afterRollbackSize = afterRollbackList.size
   }
 
+  /** Returns the discarded `afterRollbackList` entries. */
   protected def rollbackCallbacks(): Seq[Status => Unit] = {
     val level = currentLevel
     beforeCommitList.size = level._beforeCommitSize
@@ -73,6 +74,16 @@ trait AbstractInTxn extends InTxn {
     whileCommittingList.size = level._whileCommittingSize
     afterCommitList.size = level._afterCommitSize
     afterRollbackList.truncate(level._afterRollbackSize)
+  }
+
+  /** Returns the discarded `afterCommitList` entries. */
+  protected def resetCallbacks(): Seq[Status => Unit] = {
+    beforeCommitList.size = 0
+    whileValidatingList.size = 0
+    whilePreparingList.size = 0
+    whileCommittingList.size = 0
+    afterRollbackList.size = 0
+    afterCommitList.truncate(0)
   }
 
   protected def fireWhileValidating() {

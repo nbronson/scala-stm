@@ -67,7 +67,10 @@ class CallbackList[A] private (private var _size: Int,
       try {
         _data(i)(arg)
       } catch {
-        case x => level.requestRollback(Txn.UncaughtExceptionCause(x))
+        case x => {
+          val s = level.requestRollback(Txn.UncaughtExceptionCause(x))
+          assert(s.isInstanceOf[Txn.RolledBack])
+        }
       }
       fire(level, arg, i + 1)
     }
