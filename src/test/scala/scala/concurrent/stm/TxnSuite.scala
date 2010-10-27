@@ -148,49 +148,165 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  test("uncontended R+W txn perf") {
-    val x = Ref("abc")
-    var best = java.lang.Long.MAX_VALUE
-    for (pass <- 0 until 100000) {
-      val begin = System.nanoTime
+  perfTest("uncontended R+W txn perf") { x =>
+    var i = 0
+    while (i < 5) {
+      i += 1
+      atomic { implicit t =>
+        assert(x() == "abc")
+        x() = "def"
+      }
+      atomic { implicit t =>
+        assert(x() == "def")
+        x() = "abc"
+      }
+    }
+  }
+
+  for (depth <- List(0, 1, 2, 4, 8)) {
+    perfTest("uncontended R+W txn perf: nesting depth " + depth) { x =>
       var i = 0
       while (i < 5) {
         i += 1
-        atomic { implicit t =>
+        nested(depth) { implicit t =>
           assert(x() == "abc")
           x() = "def"
         }
-        atomic { implicit t =>
+        nested(depth) { implicit t =>
           assert(x() == "def")
           x() = "abc"
         }
       }
-      val elapsed = System.nanoTime - begin
-      best = best min elapsed
     }
-    println("uncontended R+W txn: best was " + (best / 10.0) + " nanos/txn")
-
-    // We should be able to get less than 5000 nanos, even on a Niagara.
-    // On most platforms we should be able to do much better than this.
-    // The exception is StripedIntRef, which has relatively expensive reads.
-    assert(best / 10 < 5000)
   }
 
-  def testAfterCommit(name: String, f: (InTxn, (Txn.Status => Unit)) => Unit) {
+  private def nested(depth: Int)(body: InTxn => Unit) {
+    atomic { implicit txn =>
+      if (depth == 0)
+        body(txn)
+      else
+        nested(depth - 1)(body)
+    }
+  }
+
+  def perfTest(name: String)(runTen: Ref[String] => Unit) {
     test(name) {
-      var ran = false
-      atomic { implicit t =>
-        f(t, { status =>
-          assert(!ran)
-          ran = true
-        })
+      val x = Ref("abc")
+      var best = java.lang.Long.MAX_VALUE
+      for (pass <- 0 until 50000) {
+        val begin = System.nanoTime
+        runTen(x)
+        val elapsed = System.nanoTime - begin
+        best = best min elapsed
       }
-      assert(ran)
+      println(name + ": best was " + (best / 10.0) + " nanos/txn")
     }
   }
 
-  testAfterCommit("afterCompletion", { (t, h) => implicit val txn = t ; Txn.afterCompletion(h) })
-  testAfterCommit("afterCommit", { (t, h) => implicit val txn = t ; Txn.afterCommit(h) })
+  test("beforeCommit upgrade on read-only commit") {
+    val x = Ref(0)
+    var ran = false
+    atomic { implicit t =>
+      assert(x() === 0)
+      Txn.beforeCommit { _ =>
+        assert(!ran)
+        x() = 1
+        ran = true
+      }
+    }
+    assert(ran)
+    assert(x.single() === 1)
+  }
+
+  test("retry in beforeCommit") {
+    val x = Ref(0)
+    val t = new Thread("trigger") {
+      override def run() {
+        for (i <- 0 until 5) {
+          Thread.sleep(200)
+          x.single() += 1
+        }
+      }
+    }
+    var tries = 0
+    t.start()
+    val y = Ref(0)
+    atomic { implicit t =>
+      tries += 1
+      y() = 1
+      Txn.beforeCommit { implicit t =>
+        if (x() < 5)
+          retry
+      }
+    }
+    assert(tries >= 5)
+  }
+
+  test("exception in beforeCommit") {
+    val x = Ref[Option[String]](Some("abc"))
+    intercept[NoSuchElementException] {
+      atomic { implicit t =>
+        x() = None
+        Txn.beforeCommit { _ => println(x().get) }
+      }
+    }
+  }
+
+  test("surviving beforeCommit") {
+    val x = Ref(1)
+    val y = Ref(2)
+    val z = Ref(3)
+    var a = false
+    var aa = false
+    var ab = false
+    var b = false
+    var ba = false
+    var bb = false
+    var bc = false
+    atomic { implicit t =>
+      Txn.beforeCommit { _ => assert(!a) ; a = true }
+      atomic { implicit t =>
+        Txn.beforeCommit { _ => assert(!aa) ; aa = true }
+        x += 1
+        if (x() != 0)
+          retry
+      } orAtomic { implicit t =>
+        Txn.beforeCommit { _ => assert(!ab) ; ab = true }
+        y += 1
+        if (y() != 0)
+          retry
+      }
+      z += 8
+    } orAtomic { implicit t =>
+      Txn.beforeCommit { _ => assert(!b && !ba && !bb && !bc) ; b = true }
+      atomic { implicit t =>
+        Txn.beforeCommit { _ => assert(!ba) ; ba = true }
+        z += 1
+        if (x() != 0)
+          retry
+      } orAtomic { implicit t =>
+        Txn.beforeCommit { _ => assert(!bb) ; bb = true }
+        x += 1
+        if (x() != 0)
+          retry
+      } orAtomic { implicit t =>
+        Txn.beforeCommit { _ => assert(b) ; assert(!bc) ; bc = true }
+        if (x() + y() + z() == 0)
+          retry
+      }
+      z += 16
+    }
+    assert(!a)
+    assert(!aa)
+    assert(!ab)
+    assert(b)
+    assert(!ba)
+    assert(!bb)
+    assert(bc)
+    assert(x.single() == 1)
+    assert(y.single() == 2)
+    assert(z.single() == 19)
+  }
 
   test("afterRollback on commit") {
     atomic { implicit t =>
@@ -238,4 +354,80 @@ class TxnSuite extends FunSuite {
     assert(ran)
     assert(x.single() === 2)
   }
+
+  test("beforeCommit during beforeCommit") {
+    val handler = new Function1[InTxn, Unit] {
+      var count = 0
+
+      def apply(txn: InTxn) {
+        if (txn eq null) {
+          // this is the after-atomic check
+          assert(count === 1000)
+        } else {
+          count += 1
+          if (count < 1000)
+            Txn.beforeCommit(this)(txn)
+        }
+      }
+    }
+    val x = Ref(0)
+    atomic { implicit t =>
+      x += 1
+      Txn.beforeCommit(handler)
+    }
+    handler(null)
+  }
+
+  test("beforeCommit termination") {
+    val x = Ref(0)
+    var a = false
+    intercept[UserException] {
+      atomic { implicit t =>
+        assert(x() === 0)
+        Txn.beforeCommit { _ =>
+          assert(!a)
+          a = true
+          throw new UserException
+        }
+        x += 2
+        Txn.beforeCommit { _ =>
+          assert(false)
+        }
+      }
+    }
+    assert(a)
+  }
+
+  test("manual optimistic retry") {
+    var tries = 0
+    val x = Ref(0)
+    atomic { implicit t =>
+      assert(x() === 0)
+      x += tries
+      tries += 1
+      if (tries < 100)
+        Txn.rollback(Txn.OptimisticFailureCause('manual_failure, None))
+    }
+    assert(x.single() === 99)
+    assert(tries === 100)
+  }
+
+  test("manual optimistic retry during beforeCommit") {
+    var tries = 0
+    val x = Ref(0)
+    atomic { implicit t =>
+      assert(x() === 0)
+      x += tries
+      tries += 1
+      Txn.beforeCommit { implicit t =>
+        if (tries < 100)
+          Txn.rollback(Txn.OptimisticFailureCause('manual_failure, None))
+      }
+    }
+    assert(x.single() === 99)
+    assert(tries === 100)
+  }
+
+  // TODO: whilePreparing and whileCommitting callbacks
+  // TODO: exception behavior from all types of callbacks
 }
