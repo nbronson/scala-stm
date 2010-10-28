@@ -11,9 +11,6 @@ package scala.concurrent.stm
 trait InTxnEnd extends MaybeTxn {
   import Txn._
 
-  /** Returns the `TxnExecutor` that created this `InTxn` context. */
-  def executor: TxnExecutor
-
   // The user-visible versions of these methods are in the Txn object.
 
   protected[stm] def status: Status

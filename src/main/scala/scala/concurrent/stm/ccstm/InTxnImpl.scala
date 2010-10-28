@@ -46,7 +46,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// per-transaction state
 
-  private var _executor: TxnExecutor = null
   private var _barging: Boolean = false
   private var _slot: Slot = 0
   private var _currentLevel: TxnLevelImpl = null
@@ -84,7 +83,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// High-level behaviors
 
   def status: Status = _currentLevel.statusAsCurrent
-  def executor: TxnExecutor = _executor
   def undoLog: TxnLevelImpl = _currentLevel
   override def currentLevel: TxnLevelImpl = _currentLevel
 
@@ -100,12 +98,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   def attempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
     var bug3965check = true
-    begin(exec, prevFailures, level)
+    begin(prevFailures, level)
     try {
       try {
         block(this)
       } catch {
-        case x if x != RollbackError && !executor.isControlFlow(x) => {
+        case x if x != RollbackError && !exec.isControlFlow(x) => {
           level.forceRollback(Txn.UncaughtExceptionCause(x))
           throw RollbackError
         }
@@ -113,7 +111,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     } finally {
       assert(bug3965check)
       bug3965check = false
-      complete() match {
+      complete(exec) match {
         case Txn.RolledBack(Txn.UncaughtExceptionCause(x)) => throw x
         case Txn.RolledBack(_) => throw RollbackError
         case _ =>
@@ -372,11 +370,11 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// begin + commit
 
-  def begin(exec: TxnExecutor, prevFailures: Int, child: TxnLevelImpl) {
+  def begin(prevFailures: Int, child: TxnLevelImpl) {
     if (prevFailures >= 3)
       _barging = true
     if (_currentLevel == null)
-      topLevelBegin(exec, child)
+      topLevelBegin(child)
     else
       nestedBegin(child)
   }
@@ -396,8 +394,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     checkpointAccessHistory()
   }
 
-  private def topLevelBegin(exec: TxnExecutor, child: TxnLevelImpl) {
-    _executor = exec 
+  private def topLevelBegin(child: TxnLevelImpl) {
     _currentLevel = child
     //_priority = CCSTM.hash(_currentLevel, 0)
     // TODO: compute priority lazily, only if needed
@@ -407,14 +404,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _readVersion = freshReadVersion
   }
 
-  def complete(): Txn.Status = {
+  def complete(exec: TxnExecutor): Txn.Status = {
     if (_currentLevel.par == null)
-      topLevelComplete()
+      topLevelComplete(exec)
     else
-      nestedComplete()
+      nestedComplete(exec)
   }
 
-  private def nestedComplete(): Txn.Status = {
+  private def nestedComplete(exec: TxnExecutor): Txn.Status = {
     val child = _currentLevel
     if (child.attemptMerge()) {
       // child was successfully merged
@@ -432,12 +429,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       rollbackAccessHistory(_slot)
       val handlers = rollbackCallbacks()
       _currentLevel = child.par
-      fireAfterCompletion(handlers, s)
+      fireAfterCompletion(handlers, exec, s)
       s
     }
   }
 
-  private def topLevelComplete(): Status = {
+  private def topLevelComplete(exec: TxnExecutor): Status = {
     val committed = attemptTopLevelComplete()
     val s = if (committed) Committed else this.status
 
@@ -451,7 +448,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
     detach()
-    fireAfterCompletion(handlers, s)
+    fireAfterCompletion(handlers, exec, s)
     s
   }
 
@@ -512,30 +509,29 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def detach() {
     slotManager.release(_slot)
     _currentLevel = null
-    _executor = null
     _barging = false
     resetAccessHistory()
   }
 
-  private def fireAfterCompletion(handlers: Seq[Status => Unit], s: Status) {
+  private def fireAfterCompletion(handlers: Seq[Status => Unit], exec: TxnExecutor, s: Status) {
     if (!handlers.isEmpty) {
       val inOrder = if (s eq Committed) handlers else handlers.view.reverse
       var failure: Option[Throwable] = None
       for (h <- inOrder)
-        failure = fireAfter(h, s) orElse failure
+        failure = fireAfter(h, exec, s) orElse failure
       for (f <- failure)
         throw f
     }
   }
 
-  private def fireAfter(handler: Status => Unit, s: Status): Option[Throwable] = {
+  private def fireAfter(handler: Status => Unit, exec: TxnExecutor, s: Status): Option[Throwable] = {
     try {
       handler(s)
       None
     } catch {
       case x => {
         try {
-          executor.postDecisionFailureHandler(s, x)
+          exec.postDecisionFailureHandler(s, x)
           None
         } catch {
           case xx => Some(xx)
