@@ -6,6 +6,10 @@ package skel
 import annotation.tailrec
 
 
+private object CallbackList {
+  val Empty : Seq[Any => Unit] = new Array[Any => Unit](0)
+}
+
 class CallbackList[A] private (private var _size: Int,
                                private var _data: Array[A => Unit]) {
   def this() = this(0, null)
@@ -15,7 +19,7 @@ class CallbackList[A] private (private var _size: Int,
       _data = new Array[A => Unit](InitialCapacity)
   }
 
-  private def InitialCapacity = 16
+  private def InitialCapacity = 128
   private def MaxEmptyCapacity = 8192
 
   def isEmpty: Boolean = _size == 0
@@ -85,12 +89,7 @@ class CallbackList[A] private (private var _size: Int,
   def truncate(newSize: Int): Seq[A => Unit] = {
     if (_size == 0) {
       // nothing to do
-      Seq.empty[A => Unit]
-    } else if (newSize == 0) {
-      // hand off the array, allocate a new one for us
-      val z = _data.slice(0, _size)
-      reset()
-      z
+      CallbackList.Empty
     } else {
       // copy
       val z = new Array[A => Unit](_size - newSize)
