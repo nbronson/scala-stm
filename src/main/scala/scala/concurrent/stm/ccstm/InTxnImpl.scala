@@ -13,7 +13,7 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
     case _ => get // this will create one
   }
 
-  private def active(txn: InTxnImpl): InTxnImpl = if (txn.currentLevel != null) txn else null
+  private def active(txn: InTxnImpl): InTxnImpl = if (txn._currentLevel != null) txn else null
 
   def dynCurrentOrNull: InTxnImpl = active(get)
 
@@ -50,6 +50,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private var _slot: Slot = 0
   private var _currentLevel: TxnLevelImpl = null
 
+  /** This is all of the remembered levels, even ones with depth greater than
+   *  `_currentLevel`.  `levels(_currentLevel.depth) == _currentLevel`
+   */
+  val levels: scala.collection.mutable.ArrayBuffer[TxnLevelImpl] =
+      (new scala.collection.mutable.ArrayBuffer[TxnLevelImpl]) += (new TxnLevelImpl(this, null, 0))
+
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
    *  long as there is no change of the current txn's priority between the
@@ -84,7 +90,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   def status: Status = _currentLevel.statusAsCurrent
   def undoLog: TxnLevelImpl = _currentLevel
-  override def currentLevel: TxnLevelImpl = _currentLevel
+  def currentLevel = _currentLevel.nestingLevel
+  def rootLevel = levels(0).nestingLevel
 
   /** There are N ways that a single attempt can complete:
    *  - block returns normally, commit;
@@ -131,13 +138,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     (while (true) {
       var prevFailures = 0
-      var level: TxnLevelImpl = null
+      val level = childLevel()
       do {
         // fail back to parent if it has been rolled back
         if (_currentLevel != null)
           _currentLevel.requireActive()
 
-        level = new TxnLevelImpl(this, _currentLevel)
         try {
           // successful attempt or permanent rollback either returns a Z or
           // throws an exception != RollbackError
@@ -147,7 +153,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
         prevFailures += 1
       } while (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
-      level = null
 
       // we're out of alternatives
 
@@ -162,6 +167,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }).asInstanceOf[Nothing]
   }
 
+  private def childLevel(): TxnLevelImpl = {
+    val d = if (_currentLevel == null) 0 else (1 + _currentLevel.depth)
+    if (d == levels.size)
+      levels += new TxnLevelImpl(this, _currentLevel, d)
+    levels(d)
+  }
+
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
     if (!_alternatives.isEmpty)
       throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
@@ -171,13 +183,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       for (block <- blocks) {
         var prevFailures = 0
-        var level: TxnLevelImpl = null
+        val level = childLevel()
         do {
           // fail back to parent if it has been rolled back
           if (_currentLevel != null)
             _currentLevel.requireActive()
 
-          level = new TxnLevelImpl(this, _currentLevel)
           try {
             // successful attempt or permanent rollback either returns a Z or
             // throws an exception != RollbackError
@@ -298,6 +309,27 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }).asInstanceOf[Nothing]
   }
 
+  private def fireWhileValidating() {
+    var level = _currentLevel
+    var i = whileValidatingList.size - 1
+    while (i >= 0) {
+      while (level.prevWhileValidatingSize > i)
+        level = level.par
+      if (level.status != Txn.Active) {
+        // skip the remaining handlers for this level
+        i = level.prevWhileValidatingSize
+      } else {
+        try {
+          if (!whileValidatingList(i)())
+            level.forceRollback(OptimisticFailureCause('validation_handler, None))
+        } catch {
+          case x => level.forceRollback(UncaughtExceptionCause(x))
+        }
+      }
+      i -= 1
+    }
+  }
+
 
   /** After this method returns, either the current transaction will have been
    *  rolled back, or it is safe to wait for `currentOwner` to be `Committed`
@@ -389,12 +421,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
 
     // successfully begun
+    child.init()
     _currentLevel = child
-    checkpointCallbacks()
+    checkpointCallbacks(child)
     checkpointAccessHistory()
   }
 
   private def topLevelBegin(child: TxnLevelImpl) {
+    child.init()
     _currentLevel = child
     //_priority = CCSTM.hash(_currentLevel, 0)
     // TODO: compute priority lazily, only if needed
@@ -427,7 +461,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       // callbacks must be last, because they might throw an exception
       rollbackAccessHistory(_slot)
-      val handlers = rollbackCallbacks()
+      val handlers = rollbackCallbacks(child)
       _currentLevel = child.par
       fireAfterCompletion(handlers, exec, s)
       s
@@ -446,7 +480,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       rollbackAccessHistory(_slot)
     }
 
-    val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
+    val handlers = if (committed) resetCallbacks() else rollbackCallbacks(_currentLevel)
     detach()
     fireAfterCompletion(handlers, exec, s)
     s
@@ -684,15 +718,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     val u = unrecordedRead(handle)
     val result = f(u.value)
     if (!u.recorded) {
-      val callback = new Function[NestingLevel, Unit] {
+      val callback = new Function0[Boolean] {
         var _latestRead = u
 
-        def apply(level: NestingLevel) {
-          if (!isValid)
-            level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-        }
-
-        private def isValid: Boolean = {
+        def apply(): Boolean = {
           if (_latestRead == null || _latestRead.stillValid)
             return true
 
@@ -731,15 +760,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     val u = unrecordedRead(handle)
     val snapshot = u.value
     if (!u.recorded) {
-      val callback = new Function[NestingLevel, Unit] {
+      val callback = new Function0[Boolean] {
         var _latestRead = u
 
-        def apply(level: NestingLevel) {
-          if (!isValid)
-            level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-        }
-
-        private def isValid: Boolean = {
+        def apply(): Boolean = {
           if (_latestRead == null || _latestRead.stillValid)
             return true
 
@@ -920,15 +944,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (!pf.isDefinedAt(u.value)) {
       // make sure it stays undefined
       if (!u.recorded) {        
-        val callback = new Function[NestingLevel, Unit] {
+        val callback = new Function0[Boolean] {
           var _latestRead = u
 
-          def apply(level: NestingLevel) {
-            if (!isValid)
-              level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-          }
-
-          private def isValid: Boolean = {
+          def apply(): Boolean = {
             if (!_latestRead.stillValid) {
               // if defined after reread then return false==invalid
               _latestRead = unrecordedRead(handle)

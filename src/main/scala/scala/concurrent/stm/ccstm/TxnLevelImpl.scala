@@ -5,31 +5,28 @@ package ccstm
 
 import scala.annotation.tailrec
 import java.util.concurrent.atomic.{AtomicLong, AtomicReferenceFieldUpdater}
+import skel._
+import ccstm.AccessHistory.UndoLog
 
 private[ccstm] object TxnLevelImpl {
 
-  /** `NestingLevel` `id`s are generated sequentially and lazily.  If `id`s are
-   *  used heavily this might be a contention point, in which case this could
-   *  be augmented with a `ThreadLocal`.
-   */ 
-  private val nextId = new AtomicLong
-
-  private val stateUpdater = new TxnLevelImpl(null, null).newStateUpdater
+  private val stateUpdater = new TxnLevelImpl(null, null, 0).newStateUpdater
 }
 
 /** `TxnLevelImpl` bundles the data and behaviors from `AccessHistory.UndoLog`
  *  and `AbstractNestingLevel`, and adds handling of the nesting level status.
  *  Some of the internal states (see `state`) are not instances of
  *  `Txn.Status`, but rather record that this level is no longer current.
+ *  The user-visible `NestingLevel` is not implemented directly by this class,
+ *  but is created on-demand.
  */
-private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
-        extends AccessHistory.UndoLog with skel.AbstractNestingLevel {
-  import skel.RollbackError
+private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl, val depth: Int)
+        extends AccessHistory.UndoLog with AbstractInTxn.UndoLog with CallbackList.StatusBridge {
   import TxnLevelImpl._
 
-  lazy val id = nextId.incrementAndGet
+  def nestingLevel: NestingLevelImpl = throw new UnsupportedOperationException
 
-  val root: TxnLevelImpl = if (par == null) this else par.root
+  //val root: TxnLevelImpl = if (par == null) this else par.root
 
   /** If `state` is a `TxnLevelImpl`, then that indicates that this nesting
    *  level is an ancestor of `txn.currentLevel`; this is reported as a status
@@ -45,7 +42,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
    *  In addition to instances of `TxnLevelImpl`, the root nesting level can
    *  have any `Txn.Status` instance as its `state`.
    */
-  @volatile private var _state: AnyRef = Txn.Active
+  @volatile private var _state: AnyRef = null
 
   private def newStateUpdater: AtomicReferenceFieldUpdater[TxnLevelImpl, AnyRef] = {
     AtomicReferenceFieldUpdater.newUpdater(classOf[TxnLevelImpl], classOf[AnyRef], "_state")
@@ -53,6 +50,11 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
 
   /** True if anybody is waiting for `status.completed`. */
   @volatile private var _waiters = false
+
+  def init() {
+    _state = Txn.Active
+    _waiters = false
+  }
 
   def status: Txn.Status = _state match {
     case null => par.status

@@ -6,12 +6,19 @@ package skel
 import annotation.tailrec
 
 
-private object CallbackList {
-  val Empty : Seq[Any => Unit] = new Array[Any => Unit](0)
+object CallbackList {
+  private val Empty : Seq[Any => Unit] = new Array[Any => Unit](0)
+
+  trait StatusBridge {
+    def status: Txn.Status
+    def forceRollback(cause: Txn.RollbackCause)
+  }
 }
 
 class CallbackList[A] private (private var _size: Int,
                                private var _data: Array[A => Unit]) {
+  import CallbackList.StatusBridge
+
   def this() = this(0, null)
 
   {
@@ -60,9 +67,9 @@ class CallbackList[A] private (private var _size: Int,
 
   def apply(i: Int): (A => Unit) = _data(i)
 
-  def fire(level: NestingLevel, arg: A): Boolean = fire(level, arg, 0)
+  def fire(level: StatusBridge, arg: A): Boolean = fire(level, arg, 0)
 
-  @tailrec private def fire(level: NestingLevel, arg: A, i: Int): Boolean = {
+  @tailrec private def fire(level: StatusBridge, arg: A, i: Int): Boolean = {
     if (!shouldFire(level))
       false
     else if (i >= _size)
@@ -72,16 +79,14 @@ class CallbackList[A] private (private var _size: Int,
         _data(i)(arg)
       } catch {
         case x => {
-          val s = level.requestRollback(Txn.UncaughtExceptionCause(x))
-          // TODO: handle exceptions from whileCommitting callbacks
-          assert(s.isInstanceOf[Txn.RolledBack])
+          level.forceRollback(Txn.UncaughtExceptionCause(x))
         }
       }
       fire(level, arg, i + 1)
     }
   }
 
-  private def shouldFire(level: NestingLevel): Boolean = !level.status.isInstanceOf[Txn.RolledBack]
+  private def shouldFire(level: StatusBridge): Boolean = !level.status.isInstanceOf[Txn.RolledBack]
 
   /** Sets the size of this callback list to `newSize`, and returns a the
    *  discarded handlers.

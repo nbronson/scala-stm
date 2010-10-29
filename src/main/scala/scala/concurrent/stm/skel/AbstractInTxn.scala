@@ -3,26 +3,26 @@
 package scala.concurrent.stm
 package skel
 
-import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
 import collection.mutable.ArrayBuffer
 
 object AbstractInTxn {
-  abstract class SuccessCallback[A, B] {
-    protected def buffer(owner: A): ArrayBuffer[B => Unit]
-
-    def add(owner: A, handler: B => Unit) { }
+  trait UndoLog {
+    var prevBeforeCommitSize = 0
+    var prevWhileValidatingSize = 0
+    var prevWhilePreparingSize = 0
+    var prevWhileCommittingSize = 0
+    var prevAfterCommitSize = 0
+    var prevAfterRollbackSize = 0
   }
 }
 
 trait AbstractInTxn extends InTxn {
-  import Txn._
-
-  override def currentLevel: AbstractNestingLevel
-
+  import Txn.{Status, Active, RolledBack, UncaughtExceptionCause, ExternalDecider}
+  
   //////////// implementation of functionality for the InTxn implementer
 
   protected def requireActive() {
-    currentLevel.status match {
+    status match {
       case Active =>
       case RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
@@ -30,7 +30,7 @@ trait AbstractInTxn extends InTxn {
   }
 
   protected def requireNotDecided() {
-    currentLevel.status match {
+    status match {
       case s if !s.decided =>
       case RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
@@ -38,7 +38,7 @@ trait AbstractInTxn extends InTxn {
   }
 
   protected def requireNotCompleted() {
-    currentLevel.status match {
+    status match {
       case s if !s.completed =>
       case RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
@@ -49,68 +49,45 @@ trait AbstractInTxn extends InTxn {
   protected def externalDecider = _decider
 
   protected val beforeCommitList = new CallbackList[InTxn]
-  protected val whileValidatingList = new CallbackList[NestingLevel]
+  protected val whileValidatingList = new ArrayBuffer[() => Boolean]
   protected val whilePreparingList = new CallbackList[InTxnEnd]
   protected val whileCommittingList = new CallbackList[InTxnEnd]
   protected val afterCommitList = new CallbackList[Status]
   protected val afterRollbackList = new CallbackList[Status]
 
-  protected def checkpointCallbacks() {
-    val level = currentLevel
-    level._beforeCommitSize = beforeCommitList.size
-    level._whileValidatingSize = whileValidatingList.size
-    level._whilePreparingSize = whilePreparingList.size
-    level._whileCommittingSize = whileCommittingList.size
-    level._afterCommitSize = afterCommitList.size
-    level._afterRollbackSize = afterRollbackList.size
+  protected def checkpointCallbacks(dst: AbstractInTxn.UndoLog) {
+    dst.prevBeforeCommitSize = beforeCommitList.size
+    dst.prevWhileValidatingSize = whileValidatingList.size
+    dst.prevWhilePreparingSize = whilePreparingList.size
+    dst.prevWhileCommittingSize = whileCommittingList.size
+    dst.prevAfterCommitSize = afterCommitList.size
+    dst.prevAfterRollbackSize = afterRollbackList.size
   }
 
   /** Returns the discarded `afterRollbackList` entries. */
-  protected def rollbackCallbacks(): Seq[Status => Unit] = {
-    val level = currentLevel
-    beforeCommitList.size = level._beforeCommitSize
-    whileValidatingList.size = level._whileValidatingSize
-    whilePreparingList.size = level._whilePreparingSize
-    whileCommittingList.size = level._whileCommittingSize
-    afterCommitList.size = level._afterCommitSize
-    afterRollbackList.truncate(level._afterRollbackSize)
+  protected def rollbackCallbacks(src: AbstractInTxn.UndoLog): Seq[Status => Unit] = {
+    beforeCommitList.size = src.prevBeforeCommitSize
+    whileValidatingList.reduceToSize(src.prevWhileValidatingSize)
+    whilePreparingList.size = src.prevWhilePreparingSize
+    whileCommittingList.size = src.prevWhileCommittingSize
+    afterCommitList.size = src.prevAfterCommitSize
+    afterRollbackList.truncate(src.prevAfterRollbackSize)
   }
 
   /** Returns the discarded `afterCommitList` entries. */
   protected def resetCallbacks(): Seq[Status => Unit] = {
     beforeCommitList.size = 0
-    whileValidatingList.size = 0
+    whileValidatingList.clear() // TODO: discard underlying array if it is too large, like CallbackList does
     whilePreparingList.size = 0
     whileCommittingList.size = 0
     afterRollbackList.size = 0
     afterCommitList.truncate(0)
   }
 
-  protected def fireWhileValidating() {
-    var level = currentLevel
-    var i = whileValidatingList.size - 1
-    while (i >= 0) {
-      while (level._whileValidatingSize > i)
-        level = level.par
-      if (level.status != Txn.Active) {
-        // skip the remaining handlers for this level
-        i = level._whileValidatingSize
-      } else {
-        try {
-          whileValidatingList(i)(level)
-        } catch {
-          case x => level.requestRollback(UncaughtExceptionCause(x))
-        }
-      }
-      i -= 1
-    }
-  }
-
   //////////// implementation of functionality for the InTxn user
 
-  override def rootLevel: AbstractNestingLevel = currentLevel.root
   def beforeCommit(handler: InTxn => Unit) { requireActive() ; beforeCommitList += handler }
-  def whileValidating(handler: NestingLevel => Unit) { requireActive() ; whileValidatingList += handler }
+  def whileValidating(handler: () => Boolean) { requireActive() ; whileValidatingList += handler }
   def whilePreparing(handler: InTxnEnd => Unit) { requireNotDecided() ; whilePreparingList += handler }
   def whileCommitting(handler: InTxnEnd => Unit) { requireNotCompleted() ; whileCommittingList += handler }
   def afterCommit(handler: Status => Unit) { requireNotCompleted() ; afterCommitList += handler }
