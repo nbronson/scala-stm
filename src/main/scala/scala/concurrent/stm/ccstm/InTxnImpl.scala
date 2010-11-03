@@ -255,7 +255,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       if (h != null) {
         val problem = checkRead(h, readVersion(i))
         if (problem != null) {
-          readLocate(i).asInstanceOf[NestingLevel].requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
+          readLocate(i).asInstanceOf[TxnLevelImpl].requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
           return false
         }
       }
