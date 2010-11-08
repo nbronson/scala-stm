@@ -8,12 +8,6 @@ import java.util.concurrent.atomic.{AtomicLong, AtomicReferenceFieldUpdater}
 
 private[ccstm] object TxnLevelImpl {
 
-  /** `NestingLevel` `id`s are generated sequentially and lazily.  If `id`s are
-   *  used heavily this might be a contention point, in which case this could
-   *  be augmented with a `ThreadLocal`.
-   */ 
-  private val nextId = new AtomicLong
-
   private val stateUpdater = new TxnLevelImpl(null, null).newStateUpdater
 }
 
@@ -26,8 +20,6 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
         extends AccessHistory.UndoLog with skel.AbstractNestingLevel {
   import skel.RollbackError
   import TxnLevelImpl._
-
-  lazy val id = nextId.incrementAndGet
 
   val root: TxnLevelImpl = if (par == null) this else par.root
 

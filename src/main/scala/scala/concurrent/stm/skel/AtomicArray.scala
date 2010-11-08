@@ -73,7 +73,7 @@ abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[T, AtomicArra
     b.result
   }
 
-  override def newBuilder: AtomicArrayBuilder[T] = throw new Error // TODO: remove this method body
+  override def newBuilder: AtomicArrayBuilder[T] = throw new AbstractMethodError
 }
 
 object AtomicArray {

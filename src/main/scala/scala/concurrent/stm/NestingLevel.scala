@@ -26,10 +26,6 @@ object NestingLevel {
 trait NestingLevel {
   import Txn._
 
-  // TODO: is Long the right type here? 
-  /** Returns a unique identifier of this `NestingLevel` instance. */
-  def id: Long
-
   /** Returns the nearest enclosing nesting level, if any. */
   def parent: Option[NestingLevel]
 

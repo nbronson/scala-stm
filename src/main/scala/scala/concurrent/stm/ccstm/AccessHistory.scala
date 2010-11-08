@@ -350,7 +350,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val slot = computeSlot(base, offset)
     val i = find(base, offset, slot)
     if (i >= 0) {
-      //assert(!freshOwner) // TODO: remove
+      //assert(!freshOwner)
       // hit, undo log entry is required to capture the potential reads that
       // won't be recorded in this nested txn's read set
       if (i < _wUndoThreshold)
