@@ -27,6 +27,9 @@ class StubSTMImpl extends impl.STMImpl {
   def newTArray[A : ClassManifest](length: Int): TArray[A] = throw new AbstractMethodError
   def newTArray[A : ClassManifest](data: TraversableOnce[A]): TArray[A] = throw new AbstractMethodError
 
+  def newTMap[A, B](): TMap[A, B] = throw new AbstractMethodError
+  def newTMap[A, B](data: TraversableOnce[(A, B)]): TMap[A, B] = throw new AbstractMethodError
+
   //////// TxnContext
 
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = throw new AbstractMethodError

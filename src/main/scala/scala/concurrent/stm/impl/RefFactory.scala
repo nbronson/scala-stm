@@ -22,4 +22,7 @@ trait RefFactory {
 
   def newTArray[A : ClassManifest](length: Int): TArray[A]
   def newTArray[A : ClassManifest](data: TraversableOnce[A]): TArray[A]
+
+  def newTMap[A, B](): TMap[A, B]
+  def newTMap[A, B](data: TraversableOnce[(A, B)]): TMap[A, B]
 }
