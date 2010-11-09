@@ -105,7 +105,7 @@ object AtomicArray {
   def apply[T <: AnyRef](elems: Array[T]) =
     new ofRef((new AtomicReferenceArray(elems.asInstanceOf[Array[AnyRef]])).asInstanceOf[AtomicReferenceArray[T]])
 
-  def apply[T](elems: Traversable[T])(implicit m: ClassManifest[T]): AtomicArray[T] = {
+  def apply[T](elems: TraversableOnce[T])(implicit m: ClassManifest[T]): AtomicArray[T] = {
     val array: AnyRef = (elems match {
       case w: WrappedArray[_] => w.array // we're going to copy out regardless, no need to duplicate right now
       case _ => elems.toArray

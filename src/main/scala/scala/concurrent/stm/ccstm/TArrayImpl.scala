@@ -14,7 +14,7 @@ class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
 
   def this(length0: Int)(implicit m: ClassManifest[A]) = this(AtomicArray[A](length0))
 
-  def this(data0: Traversable[A])(implicit m: ClassManifest[A]) = this(AtomicArray[A](data0))
+  def this(data0: TraversableOnce[A])(implicit m: ClassManifest[A]) = this(AtomicArray[A](data0))
 
   def length = values.length
 

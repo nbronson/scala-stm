@@ -25,7 +25,7 @@ class StubSTMImpl extends impl.STMImpl {
   def newRef[A : ClassManifest](v0: A): Ref[A] = throw new AbstractMethodError
 
   def newTArray[A : ClassManifest](length: Int): TArray[A] = throw new AbstractMethodError
-  def newTArray[A : ClassManifest](data: Traversable[A]): TArray[A] = throw new AbstractMethodError
+  def newTArray[A : ClassManifest](data: TraversableOnce[A]): TArray[A] = throw new AbstractMethodError
 
   //////// TxnContext
 
