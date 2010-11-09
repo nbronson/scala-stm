@@ -11,7 +11,7 @@ private[ccstm] object Handle {
   trait Provider[T] {
     def handle: Handle[T]
 
-    override def equals(o: AnyRef): Boolean = o match {
+    override def equals(o: Any): Boolean = o match {
       case rhs: Handle.Provider[_] => {
         val h0 = handle
         val h1 = rhs.handle
