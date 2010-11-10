@@ -12,7 +12,7 @@ object TArray {
    */
   trait View[A] extends mutable.IndexedSeq[A] {
     /** The `TArray` from which this view was created. */
-    def array: TArray[A]
+    def tarray: TArray[A]
 
     def length: Int
 

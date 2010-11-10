@@ -22,7 +22,7 @@ class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
   def update(index: Int, v: A)(implicit txn: InTxn) = getRef(index).set(v)
 
   def single: View[A] = new View[A] {
-    def array = TArrayImpl.this
+    def tarray = TArrayImpl.this
     def length: Int = array.length
     def apply(index: Int): A = getRef(index).single.get
     def update(index: Int, v: A) = getRef(index).single.set(v)
