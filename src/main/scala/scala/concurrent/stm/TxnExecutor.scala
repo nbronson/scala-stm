@@ -36,7 +36,6 @@ trait TxnExecutor {
    *  @tparam   Z the return type of the atomic block
    *  @return   the value returned from `block` after a successful optimistic
    *            concurrency attempt
-   *  @usecase  def atomic[Z](block: InTxn => Z): Z
    */
   final def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = runAtomically(block)
 
