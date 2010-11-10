@@ -40,6 +40,11 @@ object TMap {
  *  operations be called from inside an atomic block.  Rather than extending
  *  `Map`, an implicit conversion is provided from `TMap` to `Map` if the
  *  current scope is part of an atomic block (see `TMap.asMap`).
+ *
+ *  The keys (with type `A`) must be immutable, or at least not modified while
+ *  they are in the map.  The `TMap` implementation assumes that it can safely
+ *  perform key equality and hash checks outside a transaction without
+ *  affecting atomicity. 
  */
 trait TMap[A, B] {
 
