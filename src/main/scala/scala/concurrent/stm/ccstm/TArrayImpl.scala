@@ -23,11 +23,11 @@ class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
 
   def single: View[A] = new View[A] {
     def tarray = TArrayImpl.this
-    def length: Int = array.length
+    def length: Int = tarray.length
     def apply(index: Int): A = getRef(index).single.get
     def update(index: Int, v: A) = getRef(index).single.set(v)
     def refs: immutable.IndexedSeq[Ref.View[A]] = new immutable.IndexedSeq[Ref.View[A]] {
-      def length = array.length
+      def length = tarray.length
       def apply(index: Int) = getRef(index).single
     }
   }
