@@ -30,6 +30,7 @@ private[ccstm] object AccessHistory {
     protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T
     protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T
     protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
+    protected def transformAndGet[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
   }
 
   /** Holds the write buffer undo log for a particular nesting level.  This is
@@ -342,6 +343,13 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val before = getWriteSpecValue[T](i)
     setSpecValue(i, func(before))
     return before
+  }
+
+  protected def transformAndGet[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T = {
+    val i = findOrAllocate(handle, freshOwner)
+    val after = func(getWriteSpecValue[T](i))
+    setSpecValue(i, after)
+    return after
   }
 
   private def findOrAllocate(handle: Handle[_], freshOwner: Boolean): Int = {
