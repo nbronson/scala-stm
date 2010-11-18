@@ -899,6 +899,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     v0
   }
 
+  def transformAndGet[T](handle: Handle[T], func: T => T): T = {
+    requireActive()
+    val mPrev = acquireOwnership(handle)
+    val f = freshOwner(mPrev)
+    val v1 = transformAndGet(handle, f, func)
+    if (f)
+      revalidateIfRequired(version(mPrev))
+    v1
+  }
+
   def tryTransform[T](handle: Handle[T], f: T => T): Boolean = {
     requireActive()
 

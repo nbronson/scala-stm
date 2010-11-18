@@ -81,6 +81,16 @@ object Ref extends RefCompanion {
     def getAndTransform(f: A => A): A
 
     /** Atomically replaces the value ''v'' stored in the `Ref` with
+     *  `f`(''v''), returning the new value.  `transform` should be preferred
+     *  if the return value is not needed, since it gives the STM more
+     *  flexibility to avoid transaction conflicts.
+     *  @param f a function that is safe to call multiple times, and safe to
+     *      call later during any enclosing atomic block.
+     *  @return the new value of the viewed `Ref`.
+     */
+    def transformAndGet(f: A => A): A
+
+    /** Atomically replaces the value ''v'' stored in the `Ref` with
      *  `pf`(''v'') if `pf.isDefinedAt`(''v''), returning true, otherwise
      *  leaves the element unchanged and returns false.  `pf.apply` and
      *  `pf.isDefinedAt` might be invoked multiple times by the STM, and might

@@ -41,12 +41,16 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case txn => txn.compareAndSetIdentity(handle, before, after)
   }
   def transform(f: T => T): Unit = InTxnImpl.dynCurrentOrNull match {
-    case null => NonTxn.getAndTransform(handle, f)
-    case txn => txn.getAndTransform(handle, f)
+    case null => NonTxn.transformAndGet(handle, f)
+    case txn => txn.transformAndGet(handle, f)
   }
   def getAndTransform(f: T => T): T = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.getAndTransform(handle, f)
     case txn => txn.getAndTransform(handle, f)
+  }
+  def transformAndGet(f: T => T): T = InTxnImpl.dynCurrentOrNull match {
+    case null => NonTxn.transformAndGet(handle, f)
+    case txn => txn.transformAndGet(handle, f)
   }
   def transformIfDefined(pf: PartialFunction[T,T]): Boolean = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.transformIfDefined(handle, pf)

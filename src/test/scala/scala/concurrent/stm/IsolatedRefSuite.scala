@@ -52,6 +52,7 @@ class IsolatedRefSuite extends FunSuite {
     }
     def transform(f: A => A) { ref.transform(f) }
     def getAndTransform(f: A => A): A = { val z = get ; ref.transform(f) ; z }
+    def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
   }
 
@@ -76,6 +77,7 @@ class IsolatedRefSuite extends FunSuite {
     def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = wrap { view.compareAndSetIdentity(before, after) }
     def transform(f: A => A) { wrap { view.transform(f) } }
     def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
+    def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
   }
 
