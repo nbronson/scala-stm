@@ -5,53 +5,20 @@ package skel
 
 import collection._
 
-class SimpleTMap[A, B](m0: immutable.Map[A, B]) extends TMap.View[A, B] with TMap[A, B] {
+class SimpleTMap[A, B](m0: immutable.Map[A, B]) extends TMapViaSnapshot[A, B] {
 
   private val contents = Ref(m0).single
 
-  def tmap: TMap[A, B] = this
-  def single: TMap.View[A, B] = this
+  override def empty: TMap.View[A, B] = new SimpleTMap(immutable.Map.empty[A, B])
 
-  def snapshot: immutable.Map[A, B] = contents()
+  override def clone(): TMap.View[A, B] = new SimpleTMap(snapshot)
 
-  //////////// read-only
+  override def snapshot: immutable.Map[A, B] = contents()
 
-  // We get atomicity for the read-only operations by returning a consistent
-  // iterator that visits a snapshot.
-
-  override def size: Int = snapshot.size
-
-  def get(key: A): Option[B] = snapshot.get(key)
-
-  def iterator: Iterator[(A, B)] = snapshot.iterator
-
-  override def foreach[U](f: ((A, B)) => U) { snapshot.foreach(f) }  
-
-
-  //////////// builder functionality (from mutable.MapLike via TMap.View)
-
-  override protected[this] def newBuilder: TMap.View[A, B] = empty
-
-  override def result: TMap.View[A, B] = this
-
-
-  //////////// construction of new TMaps
-
-  // Our cheap clone() means that mutable.MapLike's implementations of +, ++,
-  // -, and -- are all pretty reasonable.
-
-  override def clone() = new SimpleTMap[A, B](snapshot)
-
-  override def empty = new SimpleTMap[A, B](immutable.Map.empty[A, B])
-
-  // this is overridden here to avoid a bit of boxing 
-  override def updated [B1 >: B](key: A, value: B1): TMap.View[A, B1] = new SimpleTMap[A, B1](snapshot.updated(key, value))
-
+  // this is an optimization to avoid boxing
+  override def updated [B1 >: B](key: A, value: B1): TMap.View[A, B1] = new SimpleTMap(snapshot.updated(key, value))
 
   //////////// mutation
-
-  // We need our own implementations of mutation to get the appropriate
-  // atomicity boundaries.
 
   override def put(key: A, value: B): Option[B] = (contents getAndTransform { _.updated(key, value) }).get(key)
 
