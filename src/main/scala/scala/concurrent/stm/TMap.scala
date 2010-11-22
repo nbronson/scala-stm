@@ -30,7 +30,7 @@ object TMap {
    */
   def apply[A, B](data: TraversableOnce[(A, B)]): TMap[A, B] = impl.STMImpl.instance.newTMap[A, B](data)
 
-  
+
   /** Allows a `TMap` in a transactional context to be used as a `Map`. */
   implicit def asMap[A, B](m: TMap[A, B])(implicit txn: InTxn): View[A, B] = m.single
 }
@@ -53,4 +53,18 @@ trait TMap[A, B] {
    *  atomic block.
    */
   def single: TMap.View[A, B]
+
+  // The following methods return the wrong receiver when invoked via the asMap
+  // conversion.  They are exactly the methods of mutable.Map whose return type
+  // is this.type.  Note that there are other methods of mutable.Map that we
+  // allow to use the implicit mechanism, such as put(k).
+  
+  def += (kv: (A, B))(implicit txn: InTxn): this.type = { single += kv ; this }
+  def += (kv1: (A, B), kv2: (A, B), kvs: (A, B)*)(implicit txn: InTxn): this.type = { single.+= (kv1, kv2, kvs: _*) ; this }
+  def ++= (kvs: TraversableOnce[(A, B)])(implicit txn: InTxn): this.type = { single ++= kvs ; this }
+  def -= (k: A)(implicit txn: InTxn): this.type = { single -= k ; this }
+  def -= (k1: A, k2: A, ks: A*)(implicit txn: InTxn): this.type = { single.-= (k1, k2, ks: _*) ; this }
+  def --= (ks: TraversableOnce[A])(implicit txn: InTxn): this.type = { single --= ks ; this }
+  def transform(f: (A, B) => B)(implicit txn: InTxn): this.type = { single transform f ; this }
+  def retain(p: (A, B) => Boolean)(implicit txn: InTxn): this.type = { single retain p ; this }
 }
