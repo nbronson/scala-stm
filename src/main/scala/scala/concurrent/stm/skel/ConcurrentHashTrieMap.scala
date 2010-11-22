@@ -18,6 +18,8 @@ object ConcurrentHashTrieMap {
 
   def indexFor(shift: Int, hash: Int) = (hash >> shift) & (BF - 1)
 
+  sealed abstract class Node[A, B]
+
   object Leaf {
     private val emptyLeaf = new Leaf[Any, Any](Array[Int](), Array[AnyRef]())
 
@@ -39,7 +41,7 @@ object ConcurrentHashTrieMap {
   }
 
   // this is immutable
-  class Leaf[A, B](val hashes: Array[Int], private val kvs: Array[AnyRef]) {
+  class Leaf[A, B](val hashes: Array[Int], private val kvs: Array[AnyRef]) extends Node[A, B] {
     def keys(i: Int): A = kvs(2 * i).asInstanceOf[A]
     def values(i: Int): B = kvs(2 * i + 1).asInstanceOf[B]
 
@@ -108,19 +110,19 @@ object ConcurrentHashTrieMap {
       hashes.length > MaxLeafCapacity && hashes(hashes.length - 1) != hashes(0)
     }
 
-    def split(shift: Int): Array[MVar[Either[Leaf[A, B], Branch[A, B]]]] = {
+    def split(shift: Int): Array[MVar[Node[A, B]]] = {
       val sizes = new Array[Int](BF)
       var i = 0
       while (i < hashes.length) {
         sizes(indexFor(shift, hashes(i))) += 1
         i += 1
       }
-      val result = new Array[MVar[Either[Leaf[A, B], Branch[A, B]]]](BF)
+      val result = new Array[MVar[Node[A, B]]](BF)
       i = 0
       while (i < BF) {
         val n = sizes(i)
         val t = if (n == 0) Leaf.empty[A, B] else new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
-        result(i) = new MVar[Either[Leaf[A, B], Branch[A, B]]](Left(t))
+        result(i) = new MVar[Node[A, B]](t)
         i += 1
       }
       i = hashes.length - 1
@@ -128,7 +130,7 @@ object ConcurrentHashTrieMap {
         val slot = indexFor(shift, hashes(i))
         sizes(slot) -= 1
         val pos = sizes(slot)
-        val dst = result(slot).value.left.get
+        val dst = result(slot).value.asInstanceOf[Leaf[A, B]]
         dst.hashes(pos) = hashes(i)
         dst.kvs(2 * pos) = kvs(2 * i)
         dst.kvs(2 * pos + 1) = kvs(2 * i + 1)
@@ -147,7 +149,7 @@ object ConcurrentHashTrieMap {
   // holds a forwarder that is valid forever.  This means that each MVar only
   // needs to be read once when performing a map read. 
 
-  class Branch[A, B](val gen: Int, val children: Array[MVar[Either[Leaf[A, B], Branch[A, B]]]]) {
+  class Branch[A, B](val gen: Int, val children: Array[MVar[Node[A, B]]]) extends Node[A, B] {
     def clone(newGen: Int): Branch[A, B] = new Branch[A, B](newGen, children map { m => new MVar(m.value) })
   }
 
@@ -160,16 +162,16 @@ object ConcurrentHashTrieMap {
 
 import ConcurrentHashTrieMap._
 
-class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Either[Leaf[A, B], Branch[A, B]]])]) {
+class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Node[A, B]])]) {
 
-  def this() = this(new MVar((0, new MVar[Either[Leaf[A, B], Branch[A, B]]](Left(Leaf.empty[A, B])))))
+  def this() = this(new MVar((0, new MVar[Node[A, B]](Leaf.empty[A, B]))))
 
   def get(key: A): Option[B] = get(root.value._2, 0, keyHash(key), key)
 
-  @tailrec private def get(n: MVar[Either[Leaf[A, B], Branch[A, B]]], shift: Int, hash: Int, key: A): Option[B] = {
+  @tailrec private def get(n: MVar[Node[A, B]], shift: Int, hash: Int, key: A): Option[B] = {
     n.value match {
-      case Left(leaf) => leaf.get(hash, key)
-      case Right(branch) => get(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
+      case leaf: Leaf[A, B] => leaf.get(hash, key)
+      case branch: Branch[A, B] => get(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
 
@@ -178,13 +180,12 @@ class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Eit
     put(r._1, r._2, 0, keyHash(key), key, value)
   }
 
-  @tailrec private def put(gen: Int, n: MVar[Either[Leaf[A, B], Branch[A, B]]], shift: Int, hash: Int, key: A, value: B): Option[B] = {
+  @tailrec private def put(gen: Int, n: MVar[Node[A, B]], shift: Int, hash: Int, key: A, value: B): Option[B] = {
     n.value match {
-      case v0 @ Left(leaf) => {
-        var after: Either[Leaf[A, B], Branch[A, B]] = Left(leaf.withPut(hash, key, value))
-        if (after.left.get.shouldSplit)
-          after = Right(new Branch[A, B](gen, after.left.get.split(shift)))
-        if (n.casi(v0, { root.value._1 == gen }, after))
+      case leaf: Leaf[A, B] => {
+        val p = leaf.withPut(hash, key, value)
+        val after = if (!p.shouldSplit) p else new Branch[A, B](gen, p.split(shift))
+        if (n.casi(leaf, { root.value._1 == gen }, after))
           leaf.get(hash, key)
         else if (root.value._1 == gen)
           put(gen, n, shift, hash, key, value) // retry locally
@@ -193,11 +194,11 @@ class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Eit
           put(r._1, r._2, 0, hash, key, value) // retry completely
         }
       }
-      case v0 @ Right(branch) => {
+      case branch: Branch[A, B] => {
         if (branch.gen == gen)
           put(gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, value)
         else {
-          n.casi(v0, Right(branch.clone(gen)))
+          n.casi(branch, branch.clone(gen))
           // try again, either picking up our improvement or someone else's
           put(gen, n, shift, hash, key, value)
         }
