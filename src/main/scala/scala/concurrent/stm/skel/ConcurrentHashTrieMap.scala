@@ -24,20 +24,6 @@ object ConcurrentHashTrieMap {
     private val emptyLeaf = new Leaf[Any, Any](Array[Int](), Array[AnyRef]())
 
     def empty[A, B] = emptyLeaf.asInstanceOf[Leaf[A, B]]
-
-    def apply[A, B](hash: Int, key: A, value: B): Leaf[A, B] = {
-      new Leaf[A, B](Array(hash), Array(key.asInstanceOf[AnyRef], value.asInstanceOf[AnyRef]))
-    }
-
-    def apply[A, B](leaves: Array[Leaf[A, B]]): Leaf[A, B] = {
-      val ss = (for (leaf <- leaves; if leaf != null; i <- 0 until leaf.hashes.length) yield {
-        val h = leaf.hashes(i)
-        val k = leaf.keys(i).asInstanceOf[AnyRef]
-        val v = leaf.values(i).asInstanceOf[AnyRef]
-        (h -> Array(k, v))
-      }).sortBy { _._1 }
-      if (ss.isEmpty) empty[A, B] else new Leaf[A, B](ss map { _._1 }, ss flatMap { _._2 })
-    }    
   }
 
   // this is immutable
@@ -45,9 +31,11 @@ object ConcurrentHashTrieMap {
     def keys(i: Int): A = kvs(2 * i).asInstanceOf[A]
     def values(i: Int): B = kvs(2 * i + 1).asInstanceOf[B]
 
+    def contains(hash: Int, key: A): Boolean = find(hash, key) >= 0
+
     def get(hash: Int, key: A): Option[B] = {
       val i = find(hash, key)
-      if (i >= 0) Some(values(i)) else None       
+      if (i >= 0) Some(values(i)) else None
     }
 
     private def find(hash: Int, key: A): Int = {
@@ -94,15 +82,19 @@ object ConcurrentHashTrieMap {
     }
 
     private def withRemove(i: Int): Leaf[A, B] = {
-      val nhashes = new Array[Int](hashes.length - 1)
-      System.arraycopy(hashes, 0, nhashes, 0, i)
-      System.arraycopy(hashes, i + 1, nhashes, i, nhashes.length - i)
+      if (hashes.length == 1)
+        Leaf.empty[A, B]
+      else {
+        val nhashes = new Array[Int](hashes.length - 1)
+        System.arraycopy(hashes, 0, nhashes, 0, i)
+        System.arraycopy(hashes, i + 1, nhashes, i, nhashes.length - i)
 
-      val nkvs = new Array[AnyRef](kvs.length - 2)
-      System.arraycopy(kvs, 0, nkvs, 0, 2 * i)
-      System.arraycopy(kvs, 2 * i + 2, nkvs, 2 * i, nkvs.length - 2 * i)
+        val nkvs = new Array[AnyRef](kvs.length - 2)
+        System.arraycopy(kvs, 0, nkvs, 0, 2 * i)
+        System.arraycopy(kvs, 2 * i + 2, nkvs, 2 * i, nkvs.length - 2 * i)
 
-      new Leaf[A, B](nhashes, nkvs)
+        new Leaf[A, B](nhashes, nkvs)
+      }
     }
 
     def shouldSplit: Boolean = {
@@ -110,7 +102,7 @@ object ConcurrentHashTrieMap {
       hashes.length > MaxLeafCapacity && hashes(hashes.length - 1) != hashes(0)
     }
 
-    def split(gen: Int, shift: Int): Branch[A, B] = {
+    def split(gen: Long, shift: Int): Branch[A, B] = {
       val sizes = new Array[Int](BF)
       var i = 0
       while (i < hashes.length) {
@@ -120,9 +112,7 @@ object ConcurrentHashTrieMap {
       val children = new Array[MVar[Node[A, B]]](BF)
       i = 0
       while (i < BF) {
-        val n = sizes(i)
-        val t = if (n == 0) Leaf.empty[A, B] else new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
-        children(i) = new MVar[Node[A, B]](t)
+        children(i) = new MVar[Node[A, B]](newLeaf(sizes(i)))
         i += 1
       }
       i = hashes.length - 1
@@ -145,6 +135,10 @@ object ConcurrentHashTrieMap {
       }
       new Branch[A, B](gen, children)
     }
+
+    private def newLeaf(n: Int): Leaf[A, B] = {
+      if (n == 0) Leaf.empty[A, B] else new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
+    }
   }
 
   class MVar[A <: AnyRef](@volatile var value: A) {
@@ -156,16 +150,32 @@ object ConcurrentHashTrieMap {
   // holds a forwarder that is valid forever.  This means that each MVar only
   // needs to be read once when performing a map read. 
 
-  class Branch[A, B](val gen: Int, val children: Array[MVar[Node[A, B]]]) extends Node[A, B] {
-    def clone(newGen: Int): Branch[A, B] = new Branch[A, B](newGen, children map { m => new MVar(m.value) })
+  class Branch[A, B](val gen: Long, val children: Array[MVar[Node[A, B]]]) extends Node[A, B] {
+    def clone(newGen: Long): Branch[A, B] = new Branch[A, B](newGen, children map { m => new MVar(m.value) })
   }
 }
 
 import ConcurrentHashTrieMap._
 
-class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Node[A, B]])]) {
+class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Long, MVar[Node[A, B]])]) {
 
-  def this() = this(new MVar((0, new MVar[Node[A, B]](Leaf.empty[A, B]))))
+  def this() = this(new MVar((0L, new MVar[Node[A, B]](Leaf.empty[A, B]))))
+
+  override def clone(): ConcurrentHashTrieMap[A, B] = {
+    // if we fail to bump the gen, someone else must have succeeded
+    val v0 = root.value
+    root.casi(v0, (v0._1 + 1, new MVar(v0._2.value)))
+    new ConcurrentHashTrieMap(new MVar((v0._1 + 1, new MVar(v0._2.value))))
+  }
+
+  def contains(key: A): Boolean = contains(root.value._2, 0, keyHash(key), key)
+
+  @tailrec private def contains(n: MVar[Node[A, B]], shift: Int, hash: Int, key: A): Boolean = {
+    n.value match {
+      case leaf: Leaf[A, B] => leaf.contains(hash, key)
+      case branch: Branch[A, B] => contains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
+    }
+  }
 
   def get(key: A): Option[B] = get(root.value._2, 0, keyHash(key), key)
 
@@ -181,7 +191,7 @@ class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Nod
     put(r._1, r._2, 0, keyHash(key), key, value)
   }
 
-  @tailrec private def put(gen: Int, n: MVar[Node[A, B]], shift: Int, hash: Int, key: A, value: B): Option[B] = {
+  @tailrec private def put(gen: Long, n: MVar[Node[A, B]], shift: Int, hash: Int, key: A, value: B): Option[B] = {
     n.value match {
       case leaf: Leaf[A, B] => {
         val p = leaf.withPut(hash, key, value)
@@ -207,10 +217,41 @@ class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Nod
     }
   }
 
-  override def clone(): ConcurrentHashTrieMap[A, B] = {
-    // we need to bump the gen of this map's root,
-    val v0 = root.value
-    root.casi(v0, (v0._1 + 1, new MVar(v0._2.value)))
-    new ConcurrentHashTrieMap(new MVar((v0._1 + 1, new MVar(v0._2.value))))
+  def remove(key: A): Option[B] = {
+    val r = root.value
+    remove(r._1, r._2, 0, keyHash(key), key, false)
   }
+
+  @tailrec private def remove(gen: Long, n: MVar[Node[A, B]], shift: Int, hash: Int, key: A, checked: Boolean): Option[B] = {
+    n.value match {
+      case leaf: Leaf[A, B] => {
+        val after = leaf.withRemove(hash, key)
+        if (after eq leaf)
+          None // no change, key must not have been present
+        else if (n.casi(leaf, { root.value._1 == gen }, after))
+          leaf.get(hash, key)
+        else if (root.value._1 == gen)
+          remove(gen, n, shift, hash, key, true) // retry locally
+        else {
+          val r = root.value
+          remove(r._1, r._2, 0, hash, key, true) // retry completely
+        }
+      }
+      case branch: Branch[A, B] => {
+        if (branch.gen == gen)
+          remove(gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, checked)
+        else {
+          // no use in cloning paths if the key isn't actually present
+          if (!checked && !contains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key))
+            None
+          else {
+            n.casi(branch, branch.clone(gen))
+            // try again, either picking up our improvement or someone else's
+            remove(gen, n, shift, hash, key, true)
+          }
+        }
+      }
+    }
+  }
+
 }
