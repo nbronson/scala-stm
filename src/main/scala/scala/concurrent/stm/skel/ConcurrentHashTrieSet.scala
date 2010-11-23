@@ -34,4 +34,8 @@ class ConcurrentHashTrieSet[A] private (private val root: Ref.View[TxnHashTrie.S
   def add(key: A): Boolean = TxnHashTrie.put(root, key, null).isEmpty
 
   def remove(key: A): Boolean = !TxnHashTrie.remove(root, key).isEmpty
+  
+  def foreach(block: A => Unit) = TxnHashTrie.setForeach(root, block)
+
+  def iterator: Iterator[A] = TxnHashTrie.setIterator(root)
 }

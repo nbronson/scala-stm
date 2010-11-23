@@ -36,4 +36,8 @@ class ConcurrentHashTrieMap[A, B] private (private val root: Ref.View[TxnHashTri
   def put(key: A, value: B): Option[B] = TxnHashTrie.put(root, key, value)
 
   def remove(key: A): Option[B] = TxnHashTrie.remove(root, key)
+
+  def foreach(block: ((A, B)) => Unit) = TxnHashTrie.mapForeach(root, block)
+
+  def iterator: Iterator[(A, B)] = TxnHashTrie.mapIterator(root)
 }

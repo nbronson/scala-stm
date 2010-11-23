@@ -27,7 +27,13 @@ object TxnHashTrie {
 
   //////// publicly-visible stuff
 
-  sealed abstract class Node[A, B]
+  sealed abstract class Node[A, B] {
+    def setForeach(block: A => Unit)
+    def mapForeach(block: ((A, B)) => Unit)
+    def setIterator: Iterator[A]
+    def mapIterator: Iterator[(A, B)]
+  }
+
   type SetNode[A] = Node[A, AnyRef]
 
   def emptySetNode[A]: SetNode[A] = emptySetValue.asInstanceOf[SetNode[A]]
@@ -171,6 +177,34 @@ object TxnHashTrie {
         new Leaf[A, B](new Array[Int](n), new Array[AnyRef](n), nvalues)
       }
     }
+
+    def setForeach(block: A => Unit) {
+      var i = 0
+      while (i < keys.length) {
+        block(keys(i).asInstanceOf[A])
+        i += 1
+      }
+    }
+
+    def mapForeach(block: ((A, B)) => Unit) {
+      var i = 0
+      while (i < keys.length) {
+        block((keys(i).asInstanceOf[A], values(i).asInstanceOf[B]))
+        i += 1
+      }
+    }
+
+    def setIterator: Iterator[A] = new Iterator[A] {
+      var pos = 0
+      def hasNext = pos < keys.length
+      def next: A = { val z = keys(pos).asInstanceOf[A] ; pos += 1 ; z }
+    }
+
+    def mapIterator: Iterator[(A, B)] = new Iterator[(A,B)] {
+      var pos = 0
+      def hasNext = pos < keys.length
+      def next: (A, B) = { val z = (keys(pos).asInstanceOf[A], values(pos).asInstanceOf[B]) ; pos += 1 ; z }
+    }
   }
 
   class Branch[A, B](val gen: Long, val children: Array[Ref.View[Node[A, B]]]) extends Node[A, B] {
@@ -183,12 +217,70 @@ object TxnHashTrie {
       }
       new Branch[A, B](newGen, cc)
     }
+
+    def setForeach(block: A => Unit) {
+      var i = 0
+      while (i < BF) {
+        children(i)().setForeach(block)
+        i += 1
+      }
+    }
+
+    def mapForeach(block: ((A, B)) => Unit) {
+      var i = 0
+      while (i < BF) {
+        children(i)().mapForeach(block)
+        i += 1
+      }
+    }
+
+    private abstract class Iter[Z] extends Iterator[Z] {
+
+      def childIter(c: Node[A, B]): Iterator[Z]
+
+      private var pos = -1
+      private var iter: Iterator[Z] = null
+      advance()
+
+      @tailrec private def advance(): Boolean = {
+        if (pos == BF - 1) {
+          iter = null
+          false
+        } else {
+          pos += 1
+          val c = children(pos)()
+          if ((c eq emptySetValue) || (c eq emptyMapValue))
+            advance() // keep looking, nothing is here
+          else {
+            iter = childIter(c)
+            iter.hasNext || advance() // keep looking if we got a dud
+          }
+        }
+      }
+
+      def hasNext = iter != null && iter.hasNext
+
+      def next: Z = {
+        val z = iter.next
+        if (!iter.hasNext)
+          advance()
+        z
+      }
+    }
+
+    def setIterator: Iterator[A] = new Iter[A] {
+      def childIter(c: Node[A, B]) = c.setIterator
+    }
+
+    def mapIterator: Iterator[(A, B)] = new Iter[(A,B)] {
+      def childIter(c: Node[A, B]) = c.mapIterator
+    }
   }
 
   //////////////// hash trie operations
 
-  def clone[A, B](root: Ref.View[Node[A, B]]): Ref.View[Node[A, B]] = {
-    Ref(root() match {
+  def frozenRoot[A, B](root: Ref.View[Node[A, B]]): Node[A, B] = {
+    root() match {
       case leaf: Leaf[A, B] => leaf // leaf is already immutable
       case branch: Branch[A, B] => {
         // If this CAS fails it means someone else already bumped the
@@ -197,8 +289,10 @@ object TxnHashTrie {
         val b = branch.clone(branch.gen + 1)
         if (!root.compareAndSet(branch, b)) b else branch.clone(branch.gen + 1)
       }
-    }).single
+    }
   }
+
+  def clone[A, B](root: Ref.View[Node[A, B]]): Ref.View[Node[A, B]] = Ref(frozenRoot(root)).single
 
   def contains[A, B](root: Ref.View[Node[A, B]], key: A): Boolean = contains(root, 0, keyHash(key), key)
 
@@ -297,4 +391,12 @@ object TxnHashTrie {
       }
     }
   }
+
+  def setForeach[A, B](root: Ref.View[Node[A, B]], block: A => Unit) { frozenRoot(root).setForeach(block) }
+
+  def mapForeach[A, B](root: Ref.View[Node[A, B]], block: ((A, B)) => Unit) { frozenRoot(root).mapForeach(block) }
+
+  def setIterator[A, B](root: Ref.View[Node[A, B]]): Iterator[A] = frozenRoot(root).setIterator
+
+  def mapIterator[A, B](root: Ref.View[Node[A, B]]): Iterator[(A, B)] = frozenRoot(root).mapIterator
 }
