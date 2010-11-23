@@ -6,17 +6,15 @@ import annotation.tailrec
 object ConcurrentHashTrieMap {
   def main(args: Array[String]) {
     for (q <- 0 until 8) {
+      val m = new ConcurrentHashTrieMap[Int, String]
+      //val m = new SimpleTMap(Map.empty[Int, String])
+      for (i <- 0 until 1000)
+        m.put(i, "foo")
       val t0 = System.currentTimeMillis
       for (p <- 0 until 1000) {
-        val m = new ConcurrentHashTrieMap[Int, String]
         var i = 0
-        while (i < 1000) {
-          m.put(i, "foo")
-          i += 1
-        }
-        i = 0        
         while (i < 10000) {
-          m.get(i)
+          m.get(-(i % 1000))
           i += 1
         }
       }
@@ -119,24 +117,26 @@ object ConcurrentHashTrieMap {
 
     def withRemove(hash: Int, key: A): Leaf[A, B] = {
       val i = find(hash, key)
-      if (i >= 0) withRemove(i) else this
+      if (i < 0) this else withRemove(i)
     }
 
     private def withRemove(i: Int): Leaf[A, B] = {
-      if (hashes.length == 1) {
-        newLeaf(0)
-      } else {
-        val nhashes = arrayRemove(hashes, new Array[Int](hashes.length - 1), i)
-        val nkeys = arrayRemove(keys, new Array[AnyRef](keys.length - 1), i)
-        val nvalues = if (values == null) null else arrayRemove(values, new Array[AnyRef](values.length - 1), i)
-        new Leaf[A, B](nhashes, nkeys, nvalues)
-      }
-    }
+      val z = newLeaf(hashes.length - 1)
+      if (z.hashes.length > 0) {
+        val j = z.hashes.length - i
 
-    private def arrayRemove[@specialized(Int) A](src: Array[A], dst: Array[A], i: Int): Array[A] = {
-      System.arraycopy(src, 0, dst, 0, i)
-      System.arraycopy(src, i + 1, dst, i, dst.length - i)
-      dst
+        System.arraycopy(hashes, 0, z.hashes, 0, i)
+        System.arraycopy(hashes, i + 1, z.hashes, i, j)
+
+        System.arraycopy(keys, 0, z.keys, 0, i)
+        System.arraycopy(keys, i + 1, z.keys, i, j)
+
+        if (values != null) {
+          System.arraycopy(values, 0, z.values, 0, i)
+          System.arraycopy(values, i + 1, z.values, i, j)
+        }
+      }
+      z
     }
 
     def shouldSplit: Boolean = {
@@ -151,10 +151,10 @@ object ConcurrentHashTrieMap {
         sizes(indexFor(shift, hashes(i))) += 1
         i += 1
       }
-      val children = new Array[Node[A, B]](BF)
+      val children = new Array[Ref.View[Node[A, B]]](BF)
       i = 0
       while (i < BF) {
-        children(i) = newLeaf(sizes(i))
+        children(i) = Ref[Node[A, B]](newLeaf(sizes(i))).single
         i += 1
       }
       i = hashes.length - 1
@@ -162,7 +162,7 @@ object ConcurrentHashTrieMap {
         val slot = indexFor(shift, hashes(i))
         sizes(slot) -= 1
         val pos = sizes(slot)
-        val dst = children(slot).asInstanceOf[Leaf[A, B]]
+        val dst = children(slot)().asInstanceOf[Leaf[A, B]]
         dst.hashes(pos) = hashes(i)
         dst.keys(pos) = keys(i)
         if (values != null)
@@ -176,7 +176,7 @@ object ConcurrentHashTrieMap {
         ////  children(slot).value = dst.split(gen, shift + LogBF)
         i -= 1
       }
-      new Branch[A, B](gen, TArray(children).single)
+      new Branch[A, B](gen, children)
     }
 
     private def newLeaf(n: Int): Leaf[A, B] = {
@@ -189,8 +189,16 @@ object ConcurrentHashTrieMap {
     }
   }
 
-  class Branch[A, B](val gen: Long, val children: TArray.View[Node[A, B]]) extends Node[A, B] {
-    def clone(newGen: Long): Branch[A, B] = new Branch[A, B](newGen, TArray(children).single)
+  class Branch[A, B](val gen: Long, val children: Array[Ref.View[Node[A, B]]]) extends Node[A, B] {
+    def clone(newGen: Long): Branch[A, B] = {
+      val cc = children.clone
+      var i = 0
+      while (i < cc.length) {
+        cc(i) = Ref(cc(i)()).single
+        i += 1
+      }
+      new Branch[A, B](newGen, cc)
+    }
   }
 }
 
@@ -200,57 +208,57 @@ class ConcurrentHashTrieMap[A, B] private (root0: Node[A, B]) {
 
   def this() = this(Leaf.emptyMap[A, B])
 
-  private val root = TArray(Array(root0)).single
+  private val root = Ref(root0).single
 
-  def contains(key: A): Boolean = contains(root, 0, 0, keyHash(key), key)
+  def contains(key: A): Boolean = contains(root, 0, keyHash(key), key)
 
-  @tailrec private def contains(a: TArray.View[Node[A, B]], i: Int, shift: Int, hash: Int, key: A): Boolean = {
-    a(i) match {
+  @tailrec private def contains(n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Boolean = {
+    n() match {
       case leaf: Leaf[A, B] => leaf.contains(hash, key)
-      case branch: Branch[A, B] => contains(branch.children, indexFor(shift, hash), shift + LogBF, hash, key)
+      case branch: Branch[A, B] => contains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
 
-  def get(key: A): Option[B] = get(root, 0, 0, keyHash(key), key)
+  def get(key: A): Option[B] = get(root, 0, keyHash(key), key)
 
-  @tailrec private def get(a: TArray.View[Node[A, B]], i: Int, shift: Int, hash: Int, key: A): Option[B] = {
-    a(i) match {
+  @tailrec private def get(n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Option[B] = {
+    n() match {
       case leaf: Leaf[A, B] => leaf.get(hash, key)
-      case branch: Branch[A, B] => get(branch.children, indexFor(shift, hash), shift + LogBF, hash, key)
+      case branch: Branch[A, B] => get(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
 
   def put(key: A, value: B): Option[B] = {
-    put(-1L, root, 0, 0, keyHash(key), key, value)
+    put(-1L, root, 0, keyHash(key), key, value)
   }
 
-  @tailrec private def put(gen: Long, a: TArray.View[Node[A, B]], i: Int, shift: Int, hash: Int, key: A, value: B): Option[B] = {
-    a(i) match {
+  @tailrec private def put(gen: Long, n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A, value: B): Option[B] = {
+    n() match {
       case leaf: Leaf[A, B] => {
         val p = leaf.withPut(hash, key, value)
         val after = if (!p.shouldSplit) p else p.split(gen, shift)
         atomic { implicit txn =>
-          if (a.tarray(i) ne leaf)
+          if (n.ref() ne leaf)
             0 // local retry
-          else if (gen != -1L && root.tarray(0).asInstanceOf[Branch[A, B]].gen != gen)
+          else if (gen != -1L && root.ref().asInstanceOf[Branch[A, B]].gen != gen)
             1 // root retry
           else {
-            a.tarray(i) = after
+            n.ref() = after
             2 // success
           }
         } match {
-          case 0 => put(gen, a, i, shift, hash, key, value)
-          case 1 => put(-1L, root, 0, 0, hash, key, value)
+          case 0 => put(gen, n, shift, hash, key, value)
+          case 1 => put(-1L, root, 0, hash, key, value)
           case 2 => leaf.get(hash, key)
         }
       }
       case branch: Branch[A, B] => {
         if (gen == -1L || branch.gen == gen)
-          put(branch.gen, branch.children, indexFor(shift, hash), shift + LogBF, hash, key, value)
+          put(branch.gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, value)
         else {
-          a.refViews(i).compareAndSetIdentity(branch, branch.clone(gen))
+          n.compareAndSetIdentity(branch, branch.clone(gen))
           // try again, either picking up our improvement or someone else's
-          put(gen, a, i, shift, hash, key, value)
+          put(gen, n, shift, hash, key, value)
         }
       }
     }
