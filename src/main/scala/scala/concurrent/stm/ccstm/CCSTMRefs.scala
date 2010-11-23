@@ -50,55 +50,55 @@ private[ccstm] object CCSTMRefs {
   private val doubleUpdater = (new DoubleRef(0 : Double)).newMetaUpdater
   private val genericUpdater = (new GenericRef("")).newMetaUpdater
 
-  private class BooleanRef(var data: Boolean) extends BaseRef[Boolean] {
+  private class BooleanRef(@volatile var data: Boolean) extends BaseRef[Boolean] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = booleanUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[BooleanRef], "meta")
   }
 
-  private class ByteRef(var data: Byte) extends BaseRef[Byte] {
+  private class ByteRef(@volatile var data: Byte) extends BaseRef[Byte] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = byteUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[ByteRef], "meta")
   }
 
-  private class ShortRef(var data: Short) extends BaseRef[Short] {
+  private class ShortRef(@volatile var data: Short) extends BaseRef[Short] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = shortUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[ShortRef], "meta")
   }
 
-  private class CharRef(var data: Char) extends BaseRef[Char] {
+  private class CharRef(@volatile var data: Char) extends BaseRef[Char] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = charUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[CharRef], "meta")
   }
 
-  private class IntRef(var data: Int) extends BaseRef[Int] {
+  private class IntRef(@volatile var data: Int) extends BaseRef[Int] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = intUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[IntRef], "meta")
   }
 
-  private class FloatRef(var data: Float) extends BaseRef[Float] {
+  private class FloatRef(@volatile var data: Float) extends BaseRef[Float] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = floatUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[FloatRef], "meta")
   }
 
-  private class LongRef(var data: Long) extends BaseRef[Long] {
+  private class LongRef(@volatile var data: Long) extends BaseRef[Long] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = longUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[LongRef], "meta")
   }
 
-  private class DoubleRef(var data: Double) extends BaseRef[Double] {
+  private class DoubleRef(@volatile var data: Double) extends BaseRef[Double] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = doubleUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[DoubleRef], "meta")
   }
 
-  private class GenericRef[A](var data: A) extends BaseRef[A] {
+  private class GenericRef[A](@volatile var data: A) extends BaseRef[A] {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = genericUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[GenericRef[_]], "meta")
