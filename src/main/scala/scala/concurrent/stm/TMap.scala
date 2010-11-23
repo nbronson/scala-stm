@@ -28,7 +28,7 @@ object TMap {
   /** Constructs and returns a new `TMap` that will contain the key/value pairs
    *  from `data`.
    */
-  def apply[A, B](data: TraversableOnce[(A, B)]): TMap[A, B] = impl.STMImpl.instance.newTMap[A, B](data)
+  def apply[A, B](data: (A, B)*): TMap[A, B] = impl.STMImpl.instance.newTMap[A, B](data)
 
 
   /** Allows a `TMap` in a transactional context to be used as a `Map`. */
