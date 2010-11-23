@@ -9,28 +9,22 @@ import scala.reflect.ClassManifest
 import scala.collection._
 
 
-class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
+class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] with TArray.View[A] {
   import TArray._
 
   def this(length0: Int)(implicit m: ClassManifest[A]) = this(AtomicArray[A](length0))
 
   def this(data0: TraversableOnce[A])(implicit m: ClassManifest[A]) = this(AtomicArray[A](data0))
 
-  def length = values.length
+  val length = values.length
+
+  //////////////// TArray
+
+  def single: View[A] = this
 
   def apply(index: Int)(implicit txn: InTxn) = getRef(index).get
-  def update(index: Int, v: A)(implicit txn: InTxn) = getRef(index).set(v)
 
-  def single: View[A] = new View[A] {
-    def tarray = TArrayImpl.this
-    def length: Int = tarray.length
-    def apply(index: Int): A = getRef(index).single.get
-    def update(index: Int, v: A) = getRef(index).single.set(v)
-    def refs: immutable.IndexedSeq[Ref.View[A]] = new immutable.IndexedSeq[Ref.View[A]] {
-      def length = tarray.length
-      def apply(index: Int) = getRef(index).single
-    }
-  }
+  def update(index: Int, v: A)(implicit txn: InTxn) = getRef(index).set(v)
 
   /** Returns a sequence that will produce transient `Ref` instances that are
    *  backed by elements of this `TArray`.  This allows use of all of `Ref`'s
@@ -41,13 +35,26 @@ class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
     def apply(index0: Int): Ref[A] = getRef(index0)
   }
 
+  //////////////// TArray.View
+
+  def tarray = TArrayImpl.this
+
+  def apply(index: Int): A = getRef(index).single.get
+
+  def update(index: Int, v: A) = getRef(index).single.set(v)
+
+  def refViews: immutable.IndexedSeq[Ref.View[A]] = new immutable.IndexedSeq[Ref.View[A]] {
+    def length = tarray.length
+    def apply(index: Int) = getRef(index).single
+  }
+
   /////////////// Internal implementation
 
   private val metaIndexMask = {
-    // We use min(length, nextPowerOfTwo(8 + length/16)) metadata elements.
-    // The mask is always nextPowerOfTwo(8 + length/16) - 1, even if that is
+    // We use min(length, nextPowerOfTwo(6 + length/16)) metadata elements.
+    // The mask is always nextPowerOfTwo(6 + length/16) - 1, even if that is
     // too large.
-    val n = 8 + length / 16
+    val n = 6 + length / 16
     var m = 7
     while (m < n - 1)
       m = (m << 1) + 1
@@ -56,22 +63,27 @@ class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
 
   private val metaValues = new AtomicLongArray(math.min(metaIndexMask + 1, length))
 
-  private def getRef(index: Int): Ref[A] = new Handle[A] with RefOps[A] with ViewOps[A] {
-    def handle: Handle[A] = this
-    def single: Ref.View[A] = this
-    def ref: Ref[A] = this
+  private def getRef(index: Int): Ref[A] = {
+    if (index < 0 || index >= length)
+      throw new ArrayIndexOutOfBoundsException(index)
 
-    def meta = metaValues.get(metaOffset)
-    def meta_=(v: Long) { metaValues.set(metaOffset, v) }
-    def metaCAS(before: Long, after: Long) = metaValues.compareAndSet(metaOffset, before, after)
-    def base = TArrayImpl.this
-    def offset = index
-    def metaOffset = index & metaIndexMask
-    def data = values(index)
-    def data_=(v: A) { values(index) = v }
+    new Handle[A] with RefOps[A] with ViewOps[A] {
+      def handle: Handle[A] = this
+      def single: Ref.View[A] = this
+      def ref: Ref[A] = this
 
-    override def toString = {
-      "TArray@" + Integer.toHexString(System.identityHashCode(TArrayImpl.this)) + "(" + index + ")"
+      def meta = metaValues.get(metaOffset)
+      def meta_=(v: Long) { metaValues.set(metaOffset, v) }
+      def metaCAS(before: Long, after: Long) = metaValues.compareAndSet(metaOffset, before, after)
+      def base = TArrayImpl.this
+      def offset = index
+      def metaOffset = index & metaIndexMask
+      def data = values(index)
+      def data_=(v: A) { values(index) = v }
+
+      override def toString = {
+        "TArray@" + Integer.toHexString(System.identityHashCode(TArrayImpl.this)) + "(" + index + ")"
+      }
     }
   }
 }

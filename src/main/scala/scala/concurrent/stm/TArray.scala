@@ -33,15 +33,18 @@ object TArray {
     /** Returns a sequence of `Ref.View` that are backed by the elements of
      *  `array`.  All operations on the contained `Ref.View`s are supported.
      */
-    def refs: immutable.IndexedSeq[Ref.View[A]]
+    def refViews: immutable.IndexedSeq[Ref.View[A]]
   }
 
   //////////////// factory methods
 
+  // We don't include apply(xs: A*) because it is surprising when
+  // TArray[Int](1000) creates a TArray of length 1.
+
   /** Returns a new `TArray[A]` containing `length` copies of the default value
    *  for elements of type `A`.
    */
-  def apply[A : ClassManifest](length: Int): TArray[A] = impl.STMImpl.instance.newTArray[A](length)
+  def ofDim[A : ClassManifest](length: Int): TArray[A] = impl.STMImpl.instance.newTArray[A](length)
 
   /** Returns a new `TArray[A]` containing the elements of `data`. */
   def apply[A : ClassManifest](data: TraversableOnce[A]): TArray[A] = impl.STMImpl.instance.newTArray[A](data)
