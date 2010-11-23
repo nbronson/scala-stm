@@ -44,11 +44,11 @@ class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] {
   /////////////// Internal implementation
 
   private val metaIndexMask = {
-    // We use min(length, nextPowerOfTwo(16 + length/16)) metadata elements.
-    // The mask is always nextPowerOfTwo(16 + length/16) - 1, even if that is
+    // We use min(length, nextPowerOfTwo(8 + length/16)) metadata elements.
+    // The mask is always nextPowerOfTwo(8 + length/16) - 1, even if that is
     // too large.
-    val n = 16 + length / 16
-    var m = 15
+    val n = 8 + length / 16
+    var m = 7
     while (m < n - 1)
       m = (m << 1) + 1
     m
