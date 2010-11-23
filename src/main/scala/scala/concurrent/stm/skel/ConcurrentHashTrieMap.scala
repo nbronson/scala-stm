@@ -7,11 +7,16 @@ object ConcurrentHashTrieMap {
   def main(args: Array[String]) {
     for (q <- 0 until 8) {
       val t0 = System.currentTimeMillis
-      for (p <- 0 until 1000000) {
+      for (p <- 0 until 1000) {
         val m = new ConcurrentHashTrieMap[Int, String]
         var i = 0
-        while (i < 10) {
-          m.put(i * i, "foo")
+        while (i < 1000) {
+          m.put(i, "foo")
+          i += 1
+        }
+        i = 0        
+        while (i < 10000) {
+          m.get(i)
           i += 1
         }
       }
@@ -191,11 +196,11 @@ object ConcurrentHashTrieMap {
 
 import ConcurrentHashTrieMap._
 
-class ConcurrentHashTrieMap[A, B] private (private val root: Ref.View[(Long, TArray.View[Node[A, B]])]) {
+class ConcurrentHashTrieMap[A, B] private (private val root: TArray.View[Node[A, B]]) {
 
-  def this() = this(Ref((0L, TArray(List[Node[A, B]](Leaf.emptyMap[A, B])).single)).single)
+  def this() = this(TArray(List[Node[A, B]](Leaf.emptyMap[A, B])).single)
 
-  def contains(key: A): Boolean = contains(root()._2, 0, 0, keyHash(key), key)
+  def contains(key: A): Boolean = contains(root, 0, 0, keyHash(key), key)
 
   @tailrec private def contains(a: TArray.View[Node[A, B]], i: Int, shift: Int, hash: Int, key: A): Boolean = {
     a(i) match {
@@ -204,7 +209,7 @@ class ConcurrentHashTrieMap[A, B] private (private val root: Ref.View[(Long, TAr
     }
   }
 
-  def get(key: A): Option[B] = get(root()._2, 0, 0, keyHash(key), key)
+  def get(key: A): Option[B] = get(root, 0, 0, keyHash(key), key)
 
   @tailrec private def get(a: TArray.View[Node[A, B]], i: Int, shift: Int, hash: Int, key: A): Option[B] = {
     a(i) match {
@@ -214,8 +219,7 @@ class ConcurrentHashTrieMap[A, B] private (private val root: Ref.View[(Long, TAr
   }
 
   def put(key: A, value: B): Option[B] = {
-    val r = root()
-    put(r._1, r._2, 0, 0, keyHash(key), key, value)
+    put(-1L, root, 0, 0, keyHash(key), key, value)
   }
 
   @tailrec private def put(gen: Long, a: TArray.View[Node[A, B]], i: Int, shift: Int, hash: Int, key: A, value: B): Option[B] = {
@@ -223,22 +227,24 @@ class ConcurrentHashTrieMap[A, B] private (private val root: Ref.View[(Long, TAr
       case leaf: Leaf[A, B] => {
         val p = leaf.withPut(hash, key, value)
         val after = if (!p.shouldSplit) p else p.split(gen, shift)
-        val f = atomic { implicit txn =>
-          ((a.tarray(i) eq leaf) && root()._1 == gen) && { a.tarray(i) = after ; true }
-        }
-        if (f) {
-          leaf.get(hash, key)
-        } else {
-          val r = root()
-          if (r._1 == gen)
-            put(gen, a, i, shift, hash, key, value) // retry locally
-          else
-            put(r._1, r._2, 0, 0, hash, key, value) // retry completely
+        atomic { implicit txn =>
+          if (a.tarray(i) ne leaf)
+            'local_retry
+          else if (gen != -1L && root.tarray(0).asInstanceOf[Branch[A, B]].gen != gen)
+            'root_retry
+          else {
+            a.tarray(i) = after
+            'okay
+          }
+        } match {
+          case 'okay => leaf.get(hash, key)
+          case 'local_retry => put(gen, a, i, shift, hash, key, value)
+          case 'root_retry => put(-1L, root, 0, 0, hash, key, value)
         }
       }
       case branch: Branch[A, B] => {
-        if (branch.gen == gen)
-          put(gen, branch.children, indexFor(shift, hash), shift + LogBF, hash, key, value)
+        if (gen == -1L || branch.gen == gen)
+          put(branch.gen, branch.children, indexFor(shift, hash), shift + LogBF, hash, key, value)
         else {
           a.refs(i).compareAndSetIdentity(branch, branch.clone(gen))
           // try again, either picking up our improvement or someone else's
