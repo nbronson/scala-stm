@@ -110,19 +110,19 @@ object ConcurrentHashTrieMap {
       hashes.length > MaxLeafCapacity && hashes(hashes.length - 1) != hashes(0)
     }
 
-    def split(shift: Int): Array[MVar[Node[A, B]]] = {
+    def split(gen: Int, shift: Int): Branch[A, B] = {
       val sizes = new Array[Int](BF)
       var i = 0
       while (i < hashes.length) {
         sizes(indexFor(shift, hashes(i))) += 1
         i += 1
       }
-      val result = new Array[MVar[Node[A, B]]](BF)
+      val children = new Array[MVar[Node[A, B]]](BF)
       i = 0
       while (i < BF) {
         val n = sizes(i)
         val t = if (n == 0) Leaf.empty[A, B] else new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
-        result(i) = new MVar[Node[A, B]](t)
+        children(i) = new MVar[Node[A, B]](t)
         i += 1
       }
       i = hashes.length - 1
@@ -130,13 +130,20 @@ object ConcurrentHashTrieMap {
         val slot = indexFor(shift, hashes(i))
         sizes(slot) -= 1
         val pos = sizes(slot)
-        val dst = result(slot).value.asInstanceOf[Leaf[A, B]]
+        val dst = children(slot).value.asInstanceOf[Leaf[A, B]]
         dst.hashes(pos) = hashes(i)
         dst.kvs(2 * pos) = kvs(2 * i)
         dst.kvs(2 * pos + 1) = kvs(2 * i + 1)
+
+        // If the hashes were very poorly distributed one leaf might get
+        // everything.  We could resplit now, but it doesn't seem to be worth
+        // it.  If we wait until the next insert we can never get more than
+        // 32 / LogBF extra.
+        //// if (pos == 0 && dst.shouldSplit)
+        ////  children(slot).value = dst.split(gen, shift + LogBF)
         i -= 1
       }
-      result
+      new Branch[A, B](gen, children)
     }
   }
 
@@ -152,12 +159,6 @@ object ConcurrentHashTrieMap {
   class Branch[A, B](val gen: Int, val children: Array[MVar[Node[A, B]]]) extends Node[A, B] {
     def clone(newGen: Int): Branch[A, B] = new Branch[A, B](newGen, children map { m => new MVar(m.value) })
   }
-
-
-
-//  class Branch[A, B] {
-//    val
-//  }
 }
 
 import ConcurrentHashTrieMap._
@@ -184,7 +185,7 @@ class ConcurrentHashTrieMap[A, B] private (private val root: MVar[(Int, MVar[Nod
     n.value match {
       case leaf: Leaf[A, B] => {
         val p = leaf.withPut(hash, key, value)
-        val after = if (!p.shouldSplit) p else new Branch[A, B](gen, p.split(shift))
+        val after = if (!p.shouldSplit) p else p.split(gen, shift)
         if (n.casi(leaf, { root.value._1 == gen }, after))
           leaf.get(hash, key)
         else if (root.value._1 == gen)
