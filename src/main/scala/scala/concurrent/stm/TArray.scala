@@ -44,7 +44,7 @@ object TArray {
   def apply[A : ClassManifest](length: Int): TArray[A] = impl.STMImpl.instance.newTArray[A](length)
 
   /** Returns a new `TArray[A]` containing the elements of `data`. */
-  def apply[A : ClassManifest](data: Traversable[A]): TArray[A] = impl.STMImpl.instance.newTArray[A](data)
+  def apply[A : ClassManifest](data: TraversableOnce[A]): TArray[A] = impl.STMImpl.instance.newTArray[A](data)
 }
 
 /** Bulk transactional storage, roughly equivalent to `Array[Ref[T]]` but
