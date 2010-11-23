@@ -50,7 +50,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT,
       DEFAULT_FLIP_PROB,
       0,
-      { (n: Int) => TArray[Int](n).refs }).runTest
+      { (n: Int) => TArray.ofDim[Int](n).refs }).runTest
   }
 
   test("random flipper test") {

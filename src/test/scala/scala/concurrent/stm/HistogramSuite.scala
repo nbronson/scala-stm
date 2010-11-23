@@ -42,7 +42,7 @@ class HistogramSuite extends FunSuite {
                 samplesPerTxn: Int) {
 
     val buckets: IndexedSeq[Ref[Int]] = (if (useTArray) {
-      TArray[Int](bucketCount).refs
+      TArray.ofDim[Int](bucketCount).refs
     } else {
       Array.tabulate(bucketCount)({ _ => Ref(0)})
     })
