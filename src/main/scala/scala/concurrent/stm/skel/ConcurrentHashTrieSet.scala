@@ -21,13 +21,17 @@ object ConcurrentHashTrieSet {
   }
 }
 
-class ConcurrentHashTrieSet[A] private (private val root: Ref.View[TxnHashTrie.Node[A, AnyRef]]) {
+class ConcurrentHashTrieSet[A] private (private val root: Ref.View[TxnHashTrie.SetNode[A]]) {
 
   def this() = this(Ref(TxnHashTrie.emptySetNode[A]).single)
 
   override def clone: ConcurrentHashTrieSet[A] = new ConcurrentHashTrieSet(TxnHashTrie.clone(root))
 
+  def clear() { root() = TxnHashTrie.emptySetNode[A] }
+
   def contains(key: A): Boolean = TxnHashTrie.contains(root, key)
 
-  def add(key: A): Boolean = !TxnHashTrie.put(root, key, null).isEmpty
+  def add(key: A): Boolean = TxnHashTrie.put(root, key, null).isEmpty
+
+  def remove(key: A): Boolean = !TxnHashTrie.remove(root, key).isEmpty
 }

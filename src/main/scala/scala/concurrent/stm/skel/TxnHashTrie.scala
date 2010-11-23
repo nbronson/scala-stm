@@ -28,8 +28,9 @@ object TxnHashTrie {
   //////// publicly-visible stuff
 
   sealed abstract class Node[A, B]
+  type SetNode[A] = Node[A, AnyRef]
 
-  def emptySetNode[A]: Node[A, AnyRef] = emptySetValue.asInstanceOf[Node[A, AnyRef]]
+  def emptySetNode[A]: SetNode[A] = emptySetValue.asInstanceOf[SetNode[A]]
   def emptyMapNode[A, B]: Node[A, B] = emptyMapValue.asInstanceOf[Node[A, B]]
 
   /** If used by a Set, values will be null. */
@@ -248,6 +249,50 @@ object TxnHashTrie {
           n.compareAndSetIdentity(branch, branch.clone(gen))
           // try again, either picking up our improvement or someone else's
           put(root, gen, n, shift, hash, key, value)
+        }
+      }
+    }
+  }
+
+  def remove[A, B](root: Ref.View[Node[A, B]], key: A): Option[B] = {
+    remove(root, -1L, root, 0, keyHash(key), key, false)
+  }
+
+  @tailrec private def remove[A, B](root: Ref.View[Node[A, B]], gen: Long, n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A, checked: Boolean): Option[B] = {
+    n() match {
+      case leaf: Leaf[A, B] => {
+        val after = leaf.withRemove(hash, key)
+        if (after eq leaf)
+          None // no change, key must not have been present
+        else {
+          atomic { implicit txn =>
+            if (n.ref() ne leaf)
+              0 // local retry
+            else if (gen != -1L && root.ref().asInstanceOf[Branch[A, B]].gen != gen)
+              1 // root retry
+            else {
+              n.ref() = after
+              2 // success
+            }
+          } match {
+            case 0 => remove(root, gen, n, shift, hash, key, true)
+            case 1 => remove(root, -1L, root, 0, hash, key, false)
+            case 2 => leaf.get(hash, key)
+          }
+        }
+      }
+      case branch: Branch[A, B] => {
+        if (branch.gen == gen)
+          remove(root, gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, checked)
+        else {
+          // no use in cloning paths if the key isn't actually present
+          if (!checked && !contains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key))
+            None
+          else {
+            n.compareAndSetIdentity(branch, branch.clone(gen))
+            // try again, either picking up our improvement or someone else's
+            remove(root, gen, n, shift, hash, key, true)
+          }
         }
       }
     }
