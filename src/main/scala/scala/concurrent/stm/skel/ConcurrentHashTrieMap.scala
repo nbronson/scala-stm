@@ -190,15 +190,17 @@ object ConcurrentHashTrieMap {
   }
 
   class Branch[A, B](val gen: Long, val children: TArray.View[Node[A, B]]) extends Node[A, B] {
-    def clone(newGen: Long): Branch[A, B] = new Branch[A, B](newGen, TArray(children).single)
+    def clone(newGen: Long): Branch[A, B] = new Branch[A, B](newGen, TArray(children: _*).single)
   }
 }
 
 import ConcurrentHashTrieMap._
 
-class ConcurrentHashTrieMap[A, B] private (private val root: TArray.View[Node[A, B]]) {
+class ConcurrentHashTrieMap[A, B] private (root0: Node[A, B]) {
 
-  def this() = this(TArray(List[Node[A, B]](Leaf.emptyMap[A, B])).single)
+  def this() = this(Leaf.emptyMap[A, B])
+
+  private val root = TArray(root0).single
 
   def contains(key: A): Boolean = contains(root, 0, 0, keyHash(key), key)
 
@@ -229,24 +231,24 @@ class ConcurrentHashTrieMap[A, B] private (private val root: TArray.View[Node[A,
         val after = if (!p.shouldSplit) p else p.split(gen, shift)
         atomic { implicit txn =>
           if (a.tarray(i) ne leaf)
-            'local_retry
+            0 // local retry
           else if (gen != -1L && root.tarray(0).asInstanceOf[Branch[A, B]].gen != gen)
-            'root_retry
+            1 // root retry
           else {
             a.tarray(i) = after
-            'okay
+            2 // success
           }
         } match {
-          case 'okay => leaf.get(hash, key)
-          case 'local_retry => put(gen, a, i, shift, hash, key, value)
-          case 'root_retry => put(-1L, root, 0, 0, hash, key, value)
+          case 0 => put(gen, a, i, shift, hash, key, value)
+          case 1 => put(-1L, root, 0, 0, hash, key, value)
+          case 2 => leaf.get(hash, key)
         }
       }
       case branch: Branch[A, B] => {
         if (gen == -1L || branch.gen == gen)
           put(branch.gen, branch.children, indexFor(shift, hash), shift + LogBF, hash, key, value)
         else {
-          a.refs(i).compareAndSetIdentity(branch, branch.clone(gen))
+          a.refViews(i).compareAndSetIdentity(branch, branch.clone(gen))
           // try again, either picking up our improvement or someone else's
           put(gen, a, i, shift, hash, key, value)
         }
