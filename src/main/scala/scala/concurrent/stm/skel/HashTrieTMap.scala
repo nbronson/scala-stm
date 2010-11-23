@@ -38,7 +38,7 @@ object HashTrieTMap {
   class Branch[A, B](gen0: Int, val shift: Int, val children: TArray.View[Node[A, B]]) extends Node[A, B](gen0) {
 
     def clone(newGen: Int): Node[A, B] = {
-      if (gen == newGen) this else new Branch(newGen, shift, TArray(children: _*).single)
+      if (gen == newGen) this else new Branch(newGen, shift, TArray(children).single)
     }
 
     private def indexFor(hash: Int): Int = HashTrieTMap.indexFor(hash, shift)
@@ -124,7 +124,7 @@ object HashTrieTMap {
 
     def shouldSplit(hash: Int): Boolean = contents().shouldSplit(hash)
 
-    def withSplit(newGen: Int, shift: Int): Node[A, B] = new Branch[A, B](newGen, shift, TArray(contents().split(newGen, shift): _*).single)
+    def withSplit(newGen: Int, shift: Int): Node[A, B] = new Branch[A, B](newGen, shift, TArray(contents().split(newGen, shift)).single)
 			     
     def remove(hash: Int, key: A): Option[B] = {
       (contents.getAndTransform { _.withRemove(hash, key) }).get(hash, key)

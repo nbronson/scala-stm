@@ -151,7 +151,7 @@ object ConcurrentHashTrieMap {
         sizes(indexFor(shift, hashes(i))) += 1
         i += 1
       }
-      val children = TArray[Node[A, B]](BF).single
+      val children = new Array[Node[A, B]](BF)
       i = 0
       while (i < BF) {
         children(i) = newLeaf(sizes(i))
@@ -176,7 +176,7 @@ object ConcurrentHashTrieMap {
         ////  children(slot).value = dst.split(gen, shift + LogBF)
         i -= 1
       }
-      new Branch[A, B](gen, children)
+      new Branch[A, B](gen, TArray(children).single)
     }
 
     private def newLeaf(n: Int): Leaf[A, B] = {
@@ -190,7 +190,7 @@ object ConcurrentHashTrieMap {
   }
 
   class Branch[A, B](val gen: Long, val children: TArray.View[Node[A, B]]) extends Node[A, B] {
-    def clone(newGen: Long): Branch[A, B] = new Branch[A, B](newGen, TArray(children: _*).single)
+    def clone(newGen: Long): Branch[A, B] = new Branch[A, B](newGen, TArray(children).single)
   }
 }
 
@@ -200,7 +200,7 @@ class ConcurrentHashTrieMap[A, B] private (root0: Node[A, B]) {
 
   def this() = this(Leaf.emptyMap[A, B])
 
-  private val root = TArray(root0).single
+  private val root = TArray(Array(root0)).single
 
   def contains(key: A): Boolean = contains(root, 0, 0, keyHash(key), key)
 
