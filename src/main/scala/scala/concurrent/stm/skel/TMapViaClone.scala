@@ -44,4 +44,31 @@ trait TMapViaClone[A, B] extends TMap.View[A, B] with TMap[A, B] {
   // -, and -- are all pretty reasonable.
 
   override def clone(): TMap.View[A, B]
+
+  //////////// atomic compound ops
+
+  override def getOrElseUpdate(key: A, op: => B): B = {
+    get(key) getOrElse {
+      atomic { implicit txn =>
+        get(key) getOrElse { val v = op ; put (key, v) ; v }
+      }
+    }
+  }
+
+  override def transform(f: (A, B) => B): this.type = {
+    atomic { implicit txn =>
+      for (kv <- this)
+        update(kv._1, f(kv._1, kv._2))
+    }
+    this
+  }
+
+  override def retain(p: (A, B) => Boolean): this.type = {
+    atomic { implicit txn =>
+      for (kv <- this)
+        if (!p(kv._1, kv._2))
+          (this: TMap[A, B]) -= kv._1
+    }
+    this
+  }
 }

@@ -36,8 +36,8 @@ private[skel] object TxnHashTrie {
   //////// publicly-visible stuff
 
   sealed abstract class Node[A, B] {
-    def setForeach(block: A => Unit)
-    def mapForeach(block: ((A, B)) => Unit)
+    def setForeach[U](f: A => U)
+    def mapForeach[U](f: ((A, B)) => U)
     def setIterator: Iterator[A]
     def mapIterator: Iterator[(A, B)]
   }
@@ -186,18 +186,18 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def setForeach(block: A => Unit) {
+    def setForeach[U](f: A => U) {
       var i = 0
       while (i < keys.length) {
-        block(keys(i).asInstanceOf[A])
+        f(keys(i).asInstanceOf[A])
         i += 1
       }
     }
 
-    def mapForeach(block: ((A, B)) => Unit) {
+    def mapForeach[U](f: ((A, B)) => U) {
       var i = 0
       while (i < keys.length) {
-        block((keys(i).asInstanceOf[A], values(i).asInstanceOf[B]))
+        f((keys(i).asInstanceOf[A], values(i).asInstanceOf[B]))
         i += 1
       }
     }
@@ -229,18 +229,18 @@ private[skel] object TxnHashTrie {
       new Branch[A, B](newGen, false, cc)
     }
 
-    def setForeach(block: A => Unit) {
+    def setForeach[U](f: A => U) {
       var i = 0
       while (i < BF) {
-        children(i)().setForeach(block)
+        children(i)().setForeach(f)
         i += 1
       }
     }
 
-    def mapForeach(block: ((A, B)) => Unit) {
+    def mapForeach[U](f: ((A, B)) => U) {
       var i = 0
       while (i < BF) {
-        children(i)().mapForeach(block)
+        children(i)().mapForeach(f)
         i += 1
       }
     }
@@ -412,9 +412,9 @@ private[skel] object TxnHashTrie {
     }
   }
 
-  def setForeach[A, B](root: Ref.View[Node[A, B]], block: A => Unit) { frozenRoot(root).setForeach(block) }
+  def setForeach[A, B, U](root: Ref.View[Node[A, B]], f: A => U) { frozenRoot(root).setForeach(f) }
 
-  def mapForeach[A, B](root: Ref.View[Node[A, B]], block: ((A, B)) => Unit) { frozenRoot(root).mapForeach(block) }
+  def mapForeach[A, B, U](root: Ref.View[Node[A, B]], f: ((A, B)) => U) { frozenRoot(root).mapForeach(f) }
 
   def setIterator[A, B](root: Ref.View[Node[A, B]]): Iterator[A] = frozenRoot(root).setIterator
 
