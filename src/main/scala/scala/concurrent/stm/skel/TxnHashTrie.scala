@@ -404,8 +404,8 @@ private[skel] object TxnHashTrie {
         remove(root, gen, n, shift, hash, key, checked)
       }
       case branch: Branch[A, B] => {
-        if (branch.gen == gen)
-          remove(root, gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, checked)
+        if (gen == -1L || branch.gen == gen)
+          remove(root, branch.gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, checked)
         else {
           // no use in cloning paths if the key isn't actually present
           if (!checked && !contains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key))
