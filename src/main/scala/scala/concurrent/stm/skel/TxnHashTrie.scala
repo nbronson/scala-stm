@@ -12,20 +12,28 @@ import annotation.tailrec
  */
 private[skel] object TxnHashTrie {
 
-  // TODO: motivate these numbers
   private def LogBF = 5
   private def BF = 32
-  private def MaxLeafCapacity = 8
 
-  private def keyHash[A](key: A): Int = if (key == null) 0 else rehash(key.##)
+  // It would seem that the leaf copying is inefficient when compared to a tree
+  // that allows more sharing, but a back-of-the-envelope calculation indicates
+  // that the crossover point for the total bytes allocates to construct an
+  // immutable node holding N elements is about 12.  Even at N=32 the total
+  // bytes required by this Leaf implementation is only about 2/3 more than an
+  // ideal balanced tree, and those bytes are accessed in a more cache friendly
+  // fashion.
+  private def MaxLeafCapacity = 14
 
-  private def rehash(h: Int) = {
+  private def keyHash[A](key: A): Int = if (key == null) 0 else mixBits(key.##)
+
+  private def mixBits(h: Int) = {
     // make sure any bit change results in a change in the bottom LogBF bits
-    val x = h ^ (h >>> 15)
-    x ^ (x >>> 5) ^ (x >>> 10)
+    val s = LogBF
+    val x = h ^ (h >>> (s * 3)) ^ (h >>> (s * 6))
+    x ^ (x >>> s) ^ (x >>> (s * 2))
   }
 
-  private def indexFor(shift: Int, hash: Int) = (hash >> shift) & (BF - 1)
+  private def indexFor(shift: Int, hash: Int) = (hash >>> shift) & (BF - 1)
 
   //////// shared instances
   
