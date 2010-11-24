@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package skel
 
-trait AbstractNestingLevel extends NestingLevel {
+private[stm] trait AbstractNestingLevel extends NestingLevel {
   import Txn._
 
   def txn: AbstractInTxn

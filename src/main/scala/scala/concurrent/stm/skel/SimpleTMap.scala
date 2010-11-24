@@ -5,7 +5,7 @@ package skel
 
 import collection._
 
-class SimpleTMap[A, B](m0: immutable.Map[A, B]) extends TMapViaSnapshot[A, B] {
+private[stm] class SimpleTMap[A, B](m0: immutable.Map[A, B]) extends TMapViaSnapshot[A, B] {
 
   private val contents = Ref(m0).single
 

@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.{immutable, mutable}
 
-object TMapViaClone {
+private[stm] object TMapViaClone {
   class FrozenMutableMap[A, B](self: mutable.Map[A, B]) extends immutable.Map[A, B] {
     override def size: Int = self.size
     def get(key: A): Option[B] = self.get(key)
@@ -22,7 +22,7 @@ object TMapViaClone {
  *  `TMap.View` by making extensive use of `clone()`.  Assumes that the
  *  underlying implementation of `clone()` is O(1).
  */
-trait TMapViaClone[A, B] extends TMap.View[A, B] with TMap[A, B] {
+private[stm] trait TMapViaClone[A, B] extends TMap.View[A, B] with TMap[A, B] {
   import TMapViaClone._
 
   // Implementations may be able to do better.

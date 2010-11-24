@@ -10,8 +10,8 @@ private object CallbackList {
   val Empty : Seq[Any => Unit] = new Array[Any => Unit](0)
 }
 
-class CallbackList[A] private (private var _size: Int,
-                               private var _data: Array[A => Unit]) {
+private[stm] class CallbackList[A] private (private var _size: Int,
+                                            private var _data: Array[A => Unit]) {
   def this() = this(0, null)
 
   {

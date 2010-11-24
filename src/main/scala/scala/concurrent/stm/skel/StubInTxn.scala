@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package skel
 
-class StubInTxn extends InTxn {
+private[stm] class StubInTxn extends InTxn {
   import concurrent.stm.Txn._
 
   def executor: TxnExecutor = throw new AbstractMethodError

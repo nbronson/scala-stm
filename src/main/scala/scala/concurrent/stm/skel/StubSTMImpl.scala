@@ -6,7 +6,7 @@ package skel
 import java.lang.Throwable
 import concurrent.stm.Txn.Status
 
-class StubSTMImpl extends impl.STMImpl {
+private[stm] class StubSTMImpl extends impl.STMImpl {
   {
     println("constructing " + getClass.getSimpleName)
   }

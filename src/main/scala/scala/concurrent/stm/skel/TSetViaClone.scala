@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.{immutable, mutable}
 
-object TSetViaClone {
+private[stm] object TSetViaClone {
   class FrozenMutableSet[A](self: mutable.Set[A]) extends immutable.Set[A] {
     override def size: Int = self.size
     def contains(key: A): Boolean = self.contains(key)
@@ -21,7 +21,7 @@ object TSetViaClone {
  *  `TSet.View` by making extensive use of `clone()`.  Assumes that the
  *  underlying implementation of `clone()` is O(1).
  */
-trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
+private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
   import TSetViaClone._
 
   // Implementations may be able to do better.

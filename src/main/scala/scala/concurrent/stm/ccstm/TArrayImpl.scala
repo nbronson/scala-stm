@@ -9,7 +9,7 @@ import scala.reflect.ClassManifest
 import scala.collection._
 
 
-class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] with TArray.View[A] {
+private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] with TArray.View[A] {
   import TArray._
 
   def this(length0: Int)(implicit m: ClassManifest[A]) = this(AtomicArray[A](length0))

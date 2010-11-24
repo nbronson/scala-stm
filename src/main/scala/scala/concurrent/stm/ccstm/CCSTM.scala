@@ -253,9 +253,10 @@ private[ccstm] object CCSTM extends GV6 {
   }
 }
 
-/** A library-only STM implementation that is based on the SwissTM algorithm.
- *  The algorithm has been extended to reduce the overhead of non-transactional
- *  accesses, and to support partial rollback.
+/** The reference STM implementation for `scala.concurrent.stm`.  CCSTM is a
+ *  library-only STM based on the SwissTM algorithm, extended to reduce the
+ *  overhead of non-transactional accesses, allow partial rollback, and include
+ *  modular blocking and composition operators `retry` and `orAtomic`.
  *
  *  @author Nathan Bronson
  */
