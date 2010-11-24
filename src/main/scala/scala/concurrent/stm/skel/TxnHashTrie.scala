@@ -3,8 +3,16 @@ package skel
 
 import annotation.tailrec
 
-object TxnHashTrie {
+/** `TxnHashTrie` implements a transactional mutable hash trie using Ref-s,
+ *  with lazy cloning to allow efficient snapshots.  Fundamental operations are
+ *  provided for hash tries representing either sets or maps, both of which are
+ *  represented as a Ref.View[Node[A, B]].  If the initial empty leaf is
+ *  `emptySetValue` then no values can be stored in the hash trie, and
+ *  operations that take or return values will expect and produce null.
+ */
+private[skel] object TxnHashTrie {
 
+  // TODO: motivate these numbers
   private def LogBF = 5
   private def BF = 32
   private def MaxLeafCapacity = 8
@@ -166,7 +174,7 @@ object TxnHashTrie {
         ////  children(slot).value = dst.split(gen, shift + LogBF)
         i -= 1
       }
-      new Branch[A, B](gen, children)
+      new Branch[A, B](gen, false, children)
     }
 
     private def newLeaf(n: Int): Leaf[A, B] = {
@@ -207,7 +215,10 @@ object TxnHashTrie {
     }
   }
 
-  class Branch[A, B](val gen: Long, val children: Array[Ref.View[Node[A, B]]]) extends Node[A, B] {
+  class Branch[A, B](val gen: Long, val frozen: Boolean, val children: Array[Ref.View[Node[A, B]]]) extends Node[A, B] {
+
+    def withFreeze: Branch[A, B] = new Branch(gen, true, children)
+
     def clone(newGen: Long): Branch[A, B] = {
       val cc = children.clone
       var i = 0
@@ -215,7 +226,7 @@ object TxnHashTrie {
         cc(i) = Ref(cc(i)()).single
         i += 1
       }
-      new Branch[A, B](newGen, cc)
+      new Branch[A, B](newGen, false, cc)
     }
 
     def setForeach(block: A => Unit) {
@@ -282,12 +293,13 @@ object TxnHashTrie {
   def frozenRoot[A, B](root: Ref.View[Node[A, B]]): Node[A, B] = {
     root() match {
       case leaf: Leaf[A, B] => leaf // leaf is already immutable
+      case branch: Branch[A, B] if branch.frozen => branch
       case branch: Branch[A, B] => {
-        // If this CAS fails it means someone else already bumped the
-        // generation number on our behalf.  If that happens then b is still
-        // ours and we don't need to make another copy.
-        val b = branch.clone(branch.gen + 1)
-        if (!root.compareAndSet(branch, b)) b else branch.clone(branch.gen + 1)
+        // If this CAS fails it means someone else already installed a frozen
+        // branch, and we can benefit from their work.
+        val b = branch.withFreeze
+        root.compareAndSetIdentity(branch, b)
+        b
       }
     }
   }
@@ -336,6 +348,10 @@ object TxnHashTrie {
           case 2 => leaf.get(hash, key)
         }
       }
+      case branch: Branch[A, B] if branch.frozen => {
+        n.compareAndSetIdentity(branch, branch.clone(branch.gen + 1))
+        put(root, gen, n, shift, hash, key, value)
+      }
       case branch: Branch[A, B] => {
         if (gen == -1L || branch.gen == gen)
           put(root, branch.gen, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key, value)
@@ -374,6 +390,10 @@ object TxnHashTrie {
             case 2 => leaf.get(hash, key)
           }
         }
+      }
+      case branch: Branch[A, B] if branch.frozen => {
+        n.compareAndSetIdentity(branch, branch.clone(branch.gen + 1))
+        remove(root, gen, n, shift, hash, key, checked)
       }
       case branch: Branch[A, B] => {
         if (branch.gen == gen)
