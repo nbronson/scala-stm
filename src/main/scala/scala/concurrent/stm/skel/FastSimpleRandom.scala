@@ -1,6 +1,6 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
-package scala.concurrent.stm.ccstm
+package scala.concurrent.stm.skel
 
 
 /** A random number generator that focuses on speed and lack of inter-thread
@@ -12,7 +12,7 @@ package scala.concurrent.stm.ccstm
  *  The constants in this 64-bit linear congruential random number generator
  *  are from http://nuclear.llnl.gov/CNP/rng/rngman/node4.html.
  */
-private[ccstm] object FastSimpleRandom {
+private[stm] object FastSimpleRandom {
   // 64 byte cache lines are typical, so there are 8 slots per cache line.
   // This means that the probability that any two threads have false sharing is
   // p = 8 / #slots.  If there are n processors, each of which is running 1
@@ -76,7 +76,7 @@ private[ccstm] object FastSimpleRandom {
 /** A single-threaded random number generator that uses the same algorithm as
  *  the concurrent `object FastSimpleRandom`.
  */
-private[ccstm] final class FastSimpleRandom private (private var _state: Long, dummy: Boolean) {
+private[stm] final class FastSimpleRandom private (private var _state: Long, dummy: Boolean) {
   import FastSimpleRandom._
 
   def this(seed: Int) = this(FastSimpleRandom.step(FastSimpleRandom.step(seed)), false)

@@ -398,7 +398,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel = child
     //_priority = CCSTM.hash(_currentLevel, 0)
     // TODO: compute priority lazily, only if needed
-    _priority = FastSimpleRandom.nextInt() // CCSTM.hash(_currentLevel, 0)
+    _priority = skel.FastSimpleRandom.nextInt() // CCSTM.hash(_currentLevel, 0)
     // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
     _slot = slotManager.assign(_currentLevel, _slot)
     _readVersion = freshReadVersion

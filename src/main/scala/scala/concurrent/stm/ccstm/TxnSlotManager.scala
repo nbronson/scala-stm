@@ -1,6 +1,7 @@
 /* scala-stm - (c) 2010, LAMP/EPFL */
 
-package scala.concurrent.stm.ccstm
+package scala.concurrent.stm
+package ccstm
 
 
 import java.util.concurrent.atomic.AtomicReferenceArray
@@ -21,7 +22,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
   private def nextSlot(tries: Int) = {
     var s = 0
     do {
-      s = ((FastSimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
+      s = ((skel.FastSimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
     } while (s < reservedSlots)
     s
   }
