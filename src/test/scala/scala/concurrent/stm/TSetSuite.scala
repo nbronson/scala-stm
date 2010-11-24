@@ -1,0 +1,186 @@
+/* scala-stm - (c) 2010, LAMP/EPFL */
+
+package scala.concurrent.stm
+
+import org.scalatest.FunSuite
+import scala.util.Random
+import scala.collection.mutable
+
+class TSetSuite extends FunSuite {
+
+  test("number equality trickiness") {
+    assert(TSet(10L).single contains 10)
+    //assert(TSet(10).single contains 10L)
+    assert(TSet[Number](10L).single contains 10)
+    assert(TSet[Number](10).single contains 10L)
+    assert(TSet[Any](10L).single contains 10)
+    assert(TSet[Any](10).single contains 10L)
+    assert(TSet[AnyRef](10L.asInstanceOf[AnyRef]).single contains 10.asInstanceOf[AnyRef])
+    assert(TSet[AnyRef](10.asInstanceOf[AnyRef]).single contains 10L.asInstanceOf[AnyRef])
+  }
+
+  test("character equality trickiness") {
+    assert(TSet('*').single contains 42)
+    assert(TSet(42: Byte).single contains '*')
+    assert(TSet[Any]('*').single contains (42: Short))
+    assert(TSet[Any](42L).single contains '*')
+    assert(TSet[AnyRef]('*'.asInstanceOf[AnyRef]).single contains 42.0.asInstanceOf[AnyRef])
+    assert(TSet[AnyRef](42.0f.asInstanceOf[AnyRef]).single contains '*'.asInstanceOf[AnyRef])
+  }
+
+  case class BadHash(k: Int) {
+    override def hashCode = if (k > 500) k / 5 else 0
+  }
+
+  test("correct despite poor hash function") {
+    val mut = TSet(((0 until 1000) map { i => BadHash(i) }): _*).single
+    for (i <- -500 until 1500)
+      assert(mut(BadHash(i)) === (i >= 0 && i < 1000))
+  }
+
+  test("clone captures correct atomic writes") {
+    val mut = TSet((0 until 100): _*)
+    val z = atomic { implicit txn =>
+      mut ++= (100 until 200)
+      val z = mut.clone.single
+      mut ++= (200 until 300)
+      z
+    }
+    assert(z.size === 200)
+    for (i <- 0 until 200)
+      assert(z.contains(i))
+  }
+
+  test("clone doesn't include discarded writes") {
+    val mut = TSet((0 until 100): _*)
+    val z = atomic { implicit txn =>
+      atomic { implicit txn =>
+        mut ++= (100 until 200)
+        if ("likely".## != 0)
+          retry
+      } orAtomic { implicit txn =>
+        mut ++= (200 until 300)
+      }
+      val z = mut.clone.single
+      atomic { implicit txn =>
+        mut ++= (300 until 400)
+        if ("likely".## != 0)
+          retry
+      } orAtomic { implicit txn =>
+        mut ++= (400 until 500)
+      }
+      z
+    }
+    assert(z.size === 200)
+    for (i <- 0 until 100)
+      assert(z.contains(i))
+    for (i <- 200 until 300)
+      assert(z.contains(i))
+  }
+
+  test("clone is transactional") {
+    val mut = TSet((0 until 100): _*)
+    val z = atomic { implicit txn =>
+      atomic { implicit txn =>
+        mut ++= (100 until 105)
+        if ("likely".## != 0)
+          retry
+      } orAtomic { implicit txn =>
+        mut ++= (200 until 205)
+      }
+      val z = mut.clone.single
+      atomic { implicit txn =>
+        z ++= (300 until 305)
+        if ("likely".## != 0)
+          retry
+      } orAtomic { implicit txn =>
+        z ++= (400 until 405)
+      }
+      z
+    }
+    assert(z.size === 110)
+    for (i <- 0 until 100)
+      assert(z.contains(i))
+    for (i <- 200 until 205)
+      assert(z.contains(i))
+    for (i <- 400 until 405)
+      assert(z.contains(i))
+  }
+
+  test("random sequential") {
+    val rand = new Random()
+
+    def nextKey(): String = "key" + (rand.nextInt() >>> rand.nextInt())
+
+    var mut = TSet.empty[String].single
+    val base = mutable.Set.empty[String]
+
+    val total = 20000
+    for (i <- 0 until total) {
+      val pct = rand.nextInt(100)
+      val k = nextKey
+      if (pct < 15) {
+        assert(base.contains(k) === mut.contains(k))
+      } else if (pct < 20) {
+        assert(base(k) === mut(k))
+      } else if (pct < 35) {
+        assert(base.add(k) === mut.add(k))
+      } else if (pct < 40) {
+        val v = rand.nextBoolean
+        base(k) = v
+        mut(k) = v
+      } else if (pct < 55) {
+        assert(base.remove(k) === mut.remove(k))
+      } else if (pct < 60) {
+        for (j <- 0 until (i / (total / 20))) {
+          if (!base.isEmpty) {
+            val k1 = base.iterator.next
+            assert(base.remove(k1) === mut.remove(k1))
+          }
+        }
+      } else if (pct < 63) {
+        mut = mut.clone
+      } else if (pct < 66) {
+        assert(base.toSet === mut.snapshot)
+      } else if (pct < 69) {
+        assert(base.isEmpty === mut.isEmpty)
+      } else if (pct < 72) {
+        assert(base.size === mut.size)
+      } else if (pct < 77) {
+        assert(base eq (base += k))
+        assert(mut eq (mut += k))
+      } else if (pct < 80) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base += (k, k2, k3)))
+        assert(mut eq (mut += (k, k2, k3)))
+      } else if (pct < 83) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base ++= Array(k, k2, k3)))
+        assert(mut eq (mut ++= Array(k, k2, k3)))
+      } else if (pct < 88) {
+        assert(base eq (base -= k))
+        assert(mut eq (mut -= k))
+      } else if (pct < 91) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base -= (k, k2, k3)))
+        assert(mut eq (mut -= (k, k2, k3)))
+      } else if (pct < 94) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base --= Array(k, k2, k3)))
+        assert(mut eq (mut --= Array(k, k2, k3)))
+      } else if (pct < 95) {
+        val s2 = mutable.Set.empty[String]
+        for (k <- mut) { s2 += k }
+        assert(base === s2)
+      } else if (pct < 96) {
+        val s2 = mutable.Set.empty[String]
+        for (k <- mut.iterator) { s2 += k }
+        assert(base === s2)
+      }
+    }
+  }
+}
