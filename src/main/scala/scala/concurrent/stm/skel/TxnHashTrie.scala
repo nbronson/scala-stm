@@ -44,6 +44,7 @@ private[skel] object TxnHashTrie {
   //////// publicly-visible stuff
 
   sealed abstract class Node[A, B] {
+    def cappedSize(cap: Int): Int
     def setForeach[U](f: A => U)
     def mapForeach[U](f: ((A, B)) => U)
     def setIterator: Iterator[A]
@@ -60,6 +61,8 @@ private[skel] object TxnHashTrie {
                    val keys: Array[AnyRef],
                    val values: Array[AnyRef]) extends Node[A, B] {
 
+    def cappedSize(cap: Int): Int = hashes.length
+
     def contains(hash: Int, key: A): Boolean = find(hash, key) >= 0
 
     def get(hash: Int, key: A): Option[B] = {
@@ -69,7 +72,7 @@ private[skel] object TxnHashTrie {
       else if (values != null)
         Some(values(i).asInstanceOf[B])
       else
-        someNull.asInstanceOf[Option[B]]
+        someNull.asInstanceOf[Option[B]] // if we don't handle sets here we need to versions of TxnHashTrie.remove
     }
 
     private def find(hash: Int, key: A): Int = {
@@ -80,13 +83,13 @@ private[skel] object TxnHashTrie {
           return i
         i += 1
       }
-      return -(i + 1)
+      return ~i
     }
 
     def withPut(hash: Int, key: A, value: B): Leaf[A, B] = {
       val i = find(hash, key)
       if (i < 0)
-        withInsert(-(i + 1), hash, key, value)
+        withInsert(~i, hash, key, value)
       else if (values != null)
         withUpdate(i, value)
       else
@@ -225,6 +228,26 @@ private[skel] object TxnHashTrie {
 
   class Branch[A, B](val gen: Long, val frozen: Boolean, val children: Array[Ref.View[Node[A, B]]]) extends Node[A, B] {
 
+    // size may only be called on a frozen branch, so we can cache the result
+    private var _cachedSize = -1
+
+    def cappedSize(cap: Int): Int = {
+      val n0 = _cachedSize
+      if (n0 >= 0) {
+        n0
+      } else {
+        var n = 0
+        var i = 0
+        while (i < BF && n < cap) {
+          n += children(i)().cappedSize(cap - n)
+          i += 1
+        }
+        if (n < cap)
+          _cachedSize = n // everybody tried their hardest
+        n
+      }
+    }
+
     def withFreeze: Branch[A, B] = new Branch(gen, true, children)
 
     def clone(newGen: Long): Branch[A, B] = {
@@ -314,6 +337,10 @@ private[skel] object TxnHashTrie {
 
   def clone[A, B](root: Ref.View[Node[A, B]]): Ref.View[Node[A, B]] = Ref(frozenRoot(root)).single
 
+  def sizeGE[A, B](root: Ref.View[Node[A, B]], n: Int): Boolean = frozenRoot(root).cappedSize(n) >= n
+  
+  def size[A, B](root: Ref.View[Node[A, B]]): Int = frozenRoot(root).cappedSize(Int.MaxValue)
+
   def contains[A, B](root: Ref.View[Node[A, B]], key: A): Boolean = contains(root, 0, keyHash(key), key)
 
   @tailrec private def contains[A, B](n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Boolean = {
@@ -340,20 +367,26 @@ private[skel] object TxnHashTrie {
     n() match {
       case leaf: Leaf[A, B] => {
         val p = leaf.withPut(hash, key, value)
-        val after = if (!p.shouldSplit) p else p.split(gen, shift)
-        atomic { implicit txn =>
-          if (n.ref() ne leaf)
-            0 // local retry
-          else if (gen != -1L && root.ref().asInstanceOf[Branch[A, B]].gen != gen)
-            1 // root retry
-          else {
-            n.ref() = after
-            2 // success
+        if (p eq leaf) {
+          // we must be set-like, and key was already present
+          someNull.asInstanceOf[Option[B]]
+        } else {
+          val after = if (!p.shouldSplit) p else p.split(gen, shift)
+          atomic { implicit txn =>
+            if (n.ref() ne leaf)
+              0 // local retry
+            else if (gen != -1L && root.ref().asInstanceOf[Branch[A, B]].gen != gen)
+              1 // root retry
+            else {
+              // TODO: use trySet, and on failure try harder to split (shouldSplitContended?) then use set
+              n.ref() = after
+              2 // success
+            }
+          } match {
+            case 0 => put(root, gen, n, shift, hash, key, value)
+            case 1 => put(root, -1L, root, 0, hash, key, value)
+            case 2 => leaf.get(hash, key)
           }
-        } match {
-          case 0 => put(root, gen, n, shift, hash, key, value)
-          case 1 => put(root, -1L, root, 0, hash, key, value)
-          case 2 => leaf.get(hash, key)
         }
       }
       case branch: Branch[A, B] if branch.frozen => {

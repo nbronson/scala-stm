@@ -15,6 +15,10 @@ private[stm] class HashTrieTSet[A] private (private val root: Ref.View[TxnHashTr
 
   override def clone(): HashTrieTSet[A] = new HashTrieTSet(TxnHashTrie.clone(root))
 
+  override def isEmpty: Boolean = !TxnHashTrie.sizeGE(root, 1)
+
+  override def size: Int = TxnHashTrie.size(root)
+
   override def iterator: Iterator[A] = TxnHashTrie.setIterator(root)
 
   override def foreach[U](f: A => U) { TxnHashTrie.setForeach(root, f) }

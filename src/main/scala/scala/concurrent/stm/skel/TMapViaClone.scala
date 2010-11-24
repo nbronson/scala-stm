@@ -7,6 +7,7 @@ import scala.collection.{immutable, mutable}
 
 private[stm] object TMapViaClone {
   class FrozenMutableMap[A, B](self: mutable.Map[A, B]) extends immutable.Map[A, B] {
+    override def isEmpty: Boolean = self.isEmpty
     override def size: Int = self.size
     def get(key: A): Option[B] = self.get(key)
     def iterator: Iterator[(A, B)] = self.iterator
@@ -14,7 +15,6 @@ private[stm] object TMapViaClone {
     def + [B1 >: B](kv: (A, B1)): immutable.Map[A, B1] =
         new FrozenMutableMap(self.clone().asInstanceOf[mutable.Map[A, B1]] += kv)
     def - (k: A): immutable.Map[A, B] = new FrozenMutableMap(self.clone() -= k)
-    // TODO: more pass-throughs for efficiency
   }
 }
 

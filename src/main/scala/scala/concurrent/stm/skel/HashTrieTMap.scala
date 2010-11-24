@@ -15,11 +15,17 @@ private[stm] class HashTrieTMap[A, B] private (private val root: Ref.View[TxnHas
 
   override def clone(): HashTrieTMap[A, B] = new HashTrieTMap(TxnHashTrie.clone(root))
 
+  override def isEmpty: Boolean = !TxnHashTrie.sizeGE(root, 1)
+
+  override def size: Int = TxnHashTrie.size(root)
+
   override def iterator: Iterator[(A, B)] = TxnHashTrie.mapIterator(root)
 
   override def foreach[U](f: ((A, B)) => U) { TxnHashTrie.mapForeach(root, f) }
 
   def get(key: A): Option[B] = TxnHashTrie.get(root, key)
+
+  // MapLike has put using update and remove using -=, we do the opposite
 
   override def put(key: A, value: B): Option[B] = TxnHashTrie.put(root, key, value)
 

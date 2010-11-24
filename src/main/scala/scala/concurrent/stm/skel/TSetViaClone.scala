@@ -7,13 +7,13 @@ import scala.collection.{immutable, mutable}
 
 private[stm] object TSetViaClone {
   class FrozenMutableSet[A](self: mutable.Set[A]) extends immutable.Set[A] {
+    override def isEmpty: Boolean = self.isEmpty
     override def size: Int = self.size
     def contains(key: A): Boolean = self.contains(key)
     def iterator: Iterator[(A)] = self.iterator
     override def foreach[U](f: A => U) { self foreach f }
     def + (x: A): immutable.Set[A] = new FrozenMutableSet(self.clone() += x)
     def - (x: A): immutable.Set[A] = new FrozenMutableSet(self.clone() -= x)
-    // TODO: more pass-throughs for efficiency (isEmpty? size?)
   }
 }
 
