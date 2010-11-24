@@ -21,8 +21,11 @@ trait RefFactory {
   def newRef[A : ClassManifest](v0: A): Ref[A]
 
   def newTArray[A : ClassManifest](length: Int): TArray[A]
-  def newTArray[A : ClassManifest](data: TraversableOnce[A]): TArray[A]
+  def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A]
 
   def newTMap[A, B](): TMap[A, B]
-  def newTMap[A, B](data: TraversableOnce[(A, B)]): TMap[A, B]
+  def newTMap[A, B](kvs: TraversableOnce[(A, B)]): TMap[A, B]
+
+  def newTSet[A](): TSet[A]
+  def newTSet[A](xs: TraversableOnce[A]): TSet[A]
 }

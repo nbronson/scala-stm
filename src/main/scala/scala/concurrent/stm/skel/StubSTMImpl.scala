@@ -25,10 +25,13 @@ class StubSTMImpl extends impl.STMImpl {
   def newRef[A : ClassManifest](v0: A): Ref[A] = throw new AbstractMethodError
 
   def newTArray[A : ClassManifest](length: Int): TArray[A] = throw new AbstractMethodError
-  def newTArray[A : ClassManifest](data: TraversableOnce[A]): TArray[A] = throw new AbstractMethodError
+  def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A] = throw new AbstractMethodError
 
   def newTMap[A, B](): TMap[A, B] = throw new AbstractMethodError
-  def newTMap[A, B](data: TraversableOnce[(A, B)]): TMap[A, B] = throw new AbstractMethodError
+  def newTMap[A, B](kvs: TraversableOnce[(A, B)]): TMap[A, B] = throw new AbstractMethodError
+
+  def newTSet[A](): TSet[A] = throw new AbstractMethodError
+  def newTSet[A](xs: TraversableOnce[A]): TSet[A] = throw new AbstractMethodError
 
   //////// TxnContext
 

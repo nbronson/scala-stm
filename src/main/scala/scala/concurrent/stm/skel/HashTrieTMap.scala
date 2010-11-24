@@ -3,9 +3,13 @@
 package scala.concurrent.stm
 package skel
 
+import scala.collection.generic.Growable
+
 class HashTrieTMap[A, B] private (private val root: Ref.View[TxnHashTrie.Node[A, B]]) extends TMapViaClone[A, B] {
 
   def this() = this(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
+
+  def this(kvs: TraversableOnce[(A, B)]) = { this() ; (this: Growable[(A, B)]) ++= kvs }
 
   override def empty: TMap.View[A, B] = new HashTrieTMap[A, B]()
 

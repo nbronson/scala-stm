@@ -10,9 +10,10 @@ object TMapViaClone {
     override def size: Int = self.size
     def get(key: A): Option[B] = self.get(key)
     def iterator: Iterator[(A, B)] = self.iterator
+    override def foreach[U](f: ((A, B)) => U) { self foreach f }
     def + [B1 >: B](kv: (A, B1)): immutable.Map[A, B1] =
         new FrozenMutableMap(self.clone().asInstanceOf[mutable.Map[A, B1]] += kv)
-    def - (k: A): immutable.Map[A, B] = new FrozenMutableMap(self.clone() - k)
+    def - (k: A): immutable.Map[A, B] = new FrozenMutableMap(self.clone() -= k)
     // TODO: more pass-throughs for efficiency
   }
 }

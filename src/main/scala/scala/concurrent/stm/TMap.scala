@@ -26,9 +26,9 @@ object TMap {
   def empty[A, B]: TMap[A, B] = impl.STMImpl.instance.newTMap[A, B]()
 
   /** Constructs and returns a new `TMap` that will contain the key/value pairs
-   *  from `data`.
+   *  from `kvs`.
    */
-  def apply[A, B](data: (A, B)*): TMap[A, B] = impl.STMImpl.instance.newTMap[A, B](data)
+  def apply[A, B](kvs: (A, B)*): TMap[A, B] = impl.STMImpl.instance.newTMap[A, B](kvs)
 
 
   /** Allows a `TMap` in a transactional context to be used as a `Map`. */

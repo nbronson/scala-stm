@@ -20,10 +20,13 @@ private[ccstm] object CCSTMRefs {
     def newRef[T : ClassManifest](v0: T): Ref[T] = new GenericRef(v0)
 
     def newTArray[A: ClassManifest](length: Int): TArray[A] = new TArrayImpl[A](length)
-    def newTArray[A: ClassManifest](data: TraversableOnce[A]): TArray[A] = new TArrayImpl[A](data)
+    def newTArray[A: ClassManifest](xs: TraversableOnce[A]): TArray[A] = new TArrayImpl[A](xs)
 
-    def newTMap[A, B](): TMap[A, B] = new skel.SimpleTMap[A, B](Map.empty[A, B])
-    def newTMap[A, B](data: TraversableOnce[(A, B)]): TMap[A, B] = new skel.SimpleTMap[A, B](data.toMap[A, B])
+    def newTMap[A, B](): TMap[A, B] = new skel.HashTrieTMap[A, B]
+    def newTMap[A, B](kvs: TraversableOnce[(A, B)]): TMap[A, B] = new skel.HashTrieTMap[A, B](kvs)
+
+    def newTSet[A](): TSet[A] = new skel.HashTrieTSet[A]
+    def newTSet[A](xs: TraversableOnce[A]): TSet[A] = new skel.HashTrieTSet[A](xs)
   }
 
   private abstract class BaseRef[A] extends Handle[A] with RefOps[A] with ViewOps[A] {
