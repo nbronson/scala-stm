@@ -54,6 +54,8 @@ trait TMap[A, B] {
    */
   def single: TMap.View[A, B]
 
+  def clone(implicit txn: InTxn): TMap[A, B] = single.clone.tmap
+
   // The following methods return the wrong receiver when invoked via the asMap
   // conversion.  They are exactly the methods of mutable.Map whose return type
   // is this.type.  Note that there are other methods of mutable.Map that we

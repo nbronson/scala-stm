@@ -54,6 +54,8 @@ trait TSet[A] {
    */
   def single: TSet.View[A]
 
+  def clone(implicit txn: InTxn): TSet[A] = single.clone.tset
+
   // The following methods return the wrong receiver when invoked via the asSet
   // conversion.  They are exactly the methods of mutable.Set whose return type
   // is this.type.  Note that there are other methods of mutable.Set that we
