@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.generic.Growable
 
-class HashTrieTSet[A] private (private val root: Ref.View[TxnHashTrie.SetNode[A]]) extends TSetViaClone[A] {
+private[stm] class HashTrieTSet[A] private (private val root: Ref.View[TxnHashTrie.SetNode[A]]) extends TSetViaClone[A] {
 
   def this() = this(Ref(TxnHashTrie.emptySetNode[A]).single)
 

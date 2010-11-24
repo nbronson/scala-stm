@@ -6,7 +6,7 @@ package skel
 import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
 import collection.mutable.ArrayBuffer
 
-object AbstractInTxn {
+private[stm] object AbstractInTxn {
   abstract class SuccessCallback[A, B] {
     protected def buffer(owner: A): ArrayBuffer[B => Unit]
 
@@ -14,7 +14,7 @@ object AbstractInTxn {
   }
 }
 
-trait AbstractInTxn extends InTxn {
+private[stm] trait AbstractInTxn extends InTxn {
   import Txn._
 
   override def currentLevel: AbstractNestingLevel

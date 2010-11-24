@@ -9,7 +9,7 @@ import scala.collection.{immutable, mutable}
  *  `TMap.View` by making extensive use of `snapshot`.  Assumes that the
  *  underlying implementation of `snapshot` is O(1).
  */
-trait TMapViaSnapshot[A, B] extends TMap.View[A, B] with TMap[A, B] {
+private[stm] trait TMapViaSnapshot[A, B] extends TMap.View[A, B] with TMap[A, B] {
 
   def tmap: TMap[A, B] = this
   def single: TMap.View[A, B] = this
