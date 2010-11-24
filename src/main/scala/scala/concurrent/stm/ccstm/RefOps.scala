@@ -20,6 +20,7 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
   //////////////// Sink stuff
 
   def set(v: T)(implicit txn: InTxn) { impl.set(handle, v) }
+  def trySet(v: T)(implicit txn: InTxn): Boolean = impl.trySet(handle, v)
 
   //////////////// Ref stuff
 

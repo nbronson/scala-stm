@@ -43,6 +43,7 @@ class IsolatedRefSuite extends FunSuite {
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
     def retryUntil(f: A => Boolean) { if (!f(get)) retry }
     def set(v: A) { ref.set(v) }
+    def trySet(v: A) = ref.trySet(v)
     def swap(v: A): A = ref.swap(v)
     def compareAndSet(before: A, after: A): Boolean = {
       if (get == before) { set(after) ; true } else false
@@ -72,6 +73,7 @@ class IsolatedRefSuite extends FunSuite {
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
     def retryUntil(f: (A) => Boolean) { wrap { view.retryUntil(f) } }
     def set(v: A) { wrap { view.set(v) } }
+    def trySet(v: A) = wrap { view.trySet(v) }
     def swap(v: A): A = wrap { view.swap(v) }
     def compareAndSet(before: A, after: A): Boolean = wrap { view.compareAndSet(before, after) }
     def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = wrap { view.compareAndSetIdentity(before, after) }
@@ -141,6 +143,15 @@ class IsolatedRefSuite extends FunSuite {
     for (i <- 1 until 10) {
       assert(view()() === i)
       view()() = view()() + 1
+    }
+    assert(view()() === 10)
+  }
+
+  createTests("get and trySet", 1) { view =>
+    for (i <- 1 until 10) {
+      assert(view()() === i)
+      val f = view().trySet(view()() + 1)
+      assert(f) // trySet shouldn't fail in the absence of contention
     }
     assert(view()() === 10)
   }

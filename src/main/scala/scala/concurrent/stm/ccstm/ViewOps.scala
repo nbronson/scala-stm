@@ -28,6 +28,10 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case null => NonTxn.set(handle, v)
     case txn => txn.set(handle, v)
   }
+  def trySet(v: T): Boolean = InTxnImpl.dynCurrentOrNull match {
+    case null => NonTxn.trySet(handle, v)
+    case txn => txn.trySet(handle, v)
+  }
   def swap(v: T): T = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.swap(handle, v)
     case txn => txn.swap(handle, v)

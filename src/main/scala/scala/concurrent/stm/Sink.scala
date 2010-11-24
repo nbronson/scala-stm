@@ -26,6 +26,13 @@ object Sink {
 
     /** Performs an atomic write; equivalent to `update(v)`. */
     def set(v: A)
+
+    /** Performs an atomic write and returns true, or returns false.  The
+     *  STM implementation may choose to return false to reduce (not
+     *  necessarily avoid) blocking.  If no other threads are performing any
+     *  transactional or atomic accesses then this method will succeed.
+     */
+    def trySet(v: A): Boolean
   }
 }
 
@@ -60,4 +67,11 @@ trait Sink[-A] {
    *  @throws IllegalStateException if `txn` is not active.
    */
   def set(v: A)(implicit txn: InTxn)
+
+  /** Performs a transactional write and returns true, or returns false.  The
+   *  STM implementation may choose to return false to reduce (not necessarily
+   *  avoid) blocking.  If no other threads are performing any transactional or
+   *  atomic accesses then this method will succeed. 
+   */
+  def trySet(v: A)(implicit txn: InTxn): Boolean
 }
