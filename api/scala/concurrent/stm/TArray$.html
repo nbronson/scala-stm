@@ -230,41 +230,19 @@
           </div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TArray#apply">
-      <a id="apply[A](Traversable[A])(ClassManifest[A]):TArray[A]"></a>
+      <a id="apply[A](TraversableOnce[A])(ClassManifest[A]):TArray[A]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">apply</span>
         <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">(<span name="data">data: Traversable[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: ClassManifest[A]</span>)</span>
+        <span class="params">(<span name="data">data: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: ClassManifest[A]</span>)</span>
         <span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[A]</span>
       </span>
       </h4>
       
             <p class="shortcomment cmt">Returns a new <code>TArray[A]</code> containing the elements of <code>data</code>.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Returns a new <code>TArray[A]</code> containing the elements of <code>data</code>.</p></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TArray#apply">
-      <a id="apply[A](Int)(ClassManifest[A]):TArray[A]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">apply</span>
-        <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">(<span name="length">length: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: ClassManifest[A]</span>)</span>
-        <span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[A]</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns a new <code>TArray[A]</code> containing <code>length</code> copies of the default value
- for elements of type <code>A</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a new <code>TArray[A]</code> containing <code>length</code> copies of the default value
- for elements of type <code>A</code>.
-</p></div>
             
             
             
@@ -554,6 +532,28 @@ possible to check whether the contents of the list are of the requested typed.
         </div><div class="block">
           definition classes: AnyRef
         </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TArray#ofDim">
+      <a id="ofDim[A](Int)(ClassManifest[A]):TArray[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">ofDim</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="params">(<span name="length">length: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: ClassManifest[A]</span>)</span>
+        <span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[A]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a new <code>TArray[A]</code> containing <code>length</code> copies of the default value
+ for elements of type <code>A</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a new <code>TArray[A]</code> containing <code>length</code> copies of the default value
+ for elements of type <code>A</code>.
+</p></div>
             
             
             

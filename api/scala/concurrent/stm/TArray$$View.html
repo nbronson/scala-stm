@@ -407,35 +407,13 @@
       
             <p class="shortcomment cmt">Performs an atomic read of the <code>index</code>th element of <code>array</code>.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Performs an atomic read of the <code>index</code>th element of <code>array</code>.  If an
- atomic block is active (see
- <a href="Txn$.html#findCurrent(MaybeTxn):Option[InTxn]" target="template">Txn.findCurrent</a> <a href="Txn$.html">Txn.findCurrent</a> ) then the read will be
+ atomic block is active (see <code>Txn.findCurrent</code>) then the read will be
  performed as part of the transaction, otherwise it will act as if it
  was performed inside a new atomic block.
 </p></div><div class="block">
           attributes: abstract 
         </div><div class="block">
           definition classes: <a href="" class="extype" name="scala.concurrent.stm.TArray.View">View</a> → SeqLike → Function1
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TArray.View#array">
-      <a id="array:TArray[A]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">array</span>
-        
-        
-        <span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[A]</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">The <code>TArray</code> from which this view was created.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>The <code>TArray</code> from which this view was created.</p></div><div class="block">
-          attributes: abstract 
         </div>
             
             
@@ -2160,12 +2138,12 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: TraversableOnce
         </div></div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TArray.View#refs">
-      <a id="refs:IndexedSeq[View[A]]"></a>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TArray.View#refViews">
+      <a id="refViews:IndexedSeq[View[A]]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">refs</span>
+        <span class="name">refViews</span>
         
         
         <span class="result">: <span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<a href="Ref$$View.html" class="extype" name="scala.concurrent.stm.Ref.View">View</a>[A]]</span>
@@ -2665,6 +2643,27 @@ possible to check whether the contents of the list are of the requested typed.
             <div class="fullcomment"><div class="block">
           definition classes: IterableLike → TraversableLike
         </div></div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TArray.View#tarray">
+      <a id="tarray:TArray[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">tarray</span>
+        
+        
+        <span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[A]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">The <code>TArray</code> from which this view was created.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>The <code>TArray</code> from which this view was created.</p></div><div class="block">
+          attributes: abstract 
+        </div>
+            
+            
+            
+          </div>
           
     </li><li visbl="prt" data-isabs="false" name="scala.collection.mutable.IndexedSeqLike#thisCollection">
       <a id="thisCollection:IndexedSeq[A]"></a>

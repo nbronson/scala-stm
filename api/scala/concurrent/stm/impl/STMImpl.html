@@ -39,7 +39,7 @@
           </div><div class="block">
             linear super types: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>, <a href="TxnContext.html" class="extype" name="scala.concurrent.stm.impl.TxnContext">TxnContext</a>, <a href="RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>, AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div><div class="block">
-            known subclasses: <a href="../skel/StubSTMImpl.html" class="extype" name="scala.concurrent.stm.skel.StubSTMImpl">StubSTMImpl</a>, <a href="../ccstm/CCSTM.html" class="extype" name="scala.concurrent.stm.ccstm.CCSTM">CCSTM</a>
+            known subclasses: <a href="../ccstm/CCSTM.html" class="extype" name="scala.concurrent.stm.ccstm.CCSTM">CCSTM</a>
           </div>
             
             
@@ -779,7 +779,7 @@ possible to check whether the contents of the list are of the requested typed.
       <span class="symbol">
         <span class="name">newTArray</span>
         <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">(<span name="data">data: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: ClassManifest[A]</span>)</span>
+        <span class="params">(<span name="xs">xs: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: ClassManifest[A]</span>)</span>
         <span class="result">: <a href="../TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[A]</span>
       </span>
       </h4>
@@ -817,7 +817,7 @@ possible to check whether the contents of the list are of the requested typed.
       <span class="symbol">
         <span class="name">newTMap</span>
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
-        <span class="params">(<span name="data">data: TraversableOnce[(A, B)]</span>)</span>
+        <span class="params">(<span name="kvs">kvs: TraversableOnce[(A, B)]</span>)</span>
         <span class="result">: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]</span>
       </span>
       </h4>
@@ -838,6 +838,44 @@ possible to check whether the contents of the list are of the requested typed.
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
         <span class="params">()</span>
         <span class="result">: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTSet">
+      <a id="newTSet[A](TraversableOnce[A]):TSet[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">newTSet</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="params">(<span name="xs">xs: TraversableOnce[A]</span>)</span>
+        <span class="result">: <a href="../TSet.html" class="extype" name="scala.concurrent.stm.TSet">TSet</a>[A]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTSet">
+      <a id="newTSet[A]():TSet[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">newTSet</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="params">()</span>
+        <span class="result">: <a href="../TSet.html" class="extype" name="scala.concurrent.stm.TSet">TSet</a>[A]</span>
       </span>
       </h4>
       

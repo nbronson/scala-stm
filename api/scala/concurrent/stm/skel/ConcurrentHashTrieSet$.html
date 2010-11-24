@@ -2,48 +2,39 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.InTxnEnd</title>
+          <title>scala.concurrent.stm.skel.ConcurrentHashTrieSet</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link href="../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
-      <script type="text/javascript" src="../../../lib/jquery.js"></script>
-      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
-      <script type="text/javascript" src="../../../lib/template.js"></script>
-      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      <link href="../../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
     
         </head>
-        <body class="type" onload="windowTitle();">
+        <body class="value" onload="windowTitle();">
 
-      <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a></p>
+      <p id="owner"><a href="../../../package.html" class="extype" name="scala">scala</a>.<a href="../../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="../package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="package.html" class="extype" name="scala.concurrent.stm.skel">skel</a></p>
 
       <div id="definition">
-        <img src="../../../lib/trait_big.png" />
-        <h1>InTxnEnd</h1>
+        <img src="../../../../lib/object_big.png" />
+        <h1>ConcurrentHashTrieSet</h1>
       </div>
 
       <h4 class="signature" id="signature">
-      <span class="kind">trait</span>
+      <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">InTxnEnd</span>
+        <span class="name">ConcurrentHashTrieSet</span>
         
         
-        <span class="result"> extends <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>
+        <span class="result"> extends AnyRef</span>
       </span>
       </h4>
-      <div class="fullcomment" id="comment"><div class="comment cmt"><p>The presence of an implicit <code>InTxnEnd</code> instance inside a transaction
- life-cycle handler grants permission to call methods in <code>object Txn</code> that
- locate nesting levels or register additional handlers.  This functionality
- is separated from that granted by <code>InTxn</code> because <code>Ref</code> operations are not
- allowed from handlers after commit has begun.
-</p></div><div class="block">
-            linear super types: <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a>, AnyRef, <span class="extype" name="scala.Any">Any</span>
+      <div class="fullcomment" id="comment"><div class="block">
+            go to: <a href="ConcurrentHashTrieSet.html">companion</a>
           </div><div class="block">
-            known subclasses: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>
-          </div>
-            
-            
-            
-          </div>
+            linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
+          </div></div>
 
       <div id="template">
 
@@ -56,7 +47,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</li><li class="in" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.skel.ConcurrentHashTrieSet">ConcurrentHashTrieSet</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -222,57 +213,6 @@
             
           </div>
           
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#afterCommit">
-      <a id="afterCommit((Status) ⇒ Unit):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">afterCommit</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#afterCompletion">
-      <a id="afterCompletion((Status) ⇒ Unit):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">afterCompletion</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#afterRollback">
-      <a id="afterRollback((Status) ⇒ Unit):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">afterRollback</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.Any#asInstanceOf">
       <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
@@ -298,23 +238,6 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#beforeCommit">
-      <a id="beforeCommit((InTxn) ⇒ Unit):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">beforeCommit</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
     </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
@@ -338,23 +261,6 @@ part of compilation it is not possible to check whether the contents of the list
             
             
           </div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#currentLevel">
-      <a id="currentLevel:NestingLevel"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">currentLevel</span>
-        
-        
-        <span class="result">: <a href="NestingLevel.html" class="extype" name="scala.concurrent.stm.NestingLevel">NestingLevel</a></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#eq">
       <a id="eq(AnyRef):Boolean"></a>
@@ -526,6 +432,18 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.ConcurrentHashTrieSet#main">
+      <a id="main(Array[String]):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">main</span>
+        
+        <span class="params">(<span name="args">args: <span class="extype" name="scala.Array">Array</span>[String]</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#ne">
       <a id="ne(AnyRef):Boolean"></a>
       <h4 class="signature">
@@ -595,74 +513,6 @@ possible to check whether the contents of the list are of the requested typed.
             
             
           </div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#rollback">
-      <a id="rollback(RollbackCause):Nothing"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">rollback</span>
-        
-        <span class="params">(<span name="cause">cause: <a href="Txn$$RollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.RollbackCause">RollbackCause</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Nothing">Nothing</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#rootLevel">
-      <a id="rootLevel:NestingLevel"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">rootLevel</span>
-        
-        
-        <span class="result">: <a href="NestingLevel.html" class="extype" name="scala.concurrent.stm.NestingLevel">NestingLevel</a></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#setExternalDecider">
-      <a id="setExternalDecider(ExternalDecider):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">setExternalDecider</span>
-        
-        <span class="params">(<span name="decider">decider: <a href="Txn$$ExternalDecider.html" class="extype" name="scala.concurrent.stm.Txn.ExternalDecider">ExternalDecider</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#status">
-      <a id="status:Status"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">status</span>
-        
-        
-        <span class="result">: <a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>
@@ -762,46 +612,10 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#whileCommitting">
-      <a id="whileCommitting((InTxnEnd) ⇒ Unit):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">whileCommitting</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.InTxnEnd#whilePreparing">
-      <a id="whilePreparing((InTxnEnd) ⇒ Unit):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">whilePreparing</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected[<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>] abstract 
-        </div></div>
-          
     </li></ol>
             </div>
 
-        <div class="parent" name="scala.concurrent.stm.MaybeTxn">
-              <h3>Inherited from <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></h3>
-            </div><div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.AnyRef">
               <h3>Inherited from AnyRef</h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>

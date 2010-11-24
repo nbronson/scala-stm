@@ -959,6 +959,33 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Ref.View#transformAndGet">
+      <a id="transformAndGet((A) ⇒ A):A"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">transformAndGet</span>
+        
+        <span class="params">(<span name="f">f: (A) ⇒ A</span>)</span>
+        <span class="result">: A</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Atomically replaces the value <i>v</i> stored in the <code>Ref</code> with
+ <code>f</code>(<i>v</i>), returning the new value.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Atomically replaces the value <i>v</i> stored in the <code>Ref</code> with
+ <code>f</code>(<i>v</i>), returning the new value.  <code>transform</code> should be preferred
+ if the return value is not needed, since it gives the STM more
+ flexibility to avoid transaction conflicts.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>a function that is safe to call multiple times, and safe to
+     call later during any enclosing atomic block.</p></dd><dt>returns</dt><dd class="cmt"><p>the new value of the viewed <code>Ref</code>.
+</p></dd></dl><div class="block">
+          attributes: abstract 
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Ref.View#transformIfDefined">
       <a id="transformIfDefined(PartialFunction[A, A]):Boolean"></a>
       <h4 class="signature">
@@ -983,6 +1010,33 @@ possible to check whether the contents of the list are of the requested typed.
      this </code>Ref<code> on entry.
 </code></p></dd></dl><div class="block">
           attributes: abstract 
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink.View#trySet">
+      <a id="trySet(A):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">trySet</span>
+        
+        <span class="params">(<span name="v">v: A</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Performs an atomic write and returns true, or returns false.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Performs an atomic write and returns true, or returns false.  The
+ STM implementation may choose to return false to reduce (not
+ necessarily avoid) blocking.  If no other threads are performing any
+ transactional or atomic accesses then this method will succeed.
+</p></div><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="Sink$$View.html" class="extype" name="scala.concurrent.stm.Sink.View">View</a>
         </div>
             
             

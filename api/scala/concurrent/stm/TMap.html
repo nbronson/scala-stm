@@ -33,13 +33,14 @@
       <div class="fullcomment" id="comment"><div class="comment cmt"><p>A transactional map implementation that requires that all of its map-like
  operations be called from inside an atomic block.  Rather than extending
  <code>Map</code>, an implicit conversion is provided from <code>TMap</code> to <code>Map</code> if the
- current scope is part of an atomic block (see <code>TMap.asMap</code>).
+ current scope is part of an atomic block (see <code>TMap.asMap</code>).</p><p> The keys (with type <code>A</code>) must be immutable, or at least not modified while
+ they are in the map.  The <code>TMap</code> implementation assumes that it can safely
+ perform key equality and hash checks outside a transaction without
+ affecting atomicity.
 </p></div><div class="block">
             go to: <a href="TMap$.html">companion</a>
           </div><div class="block">
             linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
-          </div><div class="block">
-            known subclasses: <a href="skel/SimpleTMap.html" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a>
           </div>
             
             
@@ -175,6 +176,78 @@
           definition classes: AnyRef
         </div></div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#++=">
+      <a id="++=(TraversableOnce[(A, B)])(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">++=</span>
+        
+        <span class="params">(<span name="kvs">kvs: TraversableOnce[(A, B)]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#+=">
+      <a id="+=((A, B),(A, B),(A, B)*)(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+=</span>
+        
+        <span class="params">(<span name="kv1">kv1: (A, B)</span>, <span name="kv2">kv2: (A, B)</span>, <span name="kvs">kvs: (A, B)*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#+=">
+      <a id="+=((A, B))(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+=</span>
+        
+        <span class="params">(<span name="kv">kv: (A, B)</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#--=">
+      <a id="--=(TraversableOnce[A])(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">--=</span>
+        
+        <span class="params">(<span name="ks">ks: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#-=">
+      <a id="-=(A,A,A*)(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-=</span>
+        
+        <span class="params">(<span name="k1">k1: A</span>, <span name="k2">k2: A</span>, <span name="ks">ks: A*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#-=">
+      <a id="-=(A)(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-=</span>
+        
+        <span class="params">(<span name="k">k: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#==">
       <a id="==(AnyRef):Boolean"></a>
       <h4 class="signature">
@@ -512,6 +585,18 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#retain">
+      <a id="retain((A, B) ⇒ Boolean)(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">retain</span>
+        
+        <span class="params">(<span name="p">p: (A, B) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TMap#single">
       <a id="single:View[A, B]"></a>
       <h4 class="signature">
@@ -579,6 +664,18 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#transform">
+      <a id="transform((A, B) ⇒ B)(InTxn):TMap.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">transform</span>
+        
+        <span class="params">(<span name="f">f: (A, B) ⇒ B</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: TMap.this.type</span>
+      </span>
+      </h4>
+      
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#wait">
       <a id="wait():Unit"></a>
       <h4 class="signature">

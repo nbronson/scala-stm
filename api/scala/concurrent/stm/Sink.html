@@ -595,6 +595,31 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink#trySet">
+      <a id="trySet(A)(InTxn):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">trySet</span>
+        
+        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Performs a transactional write and returns true, or returns false.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Performs a transactional write and returns true, or returns false.  The
+ STM implementation may choose to return false to reduce (not necessarily
+ avoid) blocking.  If no other threads are performing any transactional or
+ atomic accesses then this method will succeed.
+</p></div><div class="block">
+          attributes: abstract 
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Sink#update">
       <a id="update(A)(InTxn):Unit"></a>
       <h4 class="signature">

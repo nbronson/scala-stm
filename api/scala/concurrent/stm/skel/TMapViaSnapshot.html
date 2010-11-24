@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.skel.SimpleTMap</title>
+          <title>scala.concurrent.stm.skel.TMapViaSnapshot</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
@@ -17,22 +17,31 @@
       <p id="owner"><a href="../../../package.html" class="extype" name="scala">scala</a>.<a href="../../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="../package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="package.html" class="extype" name="scala.concurrent.stm.skel">skel</a></p>
 
       <div id="definition">
-        <img src="../../../../lib/class_big.png" />
-        <h1>SimpleTMap</h1>
+        <img src="../../../../lib/trait_big.png" />
+        <h1>TMapViaSnapshot</h1>
       </div>
 
       <h4 class="signature" id="signature">
-      <span class="kind">class</span>
+      <span class="kind">trait</span>
       <span class="symbol">
-        <span class="name">SimpleTMap</span>
+        <span class="name">TMapViaSnapshot</span>
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
         
-        <span class="result"> extends <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a>[A, B]</span>
+        <span class="result"> extends <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B] with <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]</span>
       </span>
       </h4>
-      <div class="fullcomment" id="comment"><div class="block">
-            linear super types: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a>[A, B], <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B], <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B], <span class="extype" name="scala.collection.mutable.Map">Map</span>[A, B], <span class="extype" name="scala.collection.mutable.MapLike">MapLike</span>[A, B, <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.mutable.Cloneable">Cloneable</span>[<a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.Shrinkable">Shrinkable</span>[A], <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.Growable">Growable</span>[(A, B)], <span class="extype" name="scala.collection.Map">Map</span>[A, B], <span class="extype" name="scala.collection.MapLike">MapLike</span>[A, B, <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.Subtractable">Subtractable</span>[A, <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.PartialFunction">PartialFunction</span>[A, B], (A) ⇒ B, <span class="extype" name="scala.collection.mutable.Iterable">Iterable</span>[(A, B)], <span class="extype" name="scala.collection.Iterable">Iterable</span>[(A, B)], <span class="extype" name="scala.collection.IterableLike">IterableLike</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="scala.collection.mutable.Traversable">Traversable</span>[(A, B)], <span class="extype" name="scala.Mutable">Mutable</span>, <span class="extype" name="scala.collection.Traversable">Traversable</span>[(A, B)], <span class="extype" name="scala.collection.generic.GenericTraversableTemplate">GenericTraversableTemplate</span>[(A, B), <span class="extype" name="scala.collection.mutable.Iterable">Iterable</span>], <span class="extype" name="scala.collection.TraversableLike">TraversableLike</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[(A, B)], <span class="extype" name="scala.collection.generic.FilterMonadic">FilterMonadic</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.HasNewBuilder">HasNewBuilder</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], AnyRef, <span class="extype" name="scala.Any">Any</span>
-          </div></div>
+      <div class="fullcomment" id="comment"><div class="comment cmt"><p>Provides an implementation for the bulk of the functionality of <code>TMap</code> and
+ <code>TMap.View</code> by making extensive use of <code>snapshot</code>.  Assumes that the
+ underlying implementation of <code>snapshot</code> is O(1).
+</p></div><div class="block">
+            linear super types: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B], <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B], <span class="extype" name="scala.collection.mutable.Map">Map</span>[A, B], <span class="extype" name="scala.collection.mutable.MapLike">MapLike</span>[A, B, <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.mutable.Cloneable">Cloneable</span>[<a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.Shrinkable">Shrinkable</span>[A], <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.Growable">Growable</span>[(A, B)], <span class="extype" name="scala.collection.Map">Map</span>[A, B], <span class="extype" name="scala.collection.MapLike">MapLike</span>[A, B, <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.Subtractable">Subtractable</span>[A, <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.PartialFunction">PartialFunction</span>[A, B], (A) ⇒ B, <span class="extype" name="scala.collection.mutable.Iterable">Iterable</span>[(A, B)], <span class="extype" name="scala.collection.Iterable">Iterable</span>[(A, B)], <span class="extype" name="scala.collection.IterableLike">IterableLike</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="scala.collection.mutable.Traversable">Traversable</span>[(A, B)], <span class="extype" name="scala.Mutable">Mutable</span>, <span class="extype" name="scala.collection.Traversable">Traversable</span>[(A, B)], <span class="extype" name="scala.collection.generic.GenericTraversableTemplate">GenericTraversableTemplate</span>[(A, B), <span class="extype" name="scala.collection.mutable.Iterable">Iterable</span>], <span class="extype" name="scala.collection.TraversableLike">TraversableLike</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[(A, B)], <span class="extype" name="scala.collection.generic.FilterMonadic">FilterMonadic</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], <span class="extype" name="scala.collection.generic.HasNewBuilder">HasNewBuilder</span>[(A, B), <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]], AnyRef, <span class="extype" name="scala.Any">Any</span>
+          </div><div class="block">
+            known subclasses: <a href="SimpleTMap.html" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a>
+          </div>
+            
+            
+            
+          </div>
 
       <div id="template">
 
@@ -45,7 +54,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</li><li class="in" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</li><li class="in" name="scala.concurrent.stm.TMap">TMap</li><li class="in" name="scala.concurrent.stm.TMap.View">View</li><li class="in" name="scala.collection.mutable.Map">Map</li><li class="in" name="scala.collection.mutable.MapLike">MapLike</li><li class="in" name="scala.collection.mutable.Cloneable">Cloneable</li><li class="in" name="scala.collection.generic.Shrinkable">Shrinkable</li><li class="in" name="scala.collection.mutable.Builder">Builder</li><li class="in" name="scala.collection.generic.Growable">Growable</li><li class="in" name="scala.collection.Map">Map</li><li class="in" name="scala.collection.MapLike">MapLike</li><li class="in" name="scala.collection.generic.Subtractable">Subtractable</li><li class="in" name="scala.PartialFunction">PartialFunction</li><li class="in" name="scala.Function1">Function1</li><li class="in" name="scala.collection.mutable.Iterable">Iterable</li><li class="in" name="scala.collection.Iterable">Iterable</li><li class="in" name="scala.collection.IterableLike">IterableLike</li><li class="in" name="scala.Equals">Equals</li><li class="in" name="scala.collection.mutable.Traversable">Traversable</li><li class="in" name="scala.Mutable">Mutable</li><li class="in" name="scala.collection.Traversable">Traversable</li><li class="in" name="scala.collection.generic.GenericTraversableTemplate">GenericTraversableTemplate</li><li class="in" name="scala.collection.TraversableLike">TraversableLike</li><li class="in" name="scala.collection.TraversableOnce">TraversableOnce</li><li class="in" name="scala.collection.generic.FilterMonadic">FilterMonadic</li><li class="in" name="scala.collection.generic.HasNewBuilder">HasNewBuilder</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</li><li class="in" name="scala.concurrent.stm.TMap">TMap</li><li class="in" name="scala.concurrent.stm.TMap.View">View</li><li class="in" name="scala.collection.mutable.Map">Map</li><li class="in" name="scala.collection.mutable.MapLike">MapLike</li><li class="in" name="scala.collection.mutable.Cloneable">Cloneable</li><li class="in" name="scala.collection.generic.Shrinkable">Shrinkable</li><li class="in" name="scala.collection.mutable.Builder">Builder</li><li class="in" name="scala.collection.generic.Growable">Growable</li><li class="in" name="scala.collection.Map">Map</li><li class="in" name="scala.collection.MapLike">MapLike</li><li class="in" name="scala.collection.generic.Subtractable">Subtractable</li><li class="in" name="scala.PartialFunction">PartialFunction</li><li class="in" name="scala.Function1">Function1</li><li class="in" name="scala.collection.mutable.Iterable">Iterable</li><li class="in" name="scala.collection.Iterable">Iterable</li><li class="in" name="scala.collection.IterableLike">IterableLike</li><li class="in" name="scala.Equals">Equals</li><li class="in" name="scala.collection.mutable.Traversable">Traversable</li><li class="in" name="scala.Mutable">Mutable</li><li class="in" name="scala.collection.Traversable">Traversable</li><li class="in" name="scala.collection.generic.GenericTraversableTemplate">GenericTraversableTemplate</li><li class="in" name="scala.collection.TraversableLike">TraversableLike</li><li class="in" name="scala.collection.TraversableOnce">TraversableOnce</li><li class="in" name="scala.collection.generic.FilterMonadic">FilterMonadic</li><li class="in" name="scala.collection.generic.HasNewBuilder">HasNewBuilder</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -57,22 +66,7 @@
             </div>
         </div>
 
-        <div class="members" id="constructors">
-              <h3>Instance constructors</h3>
-              <ol><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#this">
-      <a id="this:SimpleTMap[A, B]"></a>
-      <h4 class="signature">
-      <span class="kind">new</span>
-      <span class="symbol">
-        <span class="name">SimpleTMap</span>
         
-        <span class="params">(<span name="m0">m0: <span class="extype" name="scala.collection.immutable.Map">Map</span>[A, B]</span>)</span>
-        
-      </span>
-      </h4>
-      
-    </li></ol>
-            </div>
 
         <div class="types members" id="types">
               <h3>Type Members</h3>
@@ -268,32 +262,15 @@
           definition classes: TraversableLike
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#++=">
-      <a id="++=(TraversableOnce[(A, B)]):SimpleTMap.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">++=</span>
-        
-        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[(A, B)]</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → Growable
-        </div></div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#++=">
-      <a id="++=(TraversableOnce[(A, B)])(InTxn):SimpleTMap.this.type"></a>
+      <a id="++=(TraversableOnce[(A, B)])(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">++=</span>
         
         <span class="params">(<span name="kvs">kvs: TraversableOnce[(A, B)]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
@@ -302,49 +279,32 @@
           definition classes: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#+=">
-      <a id="+=((A, B),(A, B),(A, B)*):SimpleTMap.this.type"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.Growable#++=">
+      <a id="++=(TraversableOnce[(A, B)]):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">+=</span>
+        <span class="name">++=</span>
         
-        <span class="params">(<span name="elem1">elem1: (A, B)</span>, <span name="elem2">elem2: (A, B)</span>, <span name="elems">elems: (A, B)*</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="params">(<span name="xs">xs: <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[(A, B)]</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → Growable
-        </div></div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#+=">
-      <a id="+=((A, B)):SimpleTMap.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">+=</span>
-        
-        <span class="params">(<span name="kv">kv: (A, B)</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike → Builder → Growable
+          definition classes: Growable
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#+=">
-      <a id="+=((A, B),(A, B),(A, B)*)(InTxn):SimpleTMap.this.type"></a>
+      <a id="+=((A, B),(A, B),(A, B)*)(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">+=</span>
         
         <span class="params">(<span name="kv1">kv1: (A, B)</span>, <span name="kv2">kv2: (A, B)</span>, <span name="kvs">kvs: (A, B)*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
@@ -354,20 +314,56 @@
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#+=">
-      <a id="+=((A, B))(InTxn):SimpleTMap.this.type"></a>
+      <a id="+=((A, B))(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">+=</span>
         
         <span class="params">(<span name="kv">kv: (A, B)</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
           definition classes: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.Growable#+=">
+      <a id="+=((A, B),(A, B),(A, B)*):TMapViaSnapshot.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+=</span>
+        
+        <span class="params">(<span name="elem1">elem1: (A, B)</span>, <span name="elem2">elem2: (A, B)</span>, <span name="elems">elems: (A, B)*</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Growable
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.collection.mutable.MapLike#+=">
+      <a id="+=((A, B)):TMapViaSnapshot.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+=</span>
+        
+        <span class="params">(<span name="kv">kv: (A, B)</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: MapLike → Builder → Growable
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#-">
@@ -421,32 +417,15 @@
           definition classes: MapLike → Subtractable
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#--=">
-      <a id="--=(TraversableOnce[A]):SimpleTMap.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">--=</span>
-        
-        <span class="params">(<span name="keys">keys: <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[A]</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → Shrinkable
-        </div></div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#--=">
-      <a id="--=(TraversableOnce[A])(InTxn):SimpleTMap.this.type"></a>
+      <a id="--=(TraversableOnce[A])(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">--=</span>
         
         <span class="params">(<span name="ks">ks: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
@@ -455,49 +434,32 @@
           definition classes: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#-=">
-      <a id="-=(A,A,A*):SimpleTMap.this.type"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.Shrinkable#--=">
+      <a id="--=(TraversableOnce[A]):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">-=</span>
+        <span class="name">--=</span>
         
-        <span class="params">(<span name="key1">key1: A</span>, <span name="key2">key2: A</span>, <span name="keys">keys: A*</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="params">(<span name="xs">xs: <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[A]</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → Shrinkable
-        </div></div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#-=">
-      <a id="-=(A):SimpleTMap.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">-=</span>
-        
-        <span class="params">(<span name="key">key: A</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike → Shrinkable
+          definition classes: Shrinkable
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#-=">
-      <a id="-=(A,A,A*)(InTxn):SimpleTMap.this.type"></a>
+      <a id="-=(A,A,A*)(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">-=</span>
         
         <span class="params">(<span name="k1">k1: A</span>, <span name="k2">k2: A</span>, <span name="ks">ks: A*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
@@ -507,20 +469,56 @@
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#-=">
-      <a id="-=(A)(InTxn):SimpleTMap.this.type"></a>
+      <a id="-=(A)(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">-=</span>
         
         <span class="params">(<span name="k">k: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
           definition classes: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.Shrinkable#-=">
+      <a id="-=(A,A,A*):TMapViaSnapshot.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-=</span>
+        
+        <span class="params">(<span name="elem1">elem1: A</span>, <span name="elem2">elem2: A</span>, <span name="elems">elems: A*</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Shrinkable
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.collection.mutable.MapLike#-=">
+      <a id="-=(A):TMapViaSnapshot.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-=</span>
+        
+        <span class="params">(<span name="key">key: A</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: MapLike → Shrinkable
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.TraversableOnce#/:">
@@ -732,7 +730,7 @@ part of compilation it is not possible to check whether the contents of the list
           definition classes: IterableLike → Equals
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#clear">
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#clear">
       <a id="clear():Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -746,10 +744,10 @@ part of compilation it is not possible to check whether the contents of the list
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike → Builder → Growable
+          definition classes: MapLike → Builder → Growable
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#clone">
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#clone">
       <a id="clone():View[A, B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -764,7 +762,7 @@ part of compilation it is not possible to check whether the contents of the list
             <p class="shortcomment cmt">This method creates and returns a copy of the receiver object.</p>
             <div class="fullcomment"><div class="comment cmt"><p>This method creates and returns a copy of the receiver object.</p><p>The default implementation of the <code>clone</code> method is platform dependent.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a copy of the receiver object.</p></dd></dl><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → Cloneable → AnyRef
+          definition classes: MapLike → Cloneable → AnyRef
         </div>
             
             
@@ -1011,7 +1009,7 @@ part of compilation it is not possible to check whether the contents of the list
           <li><p>use <code>iterator' instead</code></p></li>
         </ol></div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#empty">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap.View#empty">
       <a id="empty:View[A, B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -1025,7 +1023,7 @@ part of compilation it is not possible to check whether the contents of the list
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a> → Map → Map → MapLike
+          definition classes: <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a> → Map → Map → MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#eq">
@@ -1344,7 +1342,7 @@ there are no more references to the object.</p><p>The details of when and if the
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → IterableLike → GenericTraversableTemplate → TraversableLike → TraversableOnce → FilterMonadic
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → IterableLike → GenericTraversableTemplate → TraversableLike → TraversableOnce → FilterMonadic
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.GenericTraversableTemplate#genericBuilder">
@@ -1378,7 +1376,7 @@ there are no more references to the object.</p><p>The details of when and if the
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#getClass">
@@ -1422,7 +1420,7 @@ there are no more references to the object.</p><p>The details of when and if the
           definition classes: MapLike
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#getOrElseUpdate">
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#getOrElseUpdate">
       <a id="getOrElseUpdate(A,⇒ B):B"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -1436,7 +1434,7 @@ there are no more references to the object.</p><p>The details of when and if the
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike
+          definition classes: MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.TraversableLike#groupBy">
@@ -1660,7 +1658,7 @@ possible to check whether the contents of the list are of the requested typed.
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → IterableLike
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → IterableLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.MapLike#keySet">
@@ -1960,7 +1958,7 @@ possible to check whether the contents of the list are of the requested typed.
             <div class="fullcomment"><div class="block">
           attributes: protected[this] 
         </div><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → MapLike → GenericTraversableTemplate → TraversableLike → HasNewBuilder
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → MapLike → GenericTraversableTemplate → TraversableLike → HasNewBuilder
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.TraversableOnce#nonEmpty">
@@ -2096,7 +2094,7 @@ possible to check whether the contents of the list are of the requested typed.
           <li><p>use <code>view' instead</code></p></li>
         </ol></div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#put">
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#put">
       <a id="put(A,B):Option[B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -2110,7 +2108,7 @@ possible to check whether the contents of the list are of the requested typed.
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike
+          definition classes: MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.TraversableOnce#reduceLeft">
@@ -2181,7 +2179,7 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: TraversableOnce
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#remove">
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#remove">
       <a id="remove(A):Option[B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -2195,7 +2193,7 @@ possible to check whether the contents of the list are of the requested typed.
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike
+          definition classes: MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#removeKey">
@@ -2248,41 +2246,41 @@ possible to check whether the contents of the list are of the requested typed.
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → Builder
-        </div></div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#retain">
-      <a id="retain((A, B) ⇒ Boolean):SimpleTMap.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">retain</span>
-        
-        <span class="params">(<span name="p">p: (A, B) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → MapLike → Builder
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#retain">
-      <a id="retain((A, B) ⇒ Boolean)(InTxn):SimpleTMap.this.type"></a>
+      <a id="retain((A, B) ⇒ Boolean)(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">retain</span>
         
         <span class="params">(<span name="p">p: (A, B) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
           definition classes: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#retain">
+      <a id="retain((A, B) ⇒ Boolean):TMapViaSnapshot.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">retain</span>
+        
+        <span class="params">(<span name="p">p: (A, B) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
         </div></div>
           
     </li><li visbl="prt" data-isabs="false" name="scala.collection.TraversableOnce#reversed">
@@ -2374,7 +2372,7 @@ possible to check whether the contents of the list are of the requested typed.
  requiring that operations be performed inside the static scope of an
  atomic block.
 </p></div><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
         </div>
             
             
@@ -2395,7 +2393,7 @@ possible to check whether the contents of the list are of the requested typed.
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → TraversableOnce
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → TraversableOnce
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.Builder#sizeHint">
@@ -2500,7 +2498,7 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: IterableLike
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#snapshot">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TMap.View#snapshot">
       <a id="snapshot:Map[A, B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -2514,7 +2512,9 @@ possible to check whether the contents of the list are of the requested typed.
       
             <p class="shortcomment cmt">Takes an atomic snapshot of this transactional map.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Takes an atomic snapshot of this transactional map.</p></div><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>
         </div>
             
             
@@ -2712,7 +2712,7 @@ possible to check whether the contents of the list are of the requested typed.
             <div class="fullcomment"><div class="comment cmt"><p>Returns the <code>TMap</code> perspective on this transactional map, which
  provides map functionality only inside atomic blocks.
 </p></div><div class="block">
-          definition classes: <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a> → <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>
         </div>
             
             
@@ -2947,38 +2947,38 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: TraversableLike → TraversableOnce
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#transform">
-      <a id="transform((A, B) ⇒ B):SimpleTMap.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">transform</span>
-        
-        <span class="params">(<span name="f">f: (A, B) ⇒ B</span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike
-        </div></div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap#transform">
-      <a id="transform((A, B) ⇒ B)(InTxn):SimpleTMap.this.type"></a>
+      <a id="transform((A, B) ⇒ B)(InTxn):TMapViaSnapshot.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">transform</span>
         
         <span class="params">(<span name="f">f: (A, B) ⇒ B</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: SimpleTMap.this.type</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
           definition classes: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#transform">
+      <a id="transform((A, B) ⇒ B):TMapViaSnapshot.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">transform</span>
+        
+        <span class="params">(<span name="f">f: (A, B) ⇒ B</span>)</span>
+        <span class="result">: TMapViaSnapshot.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.GenericTraversableTemplate#transpose">
@@ -3015,7 +3015,7 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: GenericTraversableTemplate
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#update">
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#update">
       <a id="update(A,B):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -3029,24 +3029,24 @@ possible to check whether the contents of the list are of the requested typed.
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike
+          definition classes: MapLike
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap#updated">
-      <a id="updated[B1&gt;:B](A,B1):View[A, B1]"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.MapLike#updated">
+      <a id="updated[B1&gt;:B](A,B1):Map[A, B1]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">updated</span>
         <span class="tparams">[<span name="B1">B1 &gt;: B</span>]</span>
         <span class="params">(<span name="key">key: A</span>, <span name="value">value: B1</span>)</span>
-        <span class="result">: <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B1]</span>
+        <span class="result">: <span class="extype" name="scala.collection.mutable.Map">Map</span>[A, B1]</span>
       </span>
       </h4>
       
             
             <div class="fullcomment"><div class="block">
-          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.SimpleTMap">SimpleTMap</a> → MapLike → MapLike
+          definition classes: MapLike → MapLike
         </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.collection.MapLike#values">
@@ -3245,9 +3245,7 @@ possible to check whether the contents of the list are of the requested typed.
     </li></ol>
             </div>
 
-        <div class="parent" name="scala.concurrent.stm.skel.TMapViaSnapshot">
-              <h3>Inherited from <a href="TMapViaSnapshot.html" class="extype" name="scala.concurrent.stm.skel.TMapViaSnapshot">TMapViaSnapshot</a>[A, B]</h3>
-            </div><div class="parent" name="scala.concurrent.stm.TMap">
+        <div class="parent" name="scala.concurrent.stm.TMap">
               <h3>Inherited from <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]</h3>
             </div><div class="parent" name="scala.concurrent.stm.TMap.View">
               <h3>Inherited from <a href="../TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]</h3>

@@ -113,6 +113,42 @@
       </span>
       </a></h4>
       
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.ConcurrentHashTrieSet">
+      <a id="ConcurrentHashTrieSet:ConcurrentHashTrieSet[A]"></a>
+      <h4 class="signature"><a href="ConcurrentHashTrieSet.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">ConcurrentHashTrieSet</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.HashTrieTMap">
+      <a id="HashTrieTMap:HashTrieTMap[A, B]"></a>
+      <h4 class="signature"><a href="HashTrieTMap.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">HashTrieTMap</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        
+        <span class="result"> extends TMapViaClone[A, B]</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.HashTrieTSet">
+      <a id="HashTrieTSet:HashTrieTSet[A]"></a>
+      <h4 class="signature"><a href="HashTrieTSet.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">HashTrieTSet</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        
+        <span class="result"> extends TSetViaClone[A]</span>
+      </span>
+      </a></h4>
+      
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.SimpleTMap">
       <a id="SimpleTMap:SimpleTMap[A, B]"></a>
       <h4 class="signature"><a href="SimpleTMap.html">
@@ -121,7 +157,7 @@
         <span class="name">SimpleTMap</span>
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
         
-        <span class="result"> extends View[A, B] with TMap[A, B]</span>
+        <span class="result"> extends TMapViaSnapshot[A, B]</span>
       </span>
       </a></h4>
       
@@ -149,6 +185,45 @@
       </span>
       </a></h4>
       
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.skel.TMapViaClone">
+      <a id="TMapViaClone:TMapViaClone[A, B]"></a>
+      <h4 class="signature"><a href="TMapViaClone.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">TMapViaClone</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        
+        <span class="result"> extends View[A, B] with TMap[A, B]</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Provides an implementation for the bulk of the functionality of <code>TMap</code> and
+ <code>TMap.View</code> by making extensive use of <code>clone()</code>.</p>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.skel.TMapViaSnapshot">
+      <a id="TMapViaSnapshot:TMapViaSnapshot[A, B]"></a>
+      <h4 class="signature"><a href="TMapViaSnapshot.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">TMapViaSnapshot</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        
+        <span class="result"> extends View[A, B] with TMap[A, B]</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Provides an implementation for the bulk of the functionality of <code>TMap</code> and
+ <code>TMap.View</code> by making extensive use of <code>snapshot</code>.</p>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.skel.TSetViaClone">
+      <a id="TSetViaClone:TSetViaClone[A]"></a>
+      <h4 class="signature"><a href="TSetViaClone.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">TSetViaClone</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        
+        <span class="result"> extends View[A] with TSet[A]</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Provides an implementation for the bulk of the functionality of <code>TSet</code> and
+ <code>TSet.View</code> by making extensive use of <code>clone()</code>.</p>
     </li></ol>
             </div>
 
@@ -184,6 +259,42 @@
       <span class="kind">object</span>
       <span class="symbol">
         <span class="name">AtomicArrayBuilder</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.ConcurrentHashTrieSet">
+      <a id="ConcurrentHashTrieSet:ConcurrentHashTrieSet"></a>
+      <h4 class="signature"><a href="ConcurrentHashTrieSet$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">ConcurrentHashTrieSet</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.TMapViaClone">
+      <a id="TMapViaClone:TMapViaClone"></a>
+      <h4 class="signature"><a href="TMapViaClone$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">TMapViaClone</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.TSetViaClone">
+      <a id="TSetViaClone:TSetViaClone"></a>
+      <h4 class="signature"><a href="TSetViaClone$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">TSetViaClone</span>
         
         
         <span class="result"> extends AnyRef</span>
