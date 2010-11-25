@@ -44,7 +44,7 @@ private[ccstm] trait GV6 {
    *  silently-committed txn under GV6).  Larger values can help amortize the
    *  cost of updating the counter.
    */
-  private val nonTxnSilentRunAhead = System.getProperty("ccstm.nontxn.runahead", "8").toInt
+  private val nonTxnSilentRunAhead = System.getProperty("ccstm.nontxn.runahead", "32").toInt
 
   /** Returns a value that is greater than `prevVersion` and greater
    *  than the value of `globalVersion` on entry.  May increase

@@ -24,7 +24,44 @@ private[ccstm] class CCSTMExecutor(val controlFlowTest: Throwable => Boolean,
 
   def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean = InTxnImpl().pushAlternative(block)
 
+  def compareAndSet[A, B](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = {
+    val ah = a.asInstanceOf[Handle.Provider[A]].handle
+    val bh = b.asInstanceOf[Handle.Provider[B]].handle
+    InTxnImpl.dynCurrentOrNull match {
+      case null => NonTxn.transform2[A, B, Boolean](ah, bh, { (av, bv) => if (a0 == av && b0 == bv) (a1, b1, true) else (a0, b0, false) })
+      case txn => a0 == txn.get(ah) && b0 == txn.get(bh) && { txn.set(ah, a1) ; txn.set(bh, b1) ; true }
+    }
+  }
+
+  def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = {
+    if (a0 eq a1)
+      ccasi(a, a0, b, b0, b1)
+    else if (b0 eq b1)
+      ccasi(b, b0, a, a0, a1)
+    else
+      dcasi(a, a0, a1, b, b0, b1)
+  }
+
+  private def ccasi[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, b: Ref[B], b0: B, b1: B): Boolean = {
+    val ah = a.asInstanceOf[Handle.Provider[A]].handle
+    val bh = b.asInstanceOf[Handle.Provider[B]].handle
+    InTxnImpl.dynCurrentOrNull match {
+      case null => NonTxn.ccasi(ah, a0, bh, b0, b1)
+      case txn => (a0 eq txn.get(ah)) && (b0 eq txn.get(bh)) && { txn.set(bh, b1) ; true }
+    }
+  }
+
+  private def dcasi[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = {
+    val ah = a.asInstanceOf[Handle.Provider[A]].handle
+    val bh = b.asInstanceOf[Handle.Provider[B]].handle
+    InTxnImpl.dynCurrentOrNull match {
+      case null => NonTxn.transform2[A, B, Boolean](ah, bh, { (av, bv) => if ((a0 eq av) && (b0 eq bv)) (a1, b1, true) else (a0, b0, false) })
+      case txn => (a0 eq txn.get(ah)) && (b0 eq txn.get(bh)) && { txn.set(ah, a1) ; txn.set(bh, b1) ; true }
+    }
+  }
+
   // CCSTM has no configuration at the moment
+
   def configuration: Map[Symbol, Any] = Map.empty
 
   def withConfig(p: (Symbol, Any)): TxnExecutor = throw new IllegalArgumentException

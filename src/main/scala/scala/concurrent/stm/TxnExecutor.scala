@@ -93,6 +93,30 @@ trait TxnExecutor {
    *  from the same original executor.
    */
   def pushAlternative[Z](mt: MaybeTxn, block: InTxn => Z): Boolean
+  
+  /** Atomically compares and sets two `Ref`s, probably more efficiently then
+   *  the corresponding transaction.  Equivalent to {{{
+   *     atomic { implicit t =>
+   *       a() == a0 && b() == b0 && { a() = a1 ; b() = b1 ; true }
+   *     }
+   *  }}}
+   */
+  def compareAndSet[A, B](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean
+
+  /** Atomically compares and sets two `Ref`s using identity comparison,
+   *  probably more efficiently then the corresponding transaction.  Equivalent
+   *  to {{{
+   *     atomic { implicit t =>
+   *       val f = (a() eq a0) && (b() eq b0)
+   *       if (f && (a0 ne a1))
+   *         a() = a1
+   *       if (f && (b0 ne b1))
+   *         b() = b1
+   *       f
+   *     }
+   *  }}}
+   */
+  def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean
 
   /** Returns the parameters of this `TxnExecutor` that are specific to the
    *  currently configured STM implementation.  The parameters of a particular
