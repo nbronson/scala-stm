@@ -51,6 +51,10 @@ private[skel] object TxnHashTrie {
     def mapIterator: Iterator[(A, B)]
   }
 
+  sealed trait BuildingNode[A, B] {
+    def endBuild: Node[A, B]
+  }
+
   type SetNode[A] = Node[A, AnyRef]
 
   def emptySetNode[A]: SetNode[A] = emptySetValue.asInstanceOf[SetNode[A]]
@@ -59,7 +63,9 @@ private[skel] object TxnHashTrie {
   /** If used by a Set, values will be null. */
   class Leaf[A, B](val hashes: Array[Int],
                    val keys: Array[AnyRef],
-                   val values: Array[AnyRef]) extends Node[A, B] {
+                   val values: Array[AnyRef]) extends Node[A, B] with BuildingNode[A, B] {
+
+    def endBuild = this
 
     def cappedSize(cap: Int): Int = hashes.length
 
@@ -154,16 +160,33 @@ private[skel] object TxnHashTrie {
     }
 
     def split(gen: Long, shift: Int): Branch[A, B] = {
+      val children = new Array[Node[A, B]](BF)
+      splitInto(shift, children)
+      val refs = new Array[Ref.View[Node[A, B]]](BF)
+      var i = 0
+      while (i < BF) {
+        refs(i) = Ref(children(i)).single
+        i += 1
+      }
+      new Branch[A, B](gen, false, refs)      
+    }
+
+    def buildingSplit(shift: Int): BuildingBranch[A, B] = {
+      val children = new Array[BuildingNode[A, B]](BF)
+      splitInto(shift, children)
+      new BuildingBranch[A, B](children)
+    }
+
+    private def splitInto[L >: Leaf[A, B]](shift: Int, children: Array[L]) {
       val sizes = new Array[Int](BF)
       var i = 0
       while (i < hashes.length) {
         sizes(indexFor(shift, hashes(i))) += 1
         i += 1
       }
-      val children = new Array[Ref.View[Node[A, B]]](BF)
       i = 0
       while (i < BF) {
-        children(i) = Ref[Node[A, B]](newLeaf(sizes(i))).single
+        children(i) = newLeaf(sizes(i))
         i += 1
       }
       i = hashes.length - 1
@@ -171,7 +194,7 @@ private[skel] object TxnHashTrie {
         val slot = indexFor(shift, hashes(i))
         sizes(slot) -= 1
         val pos = sizes(slot)
-        val dst = children(slot)().asInstanceOf[Leaf[A, B]]
+        val dst = children(slot).asInstanceOf[Leaf[A, B]]
         dst.hashes(pos) = hashes(i)
         dst.keys(pos) = keys(i)
         if (values != null)
@@ -185,7 +208,6 @@ private[skel] object TxnHashTrie {
         ////  children(slot).value = dst.split(gen, shift + LogBF)
         i -= 1
       }
-      new Branch[A, B](gen, false, children)
     }
 
     private def newLeaf(n: Int): Leaf[A, B] = {
@@ -223,6 +245,18 @@ private[skel] object TxnHashTrie {
       var pos = 0
       def hasNext = pos < keys.length
       def next: (A, B) = { val z = (keys(pos).asInstanceOf[A], values(pos).asInstanceOf[B]) ; pos += 1 ; z }
+    }
+  }
+
+  class BuildingBranch[A, B](val children: Array[BuildingNode[A, B]]) extends BuildingNode[A, B] {
+    def endBuild: Node[A, B] = {
+      val refs = new Array[Ref.View[Node[A, B]]](BF)
+      var i = 0
+      while (i < BF) {
+        refs(i) = Ref(children(i).endBuild).single
+        i += 1
+      }
+      new Branch(0L, false, refs)
     }
   }
 
@@ -316,6 +350,36 @@ private[skel] object TxnHashTrie {
 
     def mapIterator: Iterator[(A, B)] = new Iter[(A,B)] {
       def childIter(c: Node[A, B]) = c.mapIterator
+    }
+  }
+
+  //////////////// construction
+
+  def buildMap[A, B](kvs: TraversableOnce[(A, B)]): Node[A, B] = {
+    var root = emptyMapValue.asInstanceOf[BuildingNode[A, B]]
+    for (kv <- kvs)
+      root = buildingPut(root, 0, keyHash(kv._1), kv._1, kv._2)
+    root.endBuild
+  }
+
+  def buildSet[A](ks: TraversableOnce[A]): SetNode[A] = {
+    var root = emptySetValue.asInstanceOf[BuildingNode[A, AnyRef]]
+    for (k <- ks)
+      root = buildingPut(root, 0, keyHash(k), k, null)
+    root.endBuild
+  }
+
+  private def buildingPut[A, B](current: BuildingNode[A, B], shift: Int, hash: Int, key: A, value: B): BuildingNode[A, B] = {
+    current match {
+      case leaf: Leaf[A, B] => {
+        val a = leaf.withPut(hash, key, value)
+        if (!a.shouldSplit) a else a.buildingSplit(shift)
+      }
+      case branch: BuildingBranch[A, B] => {
+        val i = indexFor(shift, hash)
+        branch.children(i) = buildingPut(branch.children(i), shift + LogBF, hash, key, value)
+        branch
+      }
     }
   }
 

@@ -9,7 +9,7 @@ private[stm] class HashTrieTMap[A, B] private (private val root: Ref.View[TxnHas
 
   def this() = this(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
 
-  def this(kvs: TraversableOnce[(A, B)]) = { this() ; (this: Growable[(A, B)]) ++= kvs }
+  def this(kvs: TraversableOnce[(A, B)]) = this(Ref(TxnHashTrie.buildMap(kvs)).single)
 
   override def empty: TMap.View[A, B] = new HashTrieTMap[A, B]()
 

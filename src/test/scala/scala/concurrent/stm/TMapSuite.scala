@@ -181,10 +181,14 @@ class TMapSuite extends FunSuite {
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut eq (mut --= Array(k, k2, k3)))
       } else if (pct < 95) {
+        mut = TMap(mut.toArray: _*).single
+      } else if (pct < 96) {
+        mut = TMap.empty[String, Int].single ++= mut
+      } else if (pct < 97) {
         val m2 = mutable.Map.empty[String, Int]
         for (kv <- mut) { m2 += kv }
         assert(base === m2)
-      } else if (pct < 96) {
+      } else if (pct < 98) {
         val m2 = mutable.Map.empty[String, Int]
         for (kv <- mut.iterator) { m2 += kv }
         assert(base === m2)

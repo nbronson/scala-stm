@@ -9,7 +9,7 @@ private[stm] class HashTrieTSet[A] private (private val root: Ref.View[TxnHashTr
 
   def this() = this(Ref(TxnHashTrie.emptySetNode[A]).single)
 
-  def this(xs: TraversableOnce[A]) = { this() ; (this: Growable[A]) ++= xs }
+  def this(xs: TraversableOnce[A]) = this(Ref(TxnHashTrie.buildSet(xs)).single)
 
   override def empty: TSet.View[A] = new HashTrieTSet[A]()
 

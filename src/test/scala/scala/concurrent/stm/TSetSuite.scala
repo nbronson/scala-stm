@@ -173,10 +173,14 @@ class TSetSuite extends FunSuite {
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut eq (mut --= Array(k, k2, k3)))
       } else if (pct < 95) {
+        mut = TSet(mut.toArray: _*).single
+      } else if (pct < 96) {
+        mut = TSet.empty[String].single ++= mut
+      } else if (pct < 97) {
         val s2 = mutable.Set.empty[String]
         for (k <- mut) { s2 += k }
         assert(base === s2)
-      } else if (pct < 96) {
+      } else if (pct < 98) {
         val s2 = mutable.Set.empty[String]
         for (k <- mut.iterator) { s2 += k }
         assert(base === s2)
