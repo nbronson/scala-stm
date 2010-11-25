@@ -3,8 +3,6 @@
 package scala.concurrent.stm
 package skel
 
-import scala.collection.generic.Growable
-
 private[stm] class HashTrieTSet[A] private (private val root: Ref.View[TxnHashTrie.SetNode[A]]) extends TSetViaClone[A] {
 
   def this() = this(Ref(TxnHashTrie.emptySetNode[A]).single)
