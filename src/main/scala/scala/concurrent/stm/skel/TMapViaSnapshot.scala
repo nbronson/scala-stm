@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 package skel
@@ -8,6 +8,8 @@ import scala.collection.{immutable, mutable}
 /** Provides an implementation for the bulk of the functionality of `TMap` and
  *  `TMap.View` by making extensive use of `snapshot`.  Assumes that the
  *  underlying implementation of `snapshot` is O(1).
+ *
+ *  @author Nathan Bronson
  */
 private[stm] trait TMapViaSnapshot[A, B] extends TMap.View[A, B] with TMap[A, B] {
 

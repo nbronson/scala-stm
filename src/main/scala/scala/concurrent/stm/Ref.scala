@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -7,6 +7,8 @@ import reflect.{AnyValManifest, OptManifest}
 
 /** `object Ref` contains factory methods that allocate an STM-managed memory
  *  location and return a `Ref` instance that provides access to that location.
+ *
+ *  @author Nathan Bronson
  */
 object Ref extends RefCompanion {
 
@@ -262,6 +264,8 @@ trait RefCompanion {
  *
  *  `Ref`'s companion object contains factory methods that create `Ref`
  *  instances paired with a single STM-managed memory location.
+ *
+ *  @author Nathan Bronson
  */
 trait Ref[A] extends Source[A] with Sink[A] {
 

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -38,6 +38,8 @@ object Sink {
 
 /** `Sink[+A]` consists of the contra-variant write-only operations of
  *  `Ref[A]`.
+ *
+ *  @author Nathan Bronson
  */
 trait Sink[-A] {
 

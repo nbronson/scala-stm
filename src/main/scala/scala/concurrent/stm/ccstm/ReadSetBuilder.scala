@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm.ccstm
 
@@ -7,6 +7,8 @@ import annotation.tailrec
 
 /** This is basically a specialized builder for a map from `Handle` to
  *  `Version`. 
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] final class ReadSetBuilder {
   private var _size = 0

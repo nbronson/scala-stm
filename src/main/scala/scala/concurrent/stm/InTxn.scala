@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -8,5 +8,7 @@ package scala.concurrent.stm
  *  `InTxn` instances themselves might be reused by the STM, use
  *  `Txn.currentLevel` or `Txn.rootLevel` to get a `Txn.NestingLevel` if you
  *  need to track an individual execution attempt.
+ *
+ *  @author Nathan Bronson
  */
 trait InTxn extends InTxnEnd

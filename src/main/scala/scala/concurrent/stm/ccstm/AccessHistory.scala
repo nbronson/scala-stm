@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm.ccstm
 
@@ -103,6 +103,8 @@ private[ccstm] object AccessHistory {
  *  tame the mess the read set and write buffer interfaces are separated into
  *  traits housed in the companion object.  This doesn't actually increase
  *  modularity, but makes it easier to see what is going on.
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with AccessHistory.WriteBuffer {
 

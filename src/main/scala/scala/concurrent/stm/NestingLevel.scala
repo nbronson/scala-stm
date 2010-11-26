@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -22,6 +22,8 @@ object NestingLevel {
  *
  *  Methods on this class may be called from any thread, and may be called
  *  after the corresponding execution attempt has been completed.
+ *
+ *  @author Nathan Bronson
  */
 trait NestingLevel {
   import Txn._

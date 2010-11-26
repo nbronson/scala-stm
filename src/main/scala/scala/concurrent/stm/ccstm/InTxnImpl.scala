@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -22,6 +22,8 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
 /** In CCSTM there is one `InTxnImpl` per thread, and it is reused across all
  *  transactions.
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   import CCSTM._

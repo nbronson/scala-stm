@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -9,6 +9,8 @@ import org.scalatest.FunSuite
 /** This test uses the transactional retry mechanism to pass a token around a
  *  ring of threads.  When there are two threads this is a ping-pong test.  A
  *  separate `Ref` is used for each handoff.
+ *
+ *  @author Nathan Bronson
  */
 class TokenRingSuite extends FunSuite {
   test("small non-txn threesome") { tokenRing(3, 10000, false) }

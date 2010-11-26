@@ -1,3 +1,5 @@
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+
 package scala.concurrent.stm
 package skel
 
@@ -9,6 +11,8 @@ import annotation.tailrec
  *  represented as a Ref.View[Node[A, B]].  If the initial empty leaf is
  *  `emptySetValue` then no values can be stored in the hash trie, and
  *  operations that take or return values will expect and produce null.
+ *
+ *  @author Nathan Bronson
  */
 private[skel] object TxnHashTrie {
 

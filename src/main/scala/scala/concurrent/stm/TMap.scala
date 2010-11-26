@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -45,6 +45,8 @@ object TMap {
  *  they are in the map.  The `TMap` implementation assumes that it can safely
  *  perform key equality and hash checks outside a transaction without
  *  affecting atomicity. 
+ *
+ *  @author Nathan Bronson
  */
 trait TMap[A, B] {
 

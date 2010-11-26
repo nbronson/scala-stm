@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -7,6 +7,8 @@ import org.scalatest.FunSuite
 
 
 /** Flipper is derived from a test originally used for the ATLAS HTM prototype.
+ *
+ *  @author Nathan Bronson
  */
 class FlipperSuite extends FunSuite {
   val DEFAULT_SYNC_COUNT = 3

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -11,5 +11,7 @@ object MaybeTxn {
  *  bind to an implicit `InTxn` if one is available, otherwise it will bind to
  *  the object `TxnUnkown`.  A `MaybeTxn` of `TxnUnknown` should trigger a
  *  dynamically-scoped `InTxn` search using `Txn.current`.
+ *
+ *  @author Nathan Bronson
  */
 trait MaybeTxn

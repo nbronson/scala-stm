@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -45,6 +45,8 @@ object TSet {
  *  while they are in the set.  The `TSet` implementation assumes that it can
  *  safely perform equality and hash checks outside a transaction without
  *  affecting atomicity. 
+ *
+ *  @author Nathan Bronson
  */
 trait TSet[A] {
 

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -7,6 +7,8 @@ package scala.concurrent.stm
  *  locate nesting levels or register additional handlers.  This functionality
  *  is separated from that granted by `InTxn` because `Ref` operations are not
  *  allowed from handlers after commit has begun.
+ *
+ *  @author Nathan Bronson
  */
 trait InTxnEnd extends MaybeTxn {
   import Txn._

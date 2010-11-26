@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -7,6 +7,8 @@ package scala.concurrent.stm
  *  implicit conversion in the `stm` package object from any type `A` to a
  *  `DelayedAtomicBlock[A]`, which will kick in if there is an attempt to call
  *  `.orAtomic` on a value.
+ *
+ *  @author Nathan Bronson
  */
 class DelayedAtomicBlock[A](above: => A) {
 

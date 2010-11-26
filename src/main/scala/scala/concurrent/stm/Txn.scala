@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -6,6 +6,8 @@ package scala.concurrent.stm
  *  context.  These methods are only valid within an atomic block or a
  *  transaction life-cycle handler, which is checked at compile time by
  *  requiring that an implicit `InTxn` or `InTxnEnd` be available.
+ *
+ *  @author Nathan Bronson
  */
 object Txn {
   import impl.STMImpl

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -8,6 +8,8 @@ import annotation.tailrec
 
 /** The object that contains the code for non-transactional read and write
  *  barriers.
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] object NonTxn {
   import CCSTM._

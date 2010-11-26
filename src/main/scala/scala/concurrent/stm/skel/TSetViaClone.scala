@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 package skel
@@ -20,6 +20,8 @@ private[stm] object TSetViaClone {
 /** Provides an implementation for the bulk of the functionality of `TSet` and
  *  `TSet.View` by making extensive use of `clone()`.  Assumes that the
  *  underlying implementation of `clone()` is O(1).
+ *
+ *  @author Nathan Bronson
  */
 private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
   import TSetViaClone._

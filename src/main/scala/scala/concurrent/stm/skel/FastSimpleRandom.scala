@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm.skel
 
@@ -11,6 +11,8 @@ package scala.concurrent.stm.skel
  *  <p>
  *  The constants in this 64-bit linear congruential random number generator
  *  are from http://nuclear.llnl.gov/CNP/rng/rngman/node4.html.
+ *
+ *  @author Nathan Bronson
  */
 private[stm] object FastSimpleRandom {
   // 64 byte cache lines are typical, so there are 8 slots per cache line.
@@ -75,6 +77,8 @@ private[stm] object FastSimpleRandom {
 
 /** A single-threaded random number generator that uses the same algorithm as
  *  the concurrent `object FastSimpleRandom`.
+ *
+ *  @author Nathan Bronson
  */
 private[stm] final class FastSimpleRandom private (private var _state: Long, dummy: Boolean) {
   import FastSimpleRandom._

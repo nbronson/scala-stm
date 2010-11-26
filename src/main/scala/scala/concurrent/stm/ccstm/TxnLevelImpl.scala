@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -15,6 +15,8 @@ private[ccstm] object TxnLevelImpl {
  *  and `AbstractNestingLevel`, and adds handling of the nesting level status.
  *  Some of the internal states (see `state`) are not instances of
  *  `Txn.Status`, but rather record that this level is no longer current.
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
         extends AccessHistory.UndoLog with skel.AbstractNestingLevel {

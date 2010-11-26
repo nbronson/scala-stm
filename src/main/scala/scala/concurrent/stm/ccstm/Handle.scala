@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm.ccstm
 
@@ -34,6 +34,8 @@ private[ccstm] object Handle {
  *  invoked).  Metadata is identified by `base` and `metaOffset` (the assumption
  *  made during blocking is that a write to a handle's `meta` may affect the
  *  `meta` read by any handle with the same `base` and `metaOffset`).
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] abstract class Handle[T] {
   def meta: Long

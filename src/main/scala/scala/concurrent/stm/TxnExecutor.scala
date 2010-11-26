@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -27,6 +27,8 @@ object TxnExecutor {
  *  new executor may be used immediately, saved and used multiple times, or
  *  registered as the new system-wide default using
  *  `TxnExecutor.transformDefault`.
+ *
+ *  @author Nathan Bronson
  */
 trait TxnExecutor {
   /** Executes `block` one or more times until an atomic execution is achieved,

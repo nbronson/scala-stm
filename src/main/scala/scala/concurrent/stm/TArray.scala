@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -54,6 +54,8 @@ object TArray {
  *  potentially much more space efficient.  Elements can be read and written
  *  directly, or the `refs` method can be used to obtain transient `Ref`
  *  instances backed by the elements of the `TArray`.
+ *
+ *  @author Nathan Bronson
  */
 trait TArray[A] {
 

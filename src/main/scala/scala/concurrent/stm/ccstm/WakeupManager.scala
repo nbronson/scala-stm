@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2010, LAMP/EPFL */
+/* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
 package scala.concurrent.stm.ccstm
 
@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
  *  bulk wait and bulk notification; also does not require that the waiter and
  *  the notifier share an object reference.  There is a chance of a false
  *  positive.
+ *
+ *  @author Nathan Bronson
  */
 private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   import CCSTM.hash
