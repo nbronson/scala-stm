@@ -12,8 +12,8 @@ import annotation.tailrec
  */
 private[skel] object TxnHashTrie {
 
-  private def LogBF = 5
-  private def BF = 32
+  private def LogBF = 4
+  private def BF = 16
 
   // It would seem that the leaf copying is inefficient when compared to a tree
   // that allows more sharing, but a back-of-the-envelope calculation indicates
