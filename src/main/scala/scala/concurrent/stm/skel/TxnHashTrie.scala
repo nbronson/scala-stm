@@ -78,18 +78,20 @@ private[skel] object TxnHashTrie {
       else if (values != null)
         Some(values(i).asInstanceOf[B])
       else
-        someNull.asInstanceOf[Option[B]] // if we don't handle sets here we need to versions of TxnHashTrie.remove
+        someNull.asInstanceOf[Option[B]] // if we don't handle sets here we need two versions of TxnHashTrie.remove
     }
 
     private def find(hash: Int, key: A): Int = {
-      var i = 0
-      val hh = hashes
-      while (i < hh.length && hh(i) <= hash) {
-        if (hh(i) == hash && key == keys(i))
+      var i = hashes.length
+      while (i > 0) {
+        i -= 1
+        val h = hashes(i)
+        if (h == hash && key == keys(i))
           return i
-        i += 1
+        if (h < hash)
+          return ~(i + 1)
       }
-      return ~i
+      return ~0
     }
 
     def withPut(hash: Int, key: A, value: B): Leaf[A, B] = {
