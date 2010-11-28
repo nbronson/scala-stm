@@ -300,6 +300,70 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#compareAndSet">
+      <a id="compareAndSet[A, B](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">compareAndSet</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        <span class="params">(<span name="a">a: <a href="../Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[A]</span>, <span name="a0">a0: A</span>, <span name="a1">a1: A</span>, <span name="b">b: <a href="../Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[B]</span>, <span name="b0">b0: B</span>, <span name="b1">b1: B</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
+ the corresponding transaction.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
+ the corresponding transaction.  Equivalent to </p><pre>
+    atomic { implicit t =&gt;
+      a() == a0 &amp;&amp; b() == b0 &amp;&amp; { a() = a1 ; b() = b1 ; true }
+    }
+</pre></div><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#compareAndSetIdentity">
+      <a id="compareAndSetIdentity[A&lt;:AnyRef, B&lt;:AnyRef](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">compareAndSetIdentity</span>
+        <span class="tparams">[<span name="A">A &lt;: AnyRef</span>, <span name="B">B &lt;: AnyRef</span>]</span>
+        <span class="params">(<span name="a">a: <a href="../Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[A]</span>, <span name="a0">a0: A</span>, <span name="a1">a1: A</span>, <span name="b">b: <a href="../Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[B]</span>, <span name="b0">b0: B</span>, <span name="b1">b1: B</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s using identity comparison,
+ probably more efficiently then the corresponding transaction.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s using identity comparison,
+ probably more efficiently then the corresponding transaction.  Equivalent
+ to </p><pre>
+    atomic { implicit t =&gt;
+      val f = (a() eq a0) &amp;&amp; (b() eq b0)
+      if (f &amp;&amp; (a0 ne a1))
+        a() = a1
+      if (f &amp;&amp; (b0 ne b1))
+        b() = b1
+      f
+    }
+</pre></div><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#configuration">
       <a id="configuration:Map[Symbol, Any]"></a>
       <h4 class="signature">
