@@ -1,0 +1,23 @@
+---
+layout: default
+title: Downloading
+---
+
+h2(#github). Source on github
+
+If you system has "git":http://git-scm.com/, the best way to get the ScalaSTM source code is to clone the github repository
+
+{% highlight bash %}
+git clone https://github.com/nbronson/scala-stm-api.git
+{% endhighlight %}
+
+".tar.gz":https://github.com/nbronson/scala-stm-api/tarball/master and ".zip":https://github.com/nbronson/scala-stm-api/zipball/master source bundles are also available.
+
+Once you've got the source, use "sbt":http://code.google.com/p/simple-build-tool/ to download @scala-stm@'s dependencies (currently just @scala@ and @scalatest@), compile and run the tests, and build the JAR file.
+
+{% highlight bash %}
+sbt update
+sbt test
+sbt package
+{% endhighlight %}
+
