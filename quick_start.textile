@@ -1,0 +1,129 @@
+---
+layout: default
+title: Quick Start
+---
+
+h2(#install).  Install
+
+"Download":download.html the JAR or add @scala-stm_2.8.1@ as an sbt or maven
+"dependency":download.html#dependency.
+
+h2(#ref).  Wrap or remove non-local variables
+
+Move non-local variables into @Ref@-s.  @val x: Ref[A]@ replaces @var x: A@.
+Replace non-local mutable collections (from @scala.collection.mutable@) with
+transactional ones (like @TMap@ or @TSet@), or with a @Ref@ to an immutable
+one.
+
+{% highlight scala %}
+import scala.concurrent.stm._
+
+// class Node(val elem: Int, var next: Node)
+class Node(val elem: Int, next0: Node) {
+  val next = Ref(next0)
+}
+{% endhighlight %}
+
+h2(#atomic).  Wrap your code in atomic
+
+Put code that uses @Ref@ inside an atomic block, at whatever granularity
+makes sense for your application.  Read a @Ref x@'s contents with @x()@,
+update it with @x() = v@ (syntax sugar for @apply()@ and @update(v)@,
+respectively).
+
+ScalaSTM will run atomic blocks in parallel using optimistic concurrency
+control, automatically retrying until successful.
+
+{% highlight scala %}
+val top = Ref(null : Node) // or Ref[Node](null)
+
+def push(elem: Int) {
+  atomic { implicit txn =>
+    top() = new Node(elem, top())
+  }
+}
+{% endhighlight %}
+
+h2(#compose). Compose atomic operations
+
+Atomic blocks nest, so you can build thread-safe complex operations from simple
+ones.
+
+{% highlight scala %}
+def push(e1: Int, e2: Int, elems: Int*) {
+  atomic { implicit txn =>
+    push(e1)
+    push(e2)
+    elems foreach { push(_) }
+  }
+}
+{% endhighlight %}
+
+
+h2(#single). Optimize single-operation transactions
+
+@Ref@ reads and writes check at compile time that they are inside an
+@atomic@, but you can bypass this rule for code that doesn't need to
+perform multiple accesses atomically.  Powerful operations such as @swap@
+and @transform@ let one @Ref@ access perform both a read and a write.
+
+{% highlight scala %}
+//def isEmpty = atomic { implicit t => top() == null }
+def isEmpty = top.single() == null
+
+// def clear() { atomic { implicit t => top() = null } }
+def clear() { top.single() = null }
+
+// def push(elem: Int) {
+//   atomic { implicit txn => top() = new Node(elem, top()) }
+// }
+def push(elem: Int) { top.single.transform { n => new Node(elem, n) } }
+{% endhighlight %}
+
+
+h2(#retry). Wait for conditions to change
+
+Calling @retry@ inside an atomic block will cause it to roll back and
+wait for one of its inputs to change.  In Java we might have called it
+@retryAfterAnyObservedRefHasChanged()@.
+
+{% highlight scala %}
+def blockingPop(): Int = atomic { implicit txn =>
+  val t = top()
+  if (t == null)
+    retry
+  top() = t.next
+  t.elem
+}
+{% endhighlight %}
+
+
+h2(#alternatives). Wait for multiple events
+
+You can chain atomic blocks using @orAtomic@; the lower alternatives will be
+tried if the upper ones call @retry@.  This lets you wait on multiple events,
+or lets you convert to and from blocking behavior.
+
+{% highlight scala %}
+def selectPop(a: IntStack, b: IntStack): (IntStack, Int) = {
+  atomic { implicit txn =>
+    (a, a.blockingPop())
+  } orAtomic { implicit txn =>
+    (b, b.blockingPop())
+  }
+}
+
+def maybePop(): Option[Int] = {
+  atomic { implicit txn =>
+    Some(blockingPop())
+  } orAtomic { implicit txn =>
+    None
+  }
+}
+{% endhighlight %}
+
+
+h2(#source). Look at the source
+
+This stack example is part of the source on GitHub:
+"IntStack.scala":https://github.com/nbronson/scala-stm-api/blob/master/src/test/scala/scala/concurrent/stm/examples/IntStack.scala

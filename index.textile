@@ -1,0 +1,59 @@
+---
+layout: default
+title: ScalaSTM
+---
+
+ScalaSTM is a library that helps you write thread-safe code.  Software
+transactions let multiple threads and actors read and write global
+state without deadlocks or race conditions.  Build your shared data
+structures from immutable objects and transactional references, wrap
+your critical regions in @atomic@, and ScalaSTM will handle optimistic
+concurrency control.
+
+ScalaSTM is the product of an expert group working to produce an
+STM(software transactional memory) suitable for inclusion in Scala's
+standard library.  You can use it now as a JAR file.
+
+
+h2(#why).  Optimistic
+
+ScalaSTM _optimistically_ assumes that all threads can proceed in
+parallel, but keeps around enough information to fix things if it makes
+an incorrect speculation.  The result has some nice properties:
+
+* *Say what you mean.*  You write @atomic@, ScalaSTM executes it
+atomically without deadlocks or races.  Nested atomic blocks do the
+right thing.
+
+* *Readers scale.*  All of the threads in a system can read data without
+interfering with each other.
+
+* *Exceptions automatically trigger cleanup.*  If an atomic block throws
+an exception, all of the @Ref@-s are reset to their original state.
+(You can change this default if you like.)
+
+* *Waiting for complex conditions is easy.*  If an atomic block doesn't
+find the state it's looking for, it can call @retry@ to back up and wait
+for any of its inputs to change.  If there are multiple ways to succeed,
+you can chain them and ScalaSTM will try them all.
+
+
+h2(#whatfor).  Who is it for?
+
+ScalaSTM is for programmers whose threads or actors need to coordinate
+access to global data.  In a server, this might be the list of active
+connections or a cache.  In a client, this might be a partial result or
+worker thread status.
+
+ScalaSTM is just a library, so it doesn't affect the parts of the
+application that don't use it.  This means that you can use it inside
+a framework or hidden component.
+
+Atomic blocks are sometimes attempted more than once before they succeed,
+so software transactions _might not be a good fit_ if you need to perform
+I/O inside your critical regions.  @Ref@-s are automatically reverted
+and immutable objects are safe, but ScalaSTM doesn't try to magically
+undo a call to @println@.  There are hooks for manual rollback, and for
+integration with an external transactional resource (e.g. a database).
+
+

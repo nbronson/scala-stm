@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <meta content='text/html;charset=UTF-8' http-equiv='Content-Type'>
+    <title>ScalaSTM &mdash; {{ page.title }}</title>
+    <style type='text/css'>
+      @import 'css/default.css';
+      @import 'css/syntax.css';
+    </style>
+    <style media='print' type='text/css'>
+      @import 'css/print.css';
+    </style>
+    <meta content='ScalaSTM documentation' name='subject'>
+    <link href='images/favicon.png' rel='shortcut icon'>
+  </head>
+  <body>
+    <div id='wrap'>
+      <div id='header'>
+        <!-- <a href='http://nbronson.github.com/scala-stm-api/' title="Library-Based STM for Scala"><img alt='scalastm' src='images/scalastm.png'></a> -->
+        <div class='tagline'><a href='http://nbronson.github.com/scala-stm-api/' title="Library-Based STM for Scala"> Library-Based STM for Scala</a></div>
+      </div>
+      <div id='pages'>
+        <ol class='toc'>
+          <li>Start Here
+            <ol class="toc">
+              <li><a href='index.html'>Welcome</a></li>
+              <li><a href='quick_start.html'>Quick Start</a></li>
+            </ol>
+          </li>
+          <li>Reference
+            <ol class="toc">
+              <li><a href='api'>ScalaDoc API</a></li>
+            </ol>
+          </li>
+        </ol>
+      </div>
+      <div id='content'>
+        <h1 id='{{ page.title | downcase | replace(' ', '_') }}'>{{ page.title }}</h1>
+        {{ content | toc }}
+        {{ content }}
+      </div>
+    </div>
+  </body>
+</html>
