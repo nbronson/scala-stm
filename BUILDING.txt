@@ -1,0 +1,29 @@
+SOURCE
+
+scala-stm is built using sbt, from http://code.google.com/p/simple-build-tool/
+sbt will download the correct version of scala and ScalaTest with
+
+  sbt update
+
+At this point, you should be able to compile and run the tests with
+
+  sbt test
+
+
+DOCS
+
+The project's website is currently hosted using GitHub pages.  This means
+that instead of being a subdirectory in the master branch of git, it is
+at the top level of a branch named gh-pages.  Github automatically runs
+the entire contents of the gh-pages branch through the jekyll markup tool,
+and then places the resulting site at username.github.com/scala-stm-api.
+
+If you want to test out changes to the website locally or statically
+generate the site or a PDF, install jekyll using RubyGems (see
+https://github.com/mojombo/jekyll/wiki/install).  In the root of the
+gh-pages, run jekyll --server --auto, and the website will be available
+on localhost:4000, with edits immediately available.
+
+The api subdirectory of the gh-pages branch is currently manually
+synchronized with the target/scala_2.8.1/doc/main/api that results from
+"sbt doc" on the master branch.
