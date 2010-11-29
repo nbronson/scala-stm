@@ -1,0 +1,32 @@
+---
+layout: default
+title: Exceptions
+---
+
+h2(#default). Exception -- rollback + rethrow
+
+If an atomic block throws an exception, ScalaSTM rolls it back and then rethrows the exception.  The atomic block won't be retried.  For exceptions that represent real errors, this is a good default behavior because it prevents corruption of any shared data structures.
+
+h2(#controlflow). Control-flow exception -- commit + rethrow
+
+Sometimes exceptions represent a non-local control transfer, rather than an unexpected error.  In this case, the transaction should be committed.  ScalaSTM tests each exception that escapes an atomic block to determine which behavior is appropriate (look at the ScalaDoc for @TxnExecutor.isControlFlow@ for more).  By default all exceptions that extend @scala.util.control.ControlThrowable@ are considered to be control flow.
+
+h2(#nesting). Exceptions and nesting
+
+The previous rules about exception handling apply to nested transactions.  This means that a nested transaction might be rolled back while the outer transaction is committed.  For example, the following code sets @last@ to @"outer"@
+
+{% highlight scala %}
+val last = Ref("none")
+atomic { implicit txn =>
+  last() = "outer"
+  try {
+    atomic { implicit txn =>
+      last() = "inner"
+      throw new RuntimeException
+    }
+  } catch {
+    case _: RuntimeException =>
+  }
+}
+{% endhighlight %}
+
