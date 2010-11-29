@@ -3,6 +3,8 @@ layout: default
 title: Syntax Cheat Sheet
 ---
 
+h2(#ref). Ref, Ref.View and atomic
+
 {% highlight scala %}
 import scala.concurrent.stm._
 
