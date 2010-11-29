@@ -85,6 +85,8 @@ blockquote {
   margin-left: 0.3em;
   margin-right: 0;
   font-style: italic;
+  font-size: 130%;
+  color: #800000;
 }
 
 ul { 
