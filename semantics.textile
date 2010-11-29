@@ -40,22 +40,22 @@ One of the side effects of ScalaSTM's alternate syntax for transactional barrier
 
 The semantic problems with hiding rollback and retry come from actions that the STM cannot isolate or undo, such as I/O or calls to external libraries.  ScalaSTM does not try to automatically handle irrevocable actions.  Instead, it allows the user to register handlers to perform manual cleanup or two-phase commit.  Handler registration is accomplished via methods of @object Txn@.
 
-fn1. F. T. Schneider, V. Menon, T. Shpeisman, and A.-R. Adl-Tabatabai. Dynamic Optimization for Efficient Strong Atomicity. In _OOPSLA ’08: Proceedings of the 23rd ACM SIGPLAN conference on Object-Oriented Programming Systems, Languages, and Applications_, New York, NY, USA, October 2008. ACM.
+fn1. F. T. Schneider, V. Menon, T. Shpeisman, and A.-R. Adl-Tabatabai. Dynamic Optimization for Efficient Strong Atomicity. In _OOPSLA '08: Proceedings of the 23rd ACM SIGPLAN conference on Object-Oriented Programming Systems, Languages, and Applications_, New York, NY, USA, October 2008. ACM.
 
-fn2. N. G. Bronson, C. Kozyrakis, and K. Olukotun. Feedback-Directed Barrier Optimization in a Strongly Isolated STM. In _POPL ’09: Proceedings of the 36th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages_, pages 213–225, New York, NY, USA, 2009. ACM.
+fn2. N. G. Bronson, C. Kozyrakis, and K. Olukotun. Feedback-Directed Barrier Optimization in a Strongly Isolated STM. In _POPL '09: Proceedings of the 36th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages_, pages 213--225, New York, NY, USA, 2009. ACM.
 
-fn3. V. Menon, S. Balensieger, T. Shpeisman, A.-R. Adl-Tabatabai, R. L. Hudson, B. Saha, and A. Welc. Practical Weak-Atomicity Semantics for Java STM. In _SPAA ’08: Proceedings of the 20th ACM Symposium on Parallel Algorithms and Architectures_, 2008.
+fn3. V. Menon, S. Balensieger, T. Shpeisman, A.-R. Adl-Tabatabai, R. L. Hudson, B. Saha, and A. Welc. Practical Weak-Atomicity Semantics for Java STM. In _SPAA '08: Proceedings of the 20th ACM Symposium on Parallel Algorithms and Architectures_, 2008.
 
-fn4. K. F. Moore and D. Grossman. High-Level Small-Step Operational Semantics for transactions. In _POPL ’08: Proceedings of the 35th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages_, pages 51–62, New York, NY, USA, 2008. ACM.
+fn4. K. F. Moore and D. Grossman. High-Level Small-Step Operational Semantics for transactions. In _POPL '08: Proceedings of the 35th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages_, pages 51--62, New York, NY, USA, 2008. ACM.
 
-fn5. T. Harris, S. Marlow, S. Peyton-Jones, and M. Herlihy. Composable Memory Transactions. In _PPoPP ’05: Proceedings of the tenth ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming_, pages 48–60, New York, NY, USA, 2005. ACM.
+fn5. T. Harris, S. Marlow, S. Peyton-Jones, and M. Herlihy. Composable Memory Transactions. In _PPoPP '05: Proceedings of the tenth ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming_, pages 48--60, New York, NY, USA, 2005. ACM.
 
 fn6. R. Hickey. The Clojure Programming Language. In _Proceedings of the 2008 Symposium on Dynamic Languages_. ACM New York, NY, USA, 2008.
 
-fn7. D. Dice, O. Shalev, and N. Shavit. Transactional Locking II. In _DISC ’06: Proceedings of the 20th International Symposium on Distributed Computing_, March 2006.
+fn7. D. Dice, O. Shalev, and N. Shavit. Transactional Locking II. In _DISC '06: Proceedings of the 20th International Symposium on Distributed Computing_, March 2006.
 
-fn8. T. Riegel, P. Felber, and C. Fetzer. A Lazy Snapshot Algorithm with Eager Validation. In _Disc '06: Proceedings of the 20th International Symposium on Distributed Computing_, pages 284–298, 2006.
+fn8. T. Riegel, P. Felber, and C. Fetzer. A Lazy Snapshot Algorithm with Eager Validation. In _Disc '06: Proceedings of the 20th International Symposium on Distributed Computing_, pages 284--298, 2006.
 
-fn9. R. Guerraoui and M. Kapalka. On the Correctness of Transactional Memory. In _PPoPP ’08: Proceedings of the 13th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming_, pages 175–184, New York, NY, USA, 2008. ACM.
+fn9. R. Guerraoui and M. Kapalka. On the Correctness of Transactional Memory. In _PPoPP '08: Proceedings of the 13th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming_, pages 175--184, New York, NY, USA, 2008. ACM.
 
-fn10. A. Dragojevic, R. Guerraoui, and M. Kapalka. Stretching Transactional Memory. In _PLDI ’09: Proceedings of the 2009 ACM SIGPLAN Conference on Programming Language Design and Implementation_, pages 155–165, New York, NY, USA, 2009. ACM.
+fn10. A. Dragojevic, R. Guerraoui, and M. Kapalka. Stretching Transactional Memory. In _PLDI '09: Proceedings of the 2009 ACM SIGPLAN Conference on Programming Language Design and Implementation_, pages 155--165, New York, NY, USA, 2009. ACM.

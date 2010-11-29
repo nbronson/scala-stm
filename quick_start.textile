@@ -80,7 +80,7 @@ h2(#single). Optimize single-operation transactions
 
 h2(#retry). Wait for conditions to change
 
-@retry@ means that an atomic block can't complete on its current input state.  Calling @retry@ inside an atomic block will cause it to roll back, wait for one of its inputs to change, and then retry execution.  This is roughly analogous to a call to @wait@ where ScalaSTM automatically generates the matching @notifyAll@.  As part of its implementation of optimistic concurrency the STM keeps track of an atomic block's _read set_, the set of @Ref@-s that have been read during the transaction.  This means that the STM can efficiently block the current thread until another thread has written to an element of its read set, at which time the atomic block can be retried.  This makes it trivial to wait for complex conditions, and eliminates lost wakeups.
+Use the @retry@ keyword when an atomic block can't complete on its current input state.  Calling @retry@ inside an atomic block will cause it to roll back, wait for one of its inputs to change, and then retry execution.  This is roughly analogous to a call to @wait@ where ScalaSTM automatically generates the matching @notifyAll@.  As part of its implementation of optimistic concurrency the STM keeps track of an atomic block's _read set_, the set of @Ref@-s that have been read during the transaction.  This means that the STM can efficiently block the current thread until another thread has written to an element of its read set, at which time the atomic block can be retried.  This makes it trivial to wait for complex conditions, and eliminates lost wakeups.
 
 To demonstrate, we'll add a function to our list that waits until the list is non-empty, then removes and returns the first element.
 
@@ -99,9 +99,9 @@ To demonstrate, we'll add a function to our list that waits until the list is no
 
 h2(#alternatives). Wait for multiple events
 
-Another way to fix an atomic block that ends in @retry@ is to provide an alternative.  You can chain atomic blocks using @orAtomic@; the lower alternatives will be tried if the upper ones call @retry@.  This lets you compose functions that block using @retry@, or to convert to and from blocking behavior.
+Another way to proceed after an atomic block ends in @retry@ is to provide an alternative.  You can chain atomic blocks using @orAtomic@; the lower alternatives will be tried if the upper ones call @retry@.  This lets you compose functions that block using @retry@, or to convert to and from blocking behavior.
 
-For example, we can use the blocking version of @removeFirst@ to construct one that returns an option by providing an alternative.
+For example, we can use the blocking version of @removeFirst@ to construct one that returns an @Option@, by providing an alternative.
 
 {% highlight scala %}
   def maybeRemoveFirst(): Option[Int] = {
@@ -132,9 +132,9 @@ object ConcurrentIntList {
 
 h2(#rollback). Be careful about rollback
 
-ScalaSTM might need to try an atomic block more than once before optimistic concurrency can succeed.  This means that any call to the STM might detect a speculation failure, roll back the transaction, and then restart it.  Local non-@Ref@ variables that have a lifetime longer than the atomic block won't be rolled back, and so they should be avoided.  Local variables inside the atomic block are fine, though.
+ScalaSTM might need to try an atomic block more than once before optimistic concurrency can succeed.  Any call into the STM might potentially discover the failure and trigger the rollback and retry. Local non-@Ref@ variables that have a lifetime longer than the atomic block won't be rolled back, and so they should be avoided.  Local variables used only inside or only outside the atomic block are fine, though.
 
-@badToString@ is incorrect because it uses a mutable @StringBuilder@ both outside and inside its atomic block.  The return value will definitely mention all of the elements of the list, but it might mention some of them two or more times.  @toString@ is correct because it uses a new @StringBuilder@ for each atomic attempt.
+Below, @badToString@ is incorrect because it uses a mutable @StringBuilder@ both outside and inside its atomic block.  The return value will definitely mention all of the elements of the list, but it might include some of them two or more times.  @toString@ is correct because it uses a new @StringBuilder@ for each atomic attempt.
 
 {% highlight scala %}
   def badToString: String = {
