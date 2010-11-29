@@ -129,6 +129,49 @@ class TxnSuite extends FunSuite {
     assert(x.single.get === 13)
   }
 
+  test("partial rollback") {
+    val x = Ref("none")
+    atomic { implicit t =>
+      x() = "outer"
+      try {
+        atomic { implicit t =>
+          x() = "inner"
+          throw new UserException
+        }
+      } catch {
+        case _: UserException =>
+      }
+    }
+    assert(x.single() === "outer")
+  }
+
+  test("retry set accumulation across alternatives") {
+    val x = Ref(false)
+
+    // this prevents the test from deadlocking
+    new Thread("trigger") {
+      override def run {
+        Thread.sleep(200)
+        x.single() = true
+      }
+    } start
+
+    atomic { implicit t =>
+      // The following txn and its alternative decode the value of x that was
+      // observed, without x being a part of the current read set.
+      val f = atomic { implicit t =>
+        atomic { implicit t =>
+          // this txn encodes the read of x in its retry state
+          if (!x()) retry
+        }
+        true
+      } orAtomic { implicit t =>
+        false
+      }
+      if (!f) retry
+    }
+  }
+
   test("View in txn") {
     val x = Ref(10)
     val xs = x.single
