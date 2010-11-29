@@ -36,6 +36,8 @@ object BasicSyntax {
     List(top(), bottom(), left(), right())
   }
 
+  // this will throw an exception if the underlying STM implementation doesn't
+  // support an option named 'irrevocable
   val customAtomic = atomic.withConfig('irrevocable -> true)
                                                            
   def fireMissileAt(p: Point) { println("launch " + p) }
