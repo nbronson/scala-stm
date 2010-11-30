@@ -15,13 +15,14 @@
  */
 
 
-@media print {
+/*@media print {
   @page {
     size: letter;
     margin: 1in 1in 1.25in 1in;
     font: normal 10pt "Gill Sans" !important;
     @bottom-right { content: counter(page); }
   }
+*/
 
   title { string-set: doctitle content(); }
 
@@ -87,4 +88,4 @@
     padding-top: 1in;
   }
 
-}
+/*}*/
