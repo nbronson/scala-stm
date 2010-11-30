@@ -27,3 +27,13 @@ on localhost:4000, with edits immediately available.
 The api subdirectory of the gh-pages branch is currently manually
 synchronized with the target/scala_2.8.1/doc/main/api that results from
 "sbt doc" on the master branch.
+
+PDF construction of the docs is not yet good quality, but the best results so
+far have resulted from (in a populated _site subdirectory):
+
+    wkhtmltopdf -B 1in -L 1in -R 1.25in -T 1in --footer-right '[page]' \
+        -s Letter --user-style-sheet css/print_like.css toc \
+        --toc-header-text 'Table of Contents' \
+        `grep "li..a.href='[a-z_.]*'" just_links.html | sed -e "s/^[^']*'//" -e
+"s/'.*//"` \
+        output.pdf
