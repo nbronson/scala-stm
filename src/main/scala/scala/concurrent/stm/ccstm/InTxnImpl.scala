@@ -433,8 +433,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def topLevelBegin(child: TxnLevelImpl) {
     _currentLevel = child
-    // TODO: compute priority lazily, only if needed
+
+    // this seems to be faster than the volatile required for a lazy implementation
     _priority = skel.FastSimpleRandom.nextInt()
+    
     // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
     _slot = slotManager.assign(_currentLevel, _slot)
     _readVersion = freshReadVersion
@@ -649,7 +651,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// status checks
 
   override protected def requireActive() {
-    // TODO: optimize to remove a layer of indirection?
     val cur = _currentLevel
     if (cur == null)
       throw new IllegalStateException("no active transaction")
