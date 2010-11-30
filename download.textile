@@ -6,13 +6,13 @@ title: Downloading
 
 h2(#github). Source on github
 
-ScalaSTM is hosted at ["github.com/nbronson/scala-stm-api":http://github.com/nbronson/scala-stm-api].  If you system has "git":http://git-scm.com/, the best way to get the source code is to clone this repository.
+ScalaSTM is hosted at ["github.com/nbronson/scala-stm":http://github.com/nbronson/scala-stm].  If you system has "git":http://git-scm.com/, the best way to get the source code is to clone this repository.
 
 {% highlight bash %}
-git clone https://github.com/nbronson/scala-stm-api.git
+git clone https://github.com/nbronson/scala-stm.git
 {% endhighlight %}
 
-"tar.gz":https://github.com/nbronson/scala-stm-api/tarball/master and "zip":https://github.com/nbronson/scala-stm-api/zipball/master source bundles are also available.  These are automatically generated from the current state of the master branch.
+"tar.gz":https://github.com/nbronson/scala-stm/tarball/master and "zip":https://github.com/nbronson/scala-stm/zipball/master source bundles are also available.  These are automatically generated from the current state of the master branch.
 
 Building and testing is done with ["sbt":http://code.google.com/p/simple-build-tool/]:
 # Download the dependencies (currently just @scala@ and @scalatest@)

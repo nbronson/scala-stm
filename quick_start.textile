@@ -166,4 +166,4 @@ Below, @badToString@ is incorrect because it uses a mutable @StringBuilder@ both
 
 h2(#source). Look at the source
 
-This list example is part of the source on GitHub: "ConcurrentIntList.scala":https://github.com/nbronson/scala-stm-api/blob/master/src/test/scala/scala/concurrent/stm/examples/ConcurrentIntList.scala
+This list example is part of the source on GitHub: "ConcurrentIntList.scala":https://github.com/nbronson/scala-stm/blob/master/src/test/scala/scala/concurrent/stm/examples/ConcurrentIntList.scala

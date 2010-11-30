@@ -41,5 +41,5 @@ val pre = y.single.getAndTransform { _.toUpperCase }
 val post = y.single.transformAndGet { _.filterNot { _ == ' ' } }
 {% endhighlight %}
 
-"SyntaxCheatSheet.scala":https://github.com/nbronson/scala-stm-api/blob/master/src/test/scala/scala/concurrent/stm/examples/SyntaxCheatSheet.scala
+"SyntaxCheatSheet.scala":https://github.com/nbronson/scala-stm/blob/master/src/test/scala/scala/concurrent/stm/examples/SyntaxCheatSheet.scala
 
