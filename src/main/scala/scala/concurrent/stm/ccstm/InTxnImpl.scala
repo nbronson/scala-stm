@@ -100,7 +100,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
                  level: TxnLevelImpl,
                  block: InTxn => Z,
                  reusedReadThreshold: Int): Z = {
-    var bug3965notTriggered = true
     begin(prevFailures, level, reusedReadThreshold)
     try {
       try {
@@ -112,8 +111,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
       }
     } finally {
-      assert(bug3965notTriggered)
-      bug3965notTriggered = false
       complete(exec) match {
         case Txn.RolledBack(Txn.UncaughtExceptionCause(x)) => throw x
         case Txn.RolledBack(_) => throw RollbackError
@@ -151,7 +148,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         if (_currentLevel != null)
           _currentLevel.requireActive()
 
-        // phantom attempts reuse reads from the previous one
         val level = new TxnLevelImpl(this, _currentLevel, false)
         try {
           // successful attempt or permanent rollback either returns a Z or
@@ -162,12 +158,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
         // we are only here if it is a transient rollback or an explicit retry
         if (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
-          prevFailures += 1 // transient rollback, retry (not as a phantom)
+          prevFailures += 1 // transient rollback, retry
         else
           prevFailures = -1 // explicit retry, exit the loop
       }
 
-      // no more alternatives, reads are still in access history
+      // reads are still in access history
       if (_currentLevel != null) {
         // retry the parent, which will treat the reads as its own
         _currentLevel.forceRollback(ExplicitRetryCause)
@@ -198,11 +194,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           _currentLevel.requireActive()
 
         // phantom attempts reuse reads from the previous one
-        level = new TxnLevelImpl(this, _currentLevel, reusedReadThreshold >= 0)
+        val phantom = reusedReadThreshold >= 0
+        level = new TxnLevelImpl(this, _currentLevel, phantom)
         try {
           // successful attempt or permanent rollback either returns a Z or
           // throws an exception != RollbackError
-          val b = if (level.phantom) { (_: InTxn) => atomicImpl(exec, alternatives.head, alternatives.tail) } else block
+          val b = if (phantom) { (_: InTxn) => atomicImpl(exec, alternatives.head, alternatives.tail) } else block
           return attempt(exec, prevFailures, level, b, reusedReadThreshold)
         } catch {
           case RollbackError =>
