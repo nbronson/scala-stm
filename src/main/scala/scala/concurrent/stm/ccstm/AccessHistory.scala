@@ -38,13 +38,14 @@ private[ccstm] object AccessHistory {
    *  have per-nesting level objects can share a single instance.
    */
   abstract class UndoLog {
-    def par: UndoLog
+    def parUndo: UndoLog
 
+    var retainReadSet = false
     var prevReadCount = 0
     var prevWriteThreshold = 0
 
     @tailrec final def readLocate(index: Int): UndoLog = {
-      if (index >= prevReadCount) this else par.readLocate(index)
+      if (index >= prevReadCount) this else parUndo.readLocate(index)
     }
 
     private var _logSize = 0
@@ -110,8 +111,8 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   protected def undoLog: AccessHistory.UndoLog
 
-  protected def checkpointAccessHistory() {
-    checkpointReadSet()
+  protected def checkpointAccessHistory(reusedReadThreshold: Int) {
+    checkpointReadSet(reusedReadThreshold)
     checkpointWriteBuffer()
   }
 
@@ -129,14 +130,6 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   protected def resetAccessHistory() {
     resetReadSet()
     resetWriteBuffer()
-  }
-
-  /** Adds to `accum` all handles that were read during this nesting level, and
-   *  all handles written in the current level but not in a parent.
-   */
-  protected def accumulateAccessHistoryRetrySet(accum: ReadSetBuilder) {
-    accumulateReads(accum)
-    accumulateWrites(accum)
   }
 
   //////////// read set
@@ -171,18 +164,16 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     dst
   }
 
-//  final protected def releaseRead(i: Int) {
-//    _rHandles(i) = null
-//  }
-
-  private def checkpointReadSet() {
-    undoLog.prevReadCount = _rCount
+  private def checkpointReadSet(reusedReadThreshold: Int) {
+    undoLog.prevReadCount = if (reusedReadThreshold >= 0) reusedReadThreshold else _rCount
   }
 
   private def rollbackReadSet() {
-    val n = undoLog.prevReadCount
-    java.util.Arrays.fill(_rHandles.asInstanceOf[Array[AnyRef]], n, _rCount, null)
-    _rCount = n
+    if (!undoLog.retainReadSet) {
+      val n = undoLog.prevReadCount
+      java.util.Arrays.fill(_rHandles.asInstanceOf[Array[AnyRef]], n, _rCount, null)
+      _rCount = n
+    }
   }
 
   private def resetReadSet() {
@@ -197,12 +188,18 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     _rCount = 0
   }
 
-  private def accumulateReads(accum: ReadSetBuilder) {
-    var i = undoLog.prevReadCount
+  /** Clears the read set, returning a `ReadSet` that holds the values that
+   *  were removed.
+   */
+  protected def takeRetrySet(): ReadSet = {
+    val accum = new ReadSetBuilder
+    var i = 0
     while (i < _rCount) {
       accum += (_rHandles(i), _rVersions(i))
       i += 1
     }
+    resetReadSet()
+    accum.result()
   }
 
   protected def readLocate(index: Int): AccessHistory.UndoLog = undoLog.readLocate(index)
@@ -485,11 +482,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       java.util.Arrays.fill(_wDispatch, 0, InitialWriteCapacity, -1)
   }
 
-  private def accumulateWrites(accum: ReadSetBuilder) {
+  protected def addLatestWritesAsReads() {
     var i = _wCount - 1
     while (i >= _wUndoThreshold) {
       val h = getWriteHandle(i)
-      accum += (h, CCSTM.version(h.meta))
+      recordRead(h, CCSTM.version(h.meta))
       i -= 1
     }
   }

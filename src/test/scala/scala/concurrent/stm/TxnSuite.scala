@@ -65,10 +65,69 @@ class TxnSuite extends FunSuite {
     return -1
   }
 
+  test("basic retry") {
+    val x = Ref(0)
+    val y = Ref(false)
+    new Thread {
+      override def run() {
+        Thread.sleep(200)
+        y.single() = true
+        x.single() = 1
+      }
+    } start
+
+    atomic { implicit txn =>
+      if (x() == 0)
+        retry
+    }
+    assert(y.single())
+  }
+
+  test("simple orAtomic") {
+    val x = Ref(0)
+    val f = atomic { implicit txn =>
+      if (x() == 0)
+        retry
+      false
+    } orAtomic { implicit txn =>
+      true
+    }
+    assert(f)    
+  }
+
   test("atomic.oneOf") {
     val x = Ref(false)
     val y = Ref(false)
     val z = Ref(false)
+    runOneOfTest(x, y, z)
+  }
+
+  test("nested atomic.oneOf") {
+    val x = Ref(false)
+    val y = Ref(false)
+    val z = Ref(false)
+    atomic { implicit txn =>
+      runOneOfTest(x, y, z)
+    }
+  }
+
+  test("alternative atomic.oneOf") {
+    val a = Ref(0)
+    val x = Ref(false)
+    val y = Ref(false)
+    val z = Ref(false)
+    val f = atomic { implicit txn =>
+      if (a() == 0)
+        retry
+      false
+    } orAtomic { implicit txn =>
+      runOneOfTest(x, y, z)
+      true
+    }
+    assert(f)
+  }
+
+  private def runOneOfTest(x: Ref[Boolean], y: Ref[Boolean], z: Ref[Boolean]) {
     for ((ref,name) <- List((x,"x"), (y,"y"), (z,"z"))) {
       new Thread("wakeup") {
         override def run {

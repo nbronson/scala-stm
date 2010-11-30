@@ -91,7 +91,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     var i = whileValidatingList.size - 1
     while (i >= 0) {
       while (level._whileValidatingSize > i)
-        level = level.par
+        level = level.parLevel
       if (level.status != Txn.Active) {
         // skip the remaining handlers for this level
         i = level._whileValidatingSize

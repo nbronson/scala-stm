@@ -7,10 +7,10 @@ private[stm] trait AbstractNestingLevel extends NestingLevel {
   import Txn._
 
   def txn: AbstractInTxn
-  def par: AbstractNestingLevel
+  def parLevel: AbstractNestingLevel
   override def root: AbstractNestingLevel
 
-  def parent: Option[NestingLevel] = Option(par)
+  def parent: Option[NestingLevel] = Option(parLevel)
 
   private[skel] var _beforeCommitSize = 0
   private[skel] var _whileValidatingSize = 0

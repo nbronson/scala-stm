@@ -4,11 +4,12 @@ package scala.concurrent.stm
 package ccstm
 
 import scala.annotation.tailrec
-import java.util.concurrent.atomic.{AtomicLong, AtomicReferenceFieldUpdater}
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+import skel.{AbstractNestingLevel, RollbackError}
 
 private[ccstm] object TxnLevelImpl {
 
-  private val stateUpdater = new TxnLevelImpl(null, null).newStateUpdater
+  private val stateUpdater = new TxnLevelImpl(null, null, false).newStateUpdater
 }
 
 /** `TxnLevelImpl` bundles the data and behaviors from `AccessHistory.UndoLog`
@@ -18,12 +19,16 @@ private[ccstm] object TxnLevelImpl {
  *
  *  @author Nathan Bronson
  */
-private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
-        extends AccessHistory.UndoLog with skel.AbstractNestingLevel {
-  import skel.RollbackError
-  import TxnLevelImpl._
+private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
+                                  val parUndo: TxnLevelImpl,
+                                  val phantom: Boolean)
+        extends AccessHistory.UndoLog with AbstractNestingLevel {
+  import TxnLevelImpl.stateUpdater
 
-  val root: TxnLevelImpl = if (par == null) this else par.root
+  // this is the first non-hidden parent
+  val parLevel: AbstractNestingLevel = if (parUndo == null || !parUndo.phantom) parUndo else parUndo.parLevel
+
+  val root: AbstractNestingLevel = if (parLevel == null) this else parLevel.root
 
   /** If `state` is a `TxnLevelImpl`, then that indicates that this nesting
    *  level is an ancestor of `txn.currentLevel`; this is reported as a status
@@ -49,7 +54,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
   @volatile private var _waiters = false
 
   def status: Txn.Status = _state match {
-    case null => par.status
+    case null => parUndo.status
     case s: Txn.Status => s
     case _ => Txn.Active
   }
@@ -79,7 +84,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
 
   /** Blocks until `status.completed`. */
   def awaitCompleted() {
-    if (par != null)
+    if (parUndo != null)
       throw new IllegalStateException("awaitCompleted() is only supported for root levels")
 
     _waiters = true
@@ -122,8 +127,8 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
 
     // We must use CAS to unlink ourselves from our parent, because we race
     // with remote cancels.
-    if (par._state eq this)
-      stateUpdater.compareAndSet(par, this, Txn.Active)
+    if (parUndo._state eq this)
+      stateUpdater.compareAndSet(parUndo, this, Txn.Active)
 
     f
   }
@@ -143,7 +148,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl, val par: TxnLevelImpl)
   @tailrec private def rollbackImpl(rb: Txn.RolledBack): Txn.Status = _state match {
     case null => {
       // already merged with parent, roll back both
-      par.rollbackImpl(rb)
+      parUndo.rollbackImpl(rb)
     }
     case ch: TxnLevelImpl if !ch.status.isInstanceOf[Txn.RolledBack] => {
       // roll back the child first, then try again

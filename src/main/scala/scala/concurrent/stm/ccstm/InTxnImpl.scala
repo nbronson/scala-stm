@@ -69,15 +69,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   private var _readVersion: Version = 0
 
-  private var _retrySet: ReadSetBuilder = null
-
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" + status +
             ", slot=" + _slot +
             ", priority=" + _priority +
             ", readCount=" + readCount  +
             ", writeCount=" + writeCount +
-            ", retrySet.size=" + (if (_retrySet == null) "N/A" else _retrySet.size.toString) +
             ", readVersion=0x" + _readVersion.toHexString +
             (if (_barging) ", barging" else "") + ")")
   }
@@ -98,9 +95,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  the committed attempted; on rollback, throws an exception on a permanent
    *  rollback or `RollbackError` on a transient rollback.
    */
-  def attempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
-    var bug3965check = true
-    begin(prevFailures, level)
+  def attempt[Z](exec: TxnExecutor,
+                 prevFailures: Int,
+                 level: TxnLevelImpl,
+                 block: InTxn => Z,
+                 reusedReadThreshold: Int): Z = {
+    var bug3965notTriggered = true
+    begin(prevFailures, level, reusedReadThreshold)
     try {
       try {
         block(this)
@@ -111,8 +112,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
       }
     } finally {
-      assert(bug3965check)
-      bug3965check = false
+      assert(bug3965notTriggered)
+      bug3965notTriggered = false
       complete(exec) match {
         case Txn.RolledBack(Txn.UncaughtExceptionCause(x)) => throw x
         case Txn.RolledBack(_) => throw RollbackError
@@ -123,91 +124,124 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     if (!_alternatives.isEmpty) {
-      val z = atomicOneOf(exec, block :: takeAlternatives())
+      val z = atomicImpl(exec, block, takeAlternatives())
       throw new impl.AlternativeResult(z)
     } else {
       atomicImpl(exec, block)
     }
   }
 
+  def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
+    if (!_alternatives.isEmpty)
+      throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
+    atomicImpl(exec, blocks(0), blocks.toList.tail)
+  }
+
+  /** On commit, returns a Z or throws an exception other than `RollbackError`.
+   *  On permanent rollback, throws an exception other than `RollbackError`.
+   *  On nested explicit retry, throws `RollbackError` and sets the parent
+   *  level's status to `RolledBack(ExplicitRetryCause)`.  All other cases
+   *  result in a retry within the method.
+   */
   def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     (while (true) {
       var prevFailures = 0
-      var level: TxnLevelImpl = null
-      do {
+      while (prevFailures >= 0) {
         // fail back to parent if it has been rolled back
         if (_currentLevel != null)
           _currentLevel.requireActive()
 
-        level = new TxnLevelImpl(this, _currentLevel)
+        // phantom attempts reuse reads from the previous one
+        val level = new TxnLevelImpl(this, _currentLevel, false)
         try {
           // successful attempt or permanent rollback either returns a Z or
           // throws an exception != RollbackError
-          return attempt(exec, prevFailures, level, block)
+          return attempt(exec, prevFailures, level, block, -1)
         } catch {
           case RollbackError =>
         }
-        prevFailures += 1
-      } while (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
-      level = null
+        // we are only here if it is a transient rollback or an explicit retry
+        if (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
+          prevFailures += 1 // transient rollback, retry (not as a phantom)
+        else
+          prevFailures = -1 // explicit retry, exit the loop
+      }
 
-      // we're out of alternatives
-
+      // no more alternatives, reads are still in access history
       if (_currentLevel != null) {
-        // retry the parent
+        // retry the parent, which will treat the reads as its own
         _currentLevel.forceRollback(ExplicitRetryCause)
         throw RollbackError
       }
 
       // top-level retry after waiting for something to change
-      takeRetrySet().result().awaitRetry()
+      takeRetrySet().awaitRetry()
     }).asInstanceOf[Nothing]
   }
 
-  def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
-    if (!_alternatives.isEmpty)
-      throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
-
+  /** On commit, returns a Z or throws an exception other than `RollbackError`.
+   *  On permanent rollback, throws an exception other than `RollbackError`.
+   *  On nested explicit retry, throws `RollbackError` and sets the parent
+   *  level's status to `RolledBack(ExplicitRetryCause)`.  All other cases
+   *  result in a retry within the method.
+   */
+  def atomicImpl[Z](exec: TxnExecutor,
+                    block: InTxn => Z,
+                    alternatives: List[InTxn => Z]): Z = {
+    var reusedReadThreshold = -1
     (while (true) {
-      var rsSum: ReadSetBuilder = null
+      var level: TxnLevelImpl = null
+      var prevFailures = 0
+      while (level == null) {
+        // fail back to parent if it has been rolled back
+        if (_currentLevel != null)
+          _currentLevel.requireActive()
 
-      for (block <- blocks) {
-        var prevFailures = 0
-        var level: TxnLevelImpl = null
-        do {
-          // fail back to parent if it has been rolled back
-          if (_currentLevel != null)
-            _currentLevel.requireActive()
-
-          level = new TxnLevelImpl(this, _currentLevel)
-          try {
-            // successful attempt or permanent rollback either returns a Z or
-            // throws an exception != RollbackError
-            return attempt(exec, prevFailures, level, block)
-          } catch {
-            case RollbackError =>
-          }
+        // phantom attempts reuse reads from the previous one
+        level = new TxnLevelImpl(this, _currentLevel, reusedReadThreshold >= 0)
+        try {
+          // successful attempt or permanent rollback either returns a Z or
+          // throws an exception != RollbackError
+          val b = if (level.phantom) { (_: InTxn) => atomicImpl(exec, alternatives.head, alternatives.tail) } else block
+          return attempt(exec, prevFailures, level, b, reusedReadThreshold)
+        } catch {
+          case RollbackError =>
+        }
+        // we are only here if it is a transient rollback or an explicit retry
+        if (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause) {
+          // transient rollback, retry (not as a phantom)
           prevFailures += 1
-        } while (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause)
-
-        val rs = takeRetrySet()
-        if (rsSum != null)
-          rsSum ++= rs
-        else
-          rsSum = rs
+          reusedReadThreshold = -1
+          level = null
+        }
+        // else explicit retry, exit the loop
       }
 
-      // we're out of alternatives
-      
-      if (_currentLevel != null) {
-        // retry the parent, including the sum of all of these retry sets
-        _retrySet = rsSum
-        _currentLevel.forceRollback(ExplicitRetryCause)
-        throw RollbackError
-      }
+      // The attempt ended in an explicit retry.  If there are alternatives
+      // then we run a phantom attempt that reuses the read from the last real
+      // attempt on the block.  Phantom attempts can also end in explicit retry
+      // (if all of the alternatives triggered retry), in which case we treat
+      // them the same as a regular block with no alternatives.
+      val phantom = reusedReadThreshold >= 0
+      if (!phantom && !alternatives.isEmpty) {
+        // rerun a phantom
+        reusedReadThreshold = level.prevReadCount
+      } else {
+        level = null
 
-      // top-level retry after waiting for something to change
-      rsSum.result().awaitRetry()
+        // no more alternatives, reads are still in access history
+        if (_currentLevel != null) {
+          // retry the parent, which will treat the reads as its own
+          _currentLevel.forceRollback(ExplicitRetryCause)
+          throw RollbackError
+        }
+
+        // top-level retry after waiting for something to change
+        takeRetrySet().awaitRetry()
+
+        // rerun the real block, now that the await has completed
+        reusedReadThreshold = -1
+      }
     }).asInstanceOf[Nothing]
   }
 
@@ -372,16 +406,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// begin + commit
 
-  def begin(prevFailures: Int, child: TxnLevelImpl) {
+  def begin(prevFailures: Int, child: TxnLevelImpl, reusedReadThreshold: Int) {
     if (prevFailures >= 3)
       _barging = true
-    if (_currentLevel == null)
+    if (_currentLevel == null) {
+      assert(reusedReadThreshold <= 0)
       topLevelBegin(child)
-    else
-      nestedBegin(child)
+    } else
+      nestedBegin(child, reusedReadThreshold)
   }
 
-  private def nestedBegin(child: TxnLevelImpl) {
+  private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int) {
     // link to child races with remote rollback
     if (!_currentLevel.pushIfActive(child)) {
       assert(this.status.isInstanceOf[RolledBack])
@@ -393,21 +428,20 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     // successfully begun
     _currentLevel = child
     checkpointCallbacks()
-    checkpointAccessHistory()
+    checkpointAccessHistory(reusedReadThreshold)
   }
 
   private def topLevelBegin(child: TxnLevelImpl) {
     _currentLevel = child
-    //_priority = CCSTM.hash(_currentLevel, 0)
     // TODO: compute priority lazily, only if needed
-    _priority = skel.FastSimpleRandom.nextInt() // CCSTM.hash(_currentLevel, 0)
+    _priority = skel.FastSimpleRandom.nextInt()
     // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
     _slot = slotManager.assign(_currentLevel, _slot)
     _readVersion = freshReadVersion
   }
 
   def complete(exec: TxnExecutor): Txn.Status = {
-    if (_currentLevel.par == null)
+    if (_currentLevel.parUndo == null)
       topLevelComplete(exec)
     else
       nestedComplete(exec)
@@ -418,22 +452,32 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (child.attemptMerge()) {
       // child was successfully merged
       mergeAccessHistory()
-      _currentLevel = child.par
+      _currentLevel = child.parUndo
       Committed
     } else {
       val s = this.status
 
-      // we must accumulate the retry set before rolling back the access history
+      // we handle explicit retry by retaining (merging) the read set while
+      // rolling back the writes and firing after-rollback handlers
       if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
-        accumulateRetrySet()
+        retainRetrySet()
 
       // callbacks must be last, because they might throw an exception
       rollbackAccessHistory(_slot)
       val handlers = rollbackCallbacks()
-      _currentLevel = child.par
+      _currentLevel = child.parUndo
       fireAfterCompletion(handlers, exec, s)
       s
     }
+  }
+
+  private def retainRetrySet() {
+    // no read set entries are present for things that were read via a write
+    // lock, so we have to copy those to the read set
+    addLatestWritesAsReads()
+
+    // this will turn rollbackAccessHistory into a no-op for the reads
+    _currentLevel.retainReadSet = true
   }
 
   private def topLevelComplete(exec: TxnExecutor): Status = {
@@ -442,13 +486,15 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     if (!committed) {
       if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
-        accumulateRetrySet()
+        retainRetrySet()
 
       // this releases the locks
       rollbackAccessHistory(_slot)
     }
 
     val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
+    if (committed)
+      resetAccessHistory()
     detach()
     fireAfterCompletion(handlers, exec, s)
     s
@@ -512,7 +558,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     slotManager.release(_slot)
     _currentLevel = null
     _barging = false
-    resetAccessHistory()
+    // read count may be non-zero for explicit retry
+    assert(writeCount == 0)
   }
 
   private def fireAfterCompletion(handlers: Seq[Status => Unit], exec: TxnExecutor, s: Status) {
@@ -540,18 +587,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
       }
     }
-  }
-
-  private def accumulateRetrySet() {
-    if (_retrySet == null)
-      _retrySet = new ReadSetBuilder
-    accumulateAccessHistoryRetrySet(_retrySet)
-  }
-
-  private def takeRetrySet(): ReadSetBuilder = {
-    val z = _retrySet
-    _retrySet = null
-    z
   }
 
   private def acquireLocks(): Boolean = {
