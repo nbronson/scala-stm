@@ -17,14 +17,16 @@
 
 require 'liquid'
 
-module TocFilter
-  def toc(input)
-    input.scan(/<(h2)(?:>|\s+(.*?)>)([^<]*)<\/\1\s*>/mi).inject(%{<ol class="toc">}) { |toc, entry|
-      id = entry[1][/^id=(['"])(.*)\1$/, 2]
-      title = entry[2].gsub(/<(\w*).*?>(.*?)<\/\1\s*>/m, '\2').strip
-      toc << %{<li>&#x2193;&nbsp;<a href="##{id}">#{title}</a></li>}
-    } << "</ol>"
+module Jekyll
+  module TocFilter
+    def toc(input)
+      input.scan(/<(h2)(?:>|\s+(.*?)>)([^<]*)<\/\1\s*>/mi).inject(%{<ol class="toc">}) { |toc, entry|
+        id = entry[1][/^id=(['"])(.*)\1$/, 2]
+        title = entry[2].gsub(/<(\w*).*?>(.*?)<\/\1\s*>/m, '\2').strip
+        toc << %{<li>&#x2193;&nbsp;<a href="##{id}">#{title}</a></li>}
+      } << "</ol>"
+    end
   end
 end
 
-Liquid::Template.register_filter(TocFilter)
+Liquid::Template.register_filter(Jekyll::TocFilter)
