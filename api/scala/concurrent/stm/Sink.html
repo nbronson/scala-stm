@@ -27,7 +27,7 @@
         <span class="name">Sink</span>
         <span class="tparams">[<span name="A">-A</span>]</span>
         
-        <span class="result"> extends AnyRef</span>
+        <span class="result"> extends <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A]</span>
       </span>
       </h4>
       <div class="fullcomment" id="comment"><div class="comment cmt"><p><code>Sink[+A]</code> consists of the contra-variant write-only operations of
@@ -35,7 +35,7 @@
 </p></div><div class="block">
             go to: <a href="Sink$.html">companion</a>
           </div><div class="block">
-            linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
+            linear super types: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A], AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div><div class="block">
             known subclasses: <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>
           </div>
@@ -55,7 +55,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.Sink">Sink</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.Sink">Sink</li><li class="in" name="scala.concurrent.stm.SinkLike">SinkLike</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -510,7 +510,7 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink#set">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#set">
       <a id="set(A)(InTxn):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -527,6 +527,8 @@ possible to check whether the contents of the list are of the requested typed.
  any other threads until (and unless) <code>txn</code> successfully commits.
  Equivalent to <code>update(v)</code>.</p></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl><div class="block">
           attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
         </div>
             
             
@@ -595,7 +597,7 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink#trySet">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#trySet">
       <a id="trySet(A)(InTxn):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -614,13 +616,15 @@ possible to check whether the contents of the list are of the requested typed.
  atomic accesses then this method will succeed.
 </p></div><div class="block">
           attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
         </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Sink#update">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SinkLike#update">
       <a id="update(A)(InTxn):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -642,7 +646,9 @@ possible to check whether the contents of the list are of the requested typed.
      x() = 10 // perform a write inside a transaction
      ...
    }
-</pre></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl>
+</pre></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl><div class="block">
+          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
+        </div>
             
             
             
@@ -708,7 +714,9 @@ possible to check whether the contents of the list are of the requested typed.
     </li></ol>
             </div>
 
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.concurrent.stm.SinkLike">
+              <h3>Inherited from <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A]</h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from AnyRef</h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>

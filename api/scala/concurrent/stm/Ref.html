@@ -27,7 +27,7 @@
         <span class="name">Ref</span>
         <span class="tparams">[<span name="A">A</span>]</span>
         
-        <span class="result"> extends <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A] with <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A]</span>
+        <span class="result"> extends <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A] with <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A] with <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A]</span>
       </span>
       </h4>
       <div class="fullcomment" id="comment"><div class="comment cmt"><p>Provides access to a single element of type <i>A</i>.  Accesses are
@@ -59,7 +59,7 @@
 </p></div><div class="block">
             go to: <a href="Ref$.html">companion</a>
           </div><div class="block">
-            linear super types: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A], <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A], AnyRef, <span class="extype" name="scala.Any">Any</span>
+            linear super types: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A], <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A], <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A], <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A], <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A], AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div>
             
             
@@ -77,7 +77,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.Ref">Ref</li><li class="in" name="scala.concurrent.stm.Sink">Sink</li><li class="in" name="scala.concurrent.stm.Source">Source</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.Ref">Ref</li><li class="in" name="scala.concurrent.stm.Sink">Sink</li><li class="in" name="scala.concurrent.stm.Source">Source</li><li class="in" name="scala.concurrent.stm.RefLike">RefLike</li><li class="in" name="scala.concurrent.stm.SinkLike">SinkLike</li><li class="in" name="scala.concurrent.stm.SourceLike">SourceLike</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -195,7 +195,7 @@
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Ref#*=">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#*=">
       <a id="*=(A)(InTxn,Numeric[A]):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -208,13 +208,15 @@
       </h4>
       
             <p class="shortcomment cmt">Transforms the value stored in the <code>Ref</code> by multiplying it.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by multiplying it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to multiply the value of this <code>Ref</code>.</p></dd></dl>
+            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by multiplying it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to multiply the value of this <code>Ref</code>.</p></dd></dl><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
+        </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Ref#+=">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#+=">
       <a id="+=(A)(InTxn,Numeric[A]):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -227,13 +229,15 @@
       </h4>
       
             <p class="shortcomment cmt">Transforms the value stored in the <code>Ref</code> by incrementing it.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by incrementing it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to increment the value of this <code>Ref</code>.</p></dd></dl>
+            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by incrementing it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to increment the value of this <code>Ref</code>.</p></dd></dl><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
+        </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Ref#-=">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#-=">
       <a id="-=(A)(InTxn,Numeric[A]):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -246,13 +250,15 @@
       </h4>
       
             <p class="shortcomment cmt">Transforms the value stored in the <code>Ref</code> by decrementing it.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by decrementing it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to decrement the value of this <code>Ref</code>.</p></dd></dl>
+            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by decrementing it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to decrement the value of this <code>Ref</code>.</p></dd></dl><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
+        </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Ref#/=">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#/=">
       <a id="/=(A)(InTxn,Numeric[A]):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -273,7 +279,9 @@
  provided by <code>Fractional[A]</code> or <code>Integral[A]</code>, it is not defined on
  <code>Numeric[A]</code>.  To avoid compile-time ambiguity this method accepts a
  <code>Numeric[A]</code> and assumes that it can be converted at runtime into
- either a <code>Fractional[A]</code> or an <code>Integral[A]</code>.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to divide the value of this <code>Ref</code>.</p></dd></dl>
+ either a <code>Fractional[A]</code> or an <code>Integral[A]</code>.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to divide the value of this <code>Ref</code>.</p></dd></dl><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
+        </div>
             
             
             
@@ -327,7 +335,7 @@
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Source#apply">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SourceLike#apply">
       <a id="apply()(InTxn):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -350,7 +358,7 @@
      ...
    }
 </pre></div><dl class="paramcmts block"><dt class="param">txn</dt><dd class="cmt"><p>an active transaction.</p></dd><dt>returns</dt><dd class="cmt"><p>the value of the <code>Ref</code> as observed by <code>txn</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>
+          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
         </div>
             
             
@@ -500,7 +508,7 @@ there are no more references to the object.</p><p>The details of when and if the
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source#get">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#get">
       <a id="get(InTxn):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -519,7 +527,7 @@ there are no more references to the object.</p><p>The details of when and if the
  concise in many situations.</p></div><dl class="paramcmts block"><dt class="param">txn</dt><dd class="cmt"><p>an active transaction.</p></dd><dt>returns</dt><dd class="cmt"><p>the value of the <code>Ref</code> as observed by <code>txn</code>.</p></dd></dl><div class="block">
           attributes: abstract 
         </div><div class="block">
-          definition classes: <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>
+          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
         </div>
             
             
@@ -550,7 +558,7 @@ there are no more references to the object.</p><p>The details of when and if the
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source#getWith">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#getWith">
       <a id="getWith[Z]((A) ⇒ Z)(InTxn):Z"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -572,7 +580,7 @@ there are no more references to the object.</p><p>The details of when and if the
 </p></dd></dl><div class="block">
           attributes: abstract 
         </div><div class="block">
-          definition classes: <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>
+          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
         </div>
             
             
@@ -701,7 +709,7 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source#relaxedGet">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#relaxedGet">
       <a id="relaxedGet((A, A) ⇒ Boolean)(InTxn):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -736,14 +744,14 @@ possible to check whether the contents of the list are of the requested typed.
 </p></dd></dl><div class="block">
           attributes: abstract 
         </div><div class="block">
-          definition classes: <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>
+          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
         </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink#set">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#set">
       <a id="set(A)(InTxn):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -761,7 +769,7 @@ possible to check whether the contents of the list are of the requested typed.
  Equivalent to <code>update(v)</code>.</p></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl><div class="block">
           attributes: abstract 
         </div><div class="block">
-          definition classes: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>
+          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
         </div>
             
             
@@ -795,7 +803,7 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Ref#swap">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike#swap">
       <a id="swap(A)(InTxn):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -810,6 +818,8 @@ possible to check whether the contents of the list are of the requested typed.
             <p class="shortcomment cmt">Works like <code>set(v)</code>, but returns the old value.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Works like <code>set(v)</code>, but returns the old value.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the previous value of this <code>Ref</code>, as observed by <code>txn</code>.</p></dd></dl><div class="block">
           attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
         </div>
             
             
@@ -857,7 +867,7 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Ref#transform">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike#transform">
       <a id="transform((A) ⇒ A)(InTxn):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -876,13 +886,15 @@ possible to check whether the contents of the list are of the requested typed.
  deferred or repeated by the STM to reduce transaction conflicts.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>a function that is safe to call multiple times, and safe to
      call later during the transaction.</p></dd></dl><div class="block">
           attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
         </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Ref#transformIfDefined">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike#transformIfDefined">
       <a id="transformIfDefined(PartialFunction[A, A])(InTxn):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -903,13 +915,15 @@ possible to check whether the contents of the list are of the requested typed.
  transaction conflicts.</p></div><dl class="paramcmts block"><dt class="param">pf</dt><dd class="cmt"><p>a partial function that is safe to call multiple times, and
      safe to call later in the transaction.</p></dd><dt>returns</dt><dd class="cmt"><p><code>pf.isDefinedAt(v)</code>, where <code>v</code> was the value of this <code>Ref</code>     before transformation (if any).</p></dd></dl><div class="block">
           attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
         </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink#trySet">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#trySet">
       <a id="trySet(A)(InTxn):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -929,14 +943,14 @@ possible to check whether the contents of the list are of the requested typed.
 </p></div><div class="block">
           attributes: abstract 
         </div><div class="block">
-          definition classes: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>
+          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
         </div>
             
             
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Sink#update">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SinkLike#update">
       <a id="update(A)(InTxn):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -959,7 +973,7 @@ possible to check whether the contents of the list are of the requested typed.
      ...
    }
 </pre></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>
+          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
         </div>
             
             
@@ -1030,6 +1044,12 @@ possible to check whether the contents of the list are of the requested typed.
               <h3>Inherited from <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A]</h3>
             </div><div class="parent" name="scala.concurrent.stm.Source">
               <h3>Inherited from <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A]</h3>
+            </div><div class="parent" name="scala.concurrent.stm.RefLike">
+              <h3>Inherited from <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A]</h3>
+            </div><div class="parent" name="scala.concurrent.stm.SinkLike">
+              <h3>Inherited from <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A]</h3>
+            </div><div class="parent" name="scala.concurrent.stm.SourceLike">
+              <h3>Inherited from <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from AnyRef</h3>
             </div><div class="parent" name="scala.Any">

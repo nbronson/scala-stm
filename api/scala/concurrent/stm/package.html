@@ -127,7 +127,7 @@
         <span class="name">Ref</span>
         <span class="tparams">[<span name="A">A</span>]</span>
         
-        <span class="result"> extends Source[A] with Sink[A]</span>
+        <span class="result"> extends RefLike[A] with Source[A] with Sink[A]</span>
       </span>
       </a></h4>
       <p class="comment cmt">Provides access to a single element of type <i>A</i>.</p>
@@ -143,6 +143,19 @@
       </span>
       </a></h4>
       
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike">
+      <a id="RefLike:RefLike[A]"></a>
+      <h4 class="signature"><a href="RefLike.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">RefLike</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        
+        <span class="result"> extends SourceLike[A] with SinkLike[A]</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Provides all of the operations of a <code>Ref[A]</code>, without the ability to get a
+ <code>Ref.View</code>.</p>
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Sink">
       <a id="Sink:Sink[A]"></a>
       <h4 class="signature"><a href="Sink.html">
@@ -151,11 +164,24 @@
         <span class="name">Sink</span>
         <span class="tparams">[<span name="A">-A</span>]</span>
         
-        <span class="result"> extends AnyRef</span>
+        <span class="result"> extends SinkLike[A]</span>
       </span>
       </a></h4>
       <p class="comment cmt"><code>Sink[+A]</code> consists of the contra-variant write-only operations of
  <code>Ref[A]</code>.</p>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike">
+      <a id="SinkLike:SinkLike[A]"></a>
+      <h4 class="signature"><a href="SinkLike.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">SinkLike</span>
+        <span class="tparams">[<span name="A">-A</span>]</span>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Provides all of the operations of a <code>Sink[A]</code>, without the ability to get
+ a <code>Sink.View</code>.</p>
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source">
       <a id="Source:Source[A]"></a>
       <h4 class="signature"><a href="Source.html">
@@ -164,10 +190,23 @@
         <span class="name">Source</span>
         <span class="tparams">[<span name="A">+A</span>]</span>
         
-        <span class="result"> extends AnyRef</span>
+        <span class="result"> extends SourceLike[A]</span>
       </span>
       </a></h4>
       <p class="comment cmt"><code>Source[+A]</code> consists of the covariant read-only operations of <code>Ref[A]</code>.</p>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike">
+      <a id="SourceLike:SourceLike[A]"></a>
+      <h4 class="signature"><a href="SourceLike.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">SourceLike</span>
+        <span class="tparams">[<span name="A">+A</span>]</span>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Provides all of the operations of a <code>Source[A]</code>, without the ability to get
+ a <code>Source.View</code>.</p>
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TArray">
       <a id="TArray:TArray[A]"></a>
       <h4 class="signature"><a href="TArray.html">
@@ -220,6 +259,18 @@
       </a></h4>
       <p class="comment cmt">A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
  using a set of configuration parameters.</p>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnLocal">
+      <a id="TxnLocal:TxnLocal[A]"></a>
+      <h4 class="signature"><a href="TxnLocal.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">TxnLocal</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        
+        <span class="result"> extends RefLike[A]</span>
+      </span>
+      </a></h4>
+      
     </li></ol>
             </div>
 
@@ -347,6 +398,18 @@
       </span>
       </a></h4>
       <p class="comment cmt"><code>object TxnExecutor</code> manages the system-wide default <code>TxnExecutor</code>.</p>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnLocal">
+      <a id="TxnLocal:TxnLocal"></a>
+      <h4 class="signature"><a href="TxnLocal$.html">
+      <span class="kind">object</span>
+      <span class="symbol">
+        <span class="name">TxnLocal</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnUnknown">
       <a id="TxnUnknown:TxnUnknown"></a>
       <h4 class="signature"><a href="TxnUnknown$.html">
