@@ -11,7 +11,7 @@ h2(#install).  Install
 [-If you use @sbt@, add the following dependency to your project definition class and then run "@sbt update@".  Maven configuration and-] manual download links are "here":download.html.
 
 {% highlight scala %}
-  val scala_stm = "org.scala-lib" %% "scala-stm" % "0.1-SNAPSHOT"
+  val scala_stm = "org.scala-tools" %% "scala-stm" % "0.1-SNAPSHOT"
 {% endhighlight %}
 
 
