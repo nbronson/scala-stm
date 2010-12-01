@@ -77,7 +77,7 @@ private[ccstm] object CCSTM extends GV6 {
   def withUnowned(m: Meta): Meta = withOwner(m, UnownedSlot)
   def withVersion(m: Meta, ver: Version) = (m & ~((1L << 51) - 1)) | ver
 
-  /** It is not allowed to set PendingWakeups if Changing and Owner != NonTxnSlot. */
+  /** It is not allowed to set PendingWakeups if Changing. */
   def withPendingWakeups(m: Meta): Meta = m | (1L << 62)
   def withNoPendingWakeups(m: Meta): Meta = m & ~(1L << 62)
   def withChanging(m: Meta): Meta = m | (1L << 63)
@@ -166,11 +166,13 @@ private[ccstm] object CCSTM extends GV6 {
   }
 
   private def weakAwaitNonTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
-    // TODO: should we spin longer here to avoid allocation?
+    // Non-transaction owners only set the changing bit for a short time (no
+    // user code and no loops), so we just wait them out.  Previously we used
+    // the wakeup mechanism, but that requires all non-txn lock releases to use
+    // CAS.
 
-    // spin a bit
     var spins = 0
-    while (spins < SpinCount + YieldCount) {
+    while (true) {
       spins += 1
       if (spins > SpinCount)
         Thread.`yield`
@@ -182,22 +184,6 @@ private[ccstm] object CCSTM extends GV6 {
       if (null != currentTxn)
         currentTxn.requireActive()
     }
-
-    // to wait for a non-txn owner, we use pendingWakeups
-    val event = wakeupManager.subscribe
-    event.addSource(handle.base, handle.metaOffset)
-    do {
-      val m = handle.meta
-      if (ownerAndVersion(m) != ownerAndVersion(m0))
-        return // observed unowned
-
-      if (pendingWakeups(m) || handle.metaCAS(m, withPendingWakeups(m))) {
-        // after the block, things will have changed with reasonably high
-        // likelihood (spurious wakeups are okay)
-        event.await(currentTxn)
-        return
-      }
-    } while (!event.triggered)
   }
 
   private def weakAwaitTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {

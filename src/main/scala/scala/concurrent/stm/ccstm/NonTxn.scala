@@ -101,8 +101,10 @@ private[ccstm] object NonTxn {
     withChanging(before)
   }
 
-  private def commitLock(handle: Handle[_], m0: Meta) {
-    releaseLock(handle, m0, CCSTM.nonTxnWriteVersion(version(m0)))
+  private def commitUpdate[T](handle: Handle[T], m0: Meta, newData: T) {
+    val newVersion = CCSTM.nonTxnWriteVersion(version(m0))
+    handle.data = newData
+    releaseLock(handle, m0, newVersion)
   }
 
   private def discardLock(handle: Handle[_], m0: Meta) {
@@ -110,15 +112,13 @@ private[ccstm] object NonTxn {
   }
 
   private def releaseLock(handle: Handle[_], m0: Meta, newVersion: Version) {
-    // If pendingWakeups is set, then we are not racing with any other updates.
-    // If the CAS fails, then we lost a race with pendingWakeups <- true, so we
-    // can just assume that it's true.
-    if (pendingWakeups(m0) || !handle.metaCAS(m0, withCommit(m0, newVersion)))
-      releaseWithWakeup(handle, m0, newVersion)
+    handle.meta = withCommit(m0, newVersion)
+
+    if (pendingWakeups(m0))
+      triggerWakeups(handle, m0)
   }
 
-  private def releaseWithWakeup(handle: Handle[_], m0: Meta, newVersion: Version) {
-    handle.meta = withCommit(withPendingWakeups(m0), newVersion)
+  private def triggerWakeups(handle: Handle[_], m0: Meta) {
     val r = handle.base
 
     // we notify on offset for threads that are waiting for handle to change
@@ -129,7 +129,8 @@ private[ccstm] object NonTxn {
     val o2 = handle.metaOffset
 
     var wakeups = wakeupManager.prepareToTrigger(r, o1)
-    if (o1 != o2) wakeups |= wakeupManager.prepareToTrigger(r, o2)
+    if (o1 != o2)
+      wakeups |= wakeupManager.prepareToTrigger(r, o2)
     wakeupManager.trigger(wakeups)
   }
 
@@ -206,15 +207,13 @@ private[ccstm] object NonTxn {
 
   def set[T](handle: Handle[T], v: T) {
     val m0 = acquireLock(handle, true)
-    handle.data = v
-    commitLock(handle, m0)
+    commitUpdate(handle, m0, v)
   }
 
   def swap[T](handle: Handle[T], v: T): T = {
     val m0 = acquireLock(handle, true)
     val z = handle.data
-    handle.data = v
-    commitLock(handle, m0)
+    commitUpdate(handle, m0, v)
     z
   }
 
@@ -223,8 +222,7 @@ private[ccstm] object NonTxn {
     if (m0 == 0L) {
       false
     } else {
-      handle.data = v
-      commitLock(handle, m0)
+      commitUpdate(handle, m0, v)
       true
     }
   }
@@ -248,8 +246,7 @@ private[ccstm] object NonTxn {
       if (before == handle.data) {
         success = true
         val m2 = upgradeLock(handle, m1)
-        handle.data = after
-        commitLock(handle, m2)
+        commitUpdate(handle, m2, after)
       }
       success
     } finally {
@@ -285,8 +282,7 @@ private[ccstm] object NonTxn {
       if (version(m2) == version(m1) || before == handle.data) {
         success = true
         val m3 = upgradeLock(handle, m2)
-        handle.data = after
-        commitLock(handle, m3)
+        commitUpdate(handle, m3, after)
       }
       success
     } finally {
@@ -307,8 +303,7 @@ private[ccstm] object NonTxn {
     }
 
     if (before eq handle.data.asInstanceOf[AnyRef]) {
-      handle.data = after
-      commitLock(handle, m1)
+      commitUpdate(handle, m1, after)
       true
     } else {
       discardLock(handle, m1)
@@ -322,8 +317,7 @@ private[ccstm] object NonTxn {
       // perform the comparison
       val m0 = acquireLock(handle, true)
       if (before eq handle.data.asInstanceOf[AnyRef]) {
-        handle.data = after
-        commitLock(handle, m0)
+        commitUpdate(handle, m0, after)
         true
       } else {
         discardLock(handle, m0)
@@ -343,8 +337,7 @@ private[ccstm] object NonTxn {
     val v0 = handle.data
     val repl = try { f(v0) } catch { case x => discardLock(handle, m0) ; throw x }
     val m1 = upgradeLock(handle, m0)
-    handle.data = repl
-    commitLock(handle, m1)
+    commitUpdate(handle, m1, repl)
     v0
   }
 
@@ -355,8 +348,7 @@ private[ccstm] object NonTxn {
   private def transformAndGetImpl[T](handle: Handle[T], f: T => T, m0: Meta): T = {
     val repl = try { f(handle.data) } catch { case x => discardLock(handle, m0) ; throw x }
     val m1 = upgradeLock(handle, m0)
-    handle.data = repl
-    commitLock(handle, m1)
+    commitUpdate(handle, m1, repl)
     repl
   }
 
@@ -377,8 +369,7 @@ private[ccstm] object NonTxn {
       if (try { pf.isDefinedAt(v) } catch { case x => discardLock(handle, m0) ; throw x }) {
         val repl = try { pf(v) } catch { case x => discardLock(handle, m0) ; throw x }
         val m1 = upgradeLock(handle, m0)
-        handle.data = repl
-        commitLock(handle, m1)
+        commitUpdate(handle, m1, repl)
         true
       } else {
         discardLock(handle, m0)
@@ -476,8 +467,7 @@ private[ccstm] object NonTxn {
           // we can definitely complete the CCASI
           if (a eq a0) {
             // a0 and b0 both match
-            handleB.data = b1
-            commitLock(handleB, mB0)
+            commitUpdate(handleB, mB0, b1)
             return true
           } else {
             // a0 doesn't match
@@ -504,8 +494,7 @@ private[ccstm] object NonTxn {
   def getAndAdd(handle: Handle[Int], delta: Int): Int = {
     val m0 = acquireLock(handle, true)
     val v0 = handle.data
-    handle.data = v0 + delta
-    commitLock(handle, m0)
+    commitUpdate(handle, m0, v0 + delta)
     v0
   }
 }
