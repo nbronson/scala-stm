@@ -160,6 +160,8 @@ private[skel] object TxnHashTrie {
       z
     }
 
+    def splitIfNeeded(gen: Long, shift: Int): Node[A, B] = if (!shouldSplit) this else split(gen, shift)
+
     def shouldSplit: Boolean = {
       // if the hash function is bad we might be oversize but unsplittable
       hashes.length > MaxLeafCapacity && hashes(hashes.length - 1) != hashes(0)
@@ -361,6 +363,8 @@ private[skel] object TxnHashTrie {
 
   //////////////// construction
 
+  // TODO: expose a real Builder
+
   def buildMap[A, B](kvs: TraversableOnce[(A, B)]): Node[A, B] = {
     var root = emptyMapValue.asInstanceOf[BuildingNode[A, B]]
     for (kv <- kvs)
@@ -429,35 +433,38 @@ private[skel] object TxnHashTrie {
     }
   }
 
-  def put[A, B](root: Ref.View[Node[A, B]], key: A, value: B): Option[B] = rootPut(root, keyHash(key), key, value, 0)
+  def put[A, B](root: Ref.View[Node[A, B]], key: A, value: B): Option[B] = rootPut(root, keyHash(key), key, value)
 
-  @tailrec private def rootPut[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A, value: B, failures: Int): Option[B] = {
-    if (failures > 10)
-      failingPut(root, hash, key, value)
-    else {
+  private def rootPut[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A, value: B): Option[B] = {
+    var failures = 0
+    while (failures < 10) {
       root() match {
         case leaf: Leaf[A, B] => {
-          val a = leaf.withPut(hash, key, value)
-          val after = if (!a.shouldSplit) a else a.split(0L, 0)
-          if (root.compareAndSetIdentity(leaf, after))
-            leaf.get(hash, key) // success, read from old leaf
-          else
-            rootPut(root, hash, key, value, failures + 1) // retry
+          val after = leaf.withPut(hash, key, value)
+          if (after eq leaf)
+            return someNull.asInstanceOf[Option[B]] // set-like and key was present, success
+          if (root.compareAndSetIdentity(leaf, after.splitIfNeeded(0L, 0)))
+            return leaf.get(hash, key) // success, read from old leaf
         }
         case branch: Branch[A, B] => {
-          var b = branch
-          if (!b.frozen || { b = branch.clone(branch.gen + 1) ; root.compareAndSetIdentity(branch, b) })
-            childPut(root, b, b.children(indexFor(0, hash)), LogBF, hash, key, value, failures)
-          else
-            rootPut(root, hash, key, value, failures + 1) // retry
+          val b = if (!branch.frozen) branch else unshare(branch.gen + 1, root, branch)
+          if (b != null)
+            return childPut(root, b, b.children(indexFor(0, hash)), LogBF, hash, key, value, 0)
         }
       }
+      failures += 1
     }
+    failingPut(root, hash, key, value)
   }
 
-  private def failingPut[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A, value: B): Option[B] = atomic { _ =>
+  private def unshare[A, B](rootGen: Long, current: Ref.View[Node[A, B]], branch: Branch[A, B]): Branch[A, B] = {
+    val b = branch.clone(rootGen)
+    if (current.compareAndSetIdentity(branch, b)) b else null
+  }
+
+  private def failingPut[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A, value: B): Option[B] = {
     // running in a transaction guarantees that CAS won't fail
-    rootPut(root, hash, key, value, 0)
+    atomic { _ => rootPut(root, hash, key, value) }
   }
 
   @tailrec private def childPut[A, B](root: Ref.View[Node[A, B]],
@@ -470,23 +477,19 @@ private[skel] object TxnHashTrie {
                                       failures: Int): Option[B] = {
     current() match {
       case leaf: Leaf[A, B] => {
-        val a = leaf.withPut(hash, key, value)
-        if (a eq leaf) {
-          // we must be set-like, and key was already present, success
-          someNull.asInstanceOf[Option[B]]
-        } else {
-          val after = if (!a.shouldSplit) a else a.split(rootNode.gen, shift)
-          if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, after))
-            leaf.get(hash, key) // success
-          else if (root() ne rootNode)
-            rootPut(root, hash, key, value, failures + 1) // root retry
-          else
-            childPut(root, rootNode, current, shift, hash, key, value, failures + 1) // local retry
-        }
+        val after = leaf.withPut(hash, key, value)
+        if (after eq leaf)
+          someNull.asInstanceOf[Option[B]] // we must be set-like, and key was already present, success
+        else if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, after.splitIfNeeded(rootNode.gen, shift)))
+          leaf.get(hash, key) // success
+        else if (root() ne rootNode)
+          failingPut(root, hash, key, value) // root retry
+        else
+          childPut(root, rootNode, current, shift, hash, key, value, failures + 1) // local retry
       }
       case branch: Branch[A, B] => {
-        var b = branch
-        if (b.gen == rootNode.gen || { b = branch.clone(rootNode.gen) ; current.compareAndSetIdentity(branch, b) })
+        val b = if (branch.gen == rootNode.gen) branch else unshare(rootNode.gen, current, branch)
+        if (b != null)
           childPut(root, rootNode, b.children(indexFor(shift, hash)), shift + LogBF, hash, key, value, failures)
         else
           childPut(root, rootNode, current, shift, hash, key, value, failures + 1) // failure, try again
@@ -494,41 +497,41 @@ private[skel] object TxnHashTrie {
     }
   }
 
-  def remove[A, B](root: Ref.View[Node[A, B]], key: A): Option[B] = rootRemove(root, keyHash(key), key, 0)
+  def remove[A, B](root: Ref.View[Node[A, B]], key: A): Option[B] = rootRemove(root, keyHash(key), key)
 
-  @tailrec private def rootRemove[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A, failures: Int): Option[B] = {
-    if (failures > 10)
-      failingRemove(root, hash, key)
-    else {
+  private def rootRemove[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A): Option[B] = {
+    var failures = 0
+    while (failures < 10) {
       root() match {
         case leaf: Leaf[A, B] => {
           val after = leaf.withRemove(hash, key)
           if (after eq leaf)
-            None // no change, key wasn't present
-          else if (root.compareAndSetIdentity(leaf, after))
-            leaf.get(hash, key) // success, read from old leaf
-          else
-            rootRemove(root, hash, key, failures + 1) // retry
+            return None // no change, key wasn't present
+          if (root.compareAndSetIdentity(leaf, after))
+            return leaf.get(hash, key) // success, read from old leaf
         }
         case branch: Branch[A, B] => {
           val i = indexFor(0, hash)
-          if (branch.frozen && !contains(branch.children(i), LogBF, hash, key))
-            None // child is absent, no point in cloning
-          else {
-            var b = branch
-            if (!branch.frozen || { b = b.clone(b.gen + 1) ; root.compareAndSetIdentity(branch, b) })
-              childRemove(root, b, b.children(i), LogBF, hash, key, branch.frozen, failures)
-            else
-              rootRemove(root, hash, key, failures + 1) // retry
-          }
+          if (!branch.frozen)
+            return childRemove(root, branch, branch.children(i), LogBF, hash, key, false, 0)
+
+          // branch is frozen, check if the key is there before cloning
+          if (!contains(branch.children(i), LogBF, hash, key))
+            return None
+
+          val b = unshare(branch.gen + 1, root, branch)
+          if (b != null)
+            return childRemove(root, b, b.children(i), LogBF, hash, key, true, 0)
         }
       }
+      failures += 1
     }
+    failingRemove(root, hash, key)
   }
 
-  private def failingRemove[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A): Option[B] = atomic { _ =>
+  private def failingRemove[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A): Option[B] = {
     // running in a transaction guarantees that CAS won't fail
-    rootRemove(root, hash, key, 0)
+    atomic { _ => rootRemove(root, hash, key) }
   }
 
   @tailrec private def childRemove[A, B](root: Ref.View[Node[A, B]],
@@ -547,7 +550,7 @@ private[skel] object TxnHashTrie {
         else if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, after))
           leaf.get(hash, key) // success
         else if (root() ne rootNode)
-          rootRemove(root, hash, key, failures + 1) // root retry
+          failingRemove(root, hash, key) // root retry
         else
           childRemove(root, rootNode, current, shift, hash, key, checked, failures + 1) // local retry
       }
@@ -556,8 +559,8 @@ private[skel] object TxnHashTrie {
         if (!checked && branch.gen != rootNode.gen && !contains(branch.children(i), shift + LogBF, hash, key))
           None // child is absent
         else {
-          var b = branch
-          if (branch.gen == rootNode.gen || { b = b.clone(rootNode.gen) ; current.compareAndSetIdentity(branch, b) })
+          val b = if (branch.gen == rootNode.gen) branch else unshare(rootNode.gen, current, branch)
+          if (b != null)
             childRemove(root, rootNode, b.children(i), shift + LogBF, hash, key, checked || (b ne branch), failures)
           else
             childRemove(root, rootNode, current, shift, hash, key, checked, failures + 1)
