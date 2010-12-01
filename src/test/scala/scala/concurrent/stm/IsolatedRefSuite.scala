@@ -10,25 +10,27 @@ class IsolatedRefSuite extends FunSuite {
 
   // Ref factories produces Ref from an initial value
 
-  object PrimitiveFactory extends (Int => Ref[Int]) {
+  object PrimitiveIntFactory extends (Int => Ref[Int]) {
     def apply(v0: Int) = Ref(v0)
     override def toString = "Primitive"
   }
 
-  object KnownGenericFactory extends (Int => Ref[Int]) {
-    private def create[A : ClassManifest](v0: A) = Ref(v0)
-    def apply(v0: Int) = create(v0)
+  class KnownGenericFactory[A : ClassManifest] extends (A => Ref[A]) {
+    def apply(v0: A) = Ref(v0)
     override def toString = "KnownGeneric"
   }
 
-  object UnknownGenericFactory extends (Int => Ref[Int]) {
-    private def create[A](v0: A) = Ref(v0)
-    def apply(v0: Int) = create(v0)
+  class UnknownGenericFactory[A] extends (A => Ref[A]) {
+    def apply(v0: A) = Ref(v0)
     override def toString = "UnknownGeneric"
   }
 
-  object ArrayElementFactory extends (Int => Ref[Int]) {
-    def apply(v0: Int) = (TArray[Int]((v0 - 5) until (v0 + 5))).refs(5)
+  class ArrayElementFactory[A : ClassManifest] extends (A => Ref[A]) {
+    def apply(v0: A) = {
+      val ref = TArray.ofDim[A](10).refs(5)
+      ref.single() = v0
+      ref
+    }
     override def toString = "ArrayElement"
   }
 
@@ -83,23 +85,20 @@ class IsolatedRefSuite extends FunSuite {
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
   }
 
-  object FreshSingleAccess extends ((Ref[Int], Int) => Ref.View[Int]) {
-    def apply(ref: Ref[Int], innerDepth: Int): Ref.View[Int] = new TestingView[Int](innerDepth, ref) {
+  trait ViewFactory {
+    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A]
+  }
+
+  object SingleAccess extends ViewFactory {
+    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
       protected def view = ref.single
     }
-    override def toString = "FreshSingle"
+    override def toString = "Single"
   }
 
-  object ReuseSingleAccess extends ((Ref[Int], Int) => Ref.View[Int]) {
-    def apply(ref: Ref[Int], innerDepth: Int): Ref.View[Int] = new TestingView[Int](innerDepth, ref) {
-      protected val view = ref.single
-    }
-    override def toString = "ReuseSingle"
-  }
-
-  object RefAccess extends ((Ref[Int], Int) => Ref.View[Int]) {
-    def apply(ref: Ref[Int], innerDepth: Int): Ref.View[Int] = new TestingView[Int](innerDepth, ref) {
-      protected val view = new DynamicView[Int](ref)
+  object RefAccess extends ViewFactory {
+    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
+      protected val view = new DynamicView[A](ref)
     }
     override def toString = "Ref"
   }
@@ -117,11 +116,11 @@ class IsolatedRefSuite extends FunSuite {
   // Now we enumerate the environments, generating a set of tests for each
   // configuration.
 
-  private def createTests(name: String, v0: Int)(block: (() => Ref.View[Int]) => Unit) {
+  private def createTests[A : ClassManifest](name: String, v0: A)(block: (() => Ref.View[A]) => Unit) {
     for (outerLevels <- 0 until 2;
          innerLevels <- 0 until 2;
-         refFactory <- List(PrimitiveFactory, KnownGenericFactory, UnknownGenericFactory, ArrayElementFactory);
-         viewFactory <- List(FreshSingleAccess, ReuseSingleAccess, RefAccess);
+         refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
+         viewFactory <- List(SingleAccess, RefAccess);
          if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
       test("outer=" + outerLevels + ", inner=" + innerLevels + ", " +
               refFactory + ", " + viewFactory + ": " + name) {
@@ -130,6 +129,12 @@ class IsolatedRefSuite extends FunSuite {
         nest(outerLevels) { block(getView _) }
       }
     }
+  }
+
+  test("primitive factory and ClassManifest generic produce same type") {
+    // this cuts down on the proliferation of tests
+    val g = new KnownGenericFactory[Int]
+    assert(PrimitiveIntFactory(10).getClass === g(10).getClass)
   }
 
   private def nest(depth: Int)(block: => Unit) {
@@ -235,6 +240,20 @@ class IsolatedRefSuite extends FunSuite {
     view()() = 2
   }
 
+  createTests("relaxedGet", 10) { view =>
+    assert(view().relaxedGet( _ == _ ) === 10)
+  }
+
+  createTests("write ; relaxedGet", 10) { view =>
+    view()() = 20
+    assert(view().relaxedGet( _ == _ ) === 20)
+  }
+
+  createTests("relaxedGet ; write", 10) { view =>
+    assert(view().relaxedGet( _ == _ ) === 10)
+    view()() = 20
+  }
+
   class UserException extends Exception
 
   createTests("excepting transform", 1) { view =>
@@ -246,15 +265,65 @@ class IsolatedRefSuite extends FunSuite {
     assert(view().get === 2)
   }
 
-  // TODO: compareAndSet with excepting equals
-  // TODO: compareAndSetIdentity
-  // TODO: excepting transformIfDefined
-  // TODO: relaxedGet
+  createTests("excepting transformIfDefined", 1) { view =>
+    intercept[UserException] {
+      view().transformIfDefined {
+        case v if v > 0 => throw new UserException
+        case v => v * 100
+      }
+    }
+    assert(view().get === 1)
+    view().transform(_ + 1)
+    assert(view().get === 2)
+  }
+
+  class AngryEquals(val polarity: Boolean) {
+    override def equals(rhs: Any): Boolean = {
+      if (this eq rhs.asInstanceOf[AnyRef])
+        true
+      else {
+        // equal polarities actively repel
+        if (rhs.asInstanceOf[AngryEquals].polarity == polarity)
+          throw new UserException
+        false
+      }
+    }
+  }
+
+  createTests(".equals not involved in get and set", new AngryEquals(true)) { view =>
+    assert(view().get ne null)
+    view()() = new AngryEquals(true)
+  }
+
+  createTests("excepting compareAndSet", new AngryEquals(true)) { view =>
+    val prev = view()()
+    intercept[UserException] {
+      view().compareAndSet(new AngryEquals(true), new AngryEquals(true))
+    }
+    assert(!view().compareAndSet(new AngryEquals(false), new AngryEquals(true)))
+    val repl = new AngryEquals(false)
+    assert(view().compareAndSet(prev, repl))
+    assert(view().get === repl)
+  }
+
+  createTests("compareAndSetIdentity", "orig") { view =>
+    assert(!view().compareAndSetIdentity(new String("orig"), "equal"))
+    assert(view().compareAndSetIdentity("orig", "eq"))
+    assert(view().get === "eq")
+  }
 
   createTests("/=", 11) { view =>
     view() /= 2
     assert(view()() === 5)
   }
 
-  // TODO: division test for Ref[Double] and Ref[Float]
+  createTests("/= double", 11.0) { view =>
+    view() /= 2
+    assert(view()() === 5.5)
+  }
+
+  createTests("/= float", 11.0f) { view =>
+    view() /= 2
+    assert(view()() === 5.5f)
+  }
 }
