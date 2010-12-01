@@ -217,35 +217,34 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential build performance") {
+  test("sequential append performance") {
     for (pass <- 0 until 10) {
       for (size <- List(10, 100, 1000, 100000)) {
         val src = kvRange(0, size).toArray
         val t0 = now
         var outer = 0
         while (outer < 1000000) {
-          TMap(src: _*)
+          TMap.empty[Int, String].single ++= src
           outer += size
         }
         val elapsed = now - t0
-        print(size + " keys/map -> " + elapsed + " nanos/init/key,  ")
+        print(size + " keys/map -> " + elapsed + " nanos/added-key,  ")
       }
       println
     }
   }
 
   test("sequential non-txn update performance") {
+    val values = (0 until 37) map { "x" + _ }
     for (pass <- 0 until 10) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
         var i = 0
-        var k = 0
         while (i < 1000000) {
-          val prev = m.put(k, "foobar")
+          val prev = m.put(i % size, values(i % values.length))
           assert(!prev.isEmpty)
           i += 1
-          k = if (k == size - 1) 0 else k + 1
         }
         val elapsed = now - t0
         print(size + " keys/map -> " + elapsed + " nanos/put,  ")
@@ -254,4 +253,27 @@ class TMapSuite extends FunSuite {
     }
   }
 
+  test("sequential non-txn put/remove mix performance") {
+    val values = (0 until 37) map { "x" + _ }
+    val rand = new skel.FastSimpleRandom
+    for (pass <- 0 until 10) {
+      for (size <- List(10, 100, 1000, 100000)) {
+        val m = TMap(kvRange(0, size): _*).single
+        val t0 = now
+        var i = 0
+        while (i < 1000000) {
+          val r = rand.nextInt
+          val k = math.abs(r % size)
+          if (r > 0)
+            m.put(k, values(i % values.length))
+          else
+            m.remove(k)
+          i += 1
+        }
+        val elapsed = now - t0
+        print(size + " keys/map -> " + elapsed + " nanos/op,  ")
+      }
+      println
+    }
+  }
 }
