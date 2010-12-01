@@ -65,9 +65,9 @@ private[skel] object TxnHashTrie {
   def emptyMapNode[A, B]: Node[A, B] = emptyMapValue.asInstanceOf[Node[A, B]]
 
   /** If used by a Set, values will be null. */
-  class Leaf[A, B](val hashes: Array[Int],
-                   val keys: Array[AnyRef],
-                   val values: Array[AnyRef]) extends Node[A, B] with BuildingNode[A, B] {
+  final class Leaf[A, B](val hashes: Array[Int],
+                         val keys: Array[AnyRef],
+                         val values: Array[AnyRef]) extends Node[A, B] with BuildingNode[A, B] {
 
     def endBuild = this
 
@@ -75,8 +75,9 @@ private[skel] object TxnHashTrie {
 
     def contains(hash: Int, key: A): Boolean = find(hash, key) >= 0
 
-    def get(hash: Int, key: A): Option[B] = {
-      val i = find(hash, key)
+    def get(hash: Int, key: A): Option[B] = get(find(hash, key))
+
+    def get(i: Int): Option[B] = {
       if (i < 0)
         None
       else if (values != null)
@@ -85,7 +86,7 @@ private[skel] object TxnHashTrie {
         someNull.asInstanceOf[Option[B]] // if we don't handle sets here we need two versions of TxnHashTrie.remove
     }
 
-    private def find(hash: Int, key: A): Int = {
+    def find(hash: Int, key: A): Int = {
       var i = hashes.length
       while (i > 0) {
         i -= 1
@@ -98,8 +99,9 @@ private[skel] object TxnHashTrie {
       return ~0
     }
 
-    def withPut(hash: Int, key: A, value: B): Leaf[A, B] = {
-      val i = find(hash, key)
+    def withPut(hash: Int, key: A, value: B): Leaf[A, B] = withPut(hash, key, value, find(hash, key))
+
+    def withPut(hash: Int, key: A, value: B, i: Int): Leaf[A, B] = {
       if (i < 0)
         withInsert(~i, hash, key, value)
       else if (values != null)
@@ -136,28 +138,29 @@ private[skel] object TxnHashTrie {
       z
     }
 
-    def withRemove(hash: Int, key: A): Leaf[A, B] = {
-      val i = find(hash, key)
-      if (i < 0) this else withRemove(i)
-    }
+    def withRemove(hash: Int, key: A): Leaf[A, B] = withRemove(find(hash, key))
 
-    private def withRemove(i: Int): Leaf[A, B] = {
-      val z = newLeaf(hashes.length - 1)
-      if (z.hashes.length > 0) {
-        val j = z.hashes.length - i
+    def withRemove(i: Int): Leaf[A, B] = {
+      if (i < 0)
+        this
+      else {
+        val z = newLeaf(hashes.length - 1)
+        if (z.hashes.length > 0) {
+          val j = z.hashes.length - i
 
-        System.arraycopy(hashes, 0, z.hashes, 0, i)
-        System.arraycopy(hashes, i + 1, z.hashes, i, j)
+          System.arraycopy(hashes, 0, z.hashes, 0, i)
+          System.arraycopy(hashes, i + 1, z.hashes, i, j)
 
-        System.arraycopy(keys, 0, z.keys, 0, i)
-        System.arraycopy(keys, i + 1, z.keys, i, j)
+          System.arraycopy(keys, 0, z.keys, 0, i)
+          System.arraycopy(keys, i + 1, z.keys, i, j)
 
-        if (values != null) {
-          System.arraycopy(values, 0, z.values, 0, i)
-          System.arraycopy(values, i + 1, z.values, i, j)
+          if (values != null) {
+            System.arraycopy(values, 0, z.values, 0, i)
+            System.arraycopy(values, i + 1, z.values, i, j)
+          }
         }
+        z
       }
-      z
     }
 
     def splitIfNeeded(gen: Long, shift: Int): Node[A, B] = if (!shouldSplit) this else split(gen, shift)
@@ -440,11 +443,12 @@ private[skel] object TxnHashTrie {
     while (failures < 10) {
       root() match {
         case leaf: Leaf[A, B] => {
-          val after = leaf.withPut(hash, key, value)
-          if (after eq leaf)
+          val i = leaf.find(hash, key)
+          if (i >= 0 && leaf.values == null)
             return someNull.asInstanceOf[Option[B]] // set-like and key was present, success
-          if (root.compareAndSetIdentity(leaf, after.splitIfNeeded(0L, 0)))
-            return leaf.get(hash, key) // success, read from old leaf
+          val after = leaf.withPut(hash, key, value, i).splitIfNeeded(0L, 0)
+          if (root.compareAndSetIdentity(leaf, after))
+            return leaf.get(i) // success, read from old leaf
         }
         case branch: Branch[A, B] => {
           val b = if (!branch.frozen) branch else unshare(branch.gen + 1, root, branch)
@@ -477,15 +481,18 @@ private[skel] object TxnHashTrie {
                                       failures: Int): Option[B] = {
     current() match {
       case leaf: Leaf[A, B] => {
-        val after = leaf.withPut(hash, key, value)
-        if (after eq leaf)
-          someNull.asInstanceOf[Option[B]] // we must be set-like, and key was already present, success
-        else if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, after.splitIfNeeded(rootNode.gen, shift)))
-          leaf.get(hash, key) // success
-        else if (root() ne rootNode)
-          failingPut(root, hash, key, value) // root retry
-        else
-          childPut(root, rootNode, current, shift, hash, key, value, failures + 1) // local retry
+        val i = leaf.find(hash, key)
+        if (i >= 0 && leaf.values == null)
+          someNull.asInstanceOf[Option[B]] // set-like and key was present, success
+        else {
+          val after = leaf.withPut(hash, key, value, i).splitIfNeeded(rootNode.gen, shift)
+          if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, after))
+            leaf.get(i) // success
+          else if (root() ne rootNode)
+            failingPut(root, hash, key, value) // root retry
+          else
+            childPut(root, rootNode, current, shift, hash, key, value, failures + 1) // local retry
+        }
       }
       case branch: Branch[A, B] => {
         val b = if (branch.gen == rootNode.gen) branch else unshare(rootNode.gen, current, branch)
@@ -504,11 +511,11 @@ private[skel] object TxnHashTrie {
     while (failures < 10) {
       root() match {
         case leaf: Leaf[A, B] => {
-          val after = leaf.withRemove(hash, key)
-          if (after eq leaf)
+          val i = leaf.find(hash, key)
+          if (i < 0)
             return None // no change, key wasn't present
-          if (root.compareAndSetIdentity(leaf, after))
-            return leaf.get(hash, key) // success, read from old leaf
+          if (root.compareAndSetIdentity(leaf, leaf.withRemove(i)))
+            return leaf.get(i) // success, read from old leaf
         }
         case branch: Branch[A, B] => {
           val i = indexFor(0, hash)
@@ -544,11 +551,11 @@ private[skel] object TxnHashTrie {
                                          failures: Int): Option[B] = {
     current() match {
       case leaf: Leaf[A, B] => {
-        val after = leaf.withRemove(hash, key)
-        if (after eq leaf)
-          None // no change, key must not have been present
-        else if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, after))
-          leaf.get(hash, key) // success
+        val i = leaf.find(hash, key)
+        if (i < 0)
+          None // no change, key wasn't present
+        else if (atomic.compareAndSetIdentity(root.ref, rootNode, rootNode, current.ref, leaf, leaf.withRemove(i)))
+          leaf.get(i) // success
         else if (root() ne rootNode)
           failingRemove(root, hash, key) // root retry
         else
