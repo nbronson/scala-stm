@@ -243,14 +243,18 @@ private[ccstm] object NonTxn {
       return invisibleCAS(handle, before, after)
     }
 
-    if (before == handle.data) {
-      val m2 = upgradeLock(handle, m1)
-      handle.data = after
-      commitLock(handle, m2)
-      true
-    } else {
-      discardLock(handle, m1)
-      false
+    var success = false
+    try {
+      if (before == handle.data) {
+        success = true
+        val m2 = upgradeLock(handle, m1)
+        handle.data = after
+        commitLock(handle, m2)
+      }
+      success
+    } finally {
+      if (!success)
+        discardLock(handle, m1)
     }
   }
 
@@ -276,14 +280,18 @@ private[ccstm] object NonTxn {
     // don't go directly to changing, because we can't run user code
     // (before.equals) there
     val m2 = acquireLock(handle, false)
-    if (version(m2) == version(m1) || before == handle.data) {
-      val m3 = upgradeLock(handle, m2)
-      handle.data = after
-      commitLock(handle, m3)
-      true
-    } else {
-      discardLock(handle, m2)
-      false
+    var success = false
+    try {
+      if (version(m2) == version(m1) || before == handle.data) {
+        success = true
+        val m3 = upgradeLock(handle, m2)
+        handle.data = after
+        commitLock(handle, m3)
+      }
+      success
+    } finally {
+      if (!success)
+        discardLock(handle, m2)
     }
   }
 
