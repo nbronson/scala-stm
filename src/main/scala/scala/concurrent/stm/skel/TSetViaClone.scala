@@ -51,9 +51,9 @@ private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
 
   override def retain(p: A => Boolean) {
     atomic { implicit txn =>
-      for (x <- this)
+      for (x <- tset)
         if (!p(x))
-          (this: TSet[A]) -= x
+          tset -= x
     }
     this
   }

@@ -403,7 +403,7 @@ private[skel] object TxnHashTrie {
     }
   }
 
-  //////////////// hash trie operations
+  //////////////// hash trie operations on Ref.View
 
   def frozenRoot[A, B](root: Ref.View[Node[A, B]]): Node[A, B] = {
     root() match {
@@ -431,6 +431,20 @@ private[skel] object TxnHashTrie {
     n() match {
       case leaf: Leaf[A, B] => leaf.contains(hash, key)
       case branch: Branch[A, B] => contains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
+    }
+  }
+
+  def getOrThrow[A, B](root: Ref.View[Node[A, B]], key: A): B = getOrThrow(root, 0, keyHash(key), key)
+
+  @tailrec private def getOrThrow[A, B](n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): B = {
+    n() match {
+      case leaf: Leaf[A, B] => {
+        val i = leaf.find(hash, key)
+        if (i < 0)
+          throw new NoSuchElementException("key not found: " + key)
+        leaf.values(i).asInstanceOf[B]
+      }
+      case branch: Branch[A, B] => getOrThrow(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
 
@@ -474,7 +488,7 @@ private[skel] object TxnHashTrie {
 
   private def failingPut[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A, value: B): Option[B] = {
     // running in a transaction guarantees that CAS won't fail
-    atomic { _ => rootPut(root, hash, key, value, 0) }
+    atomic { implicit txn => rootPut(root.ref, hash, key, value) }
   }
 
   @tailrec private def childPut[A, B](root: Ref.View[Node[A, B]],
@@ -541,7 +555,7 @@ private[skel] object TxnHashTrie {
 
   private def failingRemove[A, B](root: Ref.View[Node[A, B]], hash: Int, key: A): Option[B] = {
     // running in a transaction guarantees that CAS won't fail
-    atomic { _ => rootRemove(root, hash, key, 0) }
+    atomic { implicit txn => rootRemove(root.ref, hash, key) }
   }
 
   @tailrec private def childRemove[A, B](root: Ref.View[Node[A, B]],
@@ -589,4 +603,145 @@ private[skel] object TxnHashTrie {
   def setIterator[A, B](root: Ref.View[Node[A, B]]): Iterator[A] = frozenRoot(root).setIterator
 
   def mapIterator[A, B](root: Ref.View[Node[A, B]]): Iterator[(A, B)] = frozenRoot(root).mapIterator
+
+
+  //////////////// hash trie operations on Ref, requiring an InTxn
+
+  def frozenRoot[A, B](root: Ref[Node[A, B]])(implicit txn: InTxn): Node[A, B] = {
+    root() match {
+      case leaf: Leaf[A, B] => leaf // leaf is already immutable
+      case branch: Branch[A, B] if branch.frozen => branch
+      case branch: Branch[A, B] => {
+        val b = branch.withFreeze
+        root() = b
+        b
+      }
+    }
+  }
+
+  def contains[A, B](root: Ref[Node[A, B]], key: A)(implicit txn: InTxn): Boolean = contains(root, 0, keyHash(key), key)(txn)
+
+  @tailrec private def contains[A, B](n: Ref[Node[A, B]], shift: Int, hash: Int, key: A)(implicit txn: InTxn): Boolean = {
+    n() match {
+      case leaf: Leaf[A, B] => leaf.contains(hash, key)
+      case branch: Branch[A, B] => contains(branch.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key)(txn)
+    }
+  }
+
+  def getOrThrow[A, B](root: Ref[Node[A, B]], key: A)(implicit txn: InTxn): B = getOrThrow(root, 0, keyHash(key), key)(txn)
+
+  @tailrec private def getOrThrow[A, B](n: Ref[Node[A, B]], shift: Int, hash: Int, key: A)(implicit txn: InTxn): B = {
+    n() match {
+      case leaf: Leaf[A, B] => {
+        val i = leaf.find(hash, key)
+        if (i < 0)
+          throw new NoSuchElementException("key not found: " + key)
+        leaf.values(i).asInstanceOf[B]
+      }
+      case branch: Branch[A, B] => getOrThrow(branch.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key)(txn)
+    }
+  }
+
+  def get[A, B](root: Ref[Node[A, B]], key: A)(implicit txn: InTxn): Option[B] = get(root, 0, keyHash(key), key)(txn)
+
+  @tailrec private def get[A, B](n: Ref[Node[A, B]], shift: Int, hash: Int, key: A)(implicit txn: InTxn): Option[B] = {
+    n() match {
+      case leaf: Leaf[A, B] => leaf.get(hash, key)
+      case branch: Branch[A, B] => get(branch.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key)(txn)
+    }
+  }
+
+  def put[A, B](root: Ref[Node[A, B]], key: A, value: B)(implicit txn: InTxn): Option[B] = rootPut(root, keyHash(key), key, value)(txn)
+
+  private def rootPut[A, B](root: Ref[Node[A, B]], hash: Int, key: A, value: B)(implicit txn: InTxn): Option[B] = {
+    root() match {
+      case leaf: Leaf[A, B] => {
+        val i = leaf.find(hash, key)
+        if (!leaf.noChange(i, value))
+          root() = leaf.withPut(0L, 0, hash, key, value, i)
+        leaf.get(i)
+      }
+      case branch: Branch[A, B] => {
+        val b = if (!branch.frozen) branch else unshare(branch.gen + 1, root, branch)
+        childPut(b.gen, b.children(indexFor(0, hash)).ref, LogBF, hash, key, value)(txn)
+      }
+    }
+  }
+
+  private def unshare[A, B](rootGen: Long, current: Ref[Node[A, B]], branch: Branch[A, B])(implicit txn: InTxn): Branch[A, B] = {
+    val b = branch.clone(rootGen)
+    current() = b
+    b
+  }
+
+  @tailrec private def childPut[A, B](rootGen: Long, current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, value: B
+          )(implicit txn: InTxn): Option[B] = {
+    current() match {
+      case leaf: Leaf[A, B] => {
+        val i = leaf.find(hash, key)
+        if (!leaf.noChange(i, value))
+          current() = leaf.withPut(rootGen, shift, hash, key, value, i)
+        leaf.get(i)
+      }
+      case branch: Branch[A, B] => {
+        val b = if (branch.gen == rootGen) branch else unshare(rootGen, current, branch)
+        childPut(rootGen, b.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key, value)(txn)
+      }
+    }
+  }
+
+  def remove[A, B](root: Ref[Node[A, B]], key: A)(implicit txn: InTxn): Option[B] = rootRemove(root, keyHash(key), key)(txn)
+
+  private def rootRemove[A, B](root: Ref[Node[A, B]], hash: Int, key: A)(implicit txn: InTxn): Option[B] = {
+    root() match {
+      case leaf: Leaf[A, B] => {
+        val i = leaf.find(hash, key)
+        if (i >= 0)
+          root() = leaf.withRemove(i)
+        leaf.get(i)
+      }
+      case branch: Branch[A, B] => {
+        val i = indexFor(0, hash)
+        if (branch.frozen && !contains(branch.children(i).ref, LogBF, hash, key))
+          None
+        else {
+          val b = if (!branch.frozen) branch else unshare(branch.gen + 1, root, branch)
+          childRemove(b.gen, b.children(i).ref, LogBF, hash, key, (b ne branch))(txn)
+        }
+      }
+    }
+  }
+
+  @tailrec private def childRemove[A, B](rootGen: Long, current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, checked: Boolean
+          )(implicit txn: InTxn): Option[B] = {
+    current() match {
+      case leaf: Leaf[A, B] => {
+        val i = leaf.find(hash, key)
+        if (i >= 0)
+          current() = leaf.withRemove(i)
+        leaf.get(i)
+      }
+      case branch: Branch[A, B] => {
+        val i = indexFor(shift, hash)
+        if (!checked && branch.gen != rootGen && !contains(branch.children(i).ref, shift + LogBF, hash, key))
+          None // child is absent
+        else {
+          val b = if (branch.gen == rootGen) branch else unshare(rootGen, current, branch)
+          childRemove(rootGen, b.children(i).ref, shift + LogBF, hash, key, checked || (b ne branch))(txn)
+        }
+      }
+    }
+  }
+
+  def setForeach[A, B, U](root: Ref[Node[A, B]], f: A => U)(implicit txn: InTxn) {
+    // no need to freeze the root, because we know that the entire visit is
+    // part of an atomic block
+    root().setForeach(f)
+  }
+
+  def mapForeach[A, B, U](root: Ref[Node[A, B]], f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
+
+  def setIterator[A, B](root: Ref[Node[A, B]])(implicit txn: InTxn): Iterator[A] = frozenRoot(root).setIterator
+
+  def mapIterator[A, B](root: Ref[Node[A, B]])(implicit txn: InTxn): Iterator[(A, B)] = frozenRoot(root).mapIterator
 }

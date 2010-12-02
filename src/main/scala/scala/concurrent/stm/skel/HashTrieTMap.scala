@@ -3,37 +3,51 @@
 package scala.concurrent.stm
 package skel
 
-private[stm] class HashTrieTMap[A, B] private (private val root: Ref.View[TxnHashTrie.Node[A, B]]) extends TMapViaClone[A, B] {
+import skel.{TxnHashTrie => Impl}
 
-  def this() = this(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
+private[stm] class HashTrieTMap[A, B] private (private val root: Ref.View[Impl.Node[A, B]]) extends TMapViaClone[A, B] {
 
-  def this(kvs: TraversableOnce[(A, B)]) = this(Ref(TxnHashTrie.buildMap(kvs)).single)
+  //// construction
 
+  def this() = this(Ref(Impl.emptyMapNode[A, B]).single)
+  def this(kvs: TraversableOnce[(A, B)]) = this(Ref(Impl.buildMap(kvs)).single)
   override def empty: TMap.View[A, B] = new HashTrieTMap[A, B]()
+  override def clone(): HashTrieTMap[A, B] = new HashTrieTMap(Impl.clone(root))
 
-  override def clone(): HashTrieTMap[A, B] = new HashTrieTMap(TxnHashTrie.clone(root))
+  //// TMap.View aggregates
 
-  override def isEmpty: Boolean = !TxnHashTrie.sizeGE(root, 1)
+  override def isEmpty: Boolean = !Impl.sizeGE(root, 1)
+  override def size: Int = Impl.size(root)
+  override def iterator: Iterator[(A, B)] = Impl.mapIterator(root)
+  override def foreach[U](f: ((A, B)) => U) { Impl.mapForeach(root, f) }
 
-  override def size: Int = TxnHashTrie.size(root)
+  override def clear() { root() = Impl.emptyMapNode[A, B] }
 
-  override def iterator: Iterator[(A, B)] = TxnHashTrie.mapIterator(root)
+  //// TMap.View per-element
 
-  override def foreach[U](f: ((A, B)) => U) { TxnHashTrie.mapForeach(root, f) }
+  override def contains(key: A): Boolean = Impl.contains(root, key)
+  override def apply(key: A): B = Impl.getOrThrow(root, key)
+  def get(key: A): Option[B] = Impl.get(root, key)
 
-  def get(key: A): Option[B] = TxnHashTrie.get(root, key)
+  override def put(key: A, value: B): Option[B] = Impl.put(root, key, value)
+  override def update(key: A, value: B) { Impl.put(root, key, value) }
+  override def += (kv: (A, B)): this.type = { Impl.put(root, kv._1, kv._2) ; this }
 
-  // MapLike has put using update and remove using -=, we do the opposite
+  override def remove(key: A): Option[B] = Impl.remove(root, key)
+  override def -= (key: A): this.type = { Impl.remove(root, key) ; this }
 
-  override def put(key: A, value: B): Option[B] = TxnHashTrie.put(root, key, value)
+  //// optimized TMap versions
 
-  override def update(key: A, value: B) { put(key, value) }
+  override def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn) = Impl.mapForeach(root.ref, f)
 
-  override def += (kv: (A, B)): this.type = { update(kv._1, kv._2) ; this }
+  override def contains(key: A)(implicit txn: InTxn): Boolean = Impl.contains(root.ref, key)
+  override def apply(key: A)(implicit txn: InTxn): B = Impl.getOrThrow(root.ref, key)
+  override def get(key: A)(implicit txn: InTxn): Option[B] = Impl.get(root.ref, key)
 
-  override def remove(key: A): Option[B] = TxnHashTrie.remove(root, key)
+  override def put(key: A, value: B)(implicit txn: InTxn): Option[B] = Impl.put(root.ref, key, value)
+  override def update(key: A, value: B)(implicit txn: InTxn) { Impl.put(root.ref, key, value) }
+  override def += (kv: (A, B))(implicit txn: InTxn): this.type = { Impl.put(root.ref, kv._1, kv._2) ; this }
 
-  override def -= (key: A): this.type = { remove(key) ; this }
-
-  override def clear() { root() = TxnHashTrie.emptyMapNode[A, B] }
+  override def remove(key: A)(implicit txn: InTxn): Option[B] = Impl.remove(root.ref, key)
+  override def -= (key: A)(implicit txn: InTxn): this.type = { Impl.remove(root.ref, key) ; this }
 }
