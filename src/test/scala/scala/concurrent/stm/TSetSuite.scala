@@ -117,7 +117,7 @@ class TSetSuite extends FunSuite {
 
     val total = 20000
     for (i <- 0 until total) {
-      val pct = rand.nextInt(100)
+      val pct = rand.nextInt(200)
       val k = nextKey
       if (pct < 15) {
         assert(base.contains(k) === mut.contains(k))
@@ -184,6 +184,75 @@ class TSetSuite extends FunSuite {
         val s2 = mutable.Set.empty[String]
         for (k <- mut.iterator) { s2 += k }
         assert(base === s2)
+      } else if (pct < 115) {
+        assert(base.contains(k) === atomic { implicit txn => mut.contains(k) })
+      } else if (pct < 120) {
+        assert(base(k) === atomic { implicit txn => mut(k) })
+      } else if (pct < 135) {
+        assert(base.add(k) === atomic { implicit txn => mut.add(k) })
+      } else if (pct < 140) {
+        val v = rand.nextBoolean
+        base(k) = v
+        atomic { implicit txn => mut(k) = v }
+      } else if (pct < 155) {
+        assert(base.remove(k) === atomic { implicit txn => mut.remove(k) })
+      } else if (pct < 160) {
+        for (j <- 0 until (i / (total / 20))) {
+          if (!base.isEmpty) {
+            val k1 = base.iterator.next
+            assert(base.remove(k1) === atomic { implicit txn => mut.remove(k1) })
+          }
+        }
+      } else if (pct < 163) {
+        mut = atomic { implicit txn => mut.clone }
+      } else if (pct < 166) {
+        assert(base.toSet === atomic { implicit txn => mut.snapshot })
+      } else if (pct < 169) {
+        assert(base.isEmpty === atomic { implicit txn => mut.isEmpty })
+      } else if (pct < 172) {
+        assert(base.size === atomic { implicit txn => mut.size })
+      } else if (pct < 177) {
+        assert(base eq (base += k))
+        assert(mut eq atomic { implicit txn => mut += k })
+      } else if (pct < 180) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base += (k, k2, k3)))
+        assert(mut eq atomic { implicit txn => mut += (k, k2, k3) })
+      } else if (pct < 183) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base ++= Array(k, k2, k3)))
+        assert(mut eq atomic { implicit txn => mut ++= Array(k, k2, k3) })
+      } else if (pct < 188) {
+        assert(base eq (base -= k))
+        assert(mut eq atomic { implicit txn => mut -= k })
+      } else if (pct < 191) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base -= (k, k2, k3)))
+        assert(mut eq atomic { implicit txn => mut -= (k, k2, k3) })
+      } else if (pct < 194) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base --= Array(k, k2, k3)))
+        assert(mut eq atomic { implicit txn => mut --= Array(k, k2, k3) })
+      } else if (pct < 195) {
+        mut = TSet(mut.toArray: _*).single
+      } else if (pct < 196) {
+        mut = atomic { implicit txn => TSet.empty[String] ++= mut }.single
+      } else if (pct < 197) {
+        atomic { implicit txn =>
+          val s2 = mutable.Set.empty[String]
+          for (k <- mut) { s2 += k }
+          assert(base === s2)
+        }
+      } else if (pct < 198) {
+        atomic { implicit txn =>
+          val s2 = mutable.Set.empty[String]
+          for (k <- mut.iterator) { s2 += k }
+          assert(base === s2)
+        }
       }
     }
   }

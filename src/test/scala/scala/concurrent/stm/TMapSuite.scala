@@ -110,7 +110,7 @@ class TMapSuite extends FunSuite {
       assert(z(i) === value(i))
   }
 
-  test("random sequential") {
+  test("random walk equivalence") {
     val rand = new Random()
 
     def nextKey(): String = "key" + (rand.nextInt() >>> rand.nextInt())
@@ -121,7 +121,7 @@ class TMapSuite extends FunSuite {
 
     val total = 20000
     for (i <- 0 until total) {
-      val pct = rand.nextInt(100)
+      val pct = rand.nextInt(200)
       val k = nextKey
       val v = nextValue
       if (pct < 15) {
@@ -192,6 +192,78 @@ class TMapSuite extends FunSuite {
         val m2 = mutable.Map.empty[String, Int]
         for (kv <- mut.iterator) { m2 += kv }
         assert(base === m2)
+      } else if (pct < 115) {
+        assert(base.get(k) === atomic { implicit t => mut.get(k) })
+      } else if (pct < 120) {
+        val a = try { Some(base(k)) } catch { case _ => None }
+        val b = try { Some(atomic { implicit t => mut(k) }) } catch { case _ => None }
+        assert(a === b)
+      } else if (pct < 135) {
+        assert(base.put(k, v) === atomic { implicit t => mut.put(k, v) })
+      } else if (pct < 140) {
+        base(k) = v
+        atomic { implicit t => mut(k) = v }
+      } else if (pct < 145) {
+        assert(base.contains(k) === atomic { implicit t => mut.contains(k) })
+      } else if (pct < 155) {
+        assert(base.remove(k) === atomic { implicit t => mut.remove(k) })
+      } else if (pct < 160) {
+        for (j <- 0 until (i / (total / 20))) {
+          if (!base.isEmpty) {
+            val k1 = base.iterator.next._1
+            assert(base.remove(k1) === atomic { implicit t => mut.remove(k1) })
+          }
+        }
+      } else if (pct < 163) {
+        mut = atomic { implicit t => mut.clone }
+      } else if (pct < 166) {
+        assert(base.toMap === atomic { implicit t => mut.snapshot })
+      } else if (pct < 169) {
+        assert(base.isEmpty === atomic { implicit t => mut.isEmpty })
+      } else if (pct < 172) {
+        assert(base.size === atomic { implicit t => mut.size })
+      } else if (pct < 177) {
+        assert(base eq (base += (k -> v)))
+        assert(mut eq atomic { implicit t => mut += (k -> v) })
+      } else if (pct < 180) {
+        val kv2 = (nextKey -> nextValue)
+        val kv3 = (nextKey -> nextValue)
+        assert(base eq (base += ((k -> v), kv2, kv3)))
+        assert(mut eq atomic { implicit t => mut += ((k -> v), kv2, kv3) })
+      } else if (pct < 183) {
+        val kv2 = (nextKey -> nextValue)
+        val kv3 = (nextKey -> nextValue)
+        assert(base eq (base ++= Array((k -> v), kv2, kv3)))
+        assert(mut eq atomic { implicit t => mut ++= Array((k -> v), kv2, kv3) })
+      } else if (pct < 188) {
+        assert(base eq (base -= k))
+        assert(mut eq atomic { implicit t => mut -= k })
+      } else if (pct < 191) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base -= (k, k2, k3)))
+        assert(mut eq atomic { implicit t => mut -= (k, k2, k3) })
+      } else if (pct < 194) {
+        val k2 = nextKey
+        val k3 = nextKey
+        assert(base eq (base --= Array(k, k2, k3)))
+        assert(mut eq atomic { implicit t => mut --= Array(k, k2, k3) })
+      } else if (pct < 195) {
+        mut = atomic { implicit t => TMap(mut.toArray: _*).single }
+      } else if (pct < 196) {
+        mut = atomic { implicit t => TMap.empty[String, Int] ++= mut }.single
+      } else if (pct < 197) {
+        atomic { implicit t =>
+          val m2 = mutable.Map.empty[String, Int]
+          for (kv <- mut) { m2 += kv }
+          assert(base === m2)
+        }
+      } else if (pct < 198) {
+        atomic { implicit t =>
+          val m2 = mutable.Map.empty[String, Int]
+          for (kv <- mut.iterator) { m2 += kv }
+          assert(base === m2)
+        }
       }
     }
   }
@@ -199,7 +271,7 @@ class TMapSuite extends FunSuite {
   private def now = System.currentTimeMillis
 
   test("sequential non-txn read performance") {
-    for (pass <- 0 until 10) {
+    for (pass <- 0 until 5) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -217,8 +289,8 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential append performance") {
-    for (pass <- 0 until 10) {
+  test("sequential non-txn append performance") {
+    for (pass <- 0 until 5) {
       for (size <- List(10, 100, 1000, 100000)) {
         val src = kvRange(0, size).toArray
         val t0 = now
@@ -236,7 +308,7 @@ class TMapSuite extends FunSuite {
 
   test("sequential non-txn update performance") {
     val values = (0 until 37) map { "x" + _ }
-    for (pass <- 0 until 10) {
+    for (pass <- 0 until 5) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -256,7 +328,7 @@ class TMapSuite extends FunSuite {
   test("sequential non-txn put/remove mix performance") {
     val values = (0 until 37) map { "x" + _ }
     val rand = new skel.FastSimpleRandom
-    for (pass <- 0 until 10) {
+    for (pass <- 0 until 5) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -274,6 +346,62 @@ class TMapSuite extends FunSuite {
         print(size + " keys/map -> " + elapsed + " nanos/op,  ")
       }
       println
+    }
+  }
+
+  test("sequential txn read performance") {
+    for (txnSize <- List(2, 10, 1000)) {
+      for (pass <- 0 until 3) {
+        print(txnSize + " accesses/txn: ")
+        for (size <- List(10, 100, 1000, 100000)) {
+          val m = TMap(kvRange(0, size): _*).single
+          val t0 = now
+          for (ii <- 0 until 1000000 by txnSize) {
+            atomic { implicit txn =>
+              var i = ii
+              while (i < ii + txnSize) {
+                val k = i % (2 * size)
+                assert(m.contains(k) == (k < size))
+                i += 1
+              }
+            }
+          }
+          val elapsed = now - t0
+          print(size + " keys/map -> " + elapsed + " nanos/contain,  ")
+        }
+        println
+      }
+    }
+  }
+
+  test("sequential txn put/remove mix performance") {
+    val values = (0 until 37) map { "x" + _ }
+    val rand = new skel.FastSimpleRandom
+    for (txnSize <- List(2, 10, 1000)) {
+      for (pass <- 0 until 3) {
+        print(txnSize + " accesses/txn: ")
+        for (size <- List(10, 100, 1000, 100000)) {
+          val m = TMap(kvRange(0, size): _*).single
+          val t0 = now
+          for (ii <- 0 until 1000000 by txnSize) {
+            atomic { implicit txn =>
+              var i = ii
+              while (i < ii + txnSize) {
+                val r = rand.nextInt
+                val k = math.abs(r % size)
+                if (r > 0)
+                  m.put(k, values(i % values.length))
+                else
+                  m.remove(k)
+                i += 1
+              }
+            }
+          }
+          val elapsed = now - t0
+          print(size + " keys/map -> " + elapsed + " nanos/op,  ")
+        }
+        println
+      }
     }
   }
 }
