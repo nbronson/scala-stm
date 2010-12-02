@@ -25,30 +25,6 @@ object BasicSyntax {
     }
   }
 
-  def snapshot = atomic.withHint('readOnly -> true) { implicit txn =>
-    List(top(), bottom(), left(), right())
-  }
-
-  def overspecifiedSnapshotAttempt = atomic.
-          withConfig('maxRetries -> 1).
-          withHint('readOnly -> true, 'readSetSize -> 4, 'nestingDepth -> 1) {
-      implicit txn =>
-    List(top(), bottom(), left(), right())
-  }
-
-  // this will throw an exception if the underlying STM implementation doesn't
-  // support an option named 'irrevocable
-  val customAtomic = atomic.withConfig('irrevocable -> true)
-                                                           
-  def fireMissileAt(p: Point) { println("launch " + p) }
-
-  def removeCorners = customAtomic { implicit txn =>
-    // fire a missile at any point that is on the corner of the bounding box
-    val pts = snapshot
-    for (p <- Set.empty ++ pts; if pts.count(_ == p) > 1)
-      fireMissileAt(p)
-  }
-
   def alternatives {
     val z = atomic { implicit txn =>
       if (!(left().x < -100))
