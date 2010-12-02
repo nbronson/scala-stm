@@ -58,10 +58,20 @@ trait TSet[A] {
 
   def clone(implicit txn: InTxn): TSet[A] = single.clone.tset
 
+  // The following methods work fine via the asSet mechanism, but are heavily
+  // used.  We add transactional versions of them to allow overrides to get
+  // access to the InTxn instance without a ThreadLocal lookup.
+
+  def foreach[U](f: A => U)(implicit txn: InTxn) { single.foreach(f) }
+  def contains(elem: A)(implicit txn: InTxn): Boolean = single.contains(elem)
+  def apply(elem: A)(implicit txn: InTxn): Boolean = contains(elem)
+  def add(elem: A)(implicit txn: InTxn): Boolean = single.add(elem)
+  def update(elem: A, included: Boolean)(implicit txn: InTxn) { if (included) this += elem else this -= elem }
+  def remove(elem: A)(implicit txn: InTxn): Boolean = single.remove(elem)
+
   // The following methods return the wrong receiver when invoked via the asSet
   // conversion.  They are exactly the methods of mutable.Set whose return type
-  // is this.type.  Note that there are other methods of mutable.Set that we
-  // allow to use the implicit mechanism, such as add(k).
+  // is this.type.
   
   def += (x: A)(implicit txn: InTxn): this.type = { single += x ; this }
   def += (x1: A, x2: A, xs: A*)(implicit txn: InTxn): this.type = { single.+= (x1, x2, xs: _*) ; this }

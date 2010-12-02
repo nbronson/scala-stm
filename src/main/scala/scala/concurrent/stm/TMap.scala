@@ -58,10 +58,22 @@ trait TMap[A, B] {
 
   def clone(implicit txn: InTxn): TMap[A, B] = single.clone.tmap
 
+  // The following methods work fine via the asMap mechanism, but are heavily
+  // used.  We add transactional versions of them to allow overrides to get
+  // access to the InTxn instance without a ThreadLocal lookup.
+
+  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn) { single.foreach(f) }
+  def contains(key: A)(implicit txn: InTxn): Boolean = single.contains(key)
+  def apply(key: A)(implicit txn: InTxn): B = single(key)
+  def get(key: A)(implicit txn: InTxn): Option[B] = single.get(key)
+  def update(key: A, value: B)(implicit txn: InTxn) { single.update(key, value) }
+  def put(key: A, value: B)(implicit txn: InTxn): Option[B] = single.put(key, value)
+  def remove(key: A)(implicit txn: InTxn): Option[B] = single.remove(key)
+
   // The following methods return the wrong receiver when invoked via the asMap
   // conversion.  They are exactly the methods of mutable.Map whose return type
   // is this.type.  Note that there are other methods of mutable.Map that we
-  // allow to use the implicit mechanism, such as put(k).
+  // allow to use the implicit mechanism, such as getOrElseUpdate(k).
   
   def += (kv: (A, B))(implicit txn: InTxn): this.type = { single += kv ; this }
   def += (kv1: (A, B), kv2: (A, B), kvs: (A, B)*)(implicit txn: InTxn): this.type = { single.+= (kv1, kv2, kvs: _*) ; this }
