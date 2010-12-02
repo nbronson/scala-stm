@@ -75,7 +75,13 @@ private[skel] object TxnHashTrie {
 
     def contains(hash: Int, key: A): Boolean = find(hash, key) >= 0
 
-    def get(hash: Int, key: A): Option[B] = get(find(hash, key))
+    def mapGet(hash: Int, key: A): Option[B] = {
+      val i = find(hash, key)
+      if (i < 0)
+        None
+      else
+        Some(values(i).asInstanceOf[B])
+    }
 
     def get(i: Int): Option[B] = {
       if (i < 0)
@@ -83,7 +89,7 @@ private[skel] object TxnHashTrie {
       else if (values != null)
         Some(values(i).asInstanceOf[B])
       else
-        someNull.asInstanceOf[Option[B]] // if we don't handle sets here we need two versions of TxnHashTrie.remove
+        someNull.asInstanceOf[Option[B]]
     }
 
     def find(hash: Int, key: A): Int = {
@@ -452,7 +458,7 @@ private[skel] object TxnHashTrie {
 
   @tailrec private def get[A, B](n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Option[B] = {
     n() match {
-      case leaf: Leaf[A, B] => leaf.get(hash, key)
+      case leaf: Leaf[A, B] => leaf.mapGet(hash, key)
       case branch: Branch[A, B] => get(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
@@ -646,7 +652,7 @@ private[skel] object TxnHashTrie {
 
   @tailrec private def get[A, B](n: Ref[Node[A, B]], shift: Int, hash: Int, key: A)(implicit txn: InTxn): Option[B] = {
     n() match {
-      case leaf: Leaf[A, B] => leaf.get(hash, key)
+      case leaf: Leaf[A, B] => leaf.mapGet(hash, key)
       case branch: Branch[A, B] => get(branch.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key)(txn)
     }
   }
