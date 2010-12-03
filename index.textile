@@ -1,33 +1,54 @@
 ---
 layout: default
-title: ScalaSTM
+title: Welcome
 ---
 
-ScalaSTM is a library that helps you write thread-safe code.  Software transactions let multiple threads and actors read and write global state without deadlocks or race conditions.  Build your shared data structures from immutable objects and transactional references, wrap your critical regions in @atomic@, and ScalaSTM will handle optimistic concurrency control.
+Welcome from the Scala STM Expert Group.  We're working on a lightweight software transactional memory for Scala, inspired by the STMs in Haskell and Clojure.  Our target is inclusion in Scala's standard library for 2.9 or the next point-release after, but you can use it today.
 
-ScalaSTM is the product of an expert group working to produce an STM(software transactional memory) suitable for inclusion in Scala's standard library.  You can use it now as a JAR file.
+ScalaSTM is a single JAR with no dependencies, and includes
+* An API that supports multiple STM implementations
+* A reference implementation based on CCSTM
 
-bq. ScalaSTM is for programmers whose threads or actors need to coordinate access to shared data.
+ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data structure using immutable objects and @Ref@-s, then you can access the shared data from multiple threads or actors without @synchronized@, without deadlocks or race conditions, and with good scalability.  ScalaSTM provides an easier and safer replacement for @wait+notify@, and also includes concurrent sets and maps.
 
 
-h2(#why).  Optimistic concurrency
+h2(#whatisit). What is STM?
 
-ScalaSTM _optimistically_ assumes that all threads can proceed in parallel, but keeps around enough information to fix things if it makes an incorrect speculation.  The result has some nice properties:
+Think of software transactional memory as a mediator that sits between a critical region of your code (the atomic block) and the program's heap.  The STM keeps a record of every read and write in the atomic block, and checks to make sure that it hasn't experienced interference from another thread.  If an atomic block is invalid, all of its writes are _rolled back_ and then it is retried.  If an atomic block completes successfully then it is _committed_, and other threads or actors will be allowed to see the changes it has made.
 
-* *Say what you mean.*  You write @atomic@, ScalaSTM executes it atomically without deadlocks or races.  Nested atomic blocks do the right thing.
+STMs use optimistic concurrency control.  They optimistically assume that atomic blocks will be able to run in parallel, and then back up and retry if that speculation is incorrect.  (There is a lot of research on algorithms that minimize the cost of mis-speculation, but there is no way to completely avoid rollback with parallel dynamic transactions.)  Keeping the old versions of data so that you can back up imposes some overhead, but optimistic concurrency typically has better scalability than alternative approaches.
 
-* *Readers scale.*  All of the threads in a system can read data without interfering with each other.
 
-* *Exceptions automatically trigger cleanup.*  If an atomic block throws an exception, all of the @Ref@-s are reset to their original state.  (You can change this default if you like.)
+h2(#nomagic). No magic
 
-* *Waiting for complex conditions is easy.*  If an atomic block doesn't find the state it's looking for, it can call @retry@ to back up and wait for any of its inputs to change.  If there are multiple ways to succeed, you can chain them and ScalaSTM will try them all.
+There have been several ambitious attempts to create STMs that can run existing sequential imperative code in parallel.  This is a difficult task that requires a lot of magic, because calls to the STM might need to be inserted for _every_ transactional access to a non-final field or array element.[1]  Good performance is also difficult because of the large numbers of reads and writes.
+
+The ScalaSTM API avoids the need for magic by only managing @Ref@-s.  This means that there are fewer memory locations to manage, and no bytecode instrumentation or compiler modifications are required.  As in Haskell and Clojure, the usefulness of @Ref@ is multiplied by good library support for immutable data structures.  We're also working on transactional collections that allow for better performance and concurrency.
 
 
 h2(#whatfor).  Who is it for?
 
 ScalaSTM is for programmers whose threads or actors need to coordinate access to shared data.  In a server, this might be the list of active connections or a cache.  In a client, this might be a partial result or worker thread status.
 
-ScalaSTM is just a library, so it doesn't affect the parts of the application that don't use it.  This means that you can use it inside a framework or hidden component.
 
-Atomic blocks are sometimes attempted more than once before they succeed, so software transactions _might not be a good fit_ if you need to perform I/O inside your critical regions.  @Ref@-s are automatically reverted and immutable objects are safe, but ScalaSTM doesn't try to magically undo a call to @println@.  There are hooks for manual rollback, and for integration with an external transactional resource (e.g. a database).
+h2(#pros).  Pros
+
+* *Say what you mean.*  You write @atomic@, ScalaSTM executes it atomically without deadlocks or races.  There is no need to map locks to data.  Nested atomic blocks do the right thing, so you can build complex thread-safe operations from simple ones.
+
+* *Readers scale.*  All of the threads in a system can read data without interfering with each other.  Optimistic algorithms take better advantage of the cache on modern architectures than pessimistic approaches.
+
+* *Exceptions automatically trigger cleanup.*  If an atomic block throws an exception, all of the @Ref@-s are reset to their original state.  (You can change this default if you like.)
+
+* *Waiting for complex conditions is easy.*  If an atomic block doesn't find the state it's looking for, it can call @retry@ to back up and wait for any of its inputs to change.  If there are multiple ways to succeed, you can chain them and ScalaSTM will try them all.
+
+* *Simple.*  ScalaSTM is just a stand-alone library, so it doesn't affect the parts of the application that don't use it.  This means that you can include it inside a framework or hidden component.
+
+h2(#cons).  Cons
+
+* *Two extra characters per read or write.*  If @x@ is a @Ref@, then @x()@ reads its value and @x() = v@ writes it.
+
+* *Single-thread overheads.*  In most cases STMs are slower when the program isn't actually running in parallel.  We've gotten the actual costs pretty low, so for most uses this won't be a problem.
+
+* *Rollback doesn't mix well with I/O.*  Only changes to @Ref@-s are undone automatically.  The ScalaSTM API includes hooks so you can perform manual compensation or DB integration, but there is no way to recall packets or pixels.  Of course, you probably shouldn't be doing I/O while you hold a lock, either.
+
 
