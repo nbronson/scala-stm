@@ -1,0 +1,16 @@
+---
+layout: default
+title: Who We Are
+---
+
+The Scala STM expert group was assembled by Martin Odersky, the creator of the Scala programming language, with the aim of producing an STM suitable for inclusion in Scala's standard library.  It includes
+
+* Jonas Bon&eacute;r -- Akka
+* Nathan Bronson -- CCSTM + Stanford's Pervasive Parallelism Lab
+* Guy Korland -- DeuceSTM
+* Aleksandar Prokopec -- EPFL
+* Krishna Sankar -- Cisco
+* Daniel Spiewak -- University of Wisconsin
+* Peter Veentjer -- Multiverse
+
+We conduct all of our discussions on the "scala-stm-expert-group":http://groups.google.com/group/scala-stm-expert-group mailing list at Google Groups, and our code is hosted at ["http://github.com/nbronson/scala-stm":http://github.com/nbronson/scala-stm].
