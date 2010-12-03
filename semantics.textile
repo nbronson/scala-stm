@@ -9,7 +9,7 @@ h2(#writeskew). Write skew
 
 Write skew occurs when a transaction's reads are validated at a different point in time from where its writes are applied.  MVCC(multi-version concurrency control) algorithms allows write skew, because it performs reads against a snapshot taken at the beginning of a transaction while using locks to atomically apply the writes at the end.
 
-One of the nice features of true atomicity is that it allows local correctness reasoning for each transaction.  A system that tolerates write skews allows a greater fraction of transactions to commit, which is a good thing, but it makes correctness a global property.  ScalaSTM chooses safety over throughput.  Some pluggable ScalaSTM implementations may allow write skew to be selectively enabled using the @TxnExecutor.withConfig@ mechanism, but it is not allowed by default.
+One of the nice features of true atomicity is that it allows local correctness reasoning for each transaction.  A system that tolerates write skews allows a greater fraction of transactions to commit, which is a good thing, but it makes correctness a global property.  Some pluggable ScalaSTM implementations may allow relaxed consistency to be selectively enabled, but write skew is not allowed by default.
 
 h2(#atomicity). Strong atomicity
 

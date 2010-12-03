@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Who We Are
+title: Scala STM Expert Group
 ---
 
 The Scala STM expert group was assembled by Martin Odersky, the creator of the Scala programming language, with the aim of producing an STM suitable for inclusion in Scala's standard library.  It includes

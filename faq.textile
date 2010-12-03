@@ -58,3 +58,7 @@ A. Yes.
 Q. Does ScalaSTM allow write skew?
 
 A. No, although pluggable implementations may allow it to be selectively enabled as an optimization.
+
+Q. Will ScalaSTM work with Scala on .NET?
+
+A. The ScalaSTM reference implementation uses classes from @java.util.concurrent.atomic@ in a few key places internally, but it should be straightforward to replace these with the CLR functionality exposed by @System::Threading::Interlocked@.  Because ScalaSTM does not do bytecode rewriting there will be no need for MSIL rewriting.
