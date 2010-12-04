@@ -89,6 +89,14 @@ blockquote {
   color: #800000;
 }
 
+p.faqq {
+}
+
+p.faqa {
+  padding-bottom: 1.3em;
+  border-bottom: 1px solid #a0a0a0;
+}
+
 ul { 
   list-style-type: disc;
 }
