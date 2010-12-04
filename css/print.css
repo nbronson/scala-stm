@@ -19,35 +19,34 @@
   @page {
     size: letter;
     margin: 1in 1in 1.25in 1in;
-    font: normal 10pt "Gill Sans" !important;
-    @bottom-right { content: counter(page); }
+    font-size: 10pt;
+    @bottom-right {
+      content: counter(page);
+    }
   }
 
-  title { string-set: doctitle content(); }
+  title {
+    string-set: doctitle content();
+  }
 
   body {
-    font-family: "Palatino";
     margin: 0;
     color: black;
     background: white;
-    font-size: 10pt;
   }
 
   h1 {
     string-set: pagetitle content();
     page-break-before: always;
   }
-  h1:first-child { page-break-before: avoid; }
-  h1, h2, h3 {
-    font-family: "Gill Sans";
+  h1:first-child {
+    page-break-before: avoid;
   }
-  pre, p, blockquote { page-break-inside: avoid; }
+  pre, p, blockquote {
+    page-break-inside: avoid;
+  }
   pre, code {
-    font-family: "Monaco", "DejaVu Sans Mono", "Courier New", "Courier";
     font-size: 9pt;
-  }
-  pre br {
-    display: none;
   }
   a:link, a:visited {
     background: transparent;
@@ -55,36 +54,20 @@
   }
   
 
-  #header, #pages, #footer { display: none }
-  #wrap, #content {
+  #header, #menu, #footer {
+    display: none
+  }
+  #outer, #content {
     float: none !important;
     color: black;
     background: transparent;
-    width: auto !important;
+    width: 6.5in !important;
     margin: 0;
-    padding: 0 0 0 0.9em;
-    border: 0;
+    padding: 0.1em;
   }
-
-  ol.toc a:link, ol.toc a:visited { text-decoration: none; }
-  ol.toc a:after { content: leader('.') target-counter(attr(href), page); }
 
   .title {
     page-break-before: always;
     border: none;
   }
-  .title img {
-    display: block;
-    width: 80%;
-    margin: 2em auto 4em auto;
-  }
-  p.preface {
-    page-break-before: always;
-    padding-top: 1.5in;
-  }
-  div.preface.quotes {
-    page-break-before: always;
-    padding-top: 1in;
-  }
-
 }
