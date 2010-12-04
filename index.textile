@@ -15,4 +15,4 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
-[-2010 Dec 5 -- ScalaSTM version 0.1 released.  "Download":download.html-]
+* [-2010 Dec 5 -- ScalaSTM version 0.1 released.  "Download":download.html-]
