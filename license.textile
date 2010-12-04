@@ -5,7 +5,7 @@ title: License
 
 All of the source code and documentation that has been developed by the Scala STM Expert Group is available under a modified-BSD license.
 
-pre.. Copyright (c) 2009-2010 Stanford University, unless otherwise specified.
+pre(license).. Copyright (c) 2009-2010 Stanford University, unless otherwise specified.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

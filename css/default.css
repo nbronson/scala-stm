@@ -34,6 +34,11 @@ pre {
   padding: 0.6em;
 }
 
+pre.license {
+  border: 0px;
+  line-height: 1.1em;
+}
+
 .home {
   font-size: 1.6em;
   font-weight: bold;
