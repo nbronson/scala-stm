@@ -16,3 +16,7 @@ builds.  Then
   cd dep_tests/sbt
   sbt +update +run
 
+To test building using maven2, edit dep_tests/maven/pom.xml, then
+
+  cd dep_tests/maven
+  mvn -U compile
