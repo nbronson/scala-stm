@@ -1,8 +1,13 @@
 *.iws
+.*.swp
 .idea/workspace.xml
-system.properties
 out/
 target/
 lib_managed/
 src_managed/
 project/boot/
+dep_tests/sbt/out/
+dep_tests/sbt/target/
+dep_tests/sbt/lib_managed/
+dep_tests/sbt/src_managed/
+dep_tests/sbt/project/boot/
