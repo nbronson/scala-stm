@@ -4,6 +4,7 @@ body {
   font-family: "Helvetica Neue", "DejaVu Sans", "Verdana", "sans-serif";
   font-size: 11pt;
   line-height: 1.4em;
+  text-align: center;
 }
 
 a:link, a:visited {
@@ -100,6 +101,7 @@ ul {
   float: right;
   width: 45em;
   padding-bottom: 3em;
+  text-align: left;
 }
 
 #footer {
@@ -112,21 +114,28 @@ ul {
 #menu ol {
   list-style-type: none;
   padding: 0.3em 2em 1.3em 0;
+  margin: 0;
 }
 
 #menu ol li {
   font-size: 125%;
   font-weight: bold;
   color: #800000;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0;
 }
 
 #menu ol li ol {
+  padding-left: 0;
   padding-right: 0;
+  margin: 0;
 }
 
 #menu ol li ol li {
   font-size: 80%;
   font-weight: normal;
-  padding-bottom: 0.3em;
+  padding: 0 0 0.3em 0;
+  margin: 0;
 }
 
