@@ -1,10 +1,38 @@
 ---
 layout: default
-title: Downloading
+title: Download
 ---
 
+The latest release of ScalaSTM is version 0.1.  To get it you can
+* use sbt or maven2 dependency management,
+* download a prebuilt JAR: ["scala-stm_2.8.1-0.1.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.1/scala-stm_2.8.1-0.1.jar], or
+* build it ["from source":#manual].
 
-h2(#github). From the source on github
+h2(#sbt). sbt
+
+Tell @sbt@ about a dependency on ScalaSTM by adding the following line to your project definition class (in @project/build@)
+
+{% highlight scala %}
+val scala_stm = "org.scala-tools" %% "scala-stm" % "0.1"
+{% endhighlight %}
+
+@sbt update@ will then download the correct @scala-stm@ JAR and use it for building.
+
+h2(#maven). Maven2
+
+Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.8.1) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). The ScalaSTM dependency for your @pom.xml@ is
+
+{% highlight xml %}
+<dependencies>
+  <dependency>
+    <groupId>org.scala-tools</groupId>
+    <artifactId>scala-stm_2.8.1</artifactId>
+    <version>0.1</version>
+  </dependency>
+</dependencies>
+{% endhighlight %}
+
+h2(#manual). Building from source
 
 ScalaSTM is hosted at ["github.com/nbronson/scala-stm":http://github.com/nbronson/scala-stm].  If you system has @git@, the best way to get the source code is to clone this repository.
 
@@ -23,7 +51,7 @@ sbt update
 {% highlight bash %}
 sbt test
 {% endhighlight %}
-# Build a JAR file
+# Build a JAR file (it will end up in a subdirectory of @target@)
 {% highlight bash %}
 sbt package
 {% endhighlight %}

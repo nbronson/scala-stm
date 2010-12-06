@@ -11,8 +11,8 @@ ScalaSTM is a single JAR with no dependencies, and includes
 
 ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data structure using immutable objects and @Ref@-s, then you can access it from multiple threads or actors.  No @synchronized@, no deadlocks or race conditions, and good scalability.  Included are concurrent sets and maps, and we also have an easier and safer replacement for @wait@ and @notifyAll@.
 
-... "learn more":intro.html
+"Learn more...":intro.html
 
 h2(#news).  News
 
-* [-2010 Dec 5 -- ScalaSTM version 0.1 released.  "Download":download.html-]
+* 2010 Dec 5 -- ScalaSTM version 0.1 released.  "Get it...":download.html
