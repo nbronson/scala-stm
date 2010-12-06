@@ -48,7 +48,7 @@ pre.license {
 h1 {
   font-size: 2em;
   margin: 0;
-  padding: 0 0 0.5em 0;
+  padding: 0.5em 0;
   border-bottom: 1px solid #808080;
 }
 
@@ -93,6 +93,7 @@ ul {
 #menu {
   float: left;
   width: 10em;
+  padding-top: 2em;
   border-right: 1px solid #c0c0c0;
   text-align: right;
 }
