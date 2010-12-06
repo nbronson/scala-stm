@@ -23,11 +23,6 @@ img {
 code {
   font-family: "Monaco", "DejaVu Sans Mono", "Courier New", "monospace";
   font-size: 10pt;
-  font-weight: bold;
-}
-
-pre code {
-  font-weight: normal;
 }
 
 pre {
