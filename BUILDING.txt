@@ -1,0 +1,40 @@
+BUILDING THE WEBSITE
+
+The project's website is currently hosted using GitHub pages.  This means
+that instead of being a subdirectory in the master branch of git, it is
+at the top level of a branch named gh-pages.  Github automatically runs
+the entire contents of the gh-pages branch through the jekyll markup tool,
+and then places the resulting site at username.github.com/scala-stm.
+
+If you want to test out changes to the website locally, install jekyll
+using RubyGems (see https://github.com/mojombo/jekyll/wiki/install).
+In the root of a checkout of the gh-pages branch, run
+
+  jekyll --server --auto
+  
+and the website will be available on localhost:4000, with edits
+immediately available.
+
+
+SCALADOC
+
+In the api directory run "gendoc.sh <branch>" to generate the ScalaDoc for a
+particular version of scala-stm.  The project.version from that branch's
+project/build.properties will be used to pick the target subdirectory.  The 0.1
+release docs can be built with "gendoc.sh release-0.1", for example.  The
+current snapshot docs can be built with "gendoc.sh master".  Only changes that
+have been pushed to github will be included.
+
+
+PDF OF THE SITE
+
+PDF construction of the docs is not yet good quality, but the best
+results so far have resulted from (in a populated _site subdirectory
+and with a patched wkhtmltopdf):
+
+    grep '^  ' css/print.css > css/print_like.css
+    wkhtmltopdf -B 1in -L 1in -R 1.25in -T 1in --footer-right '[page]' \
+        -s Letter --user-style-sheet css/print_like.css toc \
+        --toc-header-text 'Table of Contents' \
+        `grep "li..a.href='[a-z_.]*'" just_links.html | sed -e "s/^[^']*'//" -e "s/'.*//"` \
+        output.pdf
