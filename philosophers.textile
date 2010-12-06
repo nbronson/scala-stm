@@ -89,7 +89,7 @@ h2(#source). Full source
 
 The full source for this example is available as part of the ScalaSTM source on github: ["RealityShowPhilosophers.scala":https://github.com/nbronson/scala-stm/blob/master/src/test/scala/scala/concurrent/stm/examples/RealityShowPhilosophers.scala].  It includes a camera thread that prints an image 60 times a second, as well as a bit of machinery to handle thread shutdown.
 
-Below is an exerpt from running @RealityShowPhilosophers@. Note that since forks are picked up and put down instantaneously, the camera never observes a philosopher holding only a single fork.
+Below is an excerpt from running @RealityShowPhilosophers@. Note that since forks are picked up and put down instantaneously, the camera never observes a philosopher holding only a single fork.
 
 {% highlight java %}
 ...
