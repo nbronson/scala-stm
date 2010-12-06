@@ -32,9 +32,8 @@ PDF construction of the docs is not yet good quality, but the best
 results so far have resulted from (in a populated _site subdirectory
 and with a patched wkhtmltopdf):
 
-    grep '^  ' css/print.css > css/print_like.css
     wkhtmltopdf -B 1in -L 1in -R 1.25in -T 1in --footer-right '[page]' \
-        -s Letter --user-style-sheet css/print_like.css toc \
+        -s Letter --user-style-sheet css/print.css toc \
         --toc-header-text 'Table of Contents' \
         `grep "li..a.href='[a-z_.]*'" just_links.html | sed -e "s/^[^']*'//" -e "s/'.*//"` \
         output.pdf

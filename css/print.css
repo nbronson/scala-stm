@@ -1,73 +1,18 @@
-/* Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership.  The ASF
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
+.title { page-break-before: always }
+h2 { page-break-after: avoid }
+pre, p { page-break-inside: avoid }
 
+body { font-size: 10pt }
+code {
+  font-family: "Courier New", "monospace";
+}
+pre code { font-size: 9pt }
 
-@media print {
-  @page {
-    size: letter;
-    margin: 1in 1in 1.25in 1in;
-    font-size: 10pt;
-    @bottom-right {
-      content: counter(page);
-    }
-  }
-
-  title {
-    string-set: doctitle content();
-  }
-
-  body {
-    margin: 0;
-    color: black;
-    background: white;
-  }
-
-  h1 {
-    string-set: pagetitle content();
-    page-break-before: always;
-  }
-  h1:first-child {
-    page-break-before: avoid;
-  }
-  pre, p, blockquote {
-    page-break-inside: avoid;
-  }
-  pre, code {
-    font-size: 9pt;
-  }
-  a:link, a:visited {
-    background: transparent;
-    text-decoration: none;
-  }
-  
-
-  #header, #menu, #footer {
-    display: none
-  }
-  #outer, #content {
-    float: none !important;
-    color: black;
-    background: transparent;
-    width: 6.5in !important;
-    margin: 0;
-    padding: 0.1em;
-  }
-
-  .title {
-    page-break-before: always;
-    border: none;
-  }
+#header, #menu, #footer { display: none }
+#outer, #content {
+  float: none;
+  background: transparent;
+  width: auto;
+  margin: 0;
+  padding: 0;
 }
