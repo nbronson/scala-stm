@@ -49,46 +49,81 @@ private[stm] trait AbstractInTxn extends InTxn {
   private var _decider: ExternalDecider = null
   protected def externalDecider = _decider
 
-  protected val beforeCommitList = new CallbackList[InTxn]
-  protected val whileValidatingList = new CallbackList[NestingLevel]
-  protected val whilePreparingList = new CallbackList[InTxnEnd]
-  protected val whileCommittingList = new CallbackList[InTxnEnd]
-  protected val afterCommitList = new CallbackList[Status]
-  protected val afterRollbackList = new CallbackList[Status]
+  /** Set to true if any callbacks are registered. */
+  private var _callbacksPresent = false
+  
+  private val _beforeCommitList = new CallbackList[InTxn]
+  private val _whileValidatingList = new CallbackList[NestingLevel]
+  private val _whilePreparingList = new CallbackList[InTxnEnd]
+  private val _whileCommittingList = new CallbackList[InTxnEnd]
+  private val _afterCommitList = new CallbackList[Status]
+  private val _afterRollbackList = new CallbackList[Status]
+
+  /** Returns true if there are while-preparing handlers, while-committing
+   *  handlers, or an external decider.
+   */
+  protected def writeResourcesPresent: Boolean = _callbacksPresent && writeResourcesPresentImpl
+
+  private def writeResourcesPresentImpl: Boolean = {
+    !_whilePreparingList.isEmpty || !_whileCommittingList.isEmpty || externalDecider != null
+  }
+
+  protected def fireBeforeCommitCallbacks() {
+    if (_callbacksPresent)
+      _beforeCommitList.fire(currentLevel, this)
+  }
+
+  protected def fireWhilePreparingCallbacks() {
+    if (_callbacksPresent)
+      _whilePreparingList.fire(currentLevel, this)
+  }
 
   protected def checkpointCallbacks() {
-    val level = currentLevel
-    level._beforeCommitSize = beforeCommitList.size
-    level._whileValidatingSize = whileValidatingList.size
-    level._whilePreparingSize = whilePreparingList.size
-    level._whileCommittingSize = whileCommittingList.size
-    level._afterCommitSize = afterCommitList.size
-    level._afterRollbackSize = afterRollbackList.size
+    if (_callbacksPresent)
+      checkpointCallbacksImpl()
   }
 
-  /** Returns the discarded `afterRollbackList` entries. */
+  private def checkpointCallbacksImpl() {
+    val level = currentLevel
+    level._beforeCommitSize = _beforeCommitList.size
+    level._whileValidatingSize = _whileValidatingList.size
+    level._whilePreparingSize = _whilePreparingList.size
+    level._whileCommittingSize = _whileCommittingList.size
+    level._afterCommitSize = _afterCommitList.size
+    level._afterRollbackSize = _afterRollbackList.size
+  }
+
+  /** Returns the discarded `afterRollbackList` entries, or null if none */
   protected def rollbackCallbacks(): Array[Status => Unit] = {
-    val level = currentLevel
-    beforeCommitList.size = level._beforeCommitSize
-    whileValidatingList.size = level._whileValidatingSize
-    whilePreparingList.size = level._whilePreparingSize
-    whileCommittingList.size = level._whileCommittingSize
-    afterCommitList.size = level._afterCommitSize
-    afterRollbackList.truncate(level._afterRollbackSize)
+    if (!_callbacksPresent) null else rollbackCallbacksImpl()
   }
 
-  /** Returns the discarded `afterCommitList` entries. */
+  private def rollbackCallbacksImpl(): Array[Status => Unit] = {
+    val level = currentLevel
+    _beforeCommitList.size = level._beforeCommitSize
+    _whileValidatingList.size = level._whileValidatingSize
+    _whilePreparingList.size = level._whilePreparingSize
+    _whileCommittingList.size = level._whileCommittingSize
+    _afterCommitList.size = level._afterCommitSize
+    _afterRollbackList.truncate(level._afterRollbackSize)
+  }
+
+  /** Returns the discarded `afterCommitList` entries, or null if none. */
   protected def resetCallbacks(): Array[Status => Unit] = {
-    beforeCommitList.size = 0
-    whileValidatingList.size = 0
-    whilePreparingList.size = 0
-    whileCommittingList.size = 0
-    afterRollbackList.size = 0
-    afterCommitList.truncate(0)
+    if (!_callbacksPresent) null else resetCallbacksImpl()
+  }
+
+  private def resetCallbacksImpl(): Array[Status => Unit] = {
+    _beforeCommitList.size = 0
+    _whileValidatingList.size = 0
+    _whilePreparingList.size = 0
+    _whileCommittingList.size = 0
+    _afterRollbackList.size = 0
+    _afterCommitList.truncate(0)
   }
 
   protected def fireWhileValidating() {
-    val n = whileValidatingList.size
+    val n = _whileValidatingList.size
     if (n > 0)
       fireWhileValidating(n - 1, currentLevel)
   }
@@ -101,7 +136,7 @@ private[stm] trait AbstractInTxn extends InTxn {
         fireWhileValidating(level._whileValidatingSize - 1, level.parLevel) // skip the rest at this level
       else {
         try {
-          whileValidatingList(i)(level)
+          _whileValidatingList(i)(level)
         } catch {
           case x => level.requestRollback(UncaughtExceptionCause(x))
         }
@@ -113,17 +148,48 @@ private[stm] trait AbstractInTxn extends InTxn {
   //////////// implementation of functionality for the InTxn user
 
   override def rootLevel: AbstractNestingLevel = currentLevel.root
-  def beforeCommit(handler: InTxn => Unit) { requireActive() ; beforeCommitList += handler }
-  def whileValidating(handler: NestingLevel => Unit) { requireActive() ; whileValidatingList += handler }
-  def whilePreparing(handler: InTxnEnd => Unit) { requireNotDecided() ; whilePreparingList += handler }
-  def whileCommitting(handler: InTxnEnd => Unit) { requireNotCompleted() ; whileCommittingList += handler }
-  def afterCommit(handler: Status => Unit) { requireNotCompleted() ; afterCommitList += handler }
-  def afterRollback(handler: Status => Unit) { requireNotCompleted() ; afterRollbackList += handler }
+
+  def beforeCommit(handler: InTxn => Unit) {
+    requireActive()
+    _callbacksPresent = true
+    _beforeCommitList += handler
+  }
+
+  def whileValidating(handler: NestingLevel => Unit) {
+    requireActive()
+    _callbacksPresent = true
+    _whileValidatingList += handler
+  }
+
+  def whilePreparing(handler: InTxnEnd => Unit) {
+    requireNotDecided()
+    _callbacksPresent = true
+    _whilePreparingList += handler
+  }
+
+  def whileCommitting(handler: InTxnEnd => Unit) {
+    requireNotCompleted()
+    _callbacksPresent = true
+    _whileCommittingList += handler
+  }
+
+  def afterCommit(handler: Status => Unit) {
+    requireNotCompleted()
+    _callbacksPresent = true
+    _afterCommitList += handler
+  }
+
+  def afterRollback(handler: Status => Unit) {
+    requireNotCompleted()
+    _callbacksPresent = true
+    _afterRollbackList += handler
+  }
 
   def afterCompletion(handler: Status => Unit) {
     requireNotCompleted()
-    afterCommitList += handler
-    afterRollbackList += handler
+    _callbacksPresent = true
+    _afterCommitList += handler
+    _afterRollbackList += handler
   }
 
   def setExternalDecider(decider: ExternalDecider) {

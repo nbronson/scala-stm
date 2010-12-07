@@ -417,10 +417,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
-  private def writeResourcesPresent: Boolean = {
-    !whilePreparingList.isEmpty || !whileCommittingList.isEmpty || externalDecider != null
-  }
-
   private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
     // If we haven't performed any writes, there is no point in not waiting.
     if (writeCount == 0 && !writeResourcesPresent)
@@ -549,7 +545,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def attemptTopLevelComplete(): Boolean = {
     val root = _currentLevel
 
-    beforeCommitList.fire(root, this)
+    fireBeforeCommitCallbacks()
 
     // read-only transactions are easy to commit, because all of the reads
     // are already guaranteed to be consistent
@@ -567,7 +563,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (!revalidateImpl())
       return false
 
-    whilePreparingList.fire(root, this)
+    fireWhilePreparingCallbacks()
 
     if (externalDecider != null) {
       // external decider doesn't have to content with cancel by other threads
