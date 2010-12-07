@@ -493,7 +493,7 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  for (depth <- List(0, 1, 2, 4, 8)) {
+  for (depth <- List(0, 1, 2, 8)) {
     perfTest("uncontended R+W txn perf: nesting depth " + depth) { (x, y) =>
       var i = 0
       while (i < 5) {
@@ -521,7 +521,7 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  for (depth <- List(0, 1, 2, 4, 8)) {
+  for (depth <- List(0, 1, 2, 8)) {
     perfTest("uncontended R+R txn perf: nesting depth " + depth) { (x, y) =>
       var i = 0
       while (i < 10) {

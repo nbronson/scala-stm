@@ -271,7 +271,7 @@ class TMapSuite extends FunSuite {
   private def now = System.currentTimeMillis
 
   test("sequential non-txn read performance") {
-    for (pass <- 0 until 5) {
+    for (pass <- 0 until 2) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -290,7 +290,7 @@ class TMapSuite extends FunSuite {
   }
 
   test("sequential non-txn append performance") {
-    for (pass <- 0 until 5) {
+    for (pass <- 0 until 2) {
       for (size <- List(10, 100, 1000, 100000)) {
         val src = kvRange(0, size).toArray
         val t0 = now
@@ -308,7 +308,7 @@ class TMapSuite extends FunSuite {
 
   test("sequential non-txn update performance") {
     val values = (0 until 37) map { "x" + _ }
-    for (pass <- 0 until 5) {
+    for (pass <- 0 until 2) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -328,7 +328,7 @@ class TMapSuite extends FunSuite {
   test("sequential non-txn put/remove mix performance") {
     val values = (0 until 37) map { "x" + _ }
     val rand = new skel.FastSimpleRandom
-    for (pass <- 0 until 5) {
+    for (pass <- 0 until 2) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -351,7 +351,7 @@ class TMapSuite extends FunSuite {
 
   test("sequential txn read performance") {
     for (txnSize <- List(2, 10, 1000)) {
-      for (pass <- 0 until 3) {
+      for (pass <- 0 until 2) {
         print(txnSize + " accesses/txn: ")
         for (size <- List(10, 100, 1000, 100000)) {
           val m = TMap(kvRange(0, size): _*).single
@@ -378,7 +378,7 @@ class TMapSuite extends FunSuite {
     val values = (0 until 37) map { "x" + _ }
     val rand = new skel.FastSimpleRandom
     for (txnSize <- List(2, 10, 1000)) {
-      for (pass <- 0 until 3) {
+      for (pass <- 0 until 2) {
         print(txnSize + " accesses/txn: ")
         for (size <- List(10, 100, 1000, 100000)) {
           val m = TMap(kvRange(0, size): _*).single
