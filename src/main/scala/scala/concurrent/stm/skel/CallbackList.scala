@@ -7,7 +7,7 @@ import annotation.tailrec
 
 
 private object CallbackList {
-  val Empty : Seq[Any => Unit] = new Array[Any => Unit](0)
+  val Empty = new Array[Any => Unit](0)
 }
 
 private[stm] class CallbackList[A] private (private var _size: Int,
@@ -26,7 +26,12 @@ private[stm] class CallbackList[A] private (private var _size: Int,
 
   def size: Int = _size
 
-  def size_=(newSize: Int) {
+  def size_= (newSize: Int) {
+    if (newSize != _size)
+      changeSize(newSize)
+  }
+
+  private def changeSize(newSize: Int) {
     if (newSize < 0 || newSize > _size)
       throw new IllegalArgumentException
 
@@ -60,14 +65,13 @@ private[stm] class CallbackList[A] private (private var _size: Int,
 
   def apply(i: Int): (A => Unit) = _data(i)
 
-  def fire(level: NestingLevel, arg: A): Boolean = fire(level, arg, 0)
+  def fire(level: NestingLevel, arg: A) {
+    if (_size > 0)
+      fire(level, arg, 0)
+  }
 
-  @tailrec private def fire(level: NestingLevel, arg: A, i: Int): Boolean = {
-    if (!shouldFire(level))
-      false
-    else if (i >= _size)
-      true
-    else {
+  @tailrec private def fire(level: NestingLevel, arg: A, i: Int) {
+    if (i < _size && shouldFire(level)) {
       try {
         _data(i)(arg)
       } catch {
@@ -86,10 +90,10 @@ private[stm] class CallbackList[A] private (private var _size: Int,
   /** Sets the size of this callback list to `newSize`, and returns a the
    *  discarded handlers.
    */
-  def truncate(newSize: Int): Seq[A => Unit] = {
-    if (_size == 0) {
+  def truncate(newSize: Int): Array[A => Unit] = {
+    if (_size == newSize) {
       // nothing to do
-      CallbackList.Empty
+      null
     } else {
       // copy
       val z = new Array[A => Unit](_size - newSize)

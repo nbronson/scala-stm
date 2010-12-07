@@ -52,6 +52,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private var _slot: Slot = 0
   private var _currentLevel: TxnLevelImpl = null
 
+  /** Subsumption dramatically reduces the overhead of nesting, but it doesn't
+   *  allow partial rollback.  If we find out that partial rollback was needed
+   *  then we disable subsumption and rerun the parent.
+   */
+  private var _subsumptionAllowed = true
+
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
    *  long as there is no change of the current txn's priority between the
@@ -72,6 +78,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" + status +
             ", slot=" + _slot +
+            ", subsumptionAllowed=" + _subsumptionAllowed +
             ", priority=" + _priority +
             ", readCount=" + readCount  +
             ", writeCount=" + writeCount +
@@ -175,6 +182,26 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def nestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    if (_subsumptionAllowed)
+      subsumedNestedAtomicImpl(exec, block)
+    else
+      trueNestedAtomicImpl(exec, block)
+  }
+
+  private def subsumedNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    try {
+      block(this)
+    } catch {
+      case x if x != RollbackError && !exec.isControlFlow(x) => {
+        // partial rollback is required, but we can't do it here
+        _subsumptionAllowed = false
+        _currentLevel.forceRollback(Txn.OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
+        throw RollbackError
+      }
+    }    
+  }
+
+  private def trueNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     var prevFailures = 0
     (while (true) {
       // fail back to parent if it has been rolled back
@@ -390,10 +417,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
-  private def writeResourcesPresent: Boolean = {
-    !whilePreparingList.isEmpty || !whileCommittingList.isEmpty || externalDecider != null
-  }
-
   private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
     // If we haven't performed any writes, there is no point in not waiting.
     if (writeCount == 0 && !writeResourcesPresent)
@@ -432,11 +455,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int) {
-    // link to child races with remote rollback
+    // link to child races with remote rollback. pushIfActive detects the race
+    // and returns false
     if (!_currentLevel.pushIfActive(child)) {
-      assert(this.status.isInstanceOf[RolledBack])
-      // null localStatus will forward to parent's status
-      child.status = this.status
+      child.forceRollback(this.status.asInstanceOf[RolledBack].cause)
       throw RollbackError
     }
 
@@ -451,7 +473,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     // this seems to be faster than the volatile required for a lazy implementation
     _priority = skel.FastSimpleRandom.nextInt()
-    
+
     // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
     _slot = slotManager.assign(_currentLevel, _slot)
     _readVersion = freshReadVersion
@@ -507,6 +529,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       // this releases the locks
       rollbackAccessHistory(_slot)
+    } else {
+      // we can start subsuming again
+      _subsumptionAllowed = true      
     }
 
     val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
@@ -520,13 +545,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def attemptTopLevelComplete(): Boolean = {
     val root = _currentLevel
 
-    if (!beforeCommitList.fire(root, this))
-      return false
+    fireBeforeCommitCallbacks()
 
-      // read-only transactions are easy to commit, because all of the reads
-      // are already guaranteed to be consistent
+    // read-only transactions are easy to commit, because all of the reads
+    // are already guaranteed to be consistent
     if (writeCount == 0 && !writeResourcesPresent)
-      return root.statusCAS(Active, Committed)
+      return root.setCommittedIfActive()
 
     if (!root.statusCAS(Active, Preparing) || !acquireLocks())
       return false
@@ -539,15 +563,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (!revalidateImpl())
       return false
 
-    if (!whilePreparingList.fire(root, this))
-      return false
+    fireWhilePreparingCallbacks()
 
     if (externalDecider != null) {
       // external decider doesn't have to content with cancel by other threads
       if (!root.statusCAS(Preparing, Prepared) || !consultExternalDecider())
         return false
 
-      root.status = Committing
+      root.setCommitting()
     } else {
       // attempt to decide commit
       if (!root.statusCAS(Preparing, Committing))
@@ -556,7 +579,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     commitWrites(cv)
     // TODO: handle exceptions and don't recheck status for: whileCommittingList.fire(root, this)
-    root.status = Committed
+    root.setCommitted()
 
     return true
   }
@@ -579,9 +602,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     assert(writeCount == 0)
   }
 
-  private def fireAfterCompletion(handlers: Seq[Status => Unit], exec: TxnExecutor, s: Status) {
-    if (!handlers.isEmpty) {
-      val inOrder = if (s eq Committed) handlers else handlers.view.reverse
+  private def fireAfterCompletion(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status) {
+    if (handlers != null) {
+      val inOrder = if (s eq Committed) (handlers : Seq[Status => Unit]) else handlers.view.reverse
       var failure: Option[Throwable] = None
       for (h <- inOrder)
         failure = fireAfter(h, exec, s) orElse failure

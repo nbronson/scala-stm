@@ -80,19 +80,18 @@ class TxnLocalSuite extends FunSuite {
   }
 
   test("partial rollback triggers new initialization") {
-    var count = 0
-    val tl = TxnLocal( { count += 1 ; count } )
+    val x = Ref(0)
+    val tl = TxnLocal( { x.single() } )
     atomic { implicit txn =>
+      x() = 1
       intercept[RuntimeException] {
         atomic { implicit txn =>
-          assert(tl() === 1)
-          assert(count === 1)
-          tl() = 20
+          x() = 2
+          assert(tl() === 2)
           throw new RuntimeException
         }
       }
-      assert(tl() === 2)
-      assert(count === 2)
+      assert(tl() === 1)
     }
   }
 

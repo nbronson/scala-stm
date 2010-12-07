@@ -4,11 +4,24 @@ package scala.concurrent.stm
 
 
 object TxnLocal {
+  /** Constructs and returns a `TxnLocal` that will evaluate `init` each time
+   *  that an initial value is required.
+   */
   def apply[A](init: => A): TxnLocal[A] = new TxnLocal[A] {
     override def initialValue(txn: InTxn) = init
   }
 }
 
+/** `TxnLocal[A]` holds an instance of `A` that is local to an atomic block.
+ *  If a `TxnLocal` is read before it is has been assigned a value in the
+ *  current context, the value will be computed using the overridable
+ *  `initialValue` method. `TxnLocal` holds a value until just before the
+ *  after-completion handlers for the transaction are fired.  To arrange
+ *  cleanup of a value created by `initialValue`, register a handler via
+ *  `Txn.afterCommit`, `Txn.afterRollback`, or `Txn.afterCompletion`.
+ *
+ *  @author Nathan Bronson
+ */
 class TxnLocal[A] extends RefLike[A] {
 
   private val perThread = new ThreadLocal[(NestingLevel, Ref[Option[A]])]
