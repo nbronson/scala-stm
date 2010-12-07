@@ -250,61 +250,6 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  perfTest("uncontended R+W txn perf") { x =>
-    var i = 0
-    while (i < 5) {
-      i += 1
-      atomic { implicit t =>
-        assert(x() == "abc")
-        x() = "def"
-      }
-      atomic { implicit t =>
-        assert(x() == "def")
-        x() = "abc"
-      }
-    }
-  }
-
-  for (depth <- List(0, 1, 2, 4, 8)) {
-    perfTest("uncontended R+W txn perf: nesting depth " + depth) { x =>
-      var i = 0
-      while (i < 5) {
-        i += 1
-        nested(depth) { implicit t =>
-          assert(x() == "abc")
-          x() = "def"
-        }
-        nested(depth) { implicit t =>
-          assert(x() == "def")
-          x() = "abc"
-        }
-      }
-    }
-  }
-
-  private def nested(depth: Int)(body: InTxn => Unit) {
-    atomic { implicit txn =>
-      if (depth == 0)
-        body(txn)
-      else
-        nested(depth - 1)(body)
-    }
-  }
-
-  def perfTest(name: String)(runTen: Ref[String] => Unit) {
-    test(name) {
-      val x = Ref("abc")
-      var best = java.lang.Long.MAX_VALUE
-      for (pass <- 0 until 50000) {
-        val begin = System.nanoTime
-        runTen(x)
-        val elapsed = System.nanoTime - begin
-        best = best min elapsed
-      }
-      println(name + ": best was " + (best / 10.0) + " nanos/txn")
-    }
-  }
-
   test("beforeCommit upgrade on read-only commit") {
     val x = Ref(0)
     var ran = false
@@ -532,4 +477,97 @@ class TxnSuite extends FunSuite {
 
   // TODO: whilePreparing and whileCommitting callbacks
   // TODO: exception behavior from all types of callbacks
+
+  perfTest("uncontended R+W txn perf") { (x, y) =>
+    var i = 0
+    while (i < 5) {
+      i += 1
+      atomic { implicit t =>
+        assert(x() == "abc")
+        x() = "def"
+      }
+      atomic { implicit t =>
+        assert(x() == "def")
+        x() = "abc"
+      }
+    }
+  }
+
+  for (depth <- List(0, 1, 2, 4, 8)) {
+    perfTest("uncontended R+W txn perf: nesting depth " + depth) { (x, y) =>
+      var i = 0
+      while (i < 5) {
+        i += 1
+        nested(depth) { implicit t =>
+          assert(x() == "abc")
+          x() = "def"
+        }
+        nested(depth) { implicit t =>
+          assert(x() == "def")
+          x() = "abc"
+        }
+      }
+    }
+  }
+
+  perfTest("uncontended R+R txn perf") { (x, y) =>
+    var i = 0
+    while (i < 10) {
+      i += 1
+      atomic { implicit t =>
+        assert(x() == "abc")
+        assert(y() == 10)
+      }
+    }
+  }
+
+  for (depth <- List(0, 1, 2, 4, 8)) {
+    perfTest("uncontended R+R txn perf: nesting depth " + depth) { (x, y) =>
+      var i = 0
+      while (i < 10) {
+        i += 1
+        nested(depth) { implicit t =>
+          assert(x() == "abc")
+          assert(y() == 10)
+        }
+      }
+    }
+  }
+
+//  for (i <- 0 until 50) {
+//    perfTest("uncontended R+R txn perf: nesting depth 8, take " + i) { (x, y) =>
+//      var i = 0
+//      while (i < 10) {
+//        i += 1
+//        nested(8) { implicit t =>
+//          assert(x() == "abc")
+//          assert(y() == 10)
+//        }
+//      }
+//    }
+//  }
+
+  private def nested(depth: Int)(body: InTxn => Unit) {
+    atomic { implicit txn =>
+      if (depth == 0)
+        body(txn)
+      else
+        nested(depth - 1)(body)
+    }
+  }
+
+  private def perfTest(name: String)(runTen: (Ref[String], Ref[Int]) => Unit) {
+    test(name) {
+      val x = Ref("abc")
+      val y = Ref(10)
+      var best = java.lang.Long.MAX_VALUE
+      for (pass <- 0 until 50000) {
+        val begin = System.nanoTime
+        runTen(x, y)
+        val elapsed = System.nanoTime - begin
+        best = best min elapsed
+      }
+      println(name + ": best was " + (best / 10.0) + " nanos/txn")
+    }
+  }
 }
