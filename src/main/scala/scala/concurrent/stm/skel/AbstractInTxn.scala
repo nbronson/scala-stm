@@ -5,6 +5,7 @@ package skel
 
 import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
 import collection.mutable.ArrayBuffer
+import annotation.tailrec
 
 private[stm] object AbstractInTxn {
   abstract class SuccessCallback[A, B] {
@@ -66,7 +67,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   /** Returns the discarded `afterRollbackList` entries. */
-  protected def rollbackCallbacks(): Seq[Status => Unit] = {
+  protected def rollbackCallbacks(): Array[Status => Unit] = {
     val level = currentLevel
     beforeCommitList.size = level._beforeCommitSize
     whileValidatingList.size = level._whileValidatingSize
@@ -77,7 +78,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   /** Returns the discarded `afterCommitList` entries. */
-  protected def resetCallbacks(): Seq[Status => Unit] = {
+  protected def resetCallbacks(): Array[Status => Unit] = {
     beforeCommitList.size = 0
     whileValidatingList.size = 0
     whilePreparingList.size = 0
@@ -87,22 +88,25 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   protected def fireWhileValidating() {
-    var level = currentLevel
-    var i = whileValidatingList.size - 1
-    while (i >= 0) {
-      while (level._whileValidatingSize > i)
-        level = level.parLevel
-      if (level.status != Txn.Active) {
-        // skip the remaining handlers for this level
-        i = level._whileValidatingSize
-      } else {
+    val n = whileValidatingList.size
+    if (n > 0)
+      fireWhileValidating(n - 1, currentLevel)
+  }
+
+  @tailrec private def fireWhileValidating(i: Int, level: AbstractNestingLevel) {
+    if (i >= 0) {
+      if (i < level._whileValidatingSize)
+        fireWhileValidating(i, level.parLevel)
+      else if (level.status ne Txn.Active)
+        fireWhileValidating(level._whileValidatingSize - 1, level.parLevel) // skip the rest at this level
+      else {
         try {
           whileValidatingList(i)(level)
         } catch {
           case x => level.requestRollback(UncaughtExceptionCause(x))
         }
+        fireWhileValidating(i - 1, level)
       }
-      i -= 1
     }
   }
 

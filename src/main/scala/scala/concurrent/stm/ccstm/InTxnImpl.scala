@@ -520,8 +520,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def attemptTopLevelComplete(): Boolean = {
     val root = _currentLevel
 
-    if (!beforeCommitList.fire(root, this))
-      return false
+    beforeCommitList.fire(root, this)
 
       // read-only transactions are easy to commit, because all of the reads
       // are already guaranteed to be consistent
@@ -539,8 +538,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (!revalidateImpl())
       return false
 
-    if (!whilePreparingList.fire(root, this))
-      return false
+    whilePreparingList.fire(root, this)
 
     if (externalDecider != null) {
       // external decider doesn't have to content with cancel by other threads
@@ -579,9 +577,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     assert(writeCount == 0)
   }
 
-  private def fireAfterCompletion(handlers: Seq[Status => Unit], exec: TxnExecutor, s: Status) {
-    if (!handlers.isEmpty) {
-      val inOrder = if (s eq Committed) handlers else handlers.view.reverse
+  private def fireAfterCompletion(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status) {
+    if (handlers != null) {
+      val inOrder = if (s eq Committed) (handlers : Seq[Status => Unit]) else handlers.view.reverse
       var failure: Option[Throwable] = None
       for (h <- inOrder)
         failure = fireAfter(h, exec, s) orElse failure
