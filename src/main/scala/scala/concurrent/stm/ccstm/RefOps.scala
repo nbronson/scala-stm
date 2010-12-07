@@ -13,12 +13,15 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
 
   //////////////// Source stuff
 
+  override def apply()(implicit txn: InTxn): T = impl.get(handle)
   def get(implicit txn: InTxn): T = impl.get(handle)
   def getWith[Z](f: (T) => Z)(implicit txn: InTxn): Z = impl.getWith(handle, f)
   def relaxedGet(equiv: (T, T) => Boolean)(implicit txn: InTxn): T = impl.relaxedGet(handle, equiv)
 
   //////////////// Sink stuff
 
+
+  override def update(v: T)(implicit txn: InTxn) { impl.set(handle, v) }
   def set(v: T)(implicit txn: InTxn) { impl.set(handle, v) }
   def trySet(v: T)(implicit txn: InTxn): Boolean = impl.trySet(handle, v)
 
