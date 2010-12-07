@@ -52,6 +52,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private var _slot: Slot = 0
   private var _currentLevel: TxnLevelImpl = null
 
+  /** Subsumption dramatically reduces the overhead of nesting, but it doesn't
+   *  allow partial rollback.  If we find out that partial rollback was needed
+   *  then we disable subsumption and rerun the parent.
+   */
+  private var _subsumptionAllowed = true  
+
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
    *  long as there is no change of the current txn's priority between the
@@ -72,6 +78,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" + status +
             ", slot=" + _slot +
+            ", subsumptionAllowed=" + _subsumptionAllowed +
             ", priority=" + _priority +
             ", readCount=" + readCount  +
             ", writeCount=" + writeCount +
@@ -175,6 +182,26 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def nestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    if (_subsumptionAllowed)
+      subsumedNestedAtomicImpl(exec, block)
+    else
+      trueNestedAtomicImpl(exec, block)
+  }
+
+  private def subsumedNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    try {
+      block(this)
+    } catch {
+      case x if x != RollbackError && !exec.isControlFlow(x) => {
+        // partial rollback is required, but we can't do it here
+        _subsumptionAllowed = false
+        _currentLevel.forceRollback(Txn.OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
+        throw RollbackError
+      }
+    }    
+  }
+
+  private def trueNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     var prevFailures = 0
     (while (true) {
       // fail back to parent if it has been rolled back
@@ -451,7 +478,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     // this seems to be faster than the volatile required for a lazy implementation
     _priority = skel.FastSimpleRandom.nextInt()
-    
+
     // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
     _slot = slotManager.assign(_currentLevel, _slot)
     _readVersion = freshReadVersion
@@ -507,6 +534,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       // this releases the locks
       rollbackAccessHistory(_slot)
+    } else {
+      // we can start subsuming again
+      _subsumptionAllowed = true      
     }
 
     val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
