@@ -56,7 +56,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  allow partial rollback.  If we find out that partial rollback was needed
    *  then we disable subsumption and rerun the parent.
    */
-  private var _subsumptionAllowed = true  
+  private var _subsumptionAllowed = true
 
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
@@ -459,11 +459,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int) {
-    // link to child races with remote rollback
+    // link to child races with remote rollback. pushIfActive detects the race
+    // and returns false
     if (!_currentLevel.pushIfActive(child)) {
-      assert(this.status.isInstanceOf[RolledBack])
-      // null localStatus will forward to parent's status
-      child.status = this.status
+      child.forceRollback(this.status.asInstanceOf[RolledBack].cause)
       throw RollbackError
     }
 
@@ -552,10 +551,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     beforeCommitList.fire(root, this)
 
-      // read-only transactions are easy to commit, because all of the reads
-      // are already guaranteed to be consistent
+    // read-only transactions are easy to commit, because all of the reads
+    // are already guaranteed to be consistent
     if (writeCount == 0 && !writeResourcesPresent)
-      return root.statusCAS(Active, Committed)
+      return root.setCommittedIfActive()
 
     if (!root.statusCAS(Active, Preparing) || !acquireLocks())
       return false
@@ -575,7 +574,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       if (!root.statusCAS(Preparing, Prepared) || !consultExternalDecider())
         return false
 
-      root.status = Committing
+      root.setCommitting()
     } else {
       // attempt to decide commit
       if (!root.statusCAS(Preparing, Committing))
@@ -584,7 +583,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     commitWrites(cv)
     // TODO: handle exceptions and don't recheck status for: whileCommittingList.fire(root, this)
-    root.status = Committed
+    root.setCommitted()
 
     return true
   }

@@ -59,17 +59,25 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     case _ => Txn.Active
   }
 
-  def status_=(v: Txn.Status) {
-    _state = v
-    if (v.completed)
-      notifyCompleted()
+  def setCommitting() {
+    _state = Txn.Committing
   }
 
-  def statusCAS(v0: Txn.Status, v1: Txn.Status): Boolean = {
-    val f = stateUpdater.compareAndSet(this, v0, v1)
-    if (f && v1.completed)
+  def setCommitted() {
+    _state = Txn.Committed
+    notifyCompleted()
+  }
+
+  def setCommittedIfActive(): Boolean = {
+    val f = stateUpdater.compareAndSet(this, Txn.Active, Txn.Committed)
+    if (f)
       notifyCompleted()
     f
+  }
+
+  /** v1 may not be a completed status */
+  def statusCAS(v0: Txn.Status, v1: Txn.Status): Boolean = {
+    stateUpdater.compareAndSet(this, v0, v1)
   }
 
   /** Equivalent to `status` if this level is the current level, otherwise
