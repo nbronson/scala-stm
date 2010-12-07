@@ -27,6 +27,11 @@ private[stm] class CallbackList[A] private (private var _size: Int,
   def size: Int = _size
 
   def size_= (newSize: Int) {
+    if (newSize != _size)
+      changeSize(newSize)
+  }
+
+  private def changeSize(newSize: Int) {
     if (newSize < 0 || newSize > _size)
       throw new IllegalArgumentException
 

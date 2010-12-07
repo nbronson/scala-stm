@@ -171,7 +171,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   private def rollbackReadSet() {
     if (!undoLog.retainReadSet) {
       val n = undoLog.prevReadCount
-      java.util.Arrays.fill(_rHandles.asInstanceOf[Array[AnyRef]], n, _rCount, null)
+      var i = n
+      while (i < _rCount) {
+        _rHandles(i) = null
+        i += 1
+      }
       _rCount = n
     }
   }
@@ -183,7 +187,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
     } else {
       // allow GC of old handles
-      java.util.Arrays.fill(_rHandles.asInstanceOf[Array[AnyRef]], 0, _rCount, null)
+      var i = 0
+      while (i < _rCount) {
+        _rHandles(i) = null
+        i += 1
+      }
     }
     _rCount = 0
   }
@@ -465,6 +473,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def resetWriteBuffer() {
+    if (_wCount > 0)
+      resetWriteBufferNonEmpty()
+  }
+
+  private def resetWriteBufferNonEmpty() {
     var i = _wCount - 1
     while (i >= 0) {
       // discard references to aid GC
