@@ -1,8 +1,15 @@
 ScalaSTM - 0.2-SNAPSHOT RELEASE NOTES
 
-Changes between 0.1 and 0.2-SNAPSHOT
+Changes between 0.1 and 0.2-SNAPSHOT:
 
-* Substantial performance improvements, especially for nested atomic blocks.
+* Substantial performance improvements, especially for nested atomic
+  blocks.  Nested atomic blocks without orAtomic are optimistically
+  subsumed, then retried without subsumption if partial rollback is
+  needed.
 
-* TSet.View and TMap.View are now integrated into the Scala collections class
-  hierarchy, with Builders and CanBuildFrom instances.
+* TSet.View and TMap.View are integrated into the Scala collection
+  class hierarchy, with factory companion objects and Builder and
+  CanBuildFrom instances.
+
+Snapshot releases deployed to the scala-tools.org repository are tested
+and functional, but may have changing APIs.
