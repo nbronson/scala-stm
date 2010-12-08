@@ -21,7 +21,7 @@ Building and testing is done with ["sbt":http://code.google.com/p/simple-build-t
 sbt update
 {% endhighlight %}
 # Compile everything and run the tests
-{% highlight bash %}
+{% highlight java %}
 sbt test
 {% endhighlight %}
 # Build a JAR file (it will end up in a subdirectory of @target@)
