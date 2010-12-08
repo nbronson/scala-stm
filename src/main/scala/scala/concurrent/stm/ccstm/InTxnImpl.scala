@@ -13,7 +13,7 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
     case _ => get // this will create one
   }
 
-  private def active(txn: InTxnImpl): InTxnImpl = if (txn.currentLevel != null) txn else null
+  private def active(txn: InTxnImpl): InTxnImpl = if (txn.internalCurrentLevel != null) txn else null
 
   def dynCurrentOrNull: InTxnImpl = active(get)
 
@@ -50,13 +50,21 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private var _barging: Boolean = false
   private var _slot: Slot = 0
+
   private var _currentLevel: TxnLevelImpl = null
+  protected def undoLog: TxnLevelImpl = _currentLevel
+  protected def internalCurrentLevel: TxnLevelImpl = _currentLevel
 
   /** Subsumption dramatically reduces the overhead of nesting, but it doesn't
    *  allow partial rollback.  If we find out that partial rollback was needed
    *  then we disable subsumption and rerun the parent.
    */
   private var _subsumptionAllowed = true
+
+  /** This is the inner-most level that contains all subsumption, or null if
+   *  there is no subsumption taking place.
+   */
+  private var _subsumptionParent: TxnLevelImpl = null
 
   /** Higher wins.  Currently priority doesn't change throughout the lifetime
    *  of a rootLevel.  It would be okay for it to monotonically increase, so
@@ -89,8 +97,15 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// High-level behaviors
 
   def status: Status = _currentLevel.statusAsCurrent
-  def undoLog: TxnLevelImpl = _currentLevel
-  override def currentLevel: TxnLevelImpl = _currentLevel
+
+  def currentLevel: NestingLevel = {
+    if (_subsumptionParent != null) {
+      _subsumptionAllowed = false
+      _subsumptionParent.forceRollback(Txn.OptimisticFailureCause('restart_to_materialize_current_level, None))
+      throw RollbackError
+    }
+    _currentLevel
+  }
 
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     if (!_alternatives.isEmpty)
@@ -189,16 +204,24 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def subsumedNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    val outermost = _subsumptionParent == null
+    if (outermost)
+      _subsumptionParent = _currentLevel
     try {
-      block(this)
-    } catch {
-      case x if x != RollbackError && !exec.isControlFlow(x) => {
-        // partial rollback is required, but we can't do it here
-        _subsumptionAllowed = false
-        _currentLevel.forceRollback(Txn.OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
-        throw RollbackError
+      try {
+        block(this)
+      } catch {
+        case x if x != RollbackError && !exec.isControlFlow(x) => {
+          // partial rollback is required, but we can't do it here
+          _subsumptionAllowed = false
+          _currentLevel.forceRollback(Txn.OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
+          throw RollbackError
+        }
       }
-    }    
+    } finally {
+      if (outermost)
+        _subsumptionParent = null
+    }
   }
 
   private def trueNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {

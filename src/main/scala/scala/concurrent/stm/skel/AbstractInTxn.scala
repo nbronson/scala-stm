@@ -18,12 +18,15 @@ private[stm] object AbstractInTxn {
 private[stm] trait AbstractInTxn extends InTxn {
   import Txn._
 
-  override def currentLevel: AbstractNestingLevel
+  /** This is different from `currentLevel` so that `InTxn` instances can
+   *  assume that the return value from `topLevel` is not exposed to the user.
+   */
+  protected def internalCurrentLevel: AbstractNestingLevel
 
   //////////// implementation of functionality for the InTxn implementer
 
   protected def requireActive() {
-    currentLevel.status match {
+    internalCurrentLevel.status match {
       case Active =>
       case RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
@@ -31,7 +34,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   protected def requireNotDecided() {
-    currentLevel.status match {
+    internalCurrentLevel.status match {
       case s if !s.decided =>
       case RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
@@ -39,7 +42,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   protected def requireNotCompleted() {
-    currentLevel.status match {
+    internalCurrentLevel.status match {
       case s if !s.completed =>
       case RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
@@ -70,12 +73,12 @@ private[stm] trait AbstractInTxn extends InTxn {
 
   protected def fireBeforeCommitCallbacks() {
     if (_callbacksPresent)
-      _beforeCommitList.fire(currentLevel, this)
+      _beforeCommitList.fire(internalCurrentLevel, this)
   }
 
   protected def fireWhilePreparingCallbacks() {
     if (_callbacksPresent)
-      _whilePreparingList.fire(currentLevel, this)
+      _whilePreparingList.fire(internalCurrentLevel, this)
   }
 
   protected def checkpointCallbacks() {
@@ -84,7 +87,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   private def checkpointCallbacksImpl() {
-    val level = currentLevel
+    val level = internalCurrentLevel
     level._beforeCommitSize = _beforeCommitList.size
     level._whileValidatingSize = _whileValidatingList.size
     level._whilePreparingSize = _whilePreparingList.size
@@ -99,7 +102,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   private def rollbackCallbacksImpl(): Array[Status => Unit] = {
-    val level = currentLevel
+    val level = internalCurrentLevel
     _beforeCommitList.size = level._beforeCommitSize
     _whileValidatingList.size = level._whileValidatingSize
     _whilePreparingList.size = level._whilePreparingSize
@@ -125,7 +128,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   protected def fireWhileValidating() {
     val n = _whileValidatingList.size
     if (n > 0)
-      fireWhileValidating(n - 1, currentLevel)
+      fireWhileValidating(n - 1, internalCurrentLevel)
   }
 
   @tailrec private def fireWhileValidating(i: Int, level: AbstractNestingLevel) {
@@ -147,7 +150,7 @@ private[stm] trait AbstractInTxn extends InTxn {
 
   //////////// implementation of functionality for the InTxn user
 
-  override def rootLevel: AbstractNestingLevel = currentLevel.root
+  override def rootLevel: AbstractNestingLevel = internalCurrentLevel.root
 
   def beforeCommit(handler: InTxn => Unit) {
     requireActive()

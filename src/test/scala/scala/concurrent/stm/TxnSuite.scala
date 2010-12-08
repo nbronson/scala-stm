@@ -475,6 +475,25 @@ class TxnSuite extends FunSuite {
     assert(tries === 100)
   }
 
+  test("currentLevel during nesting") {
+    // this test is _tricky_, because an assertion failure inside the atomic
+    // block might cause a restart that expands any subsumption
+    val (n0, n1, n2) = atomic { implicit t =>
+      val (n1, n2) = atomic { implicit t =>
+        val n2 = atomic { implicit t =>
+          NestingLevel.current
+        }
+        (NestingLevel.current, n2)
+      }
+      (NestingLevel.current, n1, n2)
+    }
+    assert(n2.parent.get eq n1)
+    assert(n2.root eq n0)
+    assert(n1.parent.get eq n0)
+    assert(n1.root eq n0)
+    assert(n0.parent.isEmpty)
+  }
+
   // TODO: whilePreparing and whileCommitting callbacks
   // TODO: exception behavior from all types of callbacks
 
