@@ -256,4 +256,15 @@ class TSetSuite extends FunSuite {
       }
     }
   }
+
+  test("null entry") {
+    val s = TSet("abc", "def", (null: AnyRef))
+    assert(s.single.size === 3)
+    assert(s.single(null))
+    assert(s.single.remove(null))
+    assert(s.single.size === 2)
+    assert(!s.single(null))
+    assert(s.single.add(null))
+    assert(s.single.size === 3)
+  }
 }

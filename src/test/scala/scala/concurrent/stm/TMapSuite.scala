@@ -267,6 +267,28 @@ class TMapSuite extends FunSuite {
       }
     }
   }
+  
+  test("null key") {
+    val m = TMap((null : AnyRef) -> "abc", "def" -> "ghi")
+    assert(m.single.size === 2)
+    assert(m.single(null) === "abc")
+    assert(m.single.remove(null) === Some("abc"))
+    assert(m.single.size === 1)
+    assert(m.single.put(null, "jkl") === None)
+    assert(m.single.size === 2)
+    assert(m.single.get(null) === Some("jkl"))
+  }
+
+  test("null value") {
+    val m = TMap("abc" -> null, "def" -> "ghi")
+    assert(m.single.size === 2)
+    assert(m.single.get("abc") === Some(null))
+    assert(m.single.remove("abc") === Some(null))
+    assert(m.single.size === 1)
+    assert(m.single.put("jkl", null) === None)
+    assert(m.single.size === 2)
+    assert(m.single.contains("jkl"))
+  }
 
   private def now = System.currentTimeMillis
 
