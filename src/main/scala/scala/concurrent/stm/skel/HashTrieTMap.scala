@@ -4,14 +4,32 @@ package scala.concurrent.stm
 package skel
 
 import skel.{TxnHashTrie => Impl}
+import scala.collection.mutable.Builder
 
-private[stm] class HashTrieTMap[A, B] private (private val root: Ref.View[Impl.Node[A, B]]) extends TMapViaClone[A, B] {
+object HashTrieTMap {
+  
+  def empty[A, B]: TMap[A, B] = new HashTrieTMap(Ref(Impl.emptyMapNode[A, B]).single)
+
+  def newBuilder[A, B] = new Builder[(A, B), TMap[A, B]] {
+    var root = Impl.emptyMapBuildingNode[A, B]
+
+    def clear() { root = Impl.emptyMapBuildingNode[A, B] }
+
+    def += (kv: (A, B)): this.type = { root = Impl.buildingPut(root, kv._1, kv._2) ; this }
+
+    def result(): TMap[A, B] = {
+      val r = root
+      root = null
+      new HashTrieTMap(Ref(r.endBuild).single)
+    }
+  }
+}
+
+private[skel] class HashTrieTMap[A, B] private (private val root: Ref.View[Impl.Node[A, B]]) extends TMapViaClone[A, B] {
 
   //// construction
 
-  def this() = this(Ref(Impl.emptyMapNode[A, B]).single)
-  def this(kvs: TraversableOnce[(A, B)]) = this(Ref(Impl.buildMap(kvs)).single)
-  override def empty: TMap.View[A, B] = new HashTrieTMap[A, B]()
+  override def empty: TMap.View[A, B] = new HashTrieTMap(Ref(Impl.emptyMapNode[A, B]).single)
   override def clone(): HashTrieTMap[A, B] = new HashTrieTMap(Impl.clone(root))
 
   //// TMap.View aggregates

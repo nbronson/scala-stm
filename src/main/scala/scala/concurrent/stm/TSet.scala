@@ -2,10 +2,27 @@
 
 package scala.concurrent.stm
 
-import scala.collection.{immutable, mutable}
+import scala.collection.{immutable, mutable, generic}
 
 
 object TSet {
+
+  object View extends generic.MutableSetFactory[TSet.View] {
+
+    implicit def canBuildFrom[A]: generic.CanBuildFrom[Coll, A, TSet.View[A]] = setCanBuildFrom[A]
+
+    override def empty[A] = TSet.empty[A].single
+
+    override def newBuilder[A] = new mutable.Builder[A, View[A]] {
+      private val underlying = TSet.newBuilder[A]
+
+      def clear() { underlying.clear() }
+      def += (x: A): this.type = { underlying += x ; this }
+      def result() = underlying.result().single
+    }
+
+    override def apply[A](xs: A*): TSet.View[A] = (TSet.newBuilder[A] ++= xs).result().single
+  }
 
   /** A `Set` that provides atomic execution of all of its methods. */
   trait View[A] extends mutable.Set[A] with mutable.SetLike[A, View[A]] {
@@ -20,17 +37,22 @@ object TSet {
     /** Takes an atomic snapshot of this transactional set. */
     def snapshot: immutable.Set[A]
 
-    override def empty: View[A] = throw new AbstractMethodError
+    override def empty: View[A] = TSet.empty[A].single
+    override def companion: generic.GenericCompanion[View] = View    
+    override protected[this] def newBuilder: mutable.Builder[A, View[A]] = View.newBuilder[A]
   }
-
+  
 
   /** Constructs and returns a new empty `TSet`. */
-  def empty[A]: TSet[A] = impl.STMImpl.instance.newTSet[A]()
+  def empty[A]: TSet[A] = impl.STMImpl.instance.newTSet[A]
+
+  /** Returns a builder of `TSet`. */
+  def newBuilder[A]: mutable.Builder[A, TSet[A]] = impl.STMImpl.instance.newTSetBuilder[A]
 
   /** Constructs and returns a new `TSet` that will contain the elements from
    *  `xs`.
    */
-  def apply[A](xs: A*): TSet[A] = impl.STMImpl.instance.newTSet[A](xs)
+  def apply[A](xs: A*): TSet[A] = (newBuilder[A] ++= xs).result()
 
 
   /** Allows a `TSet` in a transactional context to be used as a `Set`. */

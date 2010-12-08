@@ -4,14 +4,32 @@ package scala.concurrent.stm
 package skel
 
 import skel.{TxnHashTrie => Impl}
+import scala.collection.mutable.Builder
 
-private[stm] class HashTrieTSet[A] private (private val root: Ref.View[Impl.SetNode[A]]) extends TSetViaClone[A] {
+object HashTrieTSet {
+
+  def empty[A]: TSet[A] = new HashTrieTSet(Ref(Impl.emptySetNode[A]).single)
+
+  def newBuilder[A] = new Builder[A, TSet[A]] {
+    var root = Impl.emptySetBuildingNode[A]
+
+    def clear() { root = Impl.emptySetBuildingNode[A] }
+
+    def += (elem: A): this.type = { root = Impl.buildingAdd(root, elem) ; this }
+
+    def result(): TSet[A] = {
+      val r = root
+      root = null
+      new HashTrieTSet(Ref(r.endBuild).single)
+    }
+  }
+}
+
+private[skel] class HashTrieTSet[A] private (private val root: Ref.View[Impl.SetNode[A]]) extends TSetViaClone[A] {
 
   //// construction
 
-  def this() = this(Ref(Impl.emptySetNode[A]).single)
-  def this(xs: TraversableOnce[A]) = this(Ref(Impl.buildSet(xs)).single)
-  override def empty: TSet.View[A] = new HashTrieTSet[A]()
+  override def empty: TSet.View[A] = new HashTrieTSet(Ref(Impl.emptySetNode[A]).single)  
   override def clone(): HashTrieTSet[A] = new HashTrieTSet(Impl.clone(root))
 
   //// TSet.View aggregates

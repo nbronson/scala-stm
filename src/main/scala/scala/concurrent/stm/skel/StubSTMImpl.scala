@@ -4,7 +4,7 @@ package scala.concurrent.stm
 package skel
 
 import java.lang.Throwable
-import concurrent.stm.Txn.Status
+import scala.collection.mutable.Builder
 
 private[stm] class StubSTMImpl extends impl.STMImpl {
   {
@@ -27,11 +27,11 @@ private[stm] class StubSTMImpl extends impl.STMImpl {
   def newTArray[A : ClassManifest](length: Int): TArray[A] = throw new AbstractMethodError
   def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A] = throw new AbstractMethodError
 
-  def newTMap[A, B](): TMap[A, B] = throw new AbstractMethodError
-  def newTMap[A, B](kvs: TraversableOnce[(A, B)]): TMap[A, B] = throw new AbstractMethodError
+  def newTMap[A, B]: TMap[A, B] = throw new AbstractMethodError
+  def newTMapBuilder[A, B]: Builder[(A, B), TMap[A, B]] = throw new AbstractMethodError
 
-  def newTSet[A](): TSet[A] = throw new AbstractMethodError
-  def newTSet[A](xs: TraversableOnce[A]): TSet[A] = throw new AbstractMethodError
+  def newTSet[A]: TSet[A] = throw new AbstractMethodError
+  def newTSetBuilder[A]: Builder[A, TSet[A]] = throw new AbstractMethodError
 
   //////// TxnContext
 
@@ -48,6 +48,6 @@ private[stm] class StubSTMImpl extends impl.STMImpl {
   def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
   def isControlFlow(x: Throwable): Boolean = throw new AbstractMethodError
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = throw new AbstractMethodError
-  def postDecisionFailureHandler: (Status, Throwable) => Unit = throw new AbstractMethodError
-  def withPostDecisionFailureHandler(handler: (Status, Throwable) => Unit): TxnExecutor = throw new AbstractMethodError
+  def postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = throw new AbstractMethodError
+  def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor = throw new AbstractMethodError
 }

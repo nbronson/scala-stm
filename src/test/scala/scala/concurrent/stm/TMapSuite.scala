@@ -290,6 +290,13 @@ class TMapSuite extends FunSuite {
     assert(m.single.contains("jkl"))
   }
 
+  test("view builder magic") {
+    val fwd = TMap.View(1 -> "one", 2 -> "two")
+    val rev = fwd map { kv => (kv._2 -> kv._1) }
+    val rev2: TMap.View[String, Int] = rev
+    assert(rev === Map("one" -> 1, "two" -> 2))
+  }
+
   private def now = System.currentTimeMillis
 
   test("sequential non-txn read performance") {

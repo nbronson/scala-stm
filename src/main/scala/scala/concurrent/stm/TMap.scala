@@ -2,14 +2,31 @@
 
 package scala.concurrent.stm
 
-import scala.collection.{immutable, mutable}
+import scala.collection.{immutable, mutable, generic}
+import mutable.Iterable
 
 
 object TMap {
 
+  object View extends generic.MutableMapFactory[TMap.View] {
+
+    implicit def canBuildFrom[A, B]: generic.CanBuildFrom[Coll, (A, B), TMap.View[A, B]] = new MapCanBuildFrom[A, B]
+
+    def empty[A, B] = TMap.empty[A, B].single
+
+    override def newBuilder[A, B] = new mutable.Builder[(A, B), View[A, B]] {
+      private val underlying = TMap.newBuilder[A, B]
+
+      def clear() { underlying.clear() }
+      def += (kv: (A, B)): this.type = { underlying += kv ; this }
+      def result() = underlying.result().single
+    }
+
+    override def apply[A, B](kvs: (A, B)*): TMap.View[A, B] = (TMap.newBuilder[A, B] ++= kvs).result().single
+  }
+
   /** A `Map` that provides atomic execution of all of its methods. */
   trait View[A, B] extends mutable.Map[A, B] with mutable.MapLike[A, B, View[A, B]] {
-
     /** Returns the `TMap` perspective on this transactional map, which
      *  provides map functionality only inside atomic blocks.
      */
@@ -20,17 +37,22 @@ object TMap {
     /** Takes an atomic snapshot of this transactional map. */
     def snapshot: immutable.Map[A, B]
 
-    override def empty: View[A, B] = throw new AbstractMethodError
+    override def empty: View[A, B] = TMap.empty[A, B].single
+
+    override protected[this] def newBuilder: mutable.Builder[(A, B), View[A, B]] = View.newBuilder[A, B]
   }
 
 
   /** Constructs and returns a new empty `TMap`. */
-  def empty[A, B]: TMap[A, B] = impl.STMImpl.instance.newTMap[A, B]()
+  def empty[A, B]: TMap[A, B] = impl.STMImpl.instance.newTMap[A, B]
+
+  /** Returns a builder of `TMap`. */
+  def newBuilder[A, B]: mutable.Builder[(A, B), TMap[A, B]] = impl.STMImpl.instance.newTMapBuilder[A, B]
 
   /** Constructs and returns a new `TMap` that will contain the key/value pairs
    *  from `kvs`.
    */
-  def apply[A, B](kvs: (A, B)*): TMap[A, B] = impl.STMImpl.instance.newTMap[A, B](kvs)
+  def apply[A, B](kvs: (A, B)*): TMap[A, B] = (newBuilder[A, B] ++= kvs).result()
 
 
   /** Allows a `TMap` in a transactional context to be used as a `Map`. */

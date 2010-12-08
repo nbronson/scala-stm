@@ -60,9 +60,7 @@ private[skel] object TxnHashTrie {
   }
 
   type SetNode[A] = Node[A, AnyRef]
-
-  def emptySetNode[A]: SetNode[A] = emptySetValue.asInstanceOf[SetNode[A]]
-  def emptyMapNode[A, B]: Node[A, B] = emptyMapValue.asInstanceOf[Node[A, B]]
+  type SetBuildingNode[A] = BuildingNode[A, AnyRef]
 
   /** If used by a Set, values will be null. */
   final class Leaf[A, B](val hashes: Array[Int],
@@ -379,21 +377,14 @@ private[skel] object TxnHashTrie {
 
   //////////////// construction
 
-  // TODO: expose a real Builder
+  def emptySetNode[A]: SetNode[A] = emptySetValue.asInstanceOf[SetNode[A]]
+  def emptyMapNode[A, B]: Node[A, B] = emptyMapValue.asInstanceOf[Node[A, B]]
 
-  def buildMap[A, B](kvs: TraversableOnce[(A, B)]): Node[A, B] = {
-    var root = emptyMapValue.asInstanceOf[BuildingNode[A, B]]
-    for (kv <- kvs)
-      root = buildingPut(root, 0, keyHash(kv._1), kv._1, kv._2)
-    root.endBuild
-  }
+  def emptySetBuildingNode[A]: SetBuildingNode[A] = emptySetValue.asInstanceOf[SetBuildingNode[A]]
+  def emptyMapBuildingNode[A, B]: BuildingNode[A, B] = emptyMapValue.asInstanceOf[BuildingNode[A, B]]
 
-  def buildSet[A](ks: TraversableOnce[A]): SetNode[A] = {
-    var root = emptySetValue.asInstanceOf[BuildingNode[A, AnyRef]]
-    for (k <- ks)
-      root = buildingPut(root, 0, keyHash(k), k, null)
-    root.endBuild
-  }
+  def buildingAdd[A](root: SetBuildingNode[A], x: A): SetBuildingNode[A] = buildingPut(root, 0, keyHash(x), x, null)
+  def buildingPut[A, B](root: BuildingNode[A, B], k: A, v: B): BuildingNode[A, B] = buildingPut(root, 0, keyHash(k), k, v)
 
   private def buildingPut[A, B](current: BuildingNode[A, B], shift: Int, hash: Int, key: A, value: B): BuildingNode[A, B] = {
     current match {

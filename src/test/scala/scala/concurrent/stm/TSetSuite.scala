@@ -267,4 +267,11 @@ class TSetSuite extends FunSuite {
     assert(s.single.add(null))
     assert(s.single.size === 3)
   }
+
+  test("view builder magic") {
+    val s0 = TSet.View(1, 2, 3)
+    val s1 = s0 map { "x" + _ }
+    val s2: TSet.View[String] = s1
+    assert(s1 === Set("x1", "x2", "x3"))
+  }
 }

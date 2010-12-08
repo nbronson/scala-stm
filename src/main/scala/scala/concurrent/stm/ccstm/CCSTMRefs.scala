@@ -22,11 +22,11 @@ private[ccstm] object CCSTMRefs {
     def newTArray[A: ClassManifest](length: Int): TArray[A] = new TArrayImpl[A](length)
     def newTArray[A: ClassManifest](xs: TraversableOnce[A]): TArray[A] = new TArrayImpl[A](xs)
 
-    def newTMap[A, B](): TMap[A, B] = new skel.HashTrieTMap[A, B]
-    def newTMap[A, B](kvs: TraversableOnce[(A, B)]): TMap[A, B] = new skel.HashTrieTMap[A, B](kvs)
+    def newTMap[A, B]: TMap[A, B] = skel.HashTrieTMap.empty[A, B]
+    def newTMapBuilder[A, B] = skel.HashTrieTMap.newBuilder[A, B]
 
-    def newTSet[A](): TSet[A] = new skel.HashTrieTSet[A]
-    def newTSet[A](xs: TraversableOnce[A]): TSet[A] = new skel.HashTrieTSet[A](xs)
+    def newTSet[A]: TSet[A] = skel.HashTrieTSet.empty[A]
+    def newTSetBuilder[A] = skel.HashTrieTSet.newBuilder[A]
   }
 
   private abstract class BaseRef[A] extends Handle[A] with RefOps[A] with ViewOps[A] {

@@ -3,6 +3,8 @@
 package scala.concurrent.stm
 package impl
 
+import scala.collection.mutable.Builder
+
 /** `RefFactory` is responsible for creating concrete `Ref` instances. */ 
 trait RefFactory {
   def newRef(v0: Boolean): Ref[Boolean]
@@ -23,9 +25,9 @@ trait RefFactory {
   def newTArray[A : ClassManifest](length: Int): TArray[A]
   def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A]
 
-  def newTMap[A, B](): TMap[A, B]
-  def newTMap[A, B](kvs: TraversableOnce[(A, B)]): TMap[A, B]
+  def newTMap[A, B]: TMap[A, B]
+  def newTMapBuilder[A, B]: Builder[(A, B), TMap[A, B]]
 
-  def newTSet[A](): TSet[A]
-  def newTSet[A](xs: TraversableOnce[A]): TSet[A]
+  def newTSet[A]: TSet[A]
+  def newTSetBuilder[A]: Builder[A, TSet[A]]
 }
