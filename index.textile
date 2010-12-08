@@ -15,4 +15,6 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
-* 2010 Dec 6 -- ScalaSTM version 0.1 released.  "Get it...":download.html
+* 2010 Dec 8 -- ["0.2-SNAPSHOT":snapshots.html]: Substantial performance improvements, especially for nested atomic blocks.  @TMap.View@ and @TSet.View@ are integrated with Scala collection class hierarchy.
+
+* 2010 Dec 6 -- ScalaSTM version 0.1 released.  "Get it...":releases.html

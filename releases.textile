@@ -1,0 +1,34 @@
+---
+layout: default
+title: Releases
+---
+
+The latest release of ScalaSTM is version 0.1.  To get it you can
+* use sbt or maven2 dependency management, or
+* download a prebuilt JAR: ["scala-stm_2.8.1-0.1.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.1/scala-stm_2.8.1-0.1.jar].
+
+h2(#sbt). SBT
+
+Tell @sbt@ about a dependency on ScalaSTM by adding the following line to your project definition class (in @project/build@)
+
+{% highlight scala %}
+val scala_stm = "org.scala-tools" %% "scala-stm" % "0.1"
+{% endhighlight %}
+
+@sbt update@ will then download the correct @scala-stm@ JAR and use it for building.
+
+h2(#maven). Maven2
+
+Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.8.1) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). The ScalaSTM dependency for your @pom.xml@ is
+
+{% highlight xml %}
+<dependencies>
+  <dependency>
+    <groupId>org.scala-tools</groupId>
+    <artifactId>scala-stm_2.8.1</artifactId>
+    <version>0.1</version>
+  </dependency>
+</dependencies>
+{% endhighlight %}
+
+The deployment tests inside the ScalaSTM source include a complete ["pom.xml":https://github.com/nbronson/scala-stm/blob/master/dep_tests/maven/pom.xml], including the repository configuration for @org.scala-tools@.
