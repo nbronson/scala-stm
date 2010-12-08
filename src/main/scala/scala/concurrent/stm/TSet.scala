@@ -15,6 +15,8 @@ object TSet {
      */
     def tset: TSet[A]
 
+    def clone: TSet.View[A]
+
     /** Takes an atomic snapshot of this transactional set. */
     def snapshot: immutable.Set[A]
 

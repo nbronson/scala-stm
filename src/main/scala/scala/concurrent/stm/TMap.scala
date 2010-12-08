@@ -14,6 +14,8 @@ object TMap {
      *  provides map functionality only inside atomic blocks.
      */
     def tmap: TMap[A, B]
+    
+    def clone: TMap.View[A, B]
 
     /** Takes an atomic snapshot of this transactional map. */
     def snapshot: immutable.Map[A, B]
