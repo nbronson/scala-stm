@@ -36,6 +36,7 @@ private[stm] class StubSTMImpl extends impl.STMImpl {
   //////// TxnContext
 
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = throw new AbstractMethodError
+  def dynCurrentOrNull: InTxn = throw new AbstractMethodError
 
   //////// TxnExecutor
 

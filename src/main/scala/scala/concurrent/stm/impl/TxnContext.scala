@@ -15,4 +15,10 @@ trait TxnContext {
    *  committing on the current thread, `None` otherwise.
    */
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn]
+
+  /** Returns the current `InTxn` instance if it is active or in the process of
+   *  committing on the current thread, `null` otherwise.  Always performs a
+   *  dynamic lookup. 
+   */
+  def dynCurrentOrNull: InTxn
 }

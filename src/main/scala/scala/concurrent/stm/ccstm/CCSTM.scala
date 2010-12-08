@@ -248,4 +248,5 @@ private[ccstm] object CCSTM extends GV6 {
  */
 class CCSTM extends CCSTMExecutor with impl.STMImpl with CCSTMRefs.Factory {
   def findCurrent(implicit mt: MaybeTxn): Option[InTxn] = Option(InTxnImpl.currentOrNull)
+  def dynCurrentOrNull: InTxn = InTxnImpl.dynCurrentOrNull
 }
