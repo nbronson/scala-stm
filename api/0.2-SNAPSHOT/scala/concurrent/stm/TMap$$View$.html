@@ -2,46 +2,39 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.impl.TxnContext</title>
+          <title>scala.concurrent.stm.TMap.View</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link href="../../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
-      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
-      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
-      <script type="text/javascript" src="../../../../lib/template.js"></script>
-      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      <link href="../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
     
         </head>
-        <body class="type" onload="windowTitle();">
+        <body class="value" onload="windowTitle();">
 
-      <p id="owner"><a href="../../../package.html" class="extype" name="scala">scala</a>.<a href="../../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="../package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="package.html" class="extype" name="scala.concurrent.stm.impl">impl</a></p>
+      <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="TMap$.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a></p>
 
       <div id="definition">
-        <img src="../../../../lib/trait_big.png" />
-        <h1>TxnContext</h1>
+        <img src="../../../lib/object_big.png" />
+        <h1>View</h1>
       </div>
 
       <h4 class="signature" id="signature">
-      <span class="kind">trait</span>
+      <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">TxnContext</span>
+        <span class="name">View</span>
         
         
-        <span class="result"> extends AnyRef</span>
+        <span class="result"> extends <span class="extype" name="scala.collection.generic.MutableMapFactory">MutableMapFactory</span>[<a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>]</span>
       </span>
       </h4>
-      <div class="fullcomment" id="comment"><div class="comment cmt"><p><code>TxnContext</code> captures the implementation-specific functionality of locating
- the <code>InTxn</code> dynamically bound to the current <code>Thread</code>.  Users should use the
- lookup methods provided by <code>object Txn</code>.
-</p></div><div class="block">
-            linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
+      <div class="fullcomment" id="comment"><div class="block">
+            go to: <a href="TMap$$View.html">companion</a>
           </div><div class="block">
-            known subclasses: <a href="STMImpl.html" class="extype" name="scala.concurrent.stm.impl.STMImpl">STMImpl</a>, <a href="../ccstm/CCSTM.html" class="extype" name="scala.concurrent.stm.ccstm.CCSTM">CCSTM</a>
-          </div>
-            
-            
-            
-          </div>
+            linear super types: <span class="extype" name="scala.collection.generic.MutableMapFactory">MutableMapFactory</span>[<a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>], <span class="extype" name="scala.collection.generic.MapFactory">MapFactory</span>[<a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>], AnyRef, <span class="extype" name="scala.Any">Any</span>
+          </div></div>
 
       <div id="template">
 
@@ -54,7 +47,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.impl.TxnContext">TxnContext</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.TMap.View">View</li><li class="in" name="scala.collection.generic.MutableMapFactory">MutableMapFactory</li><li class="in" name="scala.collection.generic.MapFactory">MapFactory</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -68,7 +61,27 @@
 
         
 
+        <div class="types members" id="types">
+              <h3>Type Members</h3>
+              <ol><li visbl="pub" data-isabs="false" name="scala.collection.generic.MapFactory#Coll">
+      <a id="Coll:Coll"></a>
+      <h4 class="signature">
+      <span class="kind">type</span>
+      <span class="symbol">
+        <span class="name">Coll</span>
         
+        
+        <span class="result"> = scala.concurrent.stm.TMap.View[_, _]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapFactory
+        </div></div>
+          
+    </li></ol>
+            </div>
 
         <div class="values members" id="values">
               <h3>Value Members</h3>
@@ -220,6 +233,23 @@
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap.View#apply">
+      <a id="apply[A, B]((A, B)*):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        <span class="params">(<span name="kvs">kvs: (A, B)*</span>)</span>
+        <span class="result">: <a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.TMap.View">View</a> → MapFactory
+        </div></div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.Any#asInstanceOf">
       <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
@@ -245,6 +275,23 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap.View#canBuildFrom">
+      <a id="canBuildFrom[A, B]:CanBuildFrom[Coll, (A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">canBuildFrom</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        
+        <span class="result">: <span class="extype" name="scala.collection.generic.CanBuildFrom">CanBuildFrom</span>[Coll, (A, B), <a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: implicit 
+        </div></div>
+          
     </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
@@ -269,30 +316,22 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.TxnContext#dynCurrentOrNull">
-      <a id="dynCurrentOrNull:InTxn"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap.View#empty">
+      <a id="empty[A, B]:View[A, B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">dynCurrentOrNull</span>
+        <span class="name">empty</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
         
-        
-        <span class="result">: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>
+        <span class="result">: <a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Returns the current <code>InTxn</code> instance if it is active or in the process of
- committing on the current thread, <code>null</code> otherwise.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns the current <code>InTxn</code> instance if it is active or in the process of
- committing on the current thread, <code>null</code> otherwise.  Always performs a
- dynamic lookup.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
             
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.TMap.View">View</a> → MapFactory
+        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#eq">
       <a id="eq(AnyRef):Boolean"></a>
@@ -382,30 +421,6 @@ there are no more references to the object.</p><p>The details of when and if the
           attributes: protected 
         </div><div class="block">
           definition classes: AnyRef
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.TxnContext#findCurrent">
-      <a id="findCurrent(MaybeTxn):Option[InTxn]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">findCurrent</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="../MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns <code>Some(txn)</code> if <code>txn</code> is the <code>InTxn</code> active or in the process of
- committing on the current thread, <code>None</code> otherwise.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns <code>Some(txn)</code> if <code>txn</code> is the <code>InTxn</code> active or in the process of
- committing on the current thread, <code>None</code> otherwise.
-</p></div><div class="block">
-          attributes: abstract 
         </div>
             
             
@@ -511,6 +526,23 @@ possible to check whether the contents of the list are of the requested typed.
             
             
           </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TMap.View#newBuilder">
+      <a id="newBuilder[A, B]:Builder[(A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">newBuilder</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        
+        <span class="result">: <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[(A, B), <a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.TMap.View">View</a> → MutableMapFactory → MapFactory
+        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#notify">
       <a id="notify():Unit"></a>
@@ -659,7 +691,11 @@ possible to check whether the contents of the list are of the requested typed.
     </li></ol>
             </div>
 
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.collection.generic.MutableMapFactory">
+              <h3>Inherited from <span class="extype" name="scala.collection.generic.MutableMapFactory">MutableMapFactory</span>[<a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>]</h3>
+            </div><div class="parent" name="scala.collection.generic.MapFactory">
+              <h3>Inherited from <span class="extype" name="scala.collection.generic.MapFactory">MapFactory</span>[<a href="TMap$$View.html" class="extype" name="scala.concurrent.stm.TMap.View">View</a>]</h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from AnyRef</h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>

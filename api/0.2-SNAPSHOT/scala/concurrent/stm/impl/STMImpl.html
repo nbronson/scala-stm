@@ -364,6 +364,33 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.TxnContext#dynCurrentOrNull">
+      <a id="dynCurrentOrNull:InTxn"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">dynCurrentOrNull</span>
+        
+        
+        <span class="result">: <a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns the current <code>InTxn</code> instance if it is active or in the process of
+ committing on the current thread, <code>null</code> otherwise.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns the current <code>InTxn</code> instance if it is active or in the process of
+ committing on the current thread, <code>null</code> otherwise.  Always performs a
+ dynamic lookup.
+</p></div><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="TxnContext.html" class="extype" name="scala.concurrent.stm.impl.TxnContext">TxnContext</a>
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#eq">
       <a id="eq(AnyRef):Boolean"></a>
       <h4 class="signature">
@@ -847,13 +874,13 @@ possible to check whether the contents of the list are of the requested typed.
         </div></div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTMap">
-      <a id="newTMap[A, B](TraversableOnce[(A, B)]):TMap[A, B]"></a>
+      <a id="newTMap[A, B]:TMap[A, B]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">newTMap</span>
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
-        <span class="params">(<span name="kvs">kvs: TraversableOnce[(A, B)]</span>)</span>
+        
         <span class="result">: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]</span>
       </span>
       </h4>
@@ -865,15 +892,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: <a href="RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>
         </div></div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTMap">
-      <a id="newTMap[A, B]():TMap[A, B]"></a>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTMapBuilder">
+      <a id="newTMapBuilder[A, B]:Builder[(A, B), TMap[A, B]]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">newTMap</span>
+        <span class="name">newTMapBuilder</span>
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
-        <span class="params">()</span>
-        <span class="result">: <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]</span>
+        
+        <span class="result">: <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[(A, B), <a href="../TMap.html" class="extype" name="scala.concurrent.stm.TMap">TMap</a>[A, B]]</span>
       </span>
       </h4>
       
@@ -885,13 +912,13 @@ possible to check whether the contents of the list are of the requested typed.
         </div></div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTSet">
-      <a id="newTSet[A](TraversableOnce[A]):TSet[A]"></a>
+      <a id="newTSet[A]:TSet[A]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">newTSet</span>
         <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">(<span name="xs">xs: TraversableOnce[A]</span>)</span>
+        
         <span class="result">: <a href="../TSet.html" class="extype" name="scala.concurrent.stm.TSet">TSet</a>[A]</span>
       </span>
       </h4>
@@ -903,15 +930,15 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: <a href="RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>
         </div></div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTSet">
-      <a id="newTSet[A]():TSet[A]"></a>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.impl.RefFactory#newTSetBuilder">
+      <a id="newTSetBuilder[A]:Builder[A, TSet[A]]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">newTSet</span>
+        <span class="name">newTSetBuilder</span>
         <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">()</span>
-        <span class="result">: <a href="../TSet.html" class="extype" name="scala.concurrent.stm.TSet">TSet</a>[A]</span>
+        
+        <span class="result">: <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[A, <a href="../TSet.html" class="extype" name="scala.concurrent.stm.TSet">TSet</a>[A]]</span>
       </span>
       </h4>
       
