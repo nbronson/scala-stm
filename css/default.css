@@ -135,3 +135,6 @@ ul {
   margin: 0;
 }
 
+#menu ol li ol li.logo {
+  margin-right: -1em;
+}
