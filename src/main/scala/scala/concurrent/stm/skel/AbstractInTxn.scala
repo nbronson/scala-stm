@@ -183,16 +183,21 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   def afterRollback(handler: Status => Unit) {
-    requireNotCompleted()
+    try {
+      requireNotCompleted()
+    } catch {
+      case RollbackError => {
+        handler(internalCurrentLevel.status)
+        throw RollbackError
+      }
+    }
     _callbacksPresent = true
     _afterRollbackList += handler
   }
 
   def afterCompletion(handler: Status => Unit) {
-    requireNotCompleted()
-    _callbacksPresent = true
+    afterRollback(handler)
     _afterCommitList += handler
-    _afterRollbackList += handler
   }
 
   def setExternalDecider(decider: ExternalDecider) {

@@ -242,14 +242,15 @@ object Txn {
   def afterCommit(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCommit(handler) }
 
   /** Arranges for `handler` to be executed as soon as possible after the
-   *  current nesting level is rolled back.  Details:
-   *  - the handler will be executed immediately during a partial rollback that
-   *    includes the current nesting level;
+   *  current nesting level is rolled back, or runs the handler immediately if
+   *  the current nesting level's status is already `RolledBack`.  Details:
+   *  - the handler will be executed during any partial rollback that includes
+   *    the current nesting level;
    *  - the handler will be run before any additional attempts to execute the
    *    atomic block;
    *  - handlers will be run in the reverse of their registration order; and
    *  - handlers may be registered so long as the current transaction status is
-   *    not `RolledBack` or `Committed`.
+   *    not `Committed`.
    */
   def afterRollback(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterRollback(handler) }
 
@@ -257,8 +258,8 @@ object Txn {
    *  after-rollback handler.
    *
    *  Equivalent to: {{{
-   *     afterCommit(handler)
    *     afterRollback(handler)
+   *     afterCommit(handler)
    *  }}}
    */
   def afterCompletion(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCompletion(handler) }
