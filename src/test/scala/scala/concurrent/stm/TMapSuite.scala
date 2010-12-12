@@ -297,10 +297,12 @@ class TMapSuite extends FunSuite {
     assert(rev === Map("one" -> 1, "two" -> 2))
   }
 
+  //////// perf stuff
+
   private def now = System.currentTimeMillis
 
   test("sequential non-txn read performance") {
-    for (pass <- 0 until 2) {
+    for (pass <- 0 until 4) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -312,9 +314,8 @@ class TMapSuite extends FunSuite {
           k = if (k == 2 * size - 1) 0 else k + 1
         }
         val elapsed = now - t0
-        print(size + " keys/map -> " + elapsed + " nanos/contain,  ")
+        println("TMap: non-txn read: " + size + " keys/map -> " + elapsed + " nanos/contain")
       }
-      println
     }
   }
 
@@ -329,9 +330,8 @@ class TMapSuite extends FunSuite {
           outer += size
         }
         val elapsed = now - t0
-        print(size + " keys/map -> " + elapsed + " nanos/added-key,  ")
+        println("TMap: non-txn append: " + size + " keys/map -> " + elapsed + " nanos/added-key")
       }
-      println
     }
   }
 
@@ -348,16 +348,15 @@ class TMapSuite extends FunSuite {
           i += 1
         }
         val elapsed = now - t0
-        print(size + " keys/map -> " + elapsed + " nanos/put,  ")
+        println("TMap: non-txn update: " + size + " keys/map -> " + elapsed + " nanos/put")
       }
-      println
     }
   }
 
   test("sequential non-txn put/remove mix performance") {
     val values = (0 until 37) map { "x" + _ }
     val rand = new skel.FastSimpleRandom
-    for (pass <- 0 until 2) {
+    for (pass <- 0 until 4) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
         val t0 = now
@@ -372,16 +371,14 @@ class TMapSuite extends FunSuite {
           i += 1
         }
         val elapsed = now - t0
-        print(size + " keys/map -> " + elapsed + " nanos/op,  ")
+        println("TMap: non-txn put/remove: " + size + " keys/map -> " + elapsed + " nanos/op")
       }
-      println
     }
   }
 
   test("sequential txn read performance") {
     for (txnSize <- List(2, 10, 1000)) {
       for (pass <- 0 until 2) {
-        print(txnSize + " accesses/txn: ")
         for (size <- List(10, 100, 1000, 100000)) {
           val m = TMap(kvRange(0, size): _*).single
           val t0 = now
@@ -396,9 +393,8 @@ class TMapSuite extends FunSuite {
             }
           }
           val elapsed = now - t0
-          print(size + " keys/map -> " + elapsed + " nanos/contain,  ")
+          println("TMap: txn read: " + txnSize + " accesses/txn: " + size + " keys/map -> " + elapsed + " nanos/op")
         }
-        println
       }
     }
   }
@@ -408,7 +404,6 @@ class TMapSuite extends FunSuite {
     val rand = new skel.FastSimpleRandom
     for (txnSize <- List(2, 10, 1000)) {
       for (pass <- 0 until 2) {
-        print(txnSize + " accesses/txn: ")
         for (size <- List(10, 100, 1000, 100000)) {
           val m = TMap(kvRange(0, size): _*).single
           val t0 = now
@@ -427,9 +422,8 @@ class TMapSuite extends FunSuite {
             }
           }
           val elapsed = now - t0
-          print(size + " keys/map -> " + elapsed + " nanos/op,  ")
+          println("TMap: txn put/remove: " + txnSize + " accesses/txn: " + size + " keys/map -> " + elapsed + " nanos/op")
         }
-        println
       }
     }
   }
