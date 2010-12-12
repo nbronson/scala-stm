@@ -203,12 +203,11 @@ trait RefCompanion {
 
   private def newPrimitiveRef[A](initialValue: A, m: AnyValManifest[A]): Ref[A] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
-      // these can be reordered, so long as Unit comes before AnyRef
+      case _: Array[Int]     => apply(initialValue.asInstanceOf[Int])
       case _: Array[Boolean] => apply(initialValue.asInstanceOf[Boolean])
       case _: Array[Byte]    => apply(initialValue.asInstanceOf[Byte])
       case _: Array[Short]   => apply(initialValue.asInstanceOf[Short])
       case _: Array[Char]    => apply(initialValue.asInstanceOf[Char])
-      case _: Array[Int]     => apply(initialValue.asInstanceOf[Int])
       case _: Array[Float]   => apply(initialValue.asInstanceOf[Float])
       case _: Array[Long]    => apply(initialValue.asInstanceOf[Long])
       case _: Array[Double]  => apply(initialValue.asInstanceOf[Double])
