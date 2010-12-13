@@ -138,8 +138,9 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   private def MaxRetainedReadCapacity = 8 * InitialReadCapacity
 
   private var _rCount = 0
-  private var _rHandles = new Array[Handle[_]](InitialReadCapacity)
-  private var _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
+  private var _rHandles: Array[Handle[_]] = null
+  private var _rVersions: Array[CCSTM.Version] = null
+  allocateReadSet()
 
   protected def readCount = _rCount
   protected def readHandle(i: Int): Handle[_] = _rHandles(i)
@@ -183,8 +184,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   private def resetReadSet() {
     if (_rHandles.length > MaxRetainedReadCapacity) {
       // avoid staying very large
-      _rHandles = new Array[Handle[_]](InitialReadCapacity)
-      _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
+      allocateReadSet()
     } else {
       // allow GC of old handles
       var i = 0
@@ -194,6 +194,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       }
     }
     _rCount = 0
+  }
+
+  private def allocateReadSet() {
+    _rHandles = new Array[Handle[_]](InitialReadCapacity)
+    _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
   }
 
   /** Clears the read set, returning a `ReadSet` that holds the values that
@@ -478,21 +483,26 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def resetWriteBufferNonEmpty() {
-    var i = _wCount - 1
-    while (i >= 0) {
-      // discard references to aid GC
-      setRef(i, null)
-      setSpecValue(i, null)
-      setHandle(i, null)
-      i -= 1
+    if (_wDispatch.length > MaxRetainedWriteCapacity) {
+      allocateWriteBuffer()
+    } else {
+      val n = bucketAnysLen(_wCount)
+      var i = 0
+      while (i < n) {
+        // discard references to aid GC
+        _wAnys(i) = null
+        i += 1
+      }
+      i = 0
+      while (i < InitialWriteCapacity) {
+        _wDispatch(i) = -1
+        i += 1
+      }
+      //java.util.Arrays.fill(_wAnys, 0, bucketAnysLen(_wCount), null)
+      //java.util.Arrays.fill(_wDispatch, 0, InitialWriteCapacity, -1)
     }
-
     _wCount = 0
     _wCapacity = InitialWriteCapacity
-    if (_wDispatch.length > MaxRetainedWriteCapacity)
-      allocateWriteBuffer()
-    else
-      java.util.Arrays.fill(_wDispatch, 0, InitialWriteCapacity, -1)
   }
 
   protected def addLatestWritesAsReads() {

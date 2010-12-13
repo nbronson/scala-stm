@@ -655,24 +655,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def acquireLocks(): Boolean = {
     var i = writeCount - 1
     while (i >= 0) {
-      if (!acquireLock(getWriteHandle(i)))
-        return false
-      i -= 1
-    }
-    return this.status eq Preparing
-  }
-
-  private def acquireLock(handle: Handle[_]): Boolean = {
-    var m = handle.meta
-    if (!changing(m)) {
-      // remote requestRollback might have doomed us, followed by a steal
-      // of this handle, so we must verify ownership each try
-      while (owner(m) == _slot) {
-        if (handle.metaCAS(m, withChanging(m)))
-          return true
+      // inlined to reduce the call depth from TxnExecutor.apply
+      val handle = getWriteHandle(i)
+      var m = 0L
+      do {
         m = handle.meta
-      }
-      return false
+        if (owner(m) != _slot)
+          return false
+        // we have to use CAS to guard against remote steal
+      } while (!changing(m) && !handle.metaCAS(m, withChanging(m)))
+      i -= 1
     }
     return true
   }
@@ -683,9 +675,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     while (i >= 0) {
       val handle = getWriteHandle(i).asInstanceOf[Handle[Any]]
 
-      // update the value
-      handle.data = getWriteSpecValue[Any](i)
-
       // note that we accumulate wakeup entries for each base and offset, even
       // if they share metadata
       val m = handle.meta
@@ -694,10 +683,18 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       //assert(owner(m) == _slot)
 
+      val v = getWriteSpecValue[Any](i)
+
       // release the lock, clear the PW bit, and update the version, but only
       // if this was the entry that actually acquired ownership
-      if (wasWriteFreshOwner(i))
+      if (wasWriteFreshOwner(i)) {
+        // putting the data store in both sides allows the volatile writes to
+        // be coalesced
+        handle.data = v
         handle.meta = withCommit(m, cv)
+      } else {
+        handle.data = v
+      }
 
       // because we release when we find the original owner, it is important
       // that we traverse in reverse order.  There are no duplicates

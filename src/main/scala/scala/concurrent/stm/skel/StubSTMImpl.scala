@@ -7,9 +7,6 @@ import java.lang.Throwable
 import scala.collection.mutable.Builder
 
 private[stm] class StubSTMImpl extends impl.STMImpl {
-  {
-    println("constructing " + getClass.getSimpleName)
-  }
 
   //////// RefFactory
 
@@ -40,12 +37,10 @@ private[stm] class StubSTMImpl extends impl.STMImpl {
 
   //////// TxnExecutor
 
-  protected def runAtomically[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
+  def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
   def pushAlternative[Z](mt: MaybeTxn, block: InTxn => Z): Boolean = throw new AbstractMethodError
   def compareAndSet[A, B](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = throw new AbstractMethodError
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = throw new AbstractMethodError
-  def configuration: Map[Symbol, Any] = throw new AbstractMethodError
-  def withConfig(param: (Symbol,Any)): TxnExecutor = throw new AbstractMethodError
   def isControlFlow(x: Throwable): Boolean = throw new AbstractMethodError
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = throw new AbstractMethodError
   def postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = throw new AbstractMethodError
