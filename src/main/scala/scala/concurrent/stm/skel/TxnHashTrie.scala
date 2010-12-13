@@ -95,12 +95,28 @@ private[skel] object TxnHashTrie {
       while (i > 0) {
         i -= 1
         val h = hashes(i)
-        if (h == hash && key == keys(i))
+        if (h == hash && keyEqual(key.asInstanceOf[AnyRef], keys(i).asInstanceOf[AnyRef]))
           return i
         if (h < hash)
           return ~(i + 1)
       }
       return ~0
+    }
+
+    private def keyEqual(lhs: AnyRef, rhs: AnyRef): Boolean = {
+      if (lhs eq rhs)
+        true
+      else if (lhs == null || rhs == null)
+        false
+      else if (lhs.getClass eq rhs.getClass) {
+        if (lhs.isInstanceOf[java.lang.Integer])
+          lhs.asInstanceOf[java.lang.Integer].intValue == rhs.asInstanceOf[java.lang.Integer].intValue
+        else if (lhs.isInstanceOf[java.lang.Long])
+          lhs.asInstanceOf[java.lang.Long].longValue == rhs.asInstanceOf[java.lang.Long].longValue
+        else
+          lhs.equals(rhs)
+      } else
+        runtime.BoxesRunTime.equals2(lhs, rhs)
     }
 
     def noChange[B](i: Int, value: B): Boolean = {
@@ -184,6 +200,11 @@ private[skel] object TxnHashTrie {
     def split(gen: Long, shift: Int): Branch[A, B] = {
       val children = new Array[Node[A, B]](BF)
       splitInto(shift, children)
+
+      // class manifests for classes that have type parameters are a bit
+      // convoluted to construct, so it is better to do it only once per split
+      implicit val cm = implicitly[ClassManifest[Node[A, B]]]
+
       val refs = new Array[Ref.View[Node[A, B]]](BF)
       var i = 0
       while (i < BF) {
