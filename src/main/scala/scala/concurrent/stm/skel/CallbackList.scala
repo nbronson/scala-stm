@@ -6,21 +6,13 @@ package skel
 import annotation.tailrec
 
 
-private object CallbackList {
-  val Empty = new Array[Any => Unit](0)
-}
-
-private[stm] class CallbackList[A] private (private var _size: Int,
-                                            private var _data: Array[A => Unit]) {
-  def this() = this(0, null)
-
-  {
-    if (_data == null)
-      _data = new Array[A => Unit](InitialCapacity)
-  }
+private[stm] class CallbackList[A] {
 
   private def InitialCapacity = 128
   private def MaxEmptyCapacity = 8192
+
+  private var _size = 0
+  private var _data = new Array[A => Unit](InitialCapacity)
 
   def isEmpty: Boolean = _size == 0
 
