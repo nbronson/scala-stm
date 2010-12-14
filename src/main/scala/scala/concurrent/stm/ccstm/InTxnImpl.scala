@@ -606,8 +606,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         return false
     }
 
-    commitWrites(cv)
     _pendingFailure = fireWhileCommittingCallbacks(exec)
+    commitWrites(cv)
     root.setCommitted()
 
     return true
