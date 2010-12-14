@@ -122,13 +122,13 @@ class TMapSuite extends FunSuite {
     val rand = new Random()
 
     def nextKey(): String = "key" + (rand.nextInt() >>> rand.nextInt())
-    def nextValue(): Int = rand.nextInt()
+    def nextValue(): Int = if (rand.nextInt(10) == 0) 0 else rand.nextInt()
 
     var mut = TMap.empty[String, Int].single
     val base = mutable.Map.empty[String, Int]
 
     for (i <- 0 until total) {
-      val pct = rand.nextInt(200)
+      val pct = rand.nextInt(225)
       val k = nextKey
       val v = nextValue
       if (pct < 15) {
@@ -200,77 +200,133 @@ class TMapSuite extends FunSuite {
         for (kv <- mut.iterator) { m2 += kv }
         assert(base === m2)
       } else if (pct < 115) {
-        assert(base.get(k) === atomic { implicit t => mut.get(k) })
+        assert(base.get(k) === atomic { implicit t => mut.tmap.get(k) })
       } else if (pct < 120) {
         val a = try { Some(base(k)) } catch { case _ => None }
-        val b = try { Some(atomic { implicit t => mut(k) }) } catch { case _ => None }
+        val b = try { Some(atomic { implicit t => mut.tmap(k) }) } catch { case _ => None }
         assert(a === b)
       } else if (pct < 135) {
-        assert(base.put(k, v) === atomic { implicit t => mut.put(k, v) })
+        assert(base.put(k, v) === atomic { implicit t => mut.tmap.put(k, v) })
       } else if (pct < 140) {
         base(k) = v
-        atomic { implicit t => mut(k) = v }
+        atomic { implicit t => mut.tmap(k) = v }
       } else if (pct < 145) {
-        assert(base.contains(k) === atomic { implicit t => mut.contains(k) })
+        assert(base.contains(k) === atomic { implicit t => mut.tmap.contains(k) })
       } else if (pct < 155) {
-        assert(base.remove(k) === atomic { implicit t => mut.remove(k) })
+        assert(base.remove(k) === atomic { implicit t => mut.tmap.remove(k) })
       } else if (pct < 160) {
         for (j <- 0 until (i / (total / 20))) {
           if (!base.isEmpty) {
             val k1 = base.iterator.next._1
-            assert(base.remove(k1) === atomic { implicit t => mut.remove(k1) })
+            assert(base.remove(k1) === atomic { implicit t => mut.tmap.remove(k1) })
           }
         }
       } else if (pct < 163) {
-        mut = atomic { implicit t => mut.clone }
+        mut = atomic { implicit t => mut.tmap.clone.single }
       } else if (pct < 166) {
-        assert(base.toMap === atomic { implicit t => mut.snapshot })
+        assert(base.toMap === atomic { implicit t => mut.tmap.snapshot })
       } else if (pct < 169) {
-        assert(base.isEmpty === atomic { implicit t => mut.isEmpty })
+        assert(base.isEmpty === atomic { implicit t => mut.tmap.isEmpty })
       } else if (pct < 172) {
-        assert(base.size === atomic { implicit t => mut.size })
+        assert(base.size === atomic { implicit t => mut.tmap.size })
       } else if (pct < 177) {
         assert(base eq (base += (k -> v)))
-        assert(mut eq atomic { implicit t => mut += (k -> v) })
+        assert(mut.tmap eq atomic { implicit t => mut.tmap += (k -> v) })
       } else if (pct < 180) {
         val kv2 = (nextKey -> nextValue)
         val kv3 = (nextKey -> nextValue)
         assert(base eq (base += ((k -> v), kv2, kv3)))
-        assert(mut eq atomic { implicit t => mut += ((k -> v), kv2, kv3) })
+        assert(mut.tmap eq atomic { implicit t => mut.tmap += ((k -> v), kv2, kv3) })
       } else if (pct < 183) {
         val kv2 = (nextKey -> nextValue)
         val kv3 = (nextKey -> nextValue)
         assert(base eq (base ++= Array((k -> v), kv2, kv3)))
-        assert(mut eq atomic { implicit t => mut ++= Array((k -> v), kv2, kv3) })
+        assert(mut.tmap eq atomic { implicit t => mut.tmap ++= Array((k -> v), kv2, kv3) })
       } else if (pct < 188) {
         assert(base eq (base -= k))
-        assert(mut eq atomic { implicit t => mut -= k })
+        assert(mut.tmap eq atomic { implicit t => mut.tmap -= k })
       } else if (pct < 191) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base -= (k, k2, k3)))
-        assert(mut eq atomic { implicit t => mut -= (k, k2, k3) })
+        assert(mut.tmap eq atomic { implicit t => mut.tmap -= (k, k2, k3) })
       } else if (pct < 194) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base --= Array(k, k2, k3)))
-        assert(mut eq atomic { implicit t => mut --= Array(k, k2, k3) })
+        assert(mut.tmap eq atomic { implicit t => mut.tmap --= Array(k, k2, k3) })
       } else if (pct < 195) {
-        mut = atomic { implicit t => TMap(mut.toArray: _*).single }
+        mut = atomic { implicit t => TMap(mut.tmap.toArray: _*).single }
       } else if (pct < 196) {
-        mut = atomic { implicit t => TMap.empty[String, Int] ++= mut }.single
+        mut = atomic { implicit t => TMap.empty[String, Int] ++= mut.tmap }.single
       } else if (pct < 197) {
         atomic { implicit t =>
           val m2 = mutable.Map.empty[String, Int]
-          for (kv <- mut) { m2 += kv }
+          for (kv <- mut.tmap) { m2 += kv }
           assert(base === m2)
         }
       } else if (pct < 198) {
         atomic { implicit t =>
           val m2 = mutable.Map.empty[String, Int]
-          for (kv <- mut.iterator) { m2 += kv }
+          for (kv <- mut.tmap.iterator) { m2 += kv }
           assert(base === m2)
         }
+      } else if (pct < 200) {
+        var b = base.toMap
+        var s = mut.snapshot
+        assert(b.iterator.toMap === s.iterator.toMap)
+        while (!b.isEmpty) {
+          if (rand.nextInt(100) < 75) {
+            val k = b.keysIterator.next
+            assert(b(k) === s(k))
+            b -= k
+            s -= k
+            assert(b.size === s.size)
+          } else {
+            val kv = (nextKey -> nextValue)
+            b += kv
+            s += kv
+          }
+        }
+        assert(b.isEmpty === s.isEmpty)
+        val kv = (nextKey -> nextValue)
+        b += kv
+        s += kv
+        assert(b === s)
+      } else if (pct < 208) {
+        val cutoff = rand.nextInt
+        assert(base eq (base.retain { (k, v) => v < cutoff }))
+        assert(mut eq (mut.retain { (k, v) => v < cutoff }))
+      } else if (pct < 211) {
+        val cutoff = rand.nextInt
+        assert(base eq (base.retain { (k, v) => v < cutoff }))
+        assert(mut.tmap eq atomic { implicit txn => mut.tmap.retain { (k, v) => v < cutoff } })
+      } else if (pct < 214) {
+        val k = nextKey
+        val v = nextValue
+        var bf = false
+        var mf = false
+        assert(base.getOrElseUpdate(k, { bf = true ; v }) === mut.getOrElseUpdate(k, { mf = true ; v }))
+        assert(bf === mf)
+      } else if (pct < 217) {
+        val k = nextKey
+        val v = nextValue
+        var bf = false
+        var mf = false
+        assert(base.getOrElseUpdate(k, { bf = true ; v }) === atomic { implicit txn => mut.getOrElseUpdate(k, { mf = true ; v }) })
+        assert(bf === mf)
+      } else if (pct < 220) {
+        assert(base eq (base.transform { (k, v) => v + 1 }))
+        assert(mut eq (mut.transform { (k, v) => v + 1 }))
+      } else if (pct < 223) {
+        assert(base eq (base.transform { (k, v) => v + 1 }))
+        assert(mut.tmap eq atomic { implicit txn => mut.tmap.transform { (k, v) => v + 1 } })
+      } else if (pct < 225) {
+        val b2 = base map { kv => (kv._1 -> kv._2 * 1L) }
+        val m2 = mut map { kv => (kv._1 -> kv._2 * 1L) }
+        assert(b2 === m2)
+        assert(m2 eq m2.tmap.single)
+        mut = m2 map { kv => (kv._1 -> kv._2.asInstanceOf[Int]) }
       }
     }
   }
