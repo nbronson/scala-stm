@@ -40,7 +40,7 @@ class TxnLocalSuite extends FunSuite {
 
   test("factory method") {
     val tl = TxnLocal("hello")
-    for (i <- 0 until 100000) {
+    for (i <- 0 until 100) {
       atomic { implicit txn =>
         assert(tl() === "hello")
         tl() = "goodbye"

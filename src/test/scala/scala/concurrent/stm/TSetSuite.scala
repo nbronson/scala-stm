@@ -107,7 +107,16 @@ class TSetSuite extends FunSuite {
       assert(z.contains(i))
   }
 
+
   test("random sequential") {
+    randomTest(1000)
+  }
+
+  test("more random sequential", Slow) {
+    randomTest(20000)
+  }
+
+  def randomTest(total: Int) {
     val rand = new Random()
 
     def nextKey(): String = "key" + (rand.nextInt() >>> rand.nextInt())
@@ -115,7 +124,6 @@ class TSetSuite extends FunSuite {
     var mut = TSet.empty[String].single
     val base = mutable.Set.empty[String]
 
-    val total = 20000
     for (i <- 0 until total) {
       val pct = rand.nextInt(200)
       val k = nextKey

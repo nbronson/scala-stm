@@ -9,7 +9,7 @@ class WriteSkewSuite extends FunSuite {
   val IncrCount = 1000000
 
   test("write skew test 1K") { runTest(1000) }
-  test("write skew test 1M" /*, ExhaustiveTest*/) { runTest(1000000) }              
+  test("write skew test 1M", Slow) { runTest(1000000) }
 
   def runTest(incrCount: Int) {
     // Two threads, each of which increments its own Ref if the other Ref is

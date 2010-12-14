@@ -110,7 +110,15 @@ class TMapSuite extends FunSuite {
       assert(z(i) === value(i))
   }
 
-  test("random walk equivalence") {
+  test("random sequential") {
+    randomTest(1000)
+  }
+
+  test("more random sequential", Slow) {
+    randomTest(20000)
+  }
+
+  def randomTest(total: Int) {
     val rand = new Random()
 
     def nextKey(): String = "key" + (rand.nextInt() >>> rand.nextInt())
@@ -119,7 +127,6 @@ class TMapSuite extends FunSuite {
     var mut = TMap.empty[String, Int].single
     val base = mutable.Map.empty[String, Int]
 
-    val total = 20000
     for (i <- 0 until total) {
       val pct = rand.nextInt(200)
       val k = nextKey
@@ -301,7 +308,7 @@ class TMapSuite extends FunSuite {
 
   private def now = System.currentTimeMillis
 
-  test("sequential non-txn read performance") {
+  test("sequential non-txn read performance", Slow) {
     for (pass <- 0 until 4) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
@@ -319,7 +326,7 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential non-txn append performance") {
+  test("sequential non-txn append performance", Slow) {
     for (pass <- 0 until 2) {
       for (size <- List(10, 100, 1000, 100000)) {
         val src = kvRange(0, size).toArray
@@ -335,7 +342,7 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential non-txn update performance") {
+  test("sequential non-txn update performance", Slow) {
     val values = (0 until 37) map { "x" + _ }
     for (pass <- 0 until 2) {
       for (size <- List(10, 100, 1000, 100000)) {
@@ -353,7 +360,7 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential non-txn put/remove mix performance") {
+  test("sequential non-txn put/remove mix performance", Slow) {
     val values = (0 until 37) map { "x" + _ }
     val rand = new skel.FastSimpleRandom
     for (pass <- 0 until 4) {
@@ -376,7 +383,7 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential txn read performance") {
+  test("sequential txn read performance", Slow) {
     for (txnSize <- List(2, 10, 1000)) {
       for (pass <- 0 until 2) {
         for (size <- List(10, 100, 1000, 100000)) {
@@ -399,7 +406,7 @@ class TMapSuite extends FunSuite {
     }
   }
 
-  test("sequential txn put/remove mix performance") {
+  test("sequential txn put/remove mix performance", Slow) {
     val values = (0 until 37) map { "x" + _ }
     val rand = new skel.FastSimpleRandom
     for (txnSize <- List(2, 10, 1000)) {

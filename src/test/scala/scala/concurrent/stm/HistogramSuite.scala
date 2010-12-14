@@ -9,7 +9,7 @@ import org.scalatest.{FunSuite, Tag}
 class HistogramSuite extends FunSuite {
 
   for ((opsPerTest, name, groups) <- List((10000, "10K", List[Tag]()),
-                                          (1000000, "1M", List[Tag](/*ExhaustiveTest*/)))) {
+                                          (1000000, "1M", List[Tag](Slow)))) {
     for (buckets <- List(1, 30, 10000)) {
       for (threads <- List(1, 2, 4, 8, 16, 32, 64, 128, 256, 512) if (threads <= 2*Runtime.getRuntime.availableProcessors)) {
         for (useTArray <- List(false, true)) {

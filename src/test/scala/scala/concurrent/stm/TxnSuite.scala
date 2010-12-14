@@ -522,7 +522,7 @@ class TxnSuite extends FunSuite {
     assert(count == 1)
   }
 
-  test("whileCommitting ordering") {
+  test("whileCommitting ordering", Slow) {
     val numThreads = 10
     val numPutsPerThread = 100000
     val startingGate = new java.util.concurrent.CountDownLatch(1)
@@ -652,7 +652,7 @@ class TxnSuite extends FunSuite {
   }
 
   private def perfTest(name: String)(runTen: (Ref[String], Ref[Int]) => Unit) {
-    test(name) {
+    test(name, Slow) {
       val x = Ref("abc")
       val y = Ref(10)
       var best = java.lang.Long.MAX_VALUE

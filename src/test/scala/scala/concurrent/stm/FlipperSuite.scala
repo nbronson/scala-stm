@@ -31,7 +31,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_REF_ARRAY_FACTORY).runTest
   }
 
-  test("default flipper test") {
+  test("default flipper test", Slow) {
     Config(
       DEFAULT_SYNC_COUNT,
       DEFAULT_TRANS_COUNT,
@@ -43,7 +43,19 @@ class FlipperSuite extends FunSuite {
       DEFAULT_REF_ARRAY_FACTORY).runTest
   }
 
-  test("default flipper test w/TArray") {
+  test("small flipper test w/TArray") {
+    Config(
+      DEFAULT_SYNC_COUNT,
+      DEFAULT_TRANS_COUNT / 2,
+      DEFAULT_INSTR_COUNT / 2,
+      DEFAULT_THREAD_COUNT,
+      DEFAULT_WORD_COUNT / 2,
+      DEFAULT_FLIP_PROB,
+      0,
+      { (n: Int) => TArray.ofDim[Int](n).refs }).runTest
+  }
+
+  test("default flipper test w/TArray", Slow) {
     Config(
       DEFAULT_SYNC_COUNT,
       DEFAULT_TRANS_COUNT,
@@ -55,7 +67,7 @@ class FlipperSuite extends FunSuite {
       { (n: Int) => TArray.ofDim[Int](n).refs }).runTest
   }
 
-  test("random flipper test") {
+  test("random flipper test", Slow) {
     for (i <- 0 until 1) {
       Config(
         DEFAULT_SYNC_COUNT,
