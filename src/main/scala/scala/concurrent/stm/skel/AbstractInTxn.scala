@@ -77,8 +77,61 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   protected def fireWhilePreparingCallbacks() {
-    if (_callbacksPresent)
+    if (_callbacksPresent && !_whilePreparingList.isEmpty)
       _whilePreparingList.fire(internalCurrentLevel, this)
+  }
+
+  protected def fireWhileCommittingCallbacks(exec: TxnExecutor): Throwable = {
+    if (_callbacksPresent && !_whileCommittingList.isEmpty)
+      fireWhileCommittingCallbacksImpl(exec)
+    else
+      null
+  }
+
+  private def fireWhileCommittingCallbacksImpl(exec: TxnExecutor): Throwable = {
+    var failure: Throwable = null
+    var i = 0
+    while (i < _whileCommittingList.size) {
+      failure = firePostDecision(_whileCommittingList(i), this, exec, failure)
+      i += 1
+    }
+    failure
+  }
+
+  protected def fireAfterCompletionAndThrow(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, pendingFailure: Throwable) {
+    val f = if (handlers != null) fireAfterCompletionImpl(handlers, exec, s, pendingFailure) else pendingFailure
+    if (f != null)
+      throw f
+  }
+
+  private def fireAfterCompletionImpl(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, f0: Throwable): Throwable = {
+    var failure = f0
+    var i = 0
+    val inOrder = s eq Committed
+    var j = if (inOrder) 0 else handlers.length - 1
+    var dj = if (inOrder) 1 else -1
+    while (i < handlers.length) {
+      failure = firePostDecision(handlers(j), s, exec, failure)
+      i += 1
+      j += dj
+    }
+    failure
+  }
+
+  private def firePostDecision[A](handler: A => Unit, arg: A, exec: TxnExecutor, f: Throwable): Throwable = {
+    try {
+      handler(arg)
+      f
+    } catch {
+      case x => {
+        try {
+          exec.postDecisionFailureHandler(status, x)
+          f
+        } catch {
+          case xx => xx
+        }
+      }
+    }
   }
 
   protected def checkpointCallbacks() {

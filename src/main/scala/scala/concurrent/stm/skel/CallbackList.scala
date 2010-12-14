@@ -77,7 +77,6 @@ private[stm] class CallbackList[A] private (private var _size: Int,
       } catch {
         case x => {
           val s = level.requestRollback(Txn.UncaughtExceptionCause(x))
-          // TODO: handle exceptions from whileCommitting callbacks
           assert(s.isInstanceOf[Txn.RolledBack])
         }
       }

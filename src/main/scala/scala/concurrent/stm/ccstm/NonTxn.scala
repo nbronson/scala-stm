@@ -487,7 +487,7 @@ private[ccstm] object NonTxn {
     // fall back on a transaction
     return atomic { t =>
       val txn = t.asInstanceOf[InTxnImpl]
-      (txn.get(handleA) eq a0) && (txn.readForWrite(handleB) eq b0) && { txn.set(handleB, b1) ; true }
+      (txn.get(handleA) eq a0) && (txn.get(handleB) eq b0) && { txn.set(handleB, b1) ; true }
     }
   }
 

@@ -61,6 +61,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   private var _subsumptionAllowed = true
 
+  private var _pendingFailure: Throwable = null
+
   /** This is the inner-most level that contains all subsumption, or null if
    *  there is no subsumption taking place.
    */
@@ -528,7 +530,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       rollbackAccessHistory(_slot)
       val handlers = rollbackCallbacks()
       _currentLevel = child.parUndo
-      fireAfterCompletion(handlers, exec, s)
+      if (handlers != null)
+        fireAfterCompletionAndThrow(handlers, exec, s, null)
       s
     }
   }
@@ -543,7 +546,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def topLevelComplete(exec: TxnExecutor): Status = {
-    val committed = attemptTopLevelComplete()
+    val committed = attemptTopLevelComplete(exec)
     val s = if (committed) Committed else this.status
 
     if (!committed) {
@@ -561,11 +564,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (committed)
       resetAccessHistory()
     detach()
-    fireAfterCompletion(handlers, exec, s)
+
+    val f = _pendingFailure
+    _pendingFailure = null
+    fireAfterCompletionAndThrow(handlers, exec, s, f)
     s
   }
 
-  private def attemptTopLevelComplete(): Boolean = {
+  private def attemptTopLevelComplete(exec: TxnExecutor): Boolean = {
     val root = _currentLevel
 
     fireBeforeCommitCallbacks()
@@ -601,7 +607,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
 
     commitWrites(cv)
-    // TODO: handle exceptions and don't recheck status for: whileCommittingList.fire(root, this)
+    _pendingFailure = fireWhileCommittingCallbacks(exec)
     root.setCommitted()
 
     return true
@@ -623,33 +629,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _barging = false
     // read count may be non-zero for explicit retry
     assert(writeCount == 0)
-  }
-
-  private def fireAfterCompletion(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status) {
-    if (handlers != null) {
-      val inOrder = if (s eq Committed) (handlers : Seq[Status => Unit]) else handlers.view.reverse
-      var failure: Option[Throwable] = None
-      for (h <- inOrder)
-        failure = fireAfter(h, exec, s) orElse failure
-      for (f <- failure)
-        throw f
-    }
-  }
-
-  private def fireAfter(handler: Status => Unit, exec: TxnExecutor, s: Status): Option[Throwable] = {
-    try {
-      handler(s)
-      None
-    } catch {
-      case x => {
-        try {
-          exec.postDecisionFailureHandler(s, x)
-          None
-        } catch {
-          case xx => Some(xx)
-        }
-      }
-    }
   }
 
   private def acquireLocks(): Boolean = {

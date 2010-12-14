@@ -494,8 +494,39 @@ class TxnSuite extends FunSuite {
     assert(n0.parent.isEmpty)
   }
 
-  // TODO: whilePreparing and whileCommitting callbacks
+  test("whilePreparing") {
+    var i = 0
+    var observed = -1
+    val x = Ref(0)
+    atomic { implicit txn =>
+      i += 1
+      x() = i
+      Txn.whilePreparing { _ =>
+        observed = i
+        if (i < 4) Txn.rollback(Txn.OptimisticFailureCause('test, None))
+      }
+    }
+    assert(x.single() == 4)
+    assert(observed == 4)
+    assert(i == 4)
+  }
+
+  test("whileCommitting") {
+    var count = 0
+    val x = Ref(0)
+    atomic { implicit txn =>
+      x() = 1
+      Txn.whileCommitting { _ => count += 1 }
+    }
+    assert(x.single() == 1)
+    assert(count == 1)
+  }
+
+  // TODO: more whilePreparing and whileCommitting callback usage
+
   // TODO: exception behavior from all types of callbacks
+
+  // TODO: tests for external decider
 
   perfTest("uncontended R+W txn perf") { (x, y) =>
     var i = 0
