@@ -326,4 +326,26 @@ class IsolatedRefSuite extends FunSuite {
     view() /= 2
     assert(view()() === 5.5f)
   }
+
+  createTests("BigInt ops", BigInt("1234")) { view =>
+    view() += 1
+    assert(view()().toString === "1235")
+    view() -= 2
+    assert(view()().toString === "1233")
+    view() *= 3
+    assert(view()().toString === "3699")
+    view() /= 4
+    assert(view()().toString === "924")
+  }
+
+  createTests("BigDecimal ops", BigDecimal("1234")) { view =>
+    view() += 1
+    assert(view()().toString === "1235")
+    view() -= 2
+    assert(view()().toString === "1233")
+    view() *= 3
+    assert(view()().toString === "3699")
+    view() /= 4
+    assert(view()().toString === "924.75")
+  }
 }

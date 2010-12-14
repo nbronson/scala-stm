@@ -20,6 +20,14 @@ class TxnSuite extends FunSuite {
     assert(Integer.parseInt(answer.toString, 13) === 6*9)
   }
 
+  test("large transaction") {
+    val refs = Array.tabulate(10000) { i => Ref(i) }
+    atomic { implicit txn =>
+      for (r <- refs)
+        r() = r() + 1
+    }
+  }
+
   test("duplicate view with old access") {
     val x = Ref(1)
     atomic { implicit t =>

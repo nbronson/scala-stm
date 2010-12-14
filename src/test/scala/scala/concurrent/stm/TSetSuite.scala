@@ -318,4 +318,11 @@ class TSetSuite extends FunSuite {
     val s2: TSet.View[String] = s1
     assert(s1 === Set("x1", "x2", "x3"))
   }
+
+  test("iterator crossing a txn boundary") {
+    val ks = (0 until 100) map { i => "x" + (i % 37) }
+    val s = TSet(ks: _*)
+    val iter = atomic { implicit txn => s.iterator }
+    assert(iter.toSet === ks.toSet)
+  }
 }

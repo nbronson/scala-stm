@@ -360,6 +360,13 @@ class TMapSuite extends FunSuite {
     assert(rev === Map("one" -> 1, "two" -> 2))
   }
 
+  test("iterator crossing a txn boundary") {
+    val kvs = (0 until 100) map { i => ((i % 37) -> ("x" + i)) }
+    val m = TMap(kvs: _*)
+    val iter = atomic { implicit txn => m.iterator }
+    assert(iter.toMap === kvs.toMap)
+  }
+
   //////// perf stuff
 
   private def now = System.currentTimeMillis
