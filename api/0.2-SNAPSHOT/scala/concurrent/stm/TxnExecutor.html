@@ -225,7 +225,7 @@
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnExecutor#apply">
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#apply">
       <a id="apply[Z]((InTxn) ⇒ Z)(MaybeTxn):Z"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -244,7 +244,7 @@
 </p></div><dl class="paramcmts block"><dt class="tparam">Z</dt><dd class="cmt"><p>the return type of the atomic block</p></dd><dt class="param">block</dt><dd class="cmt"><p>code to execute atomically</p></dd><dt>returns</dt><dd class="cmt"><p>the value returned from <code>block</code> after a successful optimistic
            concurrency attempt
 </p></dd></dl><div class="block">
-          attributes: final 
+          attributes: abstract 
         </div>
             
             
@@ -723,23 +723,6 @@ possible to check whether the contents of the list are of the requested typed.
             
             
           </div>
-          
-    </li><li visbl="prt" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#runAtomically">
-      <a id="runAtomically[Z]((InTxn) ⇒ Z)(MaybeTxn):Z"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">runAtomically</span>
-        <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="block">block: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span>
-        <span class="result">: Z</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: protected abstract 
-        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>

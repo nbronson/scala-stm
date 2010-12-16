@@ -27,7 +27,7 @@
         <span class="name">Ref</span>
         <span class="tparams">[<span name="A">A</span>]</span>
         
-        <span class="result"> extends <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A] with <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A] with <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A]</span>
+        <span class="result"> extends <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>] with <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A] with <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A]</span>
       </span>
       </h4>
       <div class="fullcomment" id="comment"><div class="comment cmt"><p>Provides access to a single element of type <i>A</i>.  Accesses are
@@ -59,7 +59,7 @@
 </p></div><div class="block">
             go to: <a href="Ref$.html">companion</a>
           </div><div class="block">
-            linear super types: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A], <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A], <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A], <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A], <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A], AnyRef, <span class="extype" name="scala.Any">Any</span>
+            linear super types: <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[A], <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A], <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>], <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>], <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>], AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div>
             
             
@@ -1045,11 +1045,11 @@ possible to check whether the contents of the list are of the requested typed.
             </div><div class="parent" name="scala.concurrent.stm.Source">
               <h3>Inherited from <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[A]</h3>
             </div><div class="parent" name="scala.concurrent.stm.RefLike">
-              <h3>Inherited from <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A]</h3>
+              <h3>Inherited from <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</h3>
             </div><div class="parent" name="scala.concurrent.stm.SinkLike">
-              <h3>Inherited from <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A]</h3>
+              <h3>Inherited from <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</h3>
             </div><div class="parent" name="scala.concurrent.stm.SourceLike">
-              <h3>Inherited from <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A]</h3>
+              <h3>Inherited from <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from AnyRef</h3>
             </div><div class="parent" name="scala.Any">

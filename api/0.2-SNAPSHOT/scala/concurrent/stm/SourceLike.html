@@ -25,7 +25,7 @@
       <span class="kind">trait</span>
       <span class="symbol">
         <span class="name">SourceLike</span>
-        <span class="tparams">[<span name="A">+A</span>]</span>
+        <span class="tparams">[<span name="A">+A</span>, <span name="Context">Context</span>]</span>
         
         <span class="result"> extends AnyRef</span>
       </span>
@@ -35,7 +35,7 @@
 </p></div><div class="block">
             linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div><div class="block">
-            known subclasses: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>, <a href="TxnLocal.html" class="extype" name="scala.concurrent.stm.TxnLocal">TxnLocal</a>, <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>, <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>
+            known subclasses: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>, <a href="TxnLocal.html" class="extype" name="scala.concurrent.stm.TxnLocal">TxnLocal</a>, <a href="ccstm/TxnLocalImpl.html" class="extype" name="scala.concurrent.stm.ccstm.TxnLocalImpl">TxnLocalImpl</a>, <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>, <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>
           </div>
             
             
@@ -220,13 +220,13 @@
           </div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SourceLike#apply">
-      <a id="apply()(InTxn):A"></a>
+      <a id="apply()(Context):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">apply</span>
         
-        <span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: A</span>
       </span>
       </h4>
@@ -391,13 +391,13 @@ there are no more references to the object.</p><p>The details of when and if the
           </div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#get">
-      <a id="get(InTxn):A"></a>
+      <a id="get(Context):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">get</span>
         
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: A</span>
       </span>
       </h4>
@@ -439,13 +439,13 @@ there are no more references to the object.</p><p>The details of when and if the
           </div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#getWith">
-      <a id="getWith[Z]((A) ⇒ Z)(InTxn):Z"></a>
+      <a id="getWith[Z]((A) ⇒ Z)(Context):Z"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">getWith</span>
         <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="f">f: (A) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">(<span name="f">f: (A) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: Z</span>
       </span>
       </h4>
@@ -588,13 +588,13 @@ possible to check whether the contents of the list are of the requested typed.
           </div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#relaxedGet">
-      <a id="relaxedGet((A, A) ⇒ Boolean)(InTxn):A"></a>
+      <a id="relaxedGet((A, A) ⇒ Boolean)(Context):A"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">relaxedGet</span>
         
-        <span class="params">(<span name="equiv">equiv: (A, A) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">(<span name="equiv">equiv: (A, A) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: A</span>
       </span>
       </h4>

@@ -25,7 +25,7 @@
       <span class="kind">trait</span>
       <span class="symbol">
         <span class="name">SinkLike</span>
-        <span class="tparams">[<span name="A">-A</span>]</span>
+        <span class="tparams">[<span name="A">-A</span>, <span name="Context">Context</span>]</span>
         
         <span class="result"> extends AnyRef</span>
       </span>
@@ -35,7 +35,7 @@
 </p></div><div class="block">
             linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div><div class="block">
-            known subclasses: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>, <a href="TxnLocal.html" class="extype" name="scala.concurrent.stm.TxnLocal">TxnLocal</a>, <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>, <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>
+            known subclasses: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>, <a href="TxnLocal.html" class="extype" name="scala.concurrent.stm.TxnLocal">TxnLocal</a>, <a href="ccstm/TxnLocalImpl.html" class="extype" name="scala.concurrent.stm.ccstm.TxnLocalImpl">TxnLocalImpl</a>, <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>, <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>
           </div>
             
             
@@ -509,13 +509,13 @@ possible to check whether the contents of the list are of the requested typed.
           </div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#set">
-      <a id="set(A)(InTxn):Unit"></a>
+      <a id="set(A)(Context):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">set</span>
         
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
@@ -573,13 +573,13 @@ possible to check whether the contents of the list are of the requested typed.
           </div>
           
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#trySet">
-      <a id="trySet(A)(InTxn):Boolean"></a>
+      <a id="trySet(A)(Context):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">trySet</span>
         
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
@@ -598,13 +598,13 @@ possible to check whether the contents of the list are of the requested typed.
           </div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SinkLike#update">
-      <a id="update(A)(InTxn):Unit"></a>
+      <a id="update(A)(Context):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">update</span>
         
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: Context</span>)</span>
         <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>

@@ -214,21 +214,46 @@
           </div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnLocal#apply">
-      <a id="apply[A](⇒ A):TxnLocal[A]"></a>
+      <a id="apply[A](⇒ A,(InTxn) ⇒ A,(InTxn) ⇒ Unit,(InTxnEnd) ⇒ Unit,(InTxnEnd) ⇒ Unit,(A) ⇒ Unit,(Status) ⇒ Unit,(Status) ⇒ Unit):TxnLocal[A]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">apply</span>
         <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">(<span name="init">init: ⇒ A</span>)</span>
+        <span class="params">(<span name="init">init: ⇒ A</span>, <span name="initialValue">initialValue: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ A</span>, <span name="beforeCommit">beforeCommit: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="whilePreparing">whilePreparing: (<a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="whileCommitting">whileCommitting: (<a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="afterCommit">afterCommit: (A) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="afterRollback">afterRollback: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="afterCompletion">afterCompletion: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
         <span class="result">: <a href="TxnLocal.html" class="extype" name="scala.concurrent.stm.TxnLocal">TxnLocal</a>[A]</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Constructs and returns a <code>TxnLocal</code> that will evaluate <code>init</code> each time
- that an initial value is required.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Constructs and returns a <code>TxnLocal</code> that will evaluate <code>init</code> each time
- that an initial value is required.
+            <p class="shortcomment cmt">Returns a new transaction-local that holds values of type <code>A</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a new transaction-local that holds values of type <code>A</code>.  One
+ <code>TxnLocal</code> instance holds a separate value for each transaction in which
+ it has been accessed.  The value associated with a particular atomic
+ block is created on demand, and discarded at the same time that the
+ atomic block's after-completion handlers are invoked.  <code>TxnLocal</code> has a
+ similar relationship to transactions as <code>ThreadLocal</code> has to threads.</p><p> There are two ways to specify the initial value that will be used if the
+ first access inside a transaction is not a <code>set</code>.  If no <code>InTxn</code> context
+ is needed to compute the initial value then the by-name parameter <code>init</code> is the most convenient.  Because this is the first parameter, you can
+ omit the parameter name.  To construct a <code>TxnLocal</code> with a default value
+ of <code>aValue</code>, simply </p><pre>
+   val tl = TxnLocal(aValue)
+</pre><p> If computing the initial value requires access to <code>Ref</code>s, then it is
+ better to use the <code>initialValue</code> parameter, which lets you write </p><pre>
+   val tl = TxnLocal(initialValue = { implicit txn =&gt;
+     // Ref reads or writes, or handler registration
+   })
+</pre><p> Unlike <code>Ref</code>s, <code>TxnLocal</code>s can be read or written from inside
+ while-preparing or while-committing callbacks, with two conditions: if
+ the first access is from one of these callbacks then no <code>beforeCommit</code> parameter can be present; and if the first access is from one of these
+ callbacks and it is not a write then you must use the <code>init</code> initialization method.</p><p> This factory method also accepts parameters that correspond to <code>Txn</code>'s
+ transaction life-cycle handlers.  These handlers will be registered in any
+ transaction that reads or writes the returned <code>TxnLocal</code>.  They are
+ roughly</p><ul><li><code>beforeCommit</code> - the last time that <code>Ref</code>s can be read or written;</li><li><code>whilePreparing</code> - the last time that the transaction can be rolled
+    back;</li><li><code>whileCommitting</code> - actions that should be atomic with respect to the
+    transaction (keep them fast to avoid scalability issues);</li><li><code>afterCommit</code> - called at some time after commit;</li><li><code>afterRollback</code> - called at some time after rollback of the nesting
+    level in which the <code>TxnLocal</code> was first accessed; and</li><li><code>afterCompletion</code> - called either after commit or after rollback.</li></ul><p> The value stored in a <code>TxnLocal</code> is subject to partial rollback: initial
+ value computations and writes from a nested atomic block will be
+ discarded if the block is rolled back.
 </p></div>
             
             

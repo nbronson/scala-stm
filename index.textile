@@ -15,6 +15,8 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
+* 2010 Dec 16 -- ["0.2-SNAPSHOT":snapshots.html]: Bug fix for while-committing handlers (["#3":https://github.com/nbronson/scala-stm/issues/closed#issue/3]).  @TxnLocal@ can now be read and written from while-preparing and while-committing handlers.
+
 * 2010 Dec 8 -- ["0.2-SNAPSHOT":snapshots.html]: Substantial performance improvements, especially for nested atomic blocks.  @TMap.View@ and @TSet.View@ are integrated with Scala collection class hierarchy.
 
 * 2010 Dec 6 -- ScalaSTM version 0.1 released.  "Get it...":releases.html

@@ -236,7 +236,7 @@
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnExecutor#apply">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#apply">
       <a id="apply[Z]((InTxn) ⇒ Z)(MaybeTxn):Z"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -255,9 +255,7 @@
 </p></div><dl class="paramcmts block"><dt class="tparam">Z</dt><dd class="cmt"><p>the return type of the atomic block</p></dd><dt class="param">block</dt><dd class="cmt"><p>code to execute atomically</p></dd><dt>returns</dt><dd class="cmt"><p>the value returned from <code>block</code> after a successful optimistic
            concurrency attempt
 </p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+          definition classes: CCSTMExecutor → <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
         </div>
             
             
@@ -954,6 +952,23 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: Factory → <a href="../impl/RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>
         </div></div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMRefs.Factory#newTxnLocal">
+      <a id="newTxnLocal[A](⇒ A,(InTxn) ⇒ A,(InTxn) ⇒ Unit,(InTxnEnd) ⇒ Unit,(InTxnEnd) ⇒ Unit,(A) ⇒ Unit,(Status) ⇒ Unit,(Status) ⇒ Unit):TxnLocal[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">newTxnLocal</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="params">(<span name="init">init: ⇒ A</span>, <span name="initialValue">initialValue: (<a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ A</span>, <span name="beforeCommit">beforeCommit: (<a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="whilePreparing">whilePreparing: (<a href="../InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="whileCommitting">whileCommitting: (<a href="../InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="afterCommit">afterCommit: (A) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="afterRollback">afterRollback: (<a href="../Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>, <span name="afterCompletion">afterCompletion: (<a href="../Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span>
+        <span class="result">: <a href="../TxnLocal.html" class="extype" name="scala.concurrent.stm.TxnLocal">TxnLocal</a>[A]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Factory → <a href="../impl/RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>
+        </div></div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#notify">
       <a id="notify():Unit"></a>
       <h4 class="signature">
@@ -1098,23 +1113,6 @@ possible to check whether the contents of the list are of the requested typed.
             
             
           </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#runAtomically">
-      <a id="runAtomically[Z]((InTxn) ⇒ Z)(MaybeTxn):Z"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">runAtomically</span>
-        <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="block">block: (<a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="../MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span>
-        <span class="result">: Z</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          definition classes: CCSTMExecutor → <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
-        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>

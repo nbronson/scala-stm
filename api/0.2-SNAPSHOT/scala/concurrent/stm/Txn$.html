@@ -450,8 +450,8 @@
  after-rollback handler.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Arranges for <code>handler</code> to be called as both an after-commit and
  after-rollback handler.</p><p> Equivalent to: </p><pre>
-    afterCommit(handler)
     afterRollback(handler)
+    afterCommit(handler)
 </pre></div>
             
             
@@ -471,12 +471,14 @@
       </h4>
       
             <p class="shortcomment cmt">Arranges for <code>handler</code> to be executed as soon as possible after the
- current nesting level is rolled back.</p>
+ current nesting level is rolled back, or runs the handler immediately if
+ the current nesting level's status is already <code>RolledBack</code>.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Arranges for <code>handler</code> to be executed as soon as possible after the
- current nesting level is rolled back.  Details:</p><ul><li>the handler will be executed immediately during a partial rollback that
-   includes the current nesting level;</li><li>the handler will be run before any additional attempts to execute the
+ current nesting level is rolled back, or runs the handler immediately if
+ the current nesting level's status is already <code>RolledBack</code>.  Details:</p><ul><li>the handler will be executed during any partial rollback that includes
+   the current nesting level;</li><li>the handler will be run before any additional attempts to execute the
    atomic block;</li><li>handlers will be run in the reverse of their registration order; and</li><li>handlers may be registered so long as the current transaction status is
-   not <code>RolledBack</code> or <code>Committed</code>.
+   not <code>Committed</code>.
 </li></ul></div>
             
             
