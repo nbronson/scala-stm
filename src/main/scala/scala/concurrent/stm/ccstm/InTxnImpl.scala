@@ -372,7 +372,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           return 'version_changed
         // okay
         return null
-      } else if (owner(m1) == NonTxnSlot) {
+      } else if (owner(m1) == nonTxnSlot) {
         // non-txn updates don't set changing unless they will install a new
         // value, so we are the only party that can yield
         return 'pending_nontxn_write
@@ -634,12 +634,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def acquireLocks(): Boolean = {
     var i = writeCount - 1
     while (i >= 0) {
-      // inlined to reduce the call depth from TxnExecutor.apply
+      // acquireLock is inlined to reduce the call depth from TxnExecutor.apply
       val handle = getWriteHandle(i)
       var m = 0L
       do {
         m = handle.meta
-        if (owner(m) != _slot)
+        if (owner(m) != _slot && m != txnLocalMeta)
           return false
         // we have to use CAS to guard against remote steal
       } while (!changing(m) && !handle.metaCAS(m, withChanging(m)))
@@ -687,7 +687,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// status checks
 
-  override protected def requireActive() {
+  override def requireActive() {
     val cur = _currentLevel
     if (cur == null)
       throw new IllegalStateException("no active transaction")
@@ -706,7 +706,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (owner(m) == _slot)
       return m
     (while (true) {
-      if (owner(m) != UnownedSlot)
+      if (owner(m) != unownedSlot)
         weakAwaitUnowned(handle, m)
       else if (handle.metaCAS(m, withOwner(m, _slot)))
         return m
@@ -715,7 +715,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def tryAcquireOwnership(handle: Handle[_], m0: Meta): Boolean = {
-    owner(m0) == UnownedSlot && handle.metaCAS(m0, withOwner(m0, _slot))
+    owner(m0) == unownedSlot && handle.metaCAS(m0, withOwner(m0, _slot))
   }
 
   //////////////// barrier implementations
@@ -892,7 +892,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
-  private def freshOwner(mPrev: Meta) = owner(mPrev) == UnownedSlot
+  private def freshOwner(mPrev: Meta) = owner(mPrev) == unownedSlot
 
   def set[T](handle: Handle[T], v: T) {
     requireActive()
@@ -1039,4 +1039,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  //////////// TxnLocal stuff
+
+  // We store transactional local values in the write buffer by pretending
+  // that they are proper handles, but their data and metadata aren't actually
+  // backed by anything.
+
+  def txnLocalFind(local: TxnLocalImpl[_]): Int = findWrite(local)
+  def txnLocalGet[T](index: Int): T = getWriteSpecValue[T](index)
+  def txnLocalInsert[T](local: TxnLocalImpl[T], v: T) { writeAppend(local, false, v) }
+  def txnLocalUpdate[T](index: Int, v: T) { writeUpdate(index, v) }
 }

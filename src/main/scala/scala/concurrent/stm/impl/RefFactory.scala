@@ -22,6 +22,15 @@ trait RefFactory {
    */ 
   def newRef[A : ClassManifest](v0: A): Ref[A]
 
+  def newTxnLocal[A](init: => A,
+                     initialValue: InTxn => A,
+                     beforeCommit: InTxn => Unit,
+                     whilePreparing: InTxnEnd => Unit,
+                     whileCommitting: InTxnEnd => Unit,
+                     afterCommit: A => Unit,
+                     afterRollback: Txn.Status => Unit,
+                     afterCompletion: Txn.Status => Unit): TxnLocal[A]
+
   def newTArray[A : ClassManifest](length: Int): TArray[A]
   def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A]
 

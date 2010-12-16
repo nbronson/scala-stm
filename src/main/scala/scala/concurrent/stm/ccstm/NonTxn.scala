@@ -68,11 +68,11 @@ private[ccstm] object NonTxn {
     var m1 = 0L
     do {
       m0 = handle.meta
-      while (owner(m0) != UnownedSlot) {
+      while (owner(m0) != unownedSlot) {
         weakAwaitUnowned(handle, m0)
         m0 = handle.meta
       }
-      val mOwned = withOwner(m0, NonTxnSlot)
+      val mOwned = withOwner(m0, nonTxnSlot)
       m1 = if (exclusive) withChanging(mOwned) else mOwned
     } while (!handle.metaCAS(m0, m1))
     m1
@@ -81,9 +81,9 @@ private[ccstm] object NonTxn {
   /** Returns 0L on failure. */
   private def tryAcquireLock(handle: Handle[_], exclusive: Boolean): Meta = {
     val m0 = handle.meta
-    if (owner(m0) != UnownedSlot) return 0L
+    if (owner(m0) != unownedSlot) return 0L
 
-    val mOwned = withOwner(m0, NonTxnSlot)
+    val mOwned = withOwner(m0, nonTxnSlot)
     val m1 = if (exclusive) withChanging(mOwned) else mOwned
 
     if (!handle.metaCAS(m0, m1)) return 0L
@@ -233,10 +233,10 @@ private[ccstm] object NonTxn {
     // invisible read to determine if the CAS will succeed, only waiting for
     // the lock if the CAS might go ahead.
     val m0 = handle.meta
-    if (owner(m0) != UnownedSlot) {
+    if (owner(m0) != unownedSlot) {
       return invisibleCAS(handle, before, after)
     }
-    val m1 = withOwner(m0, NonTxnSlot)
+    val m1 = withOwner(m0, nonTxnSlot)
     if (!handle.metaCAS(m0, m1)) {
       return invisibleCAS(handle, before, after)
     }
@@ -294,10 +294,10 @@ private[ccstm] object NonTxn {
   def compareAndSetIdentity[T, R <: AnyRef with T](handle: Handle[T], before: R, after: T): Boolean = {
     // try to acquire exclusive ownership
     val m0 = handle.meta
-    if (owner(m0) != UnownedSlot) {
+    if (owner(m0) != unownedSlot) {
       return invisibleCASI(handle, before, after)
     }
-    val m1 = withChanging(withOwner(m0, NonTxnSlot))
+    val m1 = withChanging(withOwner(m0, nonTxnSlot))
     if (!handle.metaCAS(m0, m1)) {
       return invisibleCASI(handle, before, after)
     }

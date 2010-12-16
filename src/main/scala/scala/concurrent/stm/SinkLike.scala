@@ -8,7 +8,7 @@ package scala.concurrent.stm
  *
  *  @author Nathan Bronson
  */
-trait SinkLike[-A] {
+trait SinkLike[-A, Context] {
 
   /** Performs a transactional write.  The new value will not be visible by
    *  any other threads until (and unless) `txn` successfully commits.
@@ -24,7 +24,7 @@ trait SinkLike[-A] {
    *  }}}
    *  @param v a value to store in the `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def update(v: A)(implicit txn: InTxn) { set(v) }
+  def update(v: A)(implicit txn: Context) { set(v) }
 
   /** Performs a transactional write.  The new value will not be visible by
    *  any other threads until (and unless) `txn` successfully commits.
@@ -32,12 +32,12 @@ trait SinkLike[-A] {
    *  @param v a value to store in the `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def set(v: A)(implicit txn: InTxn)
+  def set(v: A)(implicit txn: Context)
 
   /** Performs a transactional write and returns true, or returns false.  The
    *  STM implementation may choose to return false to reduce (not necessarily
    *  avoid) blocking.  If no other threads are performing any transactional or
    *  atomic accesses then this method will succeed. 
    */
-  def trySet(v: A)(implicit txn: InTxn): Boolean
+  def trySet(v: A)(implicit txn: Context): Boolean
 }

@@ -8,7 +8,7 @@ package scala.concurrent.stm
  *
  *  @author Nathan Bronson
  */
-trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
+trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Context] {
 
   // read-only operations (covariant) are in SourceLike
   // write-only operations (contravariant) are in SinkLike
@@ -18,7 +18,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *  @return the previous value of this `Ref`, as observed by `txn`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def swap(v: A)(implicit txn: InTxn): A
+  def swap(v: A)(implicit txn: Context): A
 
   /** Transforms the value referenced by this `Ref` by applying the function
    *  `f`.  Acts like `ref.set(f(ref.get))`, but the execution of `f` may be
@@ -27,7 +27,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *      call later during the transaction.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def transform(f: A => A)(implicit txn: InTxn)
+  def transform(f: A => A)(implicit txn: Context)
 
   /** Transforms the value ''v'' referenced by this `Ref` by to
    *  `pf.apply`(''v''), but only if `pf.isDefinedAt`(''v'').  Returns true if
@@ -40,7 +40,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *      before transformation (if any).
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def transformIfDefined(pf: PartialFunction[A,A])(implicit txn: InTxn): Boolean
+  def transformIfDefined(pf: PartialFunction[A,A])(implicit txn: Context): Boolean
 
   /** Transforms the value stored in the `Ref` by incrementing it.
    *
@@ -49,7 +49,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *
    *  @param rhs the quantity by which to increment the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def += (rhs: A)(implicit txn: InTxn, num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
+  def += (rhs: A)(implicit txn: Context, num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
 
   /** Transforms the value stored in the `Ref` by decrementing it.
    *
@@ -58,7 +58,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *
    *  @param rhs the quantity by which to decrement the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def -= (rhs: A)(implicit txn: InTxn, num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
+  def -= (rhs: A)(implicit txn: Context, num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
 
   /** Transforms the value stored in the `Ref` by multiplying it.
    *
@@ -68,7 +68,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *  @param rhs the quantity by which to multiply the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def *= (rhs: A)(implicit txn: InTxn, num: Numeric[A]) { transform { v => num.times(v, rhs) } }
+  def *= (rhs: A)(implicit txn: Context, num: Numeric[A]) { transform { v => num.times(v, rhs) } }
 
   /** Transforms the value stored the `Ref` by performing a division on it,
    *  throwing away the remainder if division is not exact for instances of
@@ -84,7 +84,7 @@ trait RefLike[A] extends SourceLike[A] with SinkLike[A] {
    *  @param rhs the quantity by which to divide the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def /= (rhs: A)(implicit txn: InTxn, num: Numeric[A]) {
+  def /= (rhs: A)(implicit txn: Context, num: Numeric[A]) {
     num match {
       //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
       case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }

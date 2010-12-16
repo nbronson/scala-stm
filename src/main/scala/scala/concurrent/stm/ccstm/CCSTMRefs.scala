@@ -19,6 +19,16 @@ private[ccstm] object CCSTMRefs {
     def newRef(v0: Unit): Ref[Unit] = new GenericRef(v0)
     def newRef[T : ClassManifest](v0: T): Ref[T] = new GenericRef(v0)
 
+    def newTxnLocal[A](init: => A,
+                       initialValue: InTxn => A,
+                       beforeCommit: InTxn => Unit,
+                       whilePreparing: InTxnEnd => Unit,
+                       whileCommitting: InTxnEnd => Unit,
+                       afterCommit: A => Unit,
+                       afterRollback: Txn.Status => Unit,
+                       afterCompletion: Txn.Status => Unit): TxnLocal[A] = new TxnLocalImpl(
+        init, initialValue, beforeCommit, whilePreparing, whileCommitting, afterCommit, afterRollback, afterCompletion)
+
     def newTArray[A: ClassManifest](length: Int): TArray[A] = new TArrayImpl[A](length)
     def newTArray[A: ClassManifest](xs: TraversableOnce[A]): TArray[A] = new TArrayImpl[A](xs)
 

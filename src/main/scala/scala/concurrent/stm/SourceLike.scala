@@ -8,7 +8,7 @@ package scala.concurrent.stm
  *
  *  @author Nathan Bronson
  */
-trait SourceLike[+A] {
+trait SourceLike[+A, Context] {
 
   /** Performs a transactional read and checks that it is consistent with all
    *  reads already made by `txn`.  Equivalent to `get`.
@@ -25,7 +25,7 @@ trait SourceLike[+A] {
    *  @return the value of the `Ref` as observed by `txn`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def apply()(implicit txn: InTxn): A = get
+  def apply()(implicit txn: Context): A = get
   
   /** Performs a transactional read and checks that it is consistent with all
    *  reads already made by `txn`.  Equivalent to `apply()`, which is more
@@ -34,7 +34,7 @@ trait SourceLike[+A] {
    *  @return the value of the `Ref` as observed by `txn`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def get(implicit txn: InTxn): A
+  def get(implicit txn: Context): A
 
   /** Returns `f(get)`, possibly reevaluating `f` to avoid rollback if a
    *  conflicting change is made but the old and new values are equal after
@@ -45,7 +45,7 @@ trait SourceLike[+A] {
    *  @param f an idempotent function.
    *  @return the result of applying `f` to the value contained in this `Ref`.
    */
-  def getWith[Z](f: A => Z)(implicit txn: InTxn): Z
+  def getWith[Z](f: A => Z)(implicit txn: Context): Z
 
   /** Returns the same value as `get`, but allows the caller to determine
    *  whether `txn` should be rolled back if another thread changes the value
@@ -75,5 +75,5 @@ trait SourceLike[+A] {
    *  @return a value of the `Ref`, not necessary consistent with the rest of
    *      the reads performed by `txn`.
    */
-  def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn): A
+  def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: Context): A
 }

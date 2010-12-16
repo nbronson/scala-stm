@@ -67,7 +67,7 @@ object Source {
 }
 
 /** `Source[+A]` consists of the covariant read-only operations of `Ref[A]`. */
-trait Source[+A] extends SourceLike[A] {
+trait Source[+A] extends SourceLike[A, InTxn] {
 
   /** See `Ref.single`. */
   def single: Source.View[A]

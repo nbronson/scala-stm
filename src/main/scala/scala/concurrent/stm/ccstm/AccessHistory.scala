@@ -25,9 +25,12 @@ private[ccstm] object AccessHistory {
     protected def getWriteHandle(i: Int): Handle[_]
     protected def getWriteSpecValue[T](i: Int): T
     protected def wasWriteFreshOwner(i: Int): Boolean
+    protected def findWrite(handle: Handle[_]): Int
     protected def stableGet[T](handle: Handle[T]): T
     protected def put[T](handle: Handle[T], freshOwner: Boolean, value: T)
     protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T
+    protected def writeAppend[T](handle: Handle[T], freshOwner: Boolean, v: T)
+    protected def writeUpdate[T](i: Int, v: T)
     protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T
     protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
     protected def transformAndGet[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
@@ -280,6 +283,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   @inline private def setRef(i: Int, r: AnyRef) { _wAnys(refI(i)) = r }
   @inline private def setHandle(i: Int, h: Handle[_]) { _wAnys(handleI(i)) = h }
+  @inline final protected def setWriteSpecValue[T](i: Int, v: T) { setSpecValue(i, v) }
   @inline final private[AccessHistory] def setSpecValue[T](i: Int, v: T) { _wAnys(specValueI(i)) = v.asInstanceOf[AnyRef] }
   @inline private def setOffset(i: Int, o: Int) { _wInts(offsetI(i)) = o }
   @inline private def setNextAndFreshOwner(i: Int, n: Int, freshOwner: Boolean) { _wInts(nextI(i)) = (n << 1) | (if (freshOwner) 1 else 0) }
@@ -293,7 +297,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   /** Reads a handle that is owned by this InTxnImpl family. */
   protected def stableGet[T](handle: Handle[T]): T = {
-    val i = find(handle)
+    val i = findWrite(handle)
     if (i >= 0) {
       // hit
       getWriteSpecValue[T](i)
@@ -303,7 +307,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     }
   }
 
-  private def find(handle: Handle[_]): Int = {
+  protected def findWrite(handle: Handle[_]): Int = {
     val base = handle.base
     val offset = handle.offset
     find(base, offset, computeSlot(base, offset))
@@ -362,6 +366,19 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val after = func(getWriteSpecValue[T](i))
     setSpecValue(i, after)
     return after
+  }
+
+  protected def writeAppend[T](handle: Handle[T], freshOwner: Boolean, value: T) {
+    val base = handle.base
+    val offset = handle.offset
+    val slot = computeSlot(base, offset)
+    append(base, offset, handle, freshOwner, value, slot)
+  }
+
+  protected def writeUpdate[T](i: Int, value: T) {
+    if (i < _wUndoThreshold)
+      undoLog.logWrite(i, getWriteSpecValue(i))
+    setSpecValue(i, value)
   }
 
   private def findOrAllocate(handle: Handle[_], freshOwner: Boolean): Int = {

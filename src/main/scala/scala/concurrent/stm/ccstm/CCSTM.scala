@@ -54,13 +54,14 @@ private[ccstm] object CCSTM extends GV6 {
   /** The slot number used when a memory location has not been reserved or
    *  locked for writing.
    */
-  def UnownedSlot: Slot = 0
+  def unownedSlot: Slot = 0
 
   /** The slot number used by non-transactional code that reserves or locks
    *  a location for writing.
    */
-  def NonTxnSlot: Slot = 1
+  def nonTxnSlot: Slot = 1
 
+  def txnLocalMeta: Meta = withChanging(withVersion(0L, (1L << 51) - 2))
 
   // TODO: clean up the following mess
   
@@ -74,7 +75,7 @@ private[ccstm] object CCSTM extends GV6 {
   def ownerAndVersion(m: Meta) = m & ((2047L << 51) | ((1L << 51) - 1))
 
   def withOwner(m: Meta, o: Slot): Meta = (m & ~(2047L << 51)) | (o.asInstanceOf[Long] << 51)
-  def withUnowned(m: Meta): Meta = withOwner(m, UnownedSlot)
+  def withUnowned(m: Meta): Meta = withOwner(m, unownedSlot)
   def withVersion(m: Meta, ver: Version) = (m & ~((1L << 51) - 1)) | ver
 
   /** It is not allowed to set PendingWakeups if Changing. */
@@ -159,7 +160,7 @@ private[ccstm] object CCSTM extends GV6 {
    *  called before waiting for a transaction.
    */
   def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
-    if (owner(m0) == NonTxnSlot)
+    if (owner(m0) == nonTxnSlot)
       weakAwaitNonTxnUnowned(handle, m0, currentTxn)
     else
       weakAwaitTxnUnowned(handle, m0, currentTxn)

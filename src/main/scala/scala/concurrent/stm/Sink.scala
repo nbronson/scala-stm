@@ -41,7 +41,7 @@ object Sink {
  *
  *  @author Nathan Bronson
  */
-trait Sink[-A] extends SinkLike[A] {
+trait Sink[-A] extends SinkLike[A, InTxn] {
 
   /** See `Ref.single`. */
   def single: Sink.View[A]

@@ -21,6 +21,15 @@ private[stm] class StubSTMImpl extends impl.STMImpl {
   def newRef(v0: Unit): Ref[Unit] = throw new AbstractMethodError
   def newRef[A : ClassManifest](v0: A): Ref[A] = throw new AbstractMethodError
 
+  def newTxnLocal[A](init: => A,
+                     initialValue: InTxn => A,
+                     beforeCommit: InTxn => Unit,
+                     whilePreparing: InTxnEnd => Unit,
+                     whileCommitting: InTxnEnd => Unit,
+                     afterCommit: A => Unit,
+                     afterRollback: Txn.Status => Unit,
+                     afterCompletion: Txn.Status => Unit): TxnLocal[A] = throw new AbstractMethodError
+
   def newTArray[A : ClassManifest](length: Int): TArray[A] = throw new AbstractMethodError
   def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A] = throw new AbstractMethodError
 

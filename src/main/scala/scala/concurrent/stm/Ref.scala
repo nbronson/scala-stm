@@ -266,7 +266,7 @@ trait RefCompanion {
  *
  *  @author Nathan Bronson
  */
-trait Ref[A] extends RefLike[A] with Source[A] with Sink[A] {
+trait Ref[A] extends RefLike[A, InTxn] with Source[A] with Sink[A] {
 
   /** Returns a `Ref.View` that allows access to the contents of this `Ref`
    *  without requiring that a `InTxn` be available.  Each operation on the view
