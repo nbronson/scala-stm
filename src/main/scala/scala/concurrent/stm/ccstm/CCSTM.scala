@@ -212,15 +212,15 @@ private[ccstm] object CCSTM extends GV6 {
     try {
       if (null != owningRoot && owningSlot == owner(handle.meta)) {
         if (!owningRoot.status.completed) {
-          if (null != currentTxn) {
+          if (null != currentTxn)
             currentTxn.txn.resolveWriteWriteConflict(owningRoot, handle)
-          } else if (owningRoot.txn == InTxnImpl.get) {
-            // We are in an escaped context and are waiting for a txn that is
-            // attached to this thread.  Big trouble!
-            assert(false) // CCSTM on top of scala-stm doesn't have escaped contexts, this shouldn't happen
-            owningRoot.requestRollback(
-                Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
-          }
+//          else if (owningRoot.txn == InTxnImpl.get) {
+//            // We are in an escaped context and are waiting for a txn that is
+//            // attached to this thread.  Big trouble!
+//            assert(false) // CCSTM on top of scala-stm doesn't have escaped contexts, this shouldn't happen
+//            owningRoot.requestRollback(
+//                Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
+//          }
           owningRoot.awaitCompleted()
         }
 
