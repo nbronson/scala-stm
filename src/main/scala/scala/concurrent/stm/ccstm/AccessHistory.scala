@@ -385,18 +385,19 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val base = handle.base
     val offset = handle.offset
     val slot = computeSlot(base, offset)
-    val i = find(base, offset, slot)
-    if (i >= 0) {
-      //assert(!freshOwner)
-      // hit, undo log entry is required to capture the potential reads that
-      // won't be recorded in this nested txn's read set
-      if (i < _wUndoThreshold)
-        undoLog.logWrite(i, getWriteSpecValue(i))
-      return i
-    } else {
-      // miss, create a new entry using the existing data value
-      return append(base, offset, handle, freshOwner, handle.data, slot)
+    if (!freshOwner) {
+      val i = find(base, offset, slot)
+      if (i >= 0) {
+        // hit, undo log entry is required to capture the potential reads that
+        // won't be recorded in this nested txn's read set
+        if (i < _wUndoThreshold)
+          undoLog.logWrite(i, getWriteSpecValue(i))
+        return i
+      }
     }
+
+    // miss, create a new entry using the existing data value
+    return append(base, offset, handle, freshOwner, handle.data, slot)
   }
 
   private def append(base: AnyRef, offset: Int, handle: Handle[_], freshOwner: Boolean, value: Any, slot: Int): Int = {
