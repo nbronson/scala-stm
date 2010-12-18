@@ -49,6 +49,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// per-transaction state
 
   private var _barging: Boolean = false
+  private var _bargeThreshold: Version = 0
 
   /** Non-negative values are assigned slots, negative values are the bitwise
    *  complement of the last used slot value.
@@ -471,16 +472,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     // expensive.  Our heuristic is to wait only if we are barging, which
     // indicates that we are having trouble making forward progress using
     // just blind optimism.  This also guarantees that doomed transactions
-    // never block anybody, because barging txns effectively have visible
-    // readers.
+    // never block anybody, because barging txns have visible readers.
     return _barging
   }
 
   //////////////// begin + commit
 
   private def checkBarging(prevFailures: Int) {
-    if (prevFailures >= 3)
+    if (prevFailures >= 3 && !_barging) {
       _barging = true
+      _bargeThreshold = freshReadVersion - 1
+    }
   }
 
   private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int) {
@@ -797,9 +799,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// barrier implementations
   
   def get[T](handle: Handle[T]): T = {
-    if (_barging)
-      return bargingRead(handle)
-
     requireActive()
 
     var m1 = handle.meta
@@ -808,6 +807,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // buffer, but it's definitely not in anybody else's.
       return stableGet(handle)
     }
+
+    if (readShouldBarge(m1))
+      return bargingRead(handle)
 
     var m0 = 0L
     var value: T = null.asInstanceOf[T]
@@ -828,9 +830,22 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return value
   }
 
+  private def readShouldBarge(meta: Meta): Boolean = {
+    _barging && version(meta) >= _bargeThreshold
+  }
+
+  private def bargingRead[T](handle: Handle[T]): T = {
+    val mPrev = acquireOwnership(handle)
+    assert (freshOwner(mPrev))
+
+    recordBarge(handle)
+    revalidateIfRequired(version(mPrev))
+    return handle.data
+  }
+
   def getWith[T,Z](handle: Handle[T], f: T => Z): Z = {
-    if (_barging)
-      return f(bargingRead(handle))
+    if (_barging && version(handle.meta) >= _bargeThreshold)
+      return f(get(handle))
 
     val u = unrecordedRead(handle)
     val result = f(u.value)
@@ -876,8 +891,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def relaxedGet[T](handle: Handle[T], equiv: (T, T) => Boolean): T = {
-    if (_barging)
-      return bargingRead(handle)
+    if (_barging && version(handle.meta) >= _bargeThreshold)
+      return get(handle)
 
     val u = unrecordedRead(handle)
     val snapshot = u.value
@@ -1014,20 +1029,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     put(handle, true, v)
     revalidateIfRequired(version(m0))
     return true
-  }
-
-  def bargingRead[T](handle: Handle[T]): T = {
-    requireActive()
-    val mPrev = acquireOwnership(handle)
-    if (!freshOwner(mPrev)) {
-      // we've already locked this meta, perhaps via a write or another
-      // pessimistic read
-      return stableGet(handle)
-    }
-
-    recordBarge(handle)
-    revalidateIfRequired(version(mPrev))
-    return handle.data
   }
 
   def compareAndSet[T](handle: Handle[T], before: T, after: T): Boolean = {
