@@ -323,6 +323,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def rollback(cause: RollbackCause): Nothing = {
+    // We need to grab the version numbers from writes and pessimistic reads
+    // before the status is set to rollback, because as soon as the top-level
+    // txn is marked rollback other threads can steal ownership.  This is
+    // harmless if some other type of rollback occurs.
+    if (cause == ExplicitRetryCause)
+      addLatestWritesAsReads(_barging)
+
     _currentLevel.forceRollback(cause)
     throw RollbackError
   }
@@ -549,10 +556,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def retainRetrySet() {
-    // no read set entries are present for things that were read via a write
-    // lock, so we have to copy those to the read set or the barge set
-    addLatestWritesAsReads(_barging)
-
     // this will turn rollbackAccessHistory into a no-op for the reads
     _currentLevel.retainReadsAndBarges = true
   }
@@ -672,14 +675,11 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def detach() {
-    assert(_slot >= 0)
+    assert(_slot >= 0 && readCount == 0 && bargeCount == 0 && writeCount == 0)
     slotManager.release(_slot)
     _slot = ~_slot
     _currentLevel = null
     _barging = false
-    assert(readCount == 0)
-    assert(bargeCount == 0)
-    assert(writeCount == 0)
   }
 
   private def acquireLocks(): Boolean = {
@@ -836,8 +836,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def bargingRead[T](handle: Handle[T]): T = {
     val mPrev = acquireOwnership(handle)
-    assert (freshOwner(mPrev))
-
     recordBarge(handle)
     revalidateIfRequired(version(mPrev))
     return handle.data

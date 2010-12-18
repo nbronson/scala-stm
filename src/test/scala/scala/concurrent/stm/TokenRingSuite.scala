@@ -13,17 +13,21 @@ import org.scalatest.FunSuite
  *  @author Nathan Bronson
  */
 class TokenRingSuite extends FunSuite {
-  test("small non-txn threesome") { tokenRing(3, 10000, false) }
-  test("small txn threesome") { tokenRing(3, 1000, true) }
+  test("small non-txn threesome") { tokenRing(3, 10000, false, false) }
+  test("small txn threesome") { tokenRing(3, 1000, true, false) }
+  test("small txn threesome reading via write") { tokenRing(3, 1000, true, true) }
 
-  test("non-txn ping-pong", Slow) { tokenRing(2, 1000000, false) }
-  test("non-txn threesome", Slow) { tokenRing(3, 1000000, false) }
-  test("non-txn large ring", Slow) { tokenRing(32, 10000, false) }
-  test("txn ping-pong", Slow) { tokenRing(2, 100000, true) }
-  test("txn threesome", Slow) { tokenRing(3, 100000, true) }
-  test("txn large ring", Slow) { tokenRing(32, 10000, true) }
+  test("non-txn ping-pong", Slow) { tokenRing(2, 1000000, false, false) }
+  test("non-txn threesome", Slow) { tokenRing(3, 1000000, false, false) }
+  test("non-txn large ring", Slow) { tokenRing(32, 10000, false, false) }
+  test("txn ping-pong", Slow) { tokenRing(2, 100000, true, false) }
+  test("txn threesome", Slow) { tokenRing(3, 100000, true, false) }
+  test("txn large ring", Slow) { tokenRing(32, 10000, true, false) }
+  test("txn ping-pong reading via write", Slow) { tokenRing(2, 100000, true, true) }
+  test("txn threesome reading via write", Slow) { tokenRing(3, 100000, true, true) }
+  test("txn large ring reading via write", Slow) { tokenRing(32, 10000, true, true) }
 
-  def tokenRing(ringSize: Int, handoffsPerThread: Int, useTxns: Boolean) {
+  def tokenRing(ringSize: Int, handoffsPerThread: Int, useTxns: Boolean, useSwap: Boolean) {
     val ready = Array.tabulate(ringSize)(i => Ref(i == 0))
     val threads = new Array[Thread](ringSize - 1)
     val barrier = new CyclicBarrier(ringSize, new Runnable {
@@ -55,8 +59,12 @@ class TokenRingSuite extends FunSuite {
               ready(next).single() = true
             } else {
               atomic { implicit t =>
-                if (ready(index).get == false) retry
-                ready(index)() = false
+                if (!useSwap) {
+                  if (ready(index).get == false) retry
+                  ready(index)() = false
+                } else {
+                  if (ready(index).swap(false) == false) retry
+                }
                 ready(next)() = true
               }
             }

@@ -151,24 +151,21 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
    *  values that were removed.  Releases any ownership held by the barge set.
    */
   protected def takeRetrySet(slot: CCSTM.Slot): ReadSet = {
-    val accum = new ReadSetBuilder
-
+    // barge entries were copied to the read set by addLatestWritesAsReads
     var i = 0
+    while (i < _bCount) {
+      rollbackHandle(_bHandles(i), slot)
+      i += 1
+    }
+    resetBargeSet()
+
+    val accum = new ReadSetBuilder
+    i = 0
     while (i < _rCount) {
       accum += (_rHandles(i), _rVersions(i))
       i += 1
     }
     resetReadSet()
-
-    i = 0
-    while (i < _bCount) {
-      val h = _bHandles(i)
-      accum += (h, _bVersions(i))
-      rollbackHandle(h, slot)
-      i += 1
-    }
-    resetBargeSet()
-
     accum.result()
   }
 
@@ -251,11 +248,6 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   private var _bCount = 0
   private var _bHandles: Array[Handle[_]] = null
-
-  // We need to record the versions some time _before_ the txn is marked
-  // rollback, because after that another thread might steal the ownership and
-  // increment the version number.
-  private var _bVersions: Array[CCSTM.Version] = null
   allocateBargeSet()
 
   protected def bargeCount = _bCount
@@ -266,13 +258,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     if (i == _bHandles.length)
       growBargeSet()
     _bHandles(i) = handle
-    _bVersions(i) = CCSTM.version(handle.meta)
     _bCount = i + 1
   }
 
   private def growBargeSet() {
     _bHandles = copyTo(_bHandles, new Array[Handle[_]](_bHandles.length * 2))
-    _bVersions = copyTo(_bVersions, new Array[CCSTM.Version](_bVersions.length * 2))
   }
 
   private def checkpointBargeSet() {
@@ -314,7 +304,6 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   private def allocateBargeSet() {
     _bHandles = new Array[Handle[_]](InitialBargeCapacity)
-    _bVersions = new Array[CCSTM.Version](InitialBargeCapacity)
   }
 
 
@@ -621,19 +610,26 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   protected def addLatestWritesAsReads(convertToBarge: Boolean) {
-    var i = _wCount - 1
-    while (i >= _wUndoThreshold) {
+    // we need to capture the version numbers from barges
+    var i = undoLog.prevBargeCount
+    while (i < _bCount) {
+      val h = _bHandles(i)
+      recordRead(h, CCSTM.version(h.meta))
+      i += 1
+    }
+
+    i = _wUndoThreshold
+    while (i < _wCount) {
       val h = getWriteHandle(i)
-      if (wasWriteFreshOwner(i)) {
         // we only need one entry in the read set per meta
+      if (wasWriteFreshOwner(i)) {
+        recordRead(h, CCSTM.version(h.meta))
         if (convertToBarge) {
           setFreshOwner(i, false)
           recordBarge(h)
-        } else {
-          recordRead(h, CCSTM.version(h.meta))
         }
       }
-      i -= 1
+      i += 1
     }
   }
 }
