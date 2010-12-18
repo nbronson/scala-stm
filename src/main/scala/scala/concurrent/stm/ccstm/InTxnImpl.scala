@@ -49,7 +49,11 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// per-transaction state
 
   private var _barging: Boolean = false
-  private var _slot: Slot = 0
+
+  /** Non-negative values are assigned slots, negative values are the bitwise
+   *  complement of the last used slot value.
+   */
+  private var _slot: Slot = ~0
 
   private var _currentLevel: TxnLevelImpl = null
   protected def undoLog: TxnLevelImpl = _currentLevel
@@ -190,7 +194,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // we are only here if it is a transient rollback or an explicit retry
       if (level.status.asInstanceOf[RolledBack].cause == ExplicitRetryCause) {
         level = null // help the GC while waiting
-        takeRetrySet().awaitRetry()
+        awaitRetry()
         prevFailures = 0
       } else {
         prevFailures += 1 // transient rollback, retry
@@ -309,7 +313,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         }
 
         // top-level retry after waiting for something to change
-        takeRetrySet().awaitRetry()
+        awaitRetry()
 
         // rerun the real block, now that the await has completed
         reusedReadThreshold = -1
@@ -494,21 +498,15 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def topLevelBegin(child: TxnLevelImpl) {
+    if (_slot < 0) {
+      _priority = skel.FastSimpleRandom.nextInt()
+
+      // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
+      _slot = slotManager.assign(child, ~_slot)
+      _readVersion = freshReadVersion
+    }
+    // else we must be a top-level alternative
     _currentLevel = child
-
-    // this seems to be faster than the volatile required for a lazy implementation
-    _priority = skel.FastSimpleRandom.nextInt()
-
-    // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
-    _slot = slotManager.assign(_currentLevel, _slot)
-    _readVersion = freshReadVersion
-  }
-
-  def complete(exec: TxnExecutor): Txn.Status = {
-    if (_currentLevel.parUndo == null)
-      topLevelComplete(exec)
-    else
-      nestedComplete(exec)
   }
 
   private def nestedComplete(exec: TxnExecutor): Txn.Status = {
@@ -536,39 +534,83 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  private def awaitRetry() {
+    assert(_slot >= 0)
+    val rs = takeRetrySet(_slot)
+    detach()
+    val f = _pendingFailure
+    if (f != null) {
+      _pendingFailure = null
+      throw f
+    }
+    rs.awaitRetry()
+  }
+
   private def retainRetrySet() {
     // no read set entries are present for things that were read via a write
-    // lock, so we have to copy those to the read set
-    addLatestWritesAsReads()
+    // lock, so we have to copy those to the read set or the barge set
+    addLatestWritesAsReads(_barging)
 
     // this will turn rollbackAccessHistory into a no-op for the reads
-    _currentLevel.retainReadSet = true
+    _currentLevel.retainReadsAndBarges = true
   }
 
   private def topLevelComplete(exec: TxnExecutor): Status = {
-    val committed = attemptTopLevelComplete(exec)
-    val s = if (committed) Committed else this.status
-
-    if (!committed) {
-      if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
-        retainRetrySet()
-
-      // this releases the locks
-      rollbackAccessHistory(_slot)
+    if (attemptTopLevelComplete(exec)) {
+      finishTopLevelCommit(exec)
+      Txn.Committed
     } else {
-      // we can start subsuming again
-      _subsumptionAllowed = true      
+      val s = this.status
+      if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
+        finishTopLevelRetry(exec, s)
+      else
+        finishTopLevelRollback(exec, s)
+      s
     }
+  }
 
-    val handlers = if (committed) resetCallbacks() else rollbackCallbacks()
-    if (committed)
-      resetAccessHistory()
+  private def finishTopLevelCommit(exec: TxnExecutor) {
+    // we can start subsuming again
+    _subsumptionAllowed = true
+
+    resetAccessHistory()
+    val handlers = resetCallbacks()
+    detach()
+
+    val f = _pendingFailure
+    _pendingFailure = null
+    fireAfterCompletionAndThrow(handlers, exec, Txn.Committed, f)
+  }
+
+  private def finishTopLevelRollback(exec: TxnExecutor, s: Txn.Status) {
+    rollbackAccessHistory(_slot)
+    val handlers = rollbackCallbacks()
     detach()
 
     val f = _pendingFailure
     _pendingFailure = null
     fireAfterCompletionAndThrow(handlers, exec, s, f)
-    s
+  }
+
+  private def finishTopLevelRetry(exec: TxnExecutor, s: Txn.Status) {
+    retainRetrySet()
+    rollbackAccessHistory(_slot)
+    val handlers = rollbackCallbacks()
+
+    // don't detach, but we do need to give up the current level
+    _currentLevel = null
+    assert(writeCount == 0)
+
+    if (handlers != null)
+      _pendingFailure = fireAfterCompletion(handlers, exec, s, _pendingFailure)
+
+    if (_pendingFailure != null) {
+      // scuttle the retry
+      takeRetrySet(_slot)
+      val f = _pendingFailure
+      _pendingFailure = null
+      throw f
+    }
   }
 
   private def attemptTopLevelComplete(exec: TxnExecutor): Boolean = {
@@ -576,10 +618,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     fireBeforeCommitCallbacks()
 
-    // read-only transactions are easy to commit, because all of the reads
-    // are already guaranteed to be consistent
-    if (writeCount == 0 && !writeResourcesPresent)
+    // Read-only transactions are easy to commit, because all of the reads
+    // are already guaranteed to be consistent.  We still have to release the
+    // barging locks, though.
+    if (writeCount == 0 && !writeResourcesPresent) {
+      if (bargeCount > 0)
+        readOnlyCommitBarges()
       return root.setCommittedIfActive()
+    }
 
     if (!root.statusCAS(Active, Preparing) || !acquireLocks())
       return false
@@ -624,10 +670,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def detach() {
+    assert(_slot >= 0)
     slotManager.release(_slot)
+    _slot = ~_slot
     _currentLevel = null
     _barging = false
-    // read count may be non-zero for explicit retry
+    assert(readCount == 0)
+    assert(bargeCount == 0)
     assert(writeCount == 0)
   }
 
@@ -654,11 +703,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     while (i >= 0) {
       val handle = getWriteHandle(i).asInstanceOf[Handle[Any]]
 
-      // note that we accumulate wakeup entries for each base and offset, even
-      // if they share metadata
       val m = handle.meta
       if (pendingWakeups(m))
-        wakeups |= wakeupManager.prepareToTrigger(handle.base, handle.offset)
+        wakeups |= wakeupManager.prepareToTrigger(handle)
 
       //assert(owner(m) == _slot)
 
@@ -680,9 +727,38 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       i -= 1
     }
 
-    // unblock anybody waiting on a value change that has just occurred
+    // We still have ownership (but not exclusive) for pessimistic reads, and
+    // we still have exclusive ownership of pessimistic reads that turned into
+    // writes (or that share metadata with writes).  We rollback the vlock for
+    // the former and commit the vlock for the later.
+    i = bargeCount - 1
+    while (i >= 0) {
+      val handle = bargeHandle(i)
+      val m = handle.meta
+
+      if (changing(m)) {
+        // a handle sharing this base and metaOffset must also be present in
+        // the write buffer, so we should bump the version number
+        handle.meta = withCommit(m, cv)
+      } else {
+        // this was only a pessimistic read, no need to bump the version
+        rollbackHandle(handle, _slot, m)
+      }
+
+      i -= 1
+    }
+
+    // unblock anybody waiting on a value change
     if (wakeups != 0L)
       wakeupManager.trigger(wakeups)
+  }
+
+  private def readOnlyCommitBarges() {
+    var i = bargeCount - 1
+    while (i >= 0) {
+      rollbackHandle(bargeHandle(i), _slot)
+      i -= 1
+    }
   }
 
   //////////////// status checks
@@ -722,7 +798,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   
   def get[T](handle: Handle[T]): T = {
     if (_barging)
-      return readForWrite(handle)
+      return bargingRead(handle)
 
     requireActive()
 
@@ -754,7 +830,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   def getWith[T,Z](handle: Handle[T], f: T => Z): Z = {
     if (_barging)
-      return f(readForWrite(handle))
+      return f(bargingRead(handle))
 
     val u = unrecordedRead(handle)
     val result = f(u.value)
@@ -801,7 +877,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   def relaxedGet[T](handle: Handle[T], equiv: (T, T) => Boolean): T = {
     if (_barging)
-      return readForWrite(handle)
+      return bargingRead(handle)
 
     val u = unrecordedRead(handle)
     val snapshot = u.value
@@ -940,14 +1016,18 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return true
   }
 
-  def readForWrite[T](handle: Handle[T]): T = {
+  def bargingRead[T](handle: Handle[T]): T = {
     requireActive()
     val mPrev = acquireOwnership(handle)
-    val f = freshOwner(mPrev)
-    val v = allocatingGet(handle, f)
-    if (f)
-      revalidateIfRequired(version(mPrev))
-    v
+    if (!freshOwner(mPrev)) {
+      // we've already locked this meta, perhaps via a write or another
+      // pessimistic read
+      return stableGet(handle)
+    }
+
+    recordBarge(handle)
+    revalidateIfRequired(version(mPrev))
+    return handle.data
   }
 
   def compareAndSet[T](handle: Handle[T], before: T, after: T): Boolean = {
@@ -1027,7 +1107,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       }
       false
     } else {
-      val v = readForWrite(handle)
+      val v = get(handle)
       if (!u.stillValid && !pf.isDefinedAt(v)) {
         // value changed after unrecordedRead
         false

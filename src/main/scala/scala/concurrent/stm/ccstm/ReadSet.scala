@@ -28,7 +28,7 @@ private[ccstm] class ReadSet(size: Int,
       var i = size - 1
       while (i >= 0) {
         val h = handles(i)
-        if (!event.addSource(h.base, h.offset))
+        if (!event.addSource(h))
           return // event was already triggered  TODO: recheck stillValid?
         if (!addPendingWakeup(h, versions(i)))
           return // handle has already changed

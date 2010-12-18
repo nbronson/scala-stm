@@ -99,12 +99,12 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   protected def fireAfterCompletionAndThrow(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, pendingFailure: Throwable) {
-    val f = if (handlers != null) fireAfterCompletionImpl(handlers, exec, s, pendingFailure) else pendingFailure
+    val f = if (handlers != null) fireAfterCompletion(handlers, exec, s, pendingFailure) else pendingFailure
     if (f != null)
       throw f
   }
 
-  private def fireAfterCompletionImpl(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, f0: Throwable): Throwable = {
+  protected def fireAfterCompletion(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, f0: Throwable): Throwable = {
     var failure = f0
     var i = 0
     val inOrder = s eq Committed

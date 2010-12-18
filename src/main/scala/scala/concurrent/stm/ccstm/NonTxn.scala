@@ -43,7 +43,7 @@ private[ccstm] object NonTxn {
 
   private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta) {
     val event = wakeupManager.subscribe
-    event.addSource(handle.base, handle.metaOffset)
+    event.addSource(handle)
     do {
       val m = handle.meta
       if (version(m) != version(m0) || changing(m)) {
@@ -115,23 +115,11 @@ private[ccstm] object NonTxn {
     handle.meta = withCommit(m0, newVersion)
 
     if (pendingWakeups(m0))
-      triggerWakeups(handle, m0)
+      triggerWakeups(handle)
   }
 
-  private def triggerWakeups(handle: Handle[_], m0: Meta) {
-    val r = handle.base
-
-    // we notify on offset for threads that are waiting for handle to change
-    val o1 = handle.offset
-
-    // we notify on metaOffset for threads that are trying to acquire a lock
-    // on a handle that shares metaData with this handle
-    val o2 = handle.metaOffset
-
-    var wakeups = wakeupManager.prepareToTrigger(r, o1)
-    if (o1 != o2)
-      wakeups |= wakeupManager.prepareToTrigger(r, o2)
-    wakeupManager.trigger(wakeups)
+  private def triggerWakeups(handle: Handle[_]) {
+    wakeupManager.trigger(wakeupManager.prepareToTrigger(handle))
   }
 
   //////////////// public interface
@@ -413,8 +401,8 @@ private[ccstm] object NonTxn {
             // fall back to a txn, which is guaranteed to eventually succeed
             return atomic { t =>
               val txn = t.asInstanceOf[InTxnImpl]
-              val a0 = txn.readForWrite(handleA)
-              val b0 = txn.readForWrite(handleB)
+              val a0 = txn.get(handleA)
+              val b0 = txn.get(handleB)
               val (a1, b1, z) = f(a0, b0)
               txn.set(handleA, a1)
               txn.set(handleB, b1)

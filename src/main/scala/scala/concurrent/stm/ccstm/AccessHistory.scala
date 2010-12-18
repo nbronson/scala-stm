@@ -17,7 +17,16 @@ private[ccstm] object AccessHistory {
     protected def readLocate(index: Int): AccessHistory.UndoLog
   }
 
-  /** The operations provided by the write buffer functionality of an 
+  /** The operations provided by the pessimistic read set functionality of an
+   *  `AccessHistory`.
+   */
+  trait BargeSet {
+    protected def bargeCount: Int
+    protected def bargeHandle(i: Int): Handle[_]
+    protected def recordBarge(handle: Handle[_])
+  }
+
+  /** The operations provided by the write buffer functionality of an
    *  `AccessHistory`.
    */
   trait WriteBuffer {
@@ -28,7 +37,6 @@ private[ccstm] object AccessHistory {
     protected def findWrite(handle: Handle[_]): Int
     protected def stableGet[T](handle: Handle[T]): T
     protected def put[T](handle: Handle[T], freshOwner: Boolean, value: T)
-    protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T
     protected def writeAppend[T](handle: Handle[T], freshOwner: Boolean, v: T)
     protected def writeUpdate[T](i: Int, v: T)
     protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T
@@ -43,8 +51,9 @@ private[ccstm] object AccessHistory {
   abstract class UndoLog {
     def parUndo: UndoLog
 
-    var retainReadSet = false
+    var retainReadsAndBarges = false
     var prevReadCount = 0
+    var prevBargeCount = 0
     var prevWriteThreshold = 0
 
     @tailrec final def readLocate(index: Int): UndoLog = {
@@ -110,12 +119,13 @@ private[ccstm] object AccessHistory {
  *
  *  @author Nathan Bronson
  */
-private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with AccessHistory.WriteBuffer {
+private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with AccessHistory.BargeSet with AccessHistory.WriteBuffer {
 
   protected def undoLog: AccessHistory.UndoLog
 
   protected def checkpointAccessHistory(reusedReadThreshold: Int) {
     checkpointReadSet(reusedReadThreshold)
+    checkpointBargeSet()
     checkpointWriteBuffer()
   }
 
@@ -126,13 +136,40 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   /** Releases locks for discarded handles */
   protected def rollbackAccessHistory(slot: CCSTM.Slot) {
     rollbackReadSet()
+    rollbackBargeSet(slot)
     rollbackWriteBuffer(slot)
   }
 
   /** Does not release locks */
   protected def resetAccessHistory() {
     resetReadSet()
+    resetBargeSet()
     resetWriteBuffer()
+  }
+
+  /** Clears the read set and barge set, returning a `ReadSet` that holds the
+   *  values that were removed.  Releases any ownership held by the barge set.
+   */
+  protected def takeRetrySet(slot: CCSTM.Slot): ReadSet = {
+    val accum = new ReadSetBuilder
+
+    var i = 0
+    while (i < _rCount) {
+      accum += (_rHandles(i), _rVersions(i))
+      i += 1
+    }
+    resetReadSet()
+
+    i = 0
+    while (i < _bCount) {
+      val h = _bHandles(i)
+      accum += (h, _bVersions(i))
+      rollbackHandle(h, slot)
+      i += 1
+    }
+    resetBargeSet()
+
+    accum.result()
   }
 
   //////////// read set
@@ -173,7 +210,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def rollbackReadSet() {
-    if (!undoLog.retainReadSet) {
+    if (!undoLog.retainReadsAndBarges) {
       val n = undoLog.prevReadCount
       var i = n
       while (i < _rCount) {
@@ -204,21 +241,81 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     _rVersions = new Array[CCSTM.Version](InitialReadCapacity)
   }
 
-  /** Clears the read set, returning a `ReadSet` that holds the values that
-   *  were removed.
-   */
-  protected def takeRetrySet(): ReadSet = {
-    val accum = new ReadSetBuilder
-    var i = 0
-    while (i < _rCount) {
-      accum += (_rHandles(i), _rVersions(i))
-      i += 1
-    }
-    resetReadSet()
-    accum.result()
+  protected def readLocate(index: Int): AccessHistory.UndoLog = undoLog.readLocate(index)
+
+
+  //////////// pessimistic read buffer
+
+  private def InitialBargeCapacity = 1024
+  private def MaxRetainedBargeCapacity = 8 * InitialBargeCapacity
+
+  private var _bCount = 0
+  private var _bHandles: Array[Handle[_]] = null
+
+  // We need to record the versions some time _before_ the txn is marked
+  // rollback, because after that another thread might steal the ownership and
+  // increment the version number.
+  private var _bVersions: Array[CCSTM.Version] = null
+  allocateBargeSet()
+
+  protected def bargeCount = _bCount
+  protected def bargeHandle(i: Int): Handle[_] = _bHandles(i)
+
+  protected def recordBarge(handle: Handle[_]) {
+    val i = _bCount
+    if (i == _bHandles.length)
+      growBargeSet()
+    _bHandles(i) = handle
+    _bVersions(i) = CCSTM.version(handle.meta)
+    _bCount = i + 1
   }
 
-  protected def readLocate(index: Int): AccessHistory.UndoLog = undoLog.readLocate(index)
+  private def growBargeSet() {
+    _bHandles = copyTo(_bHandles, new Array[Handle[_]](_bHandles.length * 2))
+    _bVersions = copyTo(_bVersions, new Array[CCSTM.Version](_bVersions.length * 2))
+  }
+
+  private def checkpointBargeSet() {
+    undoLog.prevBargeCount = _bCount
+  }
+
+  private def rollbackBargeSet(slot: CCSTM.Slot) {
+    if (!undoLog.retainReadsAndBarges) {
+      val n = undoLog.prevBargeCount
+      var i = n
+      while (i < _bCount) {
+        rollbackHandle(_bHandles(i), slot)
+        _bHandles(i) = null
+        i += 1
+      }
+      _bCount = n
+    }
+  }
+
+  private def resetBargeSet() {
+    if (_bCount > 0)
+      resetBargeSetNonEmpty()
+  }
+
+  private def resetBargeSetNonEmpty() {
+    if (_bHandles.length > MaxRetainedBargeCapacity) {
+      // avoid staying very large
+      allocateBargeSet()
+    } else {
+      // allow GC of old handles
+      var i = 0
+      while (i < _bCount) {
+        _bHandles(i) = null
+        i += 1
+      }
+    }
+    _bCount = 0
+  }
+
+  private def allocateBargeSet() {
+    _bHandles = new Array[Handle[_]](InitialBargeCapacity)
+    _bVersions = new Array[CCSTM.Version](InitialBargeCapacity)
+  }
 
 
   //////////// write buffer
@@ -288,6 +385,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   @inline private def setOffset(i: Int, o: Int) { _wInts(offsetI(i)) = o }
   @inline private def setNextAndFreshOwner(i: Int, n: Int, freshOwner: Boolean) { _wInts(nextI(i)) = (n << 1) | (if (freshOwner) 1 else 0) }
   @inline private def setNext(i: Int, n: Int) { _wInts(nextI(i)) = (n << 1) | (_wInts(nextI(i)) & 1) }
+  @inline private def setFreshOwner(i: Int, freshOwner: Boolean) { setNextAndFreshOwner(i, getNext(i), freshOwner) }
 
   //////// bulk access
 
@@ -341,10 +439,6 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       // miss, create a new entry
       append(base, offset, handle, freshOwner, value, slot)
     }
-  }
-
-  protected def allocatingGet[T](handle: Handle[T], freshOwner: Boolean): T = {
-    return getWriteSpecValue[T](findOrAllocate(handle, freshOwner))
   }
 
   protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T = {
@@ -461,15 +555,8 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val completeRelink = i >= 2 * e // faster to reprocess remaining entries?
     while (i >= e) {
       // unlock
-      if (wasWriteFreshOwner(i)) {
-        val h = getWriteHandle(i)
-
-        // we must use CAS because there can be concurrent pendingWaiter adds
-        // and concurrent "helpers" that release the lock
-        var m0 = h.meta
-        while (CCSTM.owner(m0) == slot && !h.metaCAS(m0, CCSTM.withRollback(m0)))
-          m0 = h.meta
-      }
+      if (wasWriteFreshOwner(i))
+        rollbackHandle(getWriteHandle(i), slot)
 
       // unlink
       if (!completeRelink) {
@@ -493,6 +580,16 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
     // revert to previous context
     _wUndoThreshold = undoLog.prevWriteThreshold
+  }
+
+  protected def rollbackHandle(h: Handle[_], slot: CCSTM.Slot) { rollbackHandle(h, slot, h.meta) }
+
+  protected def rollbackHandle(h: Handle[_], slot: CCSTM.Slot, m0: CCSTM.Meta) {
+    // we must use CAS because there can be concurrent pendingWaiter adds
+    // and concurrent "helpers" that release the lock
+    var m = m0
+    while (CCSTM.owner(m) == slot && !h.metaCAS(m, CCSTM.withRollback(m)))
+      m = h.meta
   }
 
   private def resetWriteBuffer() {
@@ -523,11 +620,19 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     _wCapacity = InitialWriteCapacity
   }
 
-  protected def addLatestWritesAsReads() {
+  protected def addLatestWritesAsReads(convertToBarge: Boolean) {
     var i = _wCount - 1
     while (i >= _wUndoThreshold) {
       val h = getWriteHandle(i)
-      recordRead(h, CCSTM.version(h.meta))
+      if (wasWriteFreshOwner(i)) {
+        // we only need one entry in the read set per meta
+        if (convertToBarge) {
+          setFreshOwner(i, false)
+          recordBarge(h)
+        } else {
+          recordRead(h, CCSTM.version(h.meta))
+        }
+      }
       i -= 1
     }
   }
