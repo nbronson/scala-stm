@@ -49,7 +49,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// per-transaction state
 
   private var _barging: Boolean = false
-  private var _bargeThreshold: Version = 0
+  private var _bargeVersion: Version = 0
 
   /** Non-negative values are assigned slots, negative values are the bitwise
    *  complement of the last used slot value.
@@ -479,9 +479,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// begin + commit
 
   private def checkBarging(prevFailures: Int) {
-    if (prevFailures >= 3 && !_barging) {
+    if (prevFailures >= BargeThreshold && !_barging) {
       _barging = true
-      _bargeThreshold = freshReadVersion - 1
+      _bargeVersion = freshReadVersion - 1
     }
   }
 
@@ -831,7 +831,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def readShouldBarge(meta: Meta): Boolean = {
-    _barging && version(meta) >= _bargeThreshold
+    _barging && version(meta) >= _bargeVersion
   }
 
   private def bargingRead[T](handle: Handle[T]): T = {
@@ -844,7 +844,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def getWith[T,Z](handle: Handle[T], f: T => Z): Z = {
-    if (_barging && version(handle.meta) >= _bargeThreshold)
+    if (_barging && version(handle.meta) >= _bargeVersion)
       return f(get(handle))
 
     val u = unrecordedRead(handle)
@@ -891,7 +891,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   def relaxedGet[T](handle: Handle[T], equiv: (T, T) => Boolean): T = {
-    if (_barging && version(handle.meta) >= _bargeThreshold)
+    if (_barging && version(handle.meta) >= _bargeVersion)
       return get(handle)
 
     val u = unrecordedRead(handle)

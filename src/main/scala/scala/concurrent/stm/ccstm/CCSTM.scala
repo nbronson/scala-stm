@@ -23,6 +23,11 @@ private[ccstm] object CCSTM extends GV6 {
    */
   val YieldCount = System.getProperty("ccstm.yield", "2").toInt
 
+  /** The number of optimistic failures to tolerate before switching to
+   *  pessimistic reads.  Set to zero to always use pessimistic reads.
+   */
+  val BargeThreshold = System.getProperty("ccstm.barge.threshold", "3").toInt
+
   /** `slotManager` maps slot number to root `TxnLevelImpl`. */
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
   val wakeupManager = new WakeupManager // default size
