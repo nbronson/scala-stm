@@ -261,7 +261,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  result in a retry within the method.
    */
   private def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z, alternatives: List[InTxn => Z]): Z = {
-    (if (_currentLevel == null) Stats.top else Stats.nested).alternatives += alternatives.size
+    if (Stats.top != null)
+      recordAlternatives(alternatives)
 
     var reusedReadThreshold = -1
     (while (true) {
@@ -322,6 +323,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         reusedReadThreshold = -1
       }
     }).asInstanceOf[Nothing]
+  }
+
+  private def recordAlternatives(alternatives: List[_]) {
+    (if (_currentLevel == null) Stats.top else Stats.nested).alternatives += alternatives.size
   }
 
   def rollback(cause: RollbackCause): Nothing = {

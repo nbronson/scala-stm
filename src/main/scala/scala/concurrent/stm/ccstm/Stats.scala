@@ -6,6 +6,8 @@ import collection.mutable.ArrayBuffer
 
 private[ccstm] object Stats {
 
+  val Enabled = "yYtT1".indexOf((System.getProperty("ccstm.stats", "") + "0").charAt(0)) >= 0
+
   class LazyCounterMap[A] {
     import scala.collection.JavaConversions._
 
@@ -108,14 +110,15 @@ private[ccstm] object Stats {
     }
   }
 
-  val top = new Level
-  val nested = new Level
+  val top = if (Enabled) new Level else null
+  val nested = if (Enabled) new Level else null
   registerShutdownHook()
 
   private def registerShutdownHook() {
-    Runtime.getRuntime.addShutdownHook(new Thread("shutdown stats printer") {
-      override def run() { println(Stats) }
-    })
+    if (top != null)
+      Runtime.getRuntime.addShutdownHook(new Thread("shutdown stats printer") {
+        override def run() { println(Stats) }
+      })
   }
 
   override def toString() = {

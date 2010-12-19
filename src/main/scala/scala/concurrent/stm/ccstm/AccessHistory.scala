@@ -132,14 +132,28 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   protected def mergeAccessHistory() {
     // nested commit
-    Stats.nested.commits += 1
+    if (Stats.nested != null)
+      recordMerge()
 
     mergeWriteBuffer()
+  }
+
+  private def recordMerge() {
+    Stats.nested.commits += 1
   }
 
   /** Releases locks for discarded handles */
   protected def rollbackAccessHistory(slot: CCSTM.Slot, status: Txn.Status) {
     // nested or top-level rollback
+    if (Stats.top != null)
+      recordRollback(status)
+
+    rollbackReadSet()
+    rollbackBargeSet(slot)
+    rollbackWriteBuffer(slot)
+  }
+
+  private def recordRollback(status: Txn.Status) {
     val stat = if (undoLog.parUndo == null) Stats.top else Stats.nested
     stat.rollbackReadSet += (readCount - undoLog.prevReadCount)
     stat.rollbackBargeSet += (bargeCount - undoLog.prevBargeCount)
@@ -149,23 +163,25 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       case Txn.OptimisticFailureCause(tag, _) => stat.optimisticRetries += tag
       case Txn.UncaughtExceptionCause(x) => stat.failures += x.getClass
     }
-
-    rollbackReadSet()
-    rollbackBargeSet(slot)
-    rollbackWriteBuffer(slot)
   }
 
   /** Does not release locks */
   protected def resetAccessHistory() {
-    // top-level commit
-    Stats.top.commitReadSet += readCount
-    Stats.top.commitBargeSet += bargeCount
-    Stats.top.commitWriteSet += writeCount
-    Stats.top.commits += 1
+    if (Stats.top != null)
+      recordTopLevelCommit()
 
     resetReadSet()
     resetBargeSet()
     resetWriteBuffer()
+  }
+
+  private def recordTopLevelCommit() {
+    // top-level commit
+    val top = Stats.top
+    top.commitReadSet += readCount
+    top.commitBargeSet += bargeCount
+    top.commitWriteSet += writeCount
+    top.commits += 1
   }
 
   /** Clears the read set and barge set, returning a `ReadSet` that holds the
@@ -189,7 +205,8 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     resetReadSet()
     val result = accum.result()
 
-    Stats.top.retrySet += result.size
+    if (Stats.top != null)
+      Stats.top.retrySet += result.size
 
     result
   }
