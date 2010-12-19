@@ -383,13 +383,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       val m1 = handle.meta
       if (!changing(m1) || owner(m1) == _slot) {
         if (version(m1) != ver)
-          return 'version_changed
+          return 'stale_read
         // okay
         return null
       } else if (owner(m1) == nonTxnSlot) {
         // non-txn updates don't set changing unless they will install a new
         // value, so we are the only party that can yield
-        return 'pending_nontxn_write
+        return 'read_vs_nontxn_write
       } else {
         // Either this txn or the owning txn must roll back.  We choose to
         // give precedence to the owning txn, as it is the writer and is
@@ -410,7 +410,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           val m2 = handle.meta
           if (changing(m2) && owner(m2) == owner(m1)) {
             if (!s.isInstanceOf[Txn.RolledBack])
-              return 'pending_commit
+              return 'read_vs_pending_commit
 
             stealHandle(handle, m2, o)
           }
@@ -436,7 +436,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       resolveAsWWLoser(owningRoot, contended, false, 'owner_has_priority)
     } else {
       // This will resolve the conflict regardless of whether it succeeds or fails.
-      val s = owningRoot.requestRollback(Txn.OptimisticFailureCause('steal_from_lower_priority, Some(contended)))
+      val s = owningRoot.requestRollback(Txn.OptimisticFailureCause('steal_by_higher_priority, Some(contended)))
       if (s == Preparing || s == Committing) {
         // owner can't be remotely canceled
         val msg = if (s == Preparing) 'owner_is_preparing else 'owner_is_committing

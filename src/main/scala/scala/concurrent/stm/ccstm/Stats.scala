@@ -95,7 +95,7 @@ private[ccstm] object Stats {
           case c: Counter => buf += "%17s= %d".format(name, c())
           case m: LazyCounterMap[_] => {
             for ((k, v) <- m.contents)
-              buf += "%17s (%s) = %d".format(name, k, v)
+              buf += "%17s: %7d %s".format(name, v, k)
           }
           case h: Histo => buf += "%17s: %s".format(name, h)
         }
