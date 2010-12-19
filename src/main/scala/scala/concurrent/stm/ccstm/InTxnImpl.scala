@@ -495,7 +495,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def checkBarging(prevFailures: Int) {
     if (prevFailures >= BargeThreshold && !_barging) {
       _barging = true
-      _bargeVersion = freshReadVersion - 1
+      _bargeVersion = freshReadVersion
     }
   }
 
