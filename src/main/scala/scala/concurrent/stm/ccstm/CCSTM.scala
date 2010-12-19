@@ -32,17 +32,19 @@ private[ccstm] object CCSTM extends GV6 {
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
   val wakeupManager = new WakeupManager // default size
 
-  /** Hashes `base` with `offset`, mixing the resulting bits.  This hash
-   *  function is chosen so that it is suitable as a basis for hopscotch
-   *  hashing (among other purposes).
+  /** Hashes `base` with `offset`.
    *  @throw NullPointerException if `base` is null.
    */
   def hash(base: AnyRef, offset: Int): Int = {
-    if (null == base) throw new NullPointerException
-    var h = System.identityHashCode(base) ^ (0x40108097 * offset)
-    h ^= (h >>> 20) ^ (h >>> 12)
-    h ^= (h >>> 7) ^ (h >>> 4)
-    h
+    if (base == null) throw new NullPointerException
+    hash(base) ^ (0x40108097 * offset)
+  }
+
+  /** Hashes `base` using its identity hash code.  Tolerates null. */
+  def hash(base: AnyRef): Int = {
+    val h = System.identityHashCode(base)
+    // multiplying by -127 is recommended by java.util.IdentityHashMap
+    h - (h << 7)
   }
 
   //////////////// Metadata bit packing
@@ -110,11 +112,9 @@ private[ccstm] object CCSTM extends GV6 {
 //
 //  def resurrect(identity: Int, handle: Handle[_]) {
 //    val v0 = crypts(identity & CryptMask).get
-//
-//    // TODO: put this back
-////    if (!handle.metaCAS(0L, withVersion(0L, v0))) {
-////      throw new IllegalStateException("Refs may only be resurrected into an old identity before use")
-////    }
+//    if (!handle.metaCAS(0L, withVersion(0L, v0))) {
+//      throw new IllegalStateException("Refs may only be resurrected into an old identity before use")
+//    }
 //    handle.meta = withVersion(0L, v0)
 //  }
 

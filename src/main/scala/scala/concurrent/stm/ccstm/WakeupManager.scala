@@ -72,7 +72,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     // a possibility that we will get repeated interference with another thread
     // in a per-VM way, but it minimizes saturation of the pending wakeups,
     // which is quite important.
-    subscribe(hash(Thread.currentThread, 0) & (numChannels - 1))
+    subscribe(hash(Thread.currentThread) & (numChannels - 1))
   }
 
   private def subscribe(channel: Int): Event = {
