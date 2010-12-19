@@ -261,6 +261,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  result in a retry within the method.
    */
   private def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z, alternatives: List[InTxn => Z]): Z = {
+    (if (_currentLevel == null) Stats.top else Stats.nested).alternatives += alternatives.size
+
     var reusedReadThreshold = -1
     (while (true) {
       var level: TxnLevelImpl = null
@@ -532,7 +534,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         retainRetrySet()
 
       // callbacks must be last, because they might throw an exception
-      rollbackAccessHistory(_slot)
+      rollbackAccessHistory(_slot, s)
       val handlers = rollbackCallbacks()
       _currentLevel = child.parUndo
       if (handlers != null)
@@ -586,7 +588,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def finishTopLevelRollback(exec: TxnExecutor, s: Txn.Status) {
-    rollbackAccessHistory(_slot)
+    rollbackAccessHistory(_slot, s)
     val handlers = rollbackCallbacks()
     detach()
 
@@ -597,7 +599,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def finishTopLevelRetry(exec: TxnExecutor, s: Txn.Status) {
     retainRetrySet()
-    rollbackAccessHistory(_slot)
+    rollbackAccessHistory(_slot, s)
     val handlers = rollbackCallbacks()
 
     // don't detach, but we do need to give up the current level

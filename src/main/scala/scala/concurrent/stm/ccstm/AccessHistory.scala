@@ -1,6 +1,7 @@
 /* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
-package scala.concurrent.stm.ccstm
+package scala.concurrent.stm
+package ccstm
 
 import annotation.tailrec
 
@@ -115,7 +116,7 @@ private[ccstm] object AccessHistory {
  *  overlapping operations.  Please look away as the sausage is made.  To help
  *  tame the mess the read set and write buffer interfaces are separated into
  *  traits housed in the companion object.  This doesn't actually increase
- *  modularity, but makes it easier to see what is going on.
+ *  modularity, but serves as compile-time-checked documentation.
  *
  *  @author Nathan Bronson
  */
@@ -130,11 +131,25 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   protected def mergeAccessHistory() {
+    // nested commit
+    Stats.nested.commits += 1
+
     mergeWriteBuffer()
   }
 
   /** Releases locks for discarded handles */
-  protected def rollbackAccessHistory(slot: CCSTM.Slot) {
+  protected def rollbackAccessHistory(slot: CCSTM.Slot, status: Txn.Status) {
+    // nested or top-level rollback
+    val stat = if (undoLog.parUndo == null) Stats.top else Stats.nested
+    stat.rollbackReadSet += (readCount - undoLog.prevReadCount)
+    stat.rollbackBargeSet += (bargeCount - undoLog.prevBargeCount)
+    stat.rollbackWriteSet += (writeCount - undoLog.prevWriteThreshold)
+    status.asInstanceOf[Txn.RolledBack].cause match {
+      case Txn.ExplicitRetryCause => stat.explicitRetries += 1
+      case Txn.OptimisticFailureCause(tag, _) => stat.optimisticRetries += tag
+      case Txn.UncaughtExceptionCause(x) => stat.failures += x.getClass
+    }
+
     rollbackReadSet()
     rollbackBargeSet(slot)
     rollbackWriteBuffer(slot)
@@ -142,6 +157,12 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   /** Does not release locks */
   protected def resetAccessHistory() {
+    // top-level commit
+    Stats.top.commitReadSet += readCount
+    Stats.top.commitBargeSet += bargeCount
+    Stats.top.commitWriteSet += writeCount
+    Stats.top.commits += 1
+
     resetReadSet()
     resetBargeSet()
     resetWriteBuffer()
@@ -166,7 +187,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       i += 1
     }
     resetReadSet()
-    accum.result()
+    val result = accum.result()
+
+    Stats.top.retrySet += result.size
+
+    result
   }
 
   //////////// read set

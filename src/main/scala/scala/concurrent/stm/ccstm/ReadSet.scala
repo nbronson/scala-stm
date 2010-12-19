@@ -5,7 +5,7 @@ package scala.concurrent.stm.ccstm
 import annotation.tailrec
 
 /** A read set representation. */
-private[ccstm] class ReadSet(size: Int,
+private[ccstm] class ReadSet(val size: Int,
                              handles: Array[Handle[_]],
                              versions: Array[CCSTM.Version]) {
   import CCSTM._
