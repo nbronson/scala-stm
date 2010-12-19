@@ -7,6 +7,8 @@ package ccstm
 import java.util.concurrent.atomic.AtomicReferenceArray
 
 
+private case class SlotLock(txn: AnyRef, refCount: Int)
+
 /** This class manages a mapping from active transaction to a bounded integral
  *  range, so that transaction identities to be packed into some of the bits of
  *  an integral value.
@@ -18,15 +20,8 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
   assert(range >= 16 & (range & (range - 1)) == 0)
   assert(range >= reservedSlots + 16)
 
-  private case class SlotLock(txn: T, refCount: Int)
-
-  
   private def nextSlot(tries: Int) = {
-    var s = 0
-    do {
-      s = ((skel.FastSimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
-    } while (s < reservedSlots)
-    s
+    ((skel.FastSimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
   }
 
   /** CAS on the entries manages the actual acquisition.  Entries are either
@@ -34,15 +29,18 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
    */
   private val slots = new AtomicReferenceArray[AnyRef](range)
 
-  def assign(txn: T, preferredSlot: Int): Int = {
-    var s = preferredSlot & (range - 1)
-    if (s < reservedSlots) s = nextSlot(0)
-    
+  def assign(txn: T, slotHint: Int): Int = {
+    // We advance to the next slot number after the hint, wrapping around in a
+    // 64 byte space.  This avoids rollback from late steals, but keeps us in
+    // a cache line we already own.
+    var s = ((slotHint & ~0xf) | ((slotHint + 1) & 0xf)) & (range - 1)
+
     var tries = 0
-    while ((slots.get(s) ne null) || !slots.compareAndSet(s, null, txn)) {
+    while (s < reservedSlots || slots.get(s) != null || !slots.compareAndSet(s, null, txn)) {
       s = nextSlot(tries)
       tries += 1
-      if (tries > 100) Thread.`yield`
+      if (tries > 100)
+        Thread.`yield`
     }
     s
   }
@@ -54,7 +52,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
 
   private def unwrap(e: AnyRef): T = {
     e match {
-      case SlotLock(txn, _) => txn
+      case SlotLock(txn, _) => txn.asInstanceOf[T]
       case txn => txn.asInstanceOf[T]
     }
   }
@@ -66,14 +64,14 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
     var e: AnyRef = null
     do {
       e = slots.get(slot)
-    } while (null != e && !slots.compareAndSet(slot, e, locked(e)))
+    } while (e != null && !slots.compareAndSet(slot, e, locked(e)))
     unwrap(e)
   }
 
   private def locked(e: AnyRef): AnyRef = {
     e match {
       case SlotLock(txn, rc) => SlotLock(txn, rc + 1)
-      case txn => SlotLock(txn.asInstanceOf[T], 1)
+      case txn => SlotLock(txn, 1)
     }
   }
 
@@ -96,12 +94,12 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
     }
   }
 
-  def assertAllReleased() {
-    for (i <- 0 until range) {
-      val e = slots.get(i)
-      if (null != e) {
-        assert(false, i + " -> " + e)
-      }
-    }
-  }
+//  def assertAllReleased() {
+//    for (i <- 0 until range) {
+//      val e = slots.get(i)
+//      if (null != e) {
+//        assert(false, i + " -> " + e)
+//      }
+//    }
+//  }
 }

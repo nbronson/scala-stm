@@ -509,8 +509,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def topLevelBegin(child: TxnLevelImpl) {
     if (_slot < 0) {
       _priority = skel.FastSimpleRandom.nextInt()
-
-      // TODO: advance to a new slot in a fixed-cycle way to reduce steals from non-owners
       _slot = slotManager.assign(child, ~_slot)
       _readVersion = freshReadVersion
     }
