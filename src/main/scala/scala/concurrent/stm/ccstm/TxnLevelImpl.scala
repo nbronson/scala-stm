@@ -97,6 +97,9 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
 
     _waiters = true
 
+    if (Stats.top != null)
+      Stats.top.blockingAcquires += 1
+
     var interrupted = false
     synchronized {
       while (!status.completed) {
