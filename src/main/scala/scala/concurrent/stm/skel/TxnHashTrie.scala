@@ -27,7 +27,6 @@ private[skel] object TxnHashTrie {
   // ideal balanced tree, and those bytes are accessed in a more cache friendly
   // fashion.
   private def MaxLeafCapacity = 14
-
   private def keyHash[A](key: A): Int = if (key == null) 0 else mixBits(key.##)
 
   private def mixBits(h: Int) = {
@@ -127,9 +126,9 @@ private[skel] object TxnHashTrie {
       i >= 0 && (kvs(2 * i + 1) eq value.asInstanceOf[AnyRef])
     }
 
-    def withPut(gen: Long, shift: Int, hash: Int, key: A, value: B, i: Int): Node[A, B] = {
+    def withPut(gen: Long, shift: Int, hash: Int, key: A, value: B, i: Int, contended: Boolean): Node[A, B] = {
       if (i < 0)
-        withInsert(~i, hash, key, value).splitIfNeeded(gen, shift)
+        withInsert(~i, hash, key, value).splitIfNeeded(gen, shift, contended: Boolean)
       else
         withUpdate(i, value)
     }
@@ -182,13 +181,15 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def splitIfNeeded(gen: Long, shift: Int): Node[A, B] = if (!shouldSplit) this else split(gen, shift)
+    def splitIfNeeded(gen: Long, shift: Int, contended: Boolean): Node[A, B] = {
+      if (!shouldSplit(contended)) this else split(gen, shift)
+    }
 
-    def buildingSplitIfNeeded(shift: Int): BuildingNode[A, B] = if (!shouldSplit) this else buildingSplit(shift)
+    def buildingSplitIfNeeded(shift: Int): BuildingNode[A, B] = if (!shouldSplit(false)) this else buildingSplit(shift)
 
-    def shouldSplit: Boolean = {
+    def shouldSplit(contended: Boolean): Boolean = {
       // if the hash function is bad we might be oversize but unsplittable
-      hashes.length > MaxLeafCapacity && hashes(hashes.length - 1) != hashes(0)
+      (contended || hashes.length > MaxLeafCapacity) && hashes(hashes.length - 1) != hashes(0)
     }
 
     def split(gen: Long, shift: Int): Branch[A, B] = {
@@ -295,6 +296,7 @@ private[skel] object TxnHashTrie {
   }
 
   class Branch[A, B](val gen: Long, val frozen: Boolean, val children: Array[Ref.View[Node[A, B]]]) extends Node[A, B] {
+    var childUpdateFailures = false
 
     // size may only be called on a frozen branch, so we can cache the result
     private var _cachedSize = -1
@@ -473,7 +475,7 @@ private[skel] object TxnHashTrie {
       root() match {
         case leaf: Leaf[A, B] => {
           val i = leaf.find(hash, key)
-          if (leaf.noChange(i, value) || root.compareAndSetIdentity(leaf, leaf.withPut(0L, 0, hash, key, value, i)))
+          if (leaf.noChange(i, value) || root.compareAndSetIdentity(leaf, leaf.withPut(0L, 0, hash, key, value, i, false)))
             leaf.get(i) // success, read from old leaf
           else
             rootPut(root, hash, key, value, failures + 1)
@@ -514,7 +516,7 @@ private[skel] object TxnHashTrie {
           val i = leaf.find(hash, key)
           if (leaf.noChange(i, value) || atomic.compareAndSetIdentity(
                   root.ref, rootNode, rootNode, current.ref,
-                  leaf, leaf.withPut(rootNode.gen, shift, hash, key, value, i)))
+                  leaf, leaf.withPut(rootNode.gen, shift, hash, key, value, i, failures > 0)))
             leaf.get(i) // success
           else if (root() ne rootNode)
             failingPut(root, hash, key, value) // root retry
@@ -666,13 +668,22 @@ private[skel] object TxnHashTrie {
     root() match {
       case leaf: Leaf[A, B] => {
         val i = leaf.find(hash, key)
-        if (!leaf.noChange(i, value))
-          root() = leaf.withPut(0L, 0, hash, key, value, i)
+        if (!leaf.noChange(i, value)) {
+          val contended = false
+          root() = leaf.withPut(0L, 0, hash, key, value, i, contended)
+//          if (!root.trySet(after)) {
+//            root() = after
+//            after match {
+//              case lf: Leaf[A, B] if lf.shouldSplitIfContended => root() = lf.split(0L, 0)
+//              case _ =>
+//            }
+//          }
+        }
         leaf.get(i)
       }
       case branch: Branch[A, B] => {
         val b = if (!branch.frozen) branch else unshare(branch.gen + 1, root, branch)
-        childPut(b.gen, b.children(indexFor(0, hash)).ref, LogBF, hash, key, value)(txn)
+        childPut(b.gen, b, b.children(indexFor(0, hash)).ref, LogBF, hash, key, value)(txn)
       }
     }
   }
@@ -683,18 +694,23 @@ private[skel] object TxnHashTrie {
     b
   }
 
-  @tailrec private def childPut[A, B](rootGen: Long, current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, value: B
+  @tailrec private def childPut[A, B](rootGen: Long, parent: Branch[A, B], current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, value: B
           )(implicit txn: InTxn): Option[B] = {
     current() match {
       case leaf: Leaf[A, B] => {
         val i = leaf.find(hash, key)
-        if (!leaf.noChange(i, value))
-          current() = leaf.withPut(rootGen, shift, hash, key, value, i)
+        if (!leaf.noChange(i, value)) {
+          val after = leaf.withPut(rootGen, shift, hash, key, value, i, parent.childUpdateFailures)
+          if (!current.trySet(after)) {
+            parent.childUpdateFailures = true
+            current() = after
+          }
+        }
         leaf.get(i)
       }
       case branch: Branch[A, B] => {
         val b = if (branch.gen == rootGen) branch else unshare(rootGen, current, branch)
-        childPut(rootGen, b.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key, value)(txn)
+        childPut(rootGen, b, b.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key, value)(txn)
       }
     }
   }
