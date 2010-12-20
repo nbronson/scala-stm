@@ -7,13 +7,14 @@ SCALATEST_VERSION=1.2
 BASE="`dirname $0`/.."
 cd $BASE
 
-if [ "x$SCALA_VERSION" = "x" ]; then
-  SCALA_VERSION="`awk -F= '$1==\"build.scala.versions\" {print $2}' project/build.properties | sed 's/ .*//g'`"
+if [ "x$SCALA_VERSIONS" = "x" ]; then
+  SCALA_VERSIONS="`awk -F= '$1==\"build.scala.versions\" {print $2}' project/build.properties`"
 fi
-TARGET_BASE="target/scala_$SCALA_VERSION"
 
-SCALATEST="lib_managed/scala_$SCALA_VERSION/compile/scalatest-$SCALATEST_VERSION.jar"
-
-sbt ++$SCALA_VERSION test-compile
-
-scala -cp ${SCALATEST}:$TARGET_BASE/classes org.scalatest.tools.Runner -oW -p $TARGET_BASE/test-classes 
+for v in $SCALA_VERSIONS; do
+  TARGET_BASE="target/scala_$v"
+  SCALATEST="lib_managed/scala_$v/compile/scalatest-$SCALATEST_VERSION.jar"
+  sbt ++$v test-compile
+  scala -Dccstm.stats=1 -cp ${SCALATEST}:$TARGET_BASE/classes org.scalatest.tools.Runner -l slow -oW -p $TARGET_BASE/test-classes 
+  scala -cp ${SCALATEST}:$TARGET_BASE/classes org.scalatest.tools.Runner -oW -p $TARGET_BASE/test-classes 
+done
