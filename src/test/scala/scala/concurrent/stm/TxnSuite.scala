@@ -212,6 +212,22 @@ class TxnSuite extends FunSuite {
     assert(x.single() === "outer")
   }
 
+  test("partial rollback of transform") {
+    val x = Ref("none")
+    atomic { implicit t =>
+      x() = "outer"
+      try {
+        atomic { implicit t =>
+          x.transform { _ + "inner" }
+          throw new UserException
+        }
+      } catch {
+        case _: UserException =>
+      }
+    }
+    assert(x.single() === "outer")
+  }
+
   test("retry set accumulation across alternatives") {
     val x = Ref(false)
 
@@ -408,6 +424,23 @@ class TxnSuite extends FunSuite {
     }
     assert(ran)
     assert(x.single() === 2)
+  }
+
+  test("afterCommit doesn't access txn") {
+    var ran = false
+    val x = Ref(0)
+    atomic { implicit t =>
+      x() = 1
+      Txn.afterCommit { _ =>
+        intercept[IllegalStateException] {
+          assert(!ran)
+          ran = true
+          x() = 2
+        }
+      }
+    }
+    assert(ran)
+    assert(x.single() === 1)
   }
 
   test("beforeCommit during beforeCommit") {

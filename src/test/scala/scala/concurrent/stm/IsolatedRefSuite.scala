@@ -171,6 +171,21 @@ class IsolatedRefSuite extends FunSuite {
     assert(view()() === 10)
   }
 
+  createTests("swap", 1) { view =>
+    for (i <- 1 until 10) {
+      assert(view().swap(i + 1) === i)
+    }
+    assert(view()() === 10)
+  }
+
+  createTests("set + swap", 1) { view =>
+    for (i <- 1 until 10) {
+      view()() = -1
+      assert(view().swap(i + 1) === -1)
+    }
+    assert(view()() === 10)
+  }
+
   createTests("transform", 1) { view =>
     for (i <- 1 until 10) {
       assert(view()() === i)
@@ -348,4 +363,23 @@ class IsolatedRefSuite extends FunSuite {
     view() /= 4
     assert(view()().toString === "924.75")
   }
+
+  private def simpleGetAndSet[A : ClassManifest](v0: A, v1: A) {
+    createTests(v0.asInstanceOf[AnyRef].getClass.getSimpleName + " simple get+set", v0) { view =>
+      assert(view()() === v0)
+      view()() = v1
+      assert(view()() === v1)
+    }
+  }
+
+  simpleGetAndSet(false, true)
+  simpleGetAndSet(1 : Byte, 2 : Byte)
+  simpleGetAndSet(1 : Short, 2 : Short)
+  simpleGetAndSet('1', '2')
+  simpleGetAndSet(1, 2)
+  simpleGetAndSet(1.0f, 2.0f)
+  simpleGetAndSet(1L, 2L)
+  simpleGetAndSet(1.0, 2.0)
+  simpleGetAndSet((), ())
+  simpleGetAndSet("1", "2")
 }
