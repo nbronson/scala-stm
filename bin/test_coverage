@@ -34,6 +34,7 @@ sh $COBERTURA_DIR/cobertura-instrument.sh \
 # we have to include classes because cobertura skips those with no methods
 scala -cp ${SCALATEST}:$COBERTURA_DIR/cobertura.jar:$TARGET_BASE/classes-instr:$TARGET_BASE/classes \
     -Dnet.sourceforge.cobertura.datafile=$SER \
+    -Dccstm.stats=1 \
     org.scalatest.tools.Runner \
     -oW -l slow -p $TARGET_BASE/test-classes 
 
