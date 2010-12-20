@@ -608,6 +608,17 @@ class TxnSuite extends FunSuite {
       throw failure.single()
   }
 
+  test("toString") {
+    (atomic { implicit txn =>
+      txn.toString
+      txn
+    }).toString
+    (atomic { implicit txn =>
+      NestingLevel.current.toString
+      NestingLevel.current
+    }).toString
+  }
+
   // TODO: more whilePreparing and whileCommitting callback usage
 
   // TODO: exception behavior from all types of callbacks

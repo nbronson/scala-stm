@@ -91,14 +91,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private var _readVersion: Version = 0
 
   override def toString = {
-    ("InTxnImpl@" + hashCode.toHexString + "(" + status +
+    ("InTxnImpl@" + hashCode.toHexString + "(" +
+            (if (_currentLevel == null) "Detached" else status.toString) +
             ", slot=" + _slot +
             ", subsumptionAllowed=" + _subsumptionAllowed +
             ", priority=" + _priority +
             ", readCount=" + readCount  +
+            ", bargeCount=" + bargeCount +
             ", writeCount=" + writeCount +
             ", readVersion=0x" + _readVersion.toHexString +
-            (if (_barging) ", barging" else "") + ")")
+            (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") + ")")
   }
 
   //////////////// High-level behaviors
