@@ -368,12 +368,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     var i = 0
     while (i < readCount) {
       val h = readHandle(i)
-      if (h != null) {
-        val problem = checkRead(h, readVersion(i))
-        if (problem != null) {
-          readLocate(i).asInstanceOf[NestingLevel].requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
-          return false
-        }
+      val problem = checkRead(h, readVersion(i))
+      if (problem != null) {
+        readLocate(i).asInstanceOf[NestingLevel].requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
+        return false
       }
       i += 1
     }
@@ -1066,22 +1064,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (f)
       revalidateIfRequired(version(mPrev))
     v1
-  }
-
-  def tryTransform[T](handle: Handle[T], f: T => T): Boolean = {
-    requireActive()
-
-    val m0 = handle.meta
-    if (owner(m0) == _slot) {
-      getAndTransform(handle, false, f)
-      return true
-    }
-
-    if (!tryAcquireOwnership(handle, m0))
-      return false
-    getAndTransform(handle, true, f)
-    revalidateIfRequired(version(m0))
-    return true
   }
 
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {

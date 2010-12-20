@@ -32,15 +32,10 @@ private[ccstm] object CCSTM extends GV6 {
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
   val wakeupManager = new WakeupManager // default size
 
-  /** Hashes `base` with `offset`.
-   *  @throw NullPointerException if `base` is null.
-   */
-  def hash(base: AnyRef, offset: Int): Int = {
-    if (base == null) throw new NullPointerException
-    hash(base) ^ (0x40108097 * offset)
-  }
+  /** Hashes `base` with `offset`. */
+  def hash(base: AnyRef, offset: Int): Int = hash(base) ^ (0x40108097 * offset)
 
-  /** Hashes `base` using its identity hash code.  Tolerates null. */
+  /** Hashes `base` using its identity hash code. */
   def hash(base: AnyRef): Int = {
     val h = System.identityHashCode(base)
     // multiplying by -127 is recommended by java.util.IdentityHashMap
@@ -87,7 +82,6 @@ private[ccstm] object CCSTM extends GV6 {
 
   /** It is not allowed to set PendingWakeups if Changing. */
   def withPendingWakeups(m: Meta): Meta = m | (1L << 62)
-  def withNoPendingWakeups(m: Meta): Meta = m & ~(1L << 62)
   def withChanging(m: Meta): Meta = m | (1L << 63)
   def withUnchanging(m: Meta): Meta = m & ~(1L << 63)
 

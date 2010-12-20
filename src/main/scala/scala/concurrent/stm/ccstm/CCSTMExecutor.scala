@@ -60,12 +60,6 @@ private[ccstm] class CCSTMExecutor(val controlFlowTest: Throwable => Boolean,
     }
   }
 
-  // CCSTM has no configuration at the moment
-
-  def configuration: Map[Symbol, Any] = Map.empty
-
-  def withConfig(p: (Symbol, Any)): TxnExecutor = throw new IllegalArgumentException
-
   def isControlFlow(x: Throwable): Boolean = controlFlowTest(x)
   
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = {

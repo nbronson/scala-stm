@@ -92,8 +92,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
 
   /** Blocks until `status.completed`. */
   def awaitCompleted() {
-    if (parUndo != null)
-      throw new IllegalStateException("awaitCompleted() is only supported for root levels")
+    assert(parUndo == null)
 
     _waiters = true
 
