@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -x
+
+SCALATEST_VERSION=1.2
+
+BASE="`dirname $0`/.."
+cd $BASE
+
+if [ "x$SCALA_VERSION" = "x" ]; then
+  SCALA_VERSION="`awk -F= '$1==\"build.scala.versions\" {print $2}' project/build.properties | sed 's/ .*//g'`"
+fi
+TARGET_BASE="target/scala_$SCALA_VERSION"
+
+SCALATEST="lib_managed/scala_$SCALA_VERSION/compile/scalatest-$SCALATEST_VERSION.jar"
+
+sbt ++$SCALA_VERSION test-compile
+
+scala -cp ${SCALATEST}:$TARGET_BASE/classes org.scalatest.tools.Runner -oW -p $TARGET_BASE/test-classes 

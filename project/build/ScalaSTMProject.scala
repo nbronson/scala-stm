@@ -9,6 +9,11 @@ class ScalaSTMProject(info: ProjectInfo) extends DefaultProject(info) {
   val scalatest = "org.scalatest" % "scalatest" % "1.2"
 
 
+  //// Testing
+
+  override def testOptions = super.testOptions ++ Seq(TestArgument("-l", "slow"))
+
+
   //// Deployment
 
   override def managedStyle = ManagedStyle.Maven
