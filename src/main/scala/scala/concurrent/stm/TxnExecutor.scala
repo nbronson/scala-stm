@@ -70,14 +70,7 @@ trait TxnExecutor {
    *  The left-biasing of the `orAtomic` composition guarantees that if the
    *  first block does not call `retry`, no other blocks will be executed.
    */
-  def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = {
-    blocks.tail.reverseMap { pushAlternative(mt, _) }
-    try {
-      apply(blocks.head)
-    } catch {
-      case impl.AlternativeResult(x) => x.asInstanceOf[Z]
-    }
-  }
+  def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z
 
   /** (rare) Associates an alternative atomic block with the current thread.
    *  The next call to `apply` will consider `block` to be an alternative.

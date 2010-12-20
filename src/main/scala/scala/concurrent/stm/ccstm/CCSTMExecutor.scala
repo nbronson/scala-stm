@@ -20,7 +20,7 @@ private[ccstm] class CCSTMExecutor(val controlFlowTest: Throwable => Boolean,
 
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
 
-  override def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = InTxnImpl().atomicOneOf(this, blocks)
+  def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = InTxnImpl().atomicOneOf(this, blocks)
 
   def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean = InTxnImpl().pushAlternative(block)
 
