@@ -8,22 +8,23 @@ import org.scalatest.{FunSuite, Tag}
 
 class HistogramSuite extends FunSuite {
 
-  for ((opsPerTest, name, groups) <- List((10000, "10K", List[Tag]()),
-                                          (1000000, "1M", List[Tag](Slow)))) {
+  for ((opsPerTest, name, slow) <- List((10000, "10K", false),
+                                        (1000000, "1M", true))) {
     for (buckets <- List(1, 30, 10000)) {
       for (threads <- List(1, 2, 4, 8, 16, 32, 64, 128, 256, 512) if (threads <= 2*Runtime.getRuntime.availableProcessors)) {
         for (useTArray <- List(false, true)) {
           val str = ("" + buckets + " buckets, " + threads + " threads, " +
                   (if (useTArray) "TArray[Int]" else "Array[Ref[Int]]"))
-          addTest("single-op-txn, " + str + ", " + name, groups:_*) {
+          addTest("single-op-txn, " + str + ", " + name, Slow) {
             histogram(buckets, threads, opsPerTest / threads, useTArray, 100, 1)
           }
 
-          for (accesses <- List(1, 3, 100)) {
-            addTest("txn, " + str + ", " + accesses + " incr per txn, " + name, groups:_*) {
+          for ((accesses, slow2) <- List((1, true), (3, false), (100, true))) {
+            addTest("txn, " + str + ", " + accesses + " incr per txn, " + name, Slow) {
               histogram(buckets, threads, opsPerTest / threads, useTArray, 0, accesses)
             }
-            addTest("mix, " + str + ", " + accesses + " incr per txn " + name, groups:_*) {
+            val g = if (slow || slow2) List[Tag](Slow) else List.empty[Tag]
+            addTest("mix, " + str + ", " + accesses + " incr per txn " + name, g:_*) {
               histogram(buckets, threads, opsPerTest / threads, useTArray, 50, accesses)
             }
           }
