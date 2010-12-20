@@ -7,8 +7,12 @@ body {
   text-align: center;
 }
 
-a:link, a:visited {
+a:link {
   color: #0044b3;
+  text-decoration: none;
+}
+a:visited {
+  color: #551a8b;
   text-decoration: none;
 }
 
