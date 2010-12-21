@@ -416,6 +416,27 @@ private[skel] object TxnHashTrie {
 private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnHashTrie.Node[A, B]]) {
   import TxnHashTrie._
 
+  //////////////// txn contention tracking
+
+  private final def pct = 10000
+
+  val contentionThreshold = (System.getProperty("trie.contention", "1.0").toDouble * pct).toInt
+  var contentionEstimate = 0
+
+  private def recordNoContention() {
+    if (FastSimpleRandom.nextInt(32) == 0) {
+      val e = contentionEstimate
+      contentionEstimate = e - (e >> 4) // this is 15/16, applied every 32nd time, so about 99.8%
+    }
+  }
+
+  private def recordContention() {
+    val e = contentionEstimate
+    contentionEstimate = e + ((100 * pct - e) >> 9) // 100 * pct is the max
+  }
+
+  private def isContended = contentionEstimate > contentionThreshold
+
   //////////////// hash trie operations on Ref.View
 
   protected def frozenRoot: Node[A, B] = {
@@ -653,12 +674,11 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   protected def txnPut(key: A, value: B)(implicit txn: InTxn): Option[B] = txnRootPut(keyHash(key), key, value)(txn)
 
   private def txnRootPut(hash: Int, key: A, value: B)(implicit txn: InTxn): Option[B] = {
-    val contended = false
     root() match {
       case leaf: Leaf[A, B] => {
         val i = leaf.find(hash, key)
         if (!leaf.noChange(i, value))
-          root() = leaf.withPut(0L, 0, hash, key, value, i, contended)
+          set(root.ref, leaf.withPut(0L, 0, hash, key, value, i, isContended))
         leaf.get(i)
       }
       case branch: Branch[A, B] => {
@@ -668,46 +688,27 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
     }
   }
 
+  private def set(ref: Ref[Node[A, B]], node: Node[A, B])(implicit txn: InTxn) {
+    if (!ref.trySet(node)) {
+      recordContention()
+      ref() = node
+    } else
+      recordNoContention()
+  }
+
   private def txnUnshare(rootGen: Long, current: Ref[Node[A, B]], branch: Branch[A, B])(implicit txn: InTxn): Branch[A, B] = {
     val b = branch.clone(rootGen)
     current() = b
     b
   }
 
-  // TODO clean up
-
-  val ContentionMax = 10000
-  val SuccessAggregation = 32
-  val Decay = ContentionMax * 997 / 1000 // 995 / 1000
-  val AggregatedDecay = ContentionMax * 908 / 1000 // 882 / 1000
-
-  var contentionEstimate = 0
-  var contentionThreshold = System.getProperty("thresh", "100").toInt
-
-  def recordNoContention() {
-    if (FastSimpleRandom.nextInt(SuccessAggregation) == 0)
-      contentionEstimate = (contentionEstimate * AggregatedDecay) / ContentionMax
-  }
-
-  def recordContention() {
-    contentionEstimate = (contentionEstimate * Decay) / ContentionMax + ContentionMax - Decay
-  }
-
   @tailrec private def txnChildPut(rootGen: Long, current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, value: B
           )(implicit txn: InTxn): Option[B] = {
-    val contended = contentionEstimate > contentionThreshold
     current() match {
       case leaf: Leaf[A, B] => {
         val i = leaf.find(hash, key)
-        if (!leaf.noChange(i, value)) {
-          val after = leaf.withPut(rootGen, shift, hash, key, value, i, contended)
-          if (!current.trySet(after)) {
-            recordContention()
-            current() = after
-          } else {
-            recordNoContention()
-          }
-        }
+        if (!leaf.noChange(i, value))
+          set(current, leaf.withPut(rootGen, shift, hash, key, value, i, isContended))
         leaf.get(i)
       }
       case branch: Branch[A, B] => {
@@ -724,7 +725,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
       case leaf: Leaf[A, B] => {
         val i = leaf.find(hash, key)
         if (i >= 0)
-          root() = leaf.withRemove(i)
+          set(root.ref, leaf.withRemove(i))
         leaf.get(i)
       }
       case branch: Branch[A, B] => {
@@ -744,15 +745,8 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
     current() match {
       case leaf: Leaf[A, B] => {
         val i = leaf.find(hash, key)
-        if (i >= 0) {
-          val after = leaf.withRemove(i)
-          if (!current.trySet(after)) {
-            recordContention()
-            current() = after
-          } else {
-            recordNoContention()
-          }
-        }
+        if (i >= 0)
+          set(current, leaf.withRemove(i))
         leaf.get(i)
       }
       case branch: Branch[A, B] => {
