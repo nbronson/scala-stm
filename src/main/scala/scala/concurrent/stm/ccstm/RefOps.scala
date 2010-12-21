@@ -38,24 +38,4 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
   def transformIfDefined(pf: PartialFunction[T,T])(implicit txn: InTxn): Boolean = {
     impl.transformIfDefined(handle, pf)
   }
-
-  override def hashCode: Int = {
-    val h = handle
-    CCSTM.hash(h.base, h.offset)
-  }
-
-  override def equals(rhs: Any): Boolean = {
-    (this eq rhs.asInstanceOf[AnyRef]) || (rhs match {
-      case r: RefOps[_] => {
-        val h1 = handle
-        val h2 = r.handle
-        (h1.base eq h2.base) && (h1.offset == h2.offset)
-      }
-      case r: Ref[_] => {
-        // give the rhs the opportunity to compare itself to us
-        r equals this
-      }
-      case _ => false
-    })
-  }
 }

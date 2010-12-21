@@ -1,28 +1,31 @@
 /* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
-package scala.concurrent.stm.ccstm
+package scala.concurrent.stm
+package ccstm
 
 
 private[ccstm] object Handle {
 
-  /** A `Handle.Provider` has a single associated handle, and performs equality
-   *  and hashing based on the handle's `base` and `offset`.
-   */
+  /** A `Handle.Provider` has a single associated handle. */
   trait Provider[T] {
     def handle: Handle[T]
-
-    override def equals(o: Any): Boolean = o match {
-      case rhs: Handle.Provider[_] => {
-        val h0 = handle
-        val h1 = rhs.handle
-        (h0 eq h1) || ((h0.base eq h1.base) && (h0.offset == h1.offset))
-      }
-      case _ => false
-    }
 
     override def hashCode: Int = {
       val h = handle
       CCSTM.hash(h.base, h.offset)
+    }
+
+    override def equals(rhs: Any): Boolean = {
+      (this eq rhs.asInstanceOf[AnyRef]) || (rhs match {
+        case r: Handle.Provider[_] => {
+          val h1 = handle
+          val h2 = r.handle
+          (h1.base eq h2.base) && (h1.offset == h2.offset)
+        }
+        case r: Ref[_] => r equals this
+        case v: Ref.View[_] => v equals this
+        case _ => false
+      })
     }
   }
 }
