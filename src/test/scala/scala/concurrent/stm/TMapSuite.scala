@@ -5,6 +5,7 @@ package scala.concurrent.stm
 import org.scalatest.FunSuite
 import scala.util.Random
 import scala.collection.mutable
+import skel.FastSimpleRandom
 
 class TMapSuite extends FunSuite {
 
@@ -365,6 +366,61 @@ class TMapSuite extends FunSuite {
     val m = TMap(kvs: _*)
     val iter = atomic { implicit txn => m.iterator }
     assert(iter.toMap === kvs.toMap)
+  }
+
+  test("contention") {
+    val values = (0 until 37) map { i => "foo" + i }
+    for (pass <- 0 until 2) {
+      val numThreads = 8
+      val m = TMap.empty[Int, String]
+      val threads = for (t <- 0 until numThreads) yield new Thread {
+        override def run {
+          var rand = new FastSimpleRandom(t)
+          var i = 0
+          while (i < 1000000) {
+            if (rand.nextInt(2) == 0) {
+              var j = 0
+              while (j < 64) {
+                val key = rand.nextInt(1 << 11)
+                val pct = rand.nextInt(100)
+                if (pct < 33)
+                  m.single.contains(key)
+                else if (pct < 33)
+                  m.single.put(key, values(rand.nextInt(values.length)))
+                else
+                  m.single.remove(key)
+                j += 1
+              }
+            } else {
+              rand = atomic { implicit txn =>
+                val r = rand.clone
+                var j = 0
+                while (j < 64) {
+                  val key = r.nextInt(1 << 11)
+                  val pct = r.nextInt(100)
+                  if (pct < 33)
+                    m.contains(key)
+                  else if (pct < 33)
+                    m.put(key, values(r.nextInt(values.length)))
+                  else
+                    m.remove(key)
+                  j += 1
+                }
+                r
+              }
+            }
+            i += 64
+          }
+        }
+      }
+
+      val begin = System.currentTimeMillis
+      for (t <- threads) t.start()
+      for (t <- threads) t.join()
+      val elapsed = System.currentTimeMillis - begin
+
+      println("TMap: contended: " + numThreads + " threads, total throughput was " + (elapsed / numThreads) + " nanos/op")
+    }
   }
 
   //////// perf stuff
