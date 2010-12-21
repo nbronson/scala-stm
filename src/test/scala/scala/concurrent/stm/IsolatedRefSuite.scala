@@ -57,6 +57,9 @@ class IsolatedRefSuite extends FunSuite {
     def getAndTransform(f: A => A): A = { val z = get ; ref.transform(f) ; z }
     def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
+
+    override def hashCode: Int = ref.hashCode
+    override def equals(rhs: Any): Boolean = ref == rhs
   }
 
   abstract class TestingView[A](innerDepth: Int, val ref: Ref[A]) extends Ref.View[A] {
@@ -83,6 +86,9 @@ class IsolatedRefSuite extends FunSuite {
     def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
     def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
+
+    override def hashCode: Int = ref.hashCode
+    override def equals(rhs: Any): Boolean = ref == rhs
   }
 
   trait ViewFactory {
@@ -364,22 +370,54 @@ class IsolatedRefSuite extends FunSuite {
     assert(view()().toString === "924.75")
   }
 
-  private def simpleGetAndSet[A : ClassManifest](v0: A, v1: A) {
-    createTests(v0.asInstanceOf[AnyRef].getClass.getSimpleName + " simple get+set", v0) { view =>
+  private def perTypeTests[A : ClassManifest](v0: A, v1: A) {
+    val name = v0.asInstanceOf[AnyRef].getClass.getSimpleName
+
+    createTests(name + " simple get+set", v0) { view =>
       assert(view()() === v0)
       view()() = v1
       assert(view()() === v1)
     }
+
+    createTests(name + " Ref equality", v0) { view =>
+      assert(view() == view())
+      assert(view().ref == view())
+      assert(view() == view().ref)
+      assert(view().ref == view().ref)
+      assert(view().ref.single == view())
+      assert(view() != Ref(v0))
+    }
+
+    test(name + " TArray Ref equality") {
+      val a = TArray(Seq(v0))
+      assert(a.refs(0) == a.refs(0))
+      assert(a.single.refViews(0) == a.refs(0))
+      assert(a.single.refViews(0).ref == a.refs(0))
+      assert(a.single.refViews(0) == a.single.refViews(0))
+      assert(a.refs(0) == a.refs(0).single)
+      assert(a.single.tarray.refs(0) == a.refs(0).single)
+    }
+
+    test(name + " TArray Ref inequality") {
+      val a = TArray(Seq(v0))
+      val b = TArray(Seq(v1))
+      assert(b.refs(0) != a.refs(0))
+      assert(b.single.refViews(0) != a.refs(0))
+      assert(b.single.refViews(0).ref != a.refs(0))
+      assert(b.single.refViews(0) != a.single.refViews(0))
+      assert(b.refs(0) != a.refs(0).single)
+      assert(b.single.tarray.refs(0) != a.refs(0).single)
+    }
   }
 
-  simpleGetAndSet(false, true)
-  simpleGetAndSet(1 : Byte, 2 : Byte)
-  simpleGetAndSet(1 : Short, 2 : Short)
-  simpleGetAndSet('1', '2')
-  simpleGetAndSet(1, 2)
-  simpleGetAndSet(1.0f, 2.0f)
-  simpleGetAndSet(1L, 2L)
-  simpleGetAndSet(1.0, 2.0)
-  simpleGetAndSet((), ())
-  simpleGetAndSet("1", "2")
+  perTypeTests(false, true)
+  perTypeTests(1 : Byte, 2 : Byte)
+  perTypeTests(1 : Short, 2 : Short)
+  perTypeTests('1', '2')
+  perTypeTests(1, 2)
+  perTypeTests(1.0f, 2.0f)
+  perTypeTests(1L, 2L)
+  perTypeTests(1.0, 2.0)
+  perTypeTests((), ())
+  perTypeTests("1", "2")
 }
