@@ -152,6 +152,13 @@ object Ref extends RefCompanion {
         case numI: Integral[_] => transform { v => numI.asInstanceOf[Integral[A]].quot(v, rhs) }
       }
     }
+
+    // If you implement a Ref.View proxy, you should define a hashCode and
+    // equals that delegate to the underlying Ref or Ref.View.  Ref and
+    // Ref.View that refer to the same memory location should be equal.
+    //
+    // override def hashCode: Int = underlying.hashCode
+    // override def equals(rhs: Any): Boolean = underlying == rhs
   }
 }
 
@@ -277,4 +284,11 @@ trait Ref[A] extends RefLike[A, InTxn] with Source[A] with Sink[A] {
    *  `atomic { implicit t => ref.foo(args) }`.
    */
   override def single: Ref.View[A]
+
+  // If you implement a Ref proxy, you should define a hashCode and
+  // equals that delegate to the underlying Ref or Ref.View.  Ref and
+  // Ref.View that refer to the same memory location should be equal.
+  //
+  // override def hashCode: Int = underlying.hashCode
+  // override def equals(rhs: Any): Boolean = underlying == rhs
 }
