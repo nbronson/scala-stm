@@ -450,7 +450,7 @@ object BoostedHashMap {
   }
 }
 
-class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: ReadWriteLock) extends TMapViaClone[A, B] {
+class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: ReadWriteLock) extends AbstractTMap[A, B] {
   import BoostedHashMap._
 
   private val underlying = new java.util.concurrent.ConcurrentHashMap[A,AnyRef]
@@ -460,7 +460,7 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
 
   //// TMap.View stuff
 
-  def get(key: A): Option[B] = {
+  def nonTxnGet(key: A): Option[B] = {
     // lockHolder implementations that garbage collect locks cannot perform
     // the existingReadLock optimization
     val lock = lockHolder.existingReadLock(key)
@@ -476,7 +476,7 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
     }
   }
 
-  override def put(key: A, value: B): Option[B] = {
+  def nonTxnPut(key: A, value: B): Option[B] = {
     val lock = lockHolder.writeLock(key)
     lock.lock()
     val prev = (try {
@@ -496,7 +496,7 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
     NullValue.decodeOption(prev)
   }
 
-  override def remove(key: A): Option[B] = {
+  def nonTxnRemove(key: A): Option[B] = {
     val lock = lockHolder.existingWriteLock(key)
     if (null == lock) return None
 
@@ -521,10 +521,6 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
     })
     return NullValue.decodeOption(prev)
   }
-
-  def +=(kv: (A, B)) = { single.put(kv._1, kv._2) ; this }
-  def -=(key: A) = { single.remove(key) ; this }
-  def iterator = throw new UnsupportedOperationException
 
   //// TMap stuff
 

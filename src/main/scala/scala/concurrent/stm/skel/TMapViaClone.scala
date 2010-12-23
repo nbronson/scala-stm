@@ -9,6 +9,7 @@ private[stm] object TMapViaClone {
   class FrozenMutableMap[A, B](self: mutable.Map[A, B]) extends immutable.Map[A, B] {
     override def isEmpty: Boolean = self.isEmpty
     override def size: Int = self.size
+    override def contains(key: A): Boolean = self.contains(key)
     def get(key: A): Option[B] = self.get(key)
     def iterator: Iterator[(A, B)] = self.iterator
     override def foreach[U](f: ((A, B)) => U) { self foreach f }
@@ -18,8 +19,8 @@ private[stm] object TMapViaClone {
   }
 }
 
-/** Provides an implementation for the bulk of the functionality of `TMap` and
- *  `TMap.View` by making extensive use of `clone()`.  Assumes that the
+/** Provides an implementation for the bulk of the functionality of `TMap.View`
+ *  by making extensive use of `clone()`.  Assumes that the
  *  underlying implementation of `clone()` is O(1).
  *
  *  @author Nathan Bronson
@@ -28,7 +29,7 @@ private[stm] trait TMapViaClone[A, B] extends TMap.View[A, B] with TMap[A, B] {
   import TMapViaClone._
 
   // Implementations may be able to do better.
-  override def snapshot: immutable.Map[A, B] = new FrozenMutableMap(clone())
+  def snapshot: immutable.Map[A, B] = new FrozenMutableMap(clone())
 
   def tmap: TMap[A, B] = this
   def single: TMap.View[A, B] = this

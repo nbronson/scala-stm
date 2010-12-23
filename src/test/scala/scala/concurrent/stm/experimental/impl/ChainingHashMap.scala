@@ -84,6 +84,7 @@ class ChainingHashMap[K, V](implicit km: ClassManifest[K], vm: ClassManifest[V])
 
   override def put(key: K, value: V): Option[V] = atomic { implicit txn => tmap.put(key, value) }
   def += (kv: (K, V)) = { single.put(kv._1, kv._2) ; this }
+  override def update (k: K, v: V) { single.put(k, v) }
 
   override def remove(key: K): Option[V] = atomic { implicit txn => tmap.remove(key) }
   def -= (key: K) = { single.remove(key) ; this }

@@ -23,7 +23,7 @@ private object PredicatedHashMap_GC {
   }
 }
 
-class PredicatedHashMap_GC[A, B] extends TMapViaClone[A, B] {
+class PredicatedHashMap_GC[A, B] extends AbstractTMap[A, B] {
   import PredicatedHashMap_GC._
 
   private val predicates = new ConcurrentHashMap[A, Predicate[A, B]] {
@@ -48,7 +48,7 @@ class PredicatedHashMap_GC[A, B] extends TMapViaClone[A, B] {
 
   //// TMap.View stuff
 
-  def get(key: A): Option[B] = {
+  def nonTxnGet(key: A): Option[B] = {
     // p may be missing (null), no longer active (weakRef.get == null), or
     // active (weakRef.get != null).  We don't need to distinguish between
     // the last two cases, since they will both have a null txn Token ref and
@@ -57,8 +57,7 @@ class PredicatedHashMap_GC[A, B] extends TMapViaClone[A, B] {
     decodePair(if (null == p) null else p.contents.single.get)
   }
 
-  override def put(key: A, value: B): Option[B] = singlePutImpl(key, value, predicates.get(key))
-  def +=(kv: (A, B)) = { single.put(kv._1, kv._2) ; this }
+  def nonTxnPut(key: A, value: B): Option[B] = singlePutImpl(key, value, predicates.get(key))
 
   @tailrec private def singlePutImpl(key: A, value: B, pred: Predicate[A, B]): Option[B] = {
     val token = if (null == pred) null else pred.get
@@ -93,16 +92,12 @@ class PredicatedHashMap_GC[A, B] extends TMapViaClone[A, B] {
     decodePair(pred.contents.single.swap(token -> value))
   }
 
-  override def remove(key: A): Option[B] = {
+  def nonTxnRemove(key: A): Option[B] = {
     // if the pred is stale, then swap(null) is a no-op and doesn't harm
     // anything
     val p = predicates.get(key)
     decodePair(if (null == p) null else p.contents.single.swap(null))
   }
-
-  def -=(key: A) = { single.remove(key) ; this }
-
-  def iterator = throw new UnsupportedOperationException
 
 //    override def transform(key: A, f: (Option[B]) => Option[B]) {
 //      val tok = activeToken(key)
