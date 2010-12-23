@@ -2,15 +2,15 @@
 
 // BoostedHashMap
 
-package scala.concurrent.stm.experimental.impl
+package scala.concurrent.stm
+package experimental
+package impl
 
-import scala.concurrent.stm._
-import experimental.TMap
-import impl.FastSimpleRandom
 import java.util.IdentityHashMap
 import java.util.concurrent.locks._
 import java.util.concurrent.{ConcurrentMap, TimeUnit, ConcurrentHashMap}
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+import skel.{TMapViaClone, FastSimpleRandom}
 
 /** An transactionally boosted `ConcurrentHashMap`, implemented
  *  directly from M. Herlify and E. Koskinen, <em>Transactional Boosting: A
@@ -337,15 +337,19 @@ object BoostedHashMap {
     def undo[C <: AnyRef](underlying: ConcurrentHashMap[A,C], key: A, valueOrNull: C)
   }
 
+  object EmptyHandler extends (InTxnEnd => Unit) {
+    def apply(txn: InTxnEnd) {}
+  }
+
   class MapBooster[A](lockHolder: LockHolder[A], enumLock: Lock, mcLock: Lock) {
 
     /** Holds the number of retries. */
     private val retryCount = new ThreadLocal[Int]
 
     /** Holds the current context. */
-    private val currentContext = new TxnLocal[TxnContext[A]] {
-      override def initialValue(txn: Txn): TxnContext[A] = {
-        val result = new TxnContext[A] with (Txn => Unit) with Txn.WriteResource {
+    private val currentContext = TxnLocal[TxnContext[A]](
+      initialValue = { implicit txn =>
+        val z = new TxnContext[A] with (Txn.Status => Unit) {
           // per-txn state
           private val owned = new IdentityHashMap[Lock,Lock]
           private var undoCount = 0
@@ -364,7 +368,7 @@ object BoostedHashMap {
           }
 
           def lockForEnumeration() {
-            if (null == enumLock) throw new UnsupportedOperationException("no enumeration lock present") 
+            if (null == enumLock) throw new UnsupportedOperationException("no enumeration lock present")
             acquire(enumLock, "enum")
           }
 
@@ -378,8 +382,7 @@ object BoostedHashMap {
               if (!lock.tryLock()) {
                 // acquisition failed, deadlock?  remove before afterCompletion
                 owned.remove(lock)
-                txn.forceRollback(Txn.WriteConflictCause(info, "tryLock failed"))
-                throw RollbackError
+                txn.rollback(Txn.OptimisticFailureCause('tryLock_failed, Some(info)))
               }
             } else {
               lockHolder.returnUnused(lock)
@@ -400,8 +403,8 @@ object BoostedHashMap {
             undoCount += 1
           }
 
-          def apply(t: Txn) {
-            if (t.status != Txn.Committed) {
+          def apply(status: Txn.Status) {
+            if (status != Txn.Committed) {
               // apply the undo log in reverse order
               var i = undoCount
               while (i > 0) {
@@ -420,7 +423,7 @@ object BoostedHashMap {
             while (iter.hasNext) iter.next.unlock()
 
             // randomized exponential backoff if we are going to rerun
-            if (t.status != Txn.Committed) {
+            if (status != Txn.Committed) {
               val r = retryCount.get
               retryCount.set(r + 1)
 
@@ -436,29 +439,18 @@ object BoostedHashMap {
               while (System.nanoTime < t0 + delay) Thread.`yield`
             }
           }
-
-          // dummy write resource
-          def prepare(txn: Txn): Boolean = true
-          def performCommit(txn: Txn) {}
-          def performRollback(txn: Txn) {}
         }
+        // disable the read-only commit optimization
+        Txn.whilePreparing(EmptyHandler)
+        Txn.afterCompletion(z)
+        z
+      })
 
-        // We add ourself as a dummy write resource to prevent the read-only
-        // commit optimization.  This is because the linearization point must
-        // occur at some point while we have all of the locks held, which does
-        // not include the virtual readVersion snapshot.
-        txn.addWriteResource(result)
-
-        txn.afterCompletion(result, UndoAndUnlockPriority)
-        result
-      }
-    }
-
-    def context(implicit txn: Txn): TxnContext[A] = currentContext.get
+    def context(implicit txn: InTxn): TxnContext[A] = currentContext.get
   }
 }
 
-class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: ReadWriteLock) extends TMap[A, B] {
+class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: ReadWriteLock) extends TMapViaClone[A, B] {
   import BoostedHashMap._
 
   private val underlying = new java.util.concurrent.ConcurrentHashMap[A,AnyRef]
@@ -466,197 +458,83 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
                                           if (null == enumLock) null else enumLock.writeLock,
                                           if (null == enumLock) null else enumLock.readLock)
 
-  val escaped: TMap.Bound[A,B] = new TMap.AbstractNonTxnBound[A,B,BoostedHashMap[A,B]](BoostedHashMap.this) {
+  //// TMap.View stuff
 
-    def get(key: A): Option[B] = {
-      // lockHolder implementations that garbage collect locks cannot perform
-      // the existingReadLock optimization
-      val lock = lockHolder.existingReadLock(key)
-      if (lock == null) {
-        None
-      } else {
-        lock.lock()
-        try {
-          NullValue.decodeOption(underlying.get(key))
-        } finally {
-          lock.unlock()
-        }
+  def get(key: A): Option[B] = {
+    // lockHolder implementations that garbage collect locks cannot perform
+    // the existingReadLock optimization
+    val lock = lockHolder.existingReadLock(key)
+    if (lock == null) {
+      None
+    } else {
+      lock.lock()
+      try {
+        NullValue.decodeOption(underlying.get(key))
+      } finally {
+        lock.unlock()
       }
     }
+  }
 
-    override def put(key: A, value: B): Option[B] = {
-      val lock = lockHolder.writeLock(key)
-      lock.lock()
-      val prev = (try {
-        if (null != enumLock && !underlying.containsKey(key)) {
+  override def put(key: A, value: B): Option[B] = {
+    val lock = lockHolder.writeLock(key)
+    lock.lock()
+    val prev = (try {
+      if (null != enumLock && !underlying.containsKey(key)) {
+        enumLock.readLock.lock()
+        try {
+          underlying.put(key, NullValue.encode(value))
+        } finally {
+          enumLock.readLock.unlock()
+        }
+      } else {
+        underlying.put(key, NullValue.encode(value))
+      }
+    } finally {
+      lock.unlock()
+    })
+    NullValue.decodeOption(prev)
+  }
+
+  override def remove(key: A): Option[B] = {
+    val lock = lockHolder.existingWriteLock(key)
+    if (null == lock) return None
+
+    lock.lock()
+    val prev = (try {
+      if (null != enumLock) {
+        if (!underlying.containsKey(key)) {
+          null
+        } else {
           enumLock.readLock.lock()
           try {
-            underlying.put(key, NullValue.encode(value))
+            underlying.remove(key)
           } finally {
             enumLock.readLock.unlock()
           }
-        } else {
-          underlying.put(key, NullValue.encode(value))
         }
-      } finally {
-        lock.unlock()
-      })
-      NullValue.decodeOption(prev)
-    }
-
-    override def remove(key: A): Option[B] = {
-      val lock = lockHolder.existingWriteLock(key)
-      if (null == lock) return None
-      
-      lock.lock()
-      val prev = (try {
-        if (null != enumLock) {
-          if (!underlying.containsKey(key)) {
-            null
-          } else {
-            enumLock.readLock.lock()
-            try {
-              underlying.remove(key)
-            } finally {
-              enumLock.readLock.unlock()
-            }
-          }
-        } else {
-          underlying.remove(key)
-        }
-      } finally {
-        lock.unlock()
-      })
-      return NullValue.decodeOption(prev)
-    }
-
-//    protected def transformIfDefined(key: A,
-//                                     pfOrNull: PartialFunction[Option[B],Option[B]],
-//                                     f: Option[B] => Option[B]): Boolean = {
-//      val lock = lockHolder.writeLock(key)
-//      lock.lock()
-//      try {
-//        val prev = underlying.get(key)
-//        val p = NullValue.decodeOption(prev)
-//        if (null != pfOrNull && !pfOrNull.isDefinedAt(p)) {
-//          return false
-//        }
-//
-//        val next = NullValue.encodeOption(f(p))
-//        if (null == prev) {
-//          if (null != next) {
-//            // None -> Some
-//            if (null != enumLock) {
-//              enumLock.readLock.lock()
-//              try {
-//                underlying.put(key, next)
-//              } finally {
-//                enumLock.readLock.unlock()
-//              }
-//            } else {
-//              underlying.put(key, next)
-//            }
-//          }
-//        } else {
-//          if (null == next) {
-//            // Some -> None
-//            if (null != enumLock) {
-//              enumLock.readLock.lock()
-//              try {
-//                underlying.remove(key)
-//              } finally {
-//                enumLock.readLock.unlock()
-//              }
-//            } else {
-//              underlying.remove(key)
-//            }
-//          } else {
-//            // Some -> Some
-//            underlying.put(key, next)
-//          }
-//        }
-//
-//        return true
-//      } finally {
-//        lock.unlock()
-//      }
-//    }
-
-    def iterator: Iterator[(A,B)] = new Iterator[(A,B)] {
-      val iter = underlying.keySet().iterator
-      var avail: (A,B) = null
-      advance()
-
-      private def advance() {
-        while (iter.hasNext) {
-          val k = iter.next()
-          get(k) match {
-            case Some(v) => {
-              avail = (k,v)
-              return
-            }
-            case None => // keep looking
-          }
-        }
-        avail = null
+      } else {
+        underlying.remove(key)
       }
-
-      def hasNext: Boolean = null != avail
-      def next(): (A,B) = {
-        val z = avail
-        advance()
-        z
-      }
-    }
+    } finally {
+      lock.unlock()
+    })
+    return NullValue.decodeOption(prev)
   }
 
-  def bind(implicit txn0: Txn): TMap.Bound[A,B] = new TMap.AbstractTxnBound[A,B,BoostedHashMap[A,B]](txn0, BoostedHashMap.this) {
-    def iterator: Iterator[(A,B)] = {
-      return new Iterator[(A,B)] {
-        val iter = underlying.keySet().iterator
-        var avail: (A,B) = null
-        val ctx = booster.context
-        ctx.lockForEnumeration()
-        advance()
+  def +=(kv: (A, B)) = { single.put(kv._1, kv._2) ; this }
+  def -=(key: A) = { single.remove(key) ; this }
+  def iterator = throw new UnsupportedOperationException
 
-        private def advance() {
-          while (iter.hasNext) {
-            val k = iter.next()
-            ctx.lockForRead(k)
-            val v = underlying.get(k)
-            if (null != v) {
-              avail = (k, NullValue.decode(v))
-              return
-            }
-          }
-          avail = null
-        }
+  //// TMap stuff
 
-        def hasNext = null != avail
-        def next(): (A,B) = {
-          val z = avail
-          advance()
-          z
-        }
-      }
-    }
-  }
-
-  def isEmpty(implicit txn: Txn): Boolean = size > 0
-  
-  def size(implicit txn: Txn): Int = {
-    val ctx = booster.context
-    ctx.lockForEnumeration()
-    underlying.size()
-  }
-
-  def get(key: A)(implicit txn: Txn): Option[B] = {
+  override def get(key: A)(implicit txn: InTxn): Option[B] = {
     val ctx = booster.context
     ctx.lockForRead(key)
     NullValue.decodeOption(underlying.get(key))
   }
 
-  override def put(key: A, value: B)(implicit txn: Txn): Option[B] = {
+  override def put(key: A, value: B)(implicit txn: InTxn): Option[B] = {
     val ctx = booster.context
     ctx.lockForWrite(key)
     if (null != enumLock && !underlying.containsKey(key)) {
@@ -667,7 +545,7 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
     NullValue.decodeOption(prev)
   }
 
-  override def remove(key: A)(implicit txn: Txn): Option[B] = {
+  override def remove(key: A)(implicit txn: InTxn): Option[B] = {
     val ctx = booster.context
     ctx.lockForWrite(key)
     if (null != enumLock) {
@@ -680,40 +558,5 @@ class BoostedHashMap[A,B](lockHolder: BoostedHashMap.LockHolder[A], enumLock: Re
     ctx.undo(underlying, key, prev)
     return NullValue.decodeOption(prev)
   }
-
-//  protected def transformIfDefined(key: A,
-//                                   pfOrNull: PartialFunction[Option[B],Option[B]],
-//                                   f: Option[B] => Option[B])(implicit txn: Txn): Boolean = {
-//    val ctx = booster.context
-//    ctx.lockForWrite(key)
-//
-//    val before = underlying.get(key)
-//    val b = NullValue.decodeOption(before)
-//
-//    if (null != pfOrNull && !pfOrNull.isDefinedAt(b)) {
-//      return false
-//    }
-//
-//    val after = NullValue.encodeOption(f(b))
-//
-//    if (null == before && null == after) {
-//      // nothing to do, no membership change or undo
-//      return true
-//    }
-//
-//    if (null != enumLock && (null == before || null == after)) {
-//      ctx.lockForMembershipChange()
-//    }
-//
-//    if (null != after) {
-//      underlying.put(key, after)
-//    } else {
-//      underlying.remove(key)
-//    }
-//
-//    ctx.undo(underlying, key, before)
-//
-//    return true
-//  }
 }
 

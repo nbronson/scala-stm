@@ -91,26 +91,27 @@ private[ccstm] object CCSTM extends GV6 {
   /** Includes withUnowned and withUnchanging. */
   def withRollback(m: Meta) = withUnowned(withUnchanging(m))
 
-//  //////////////// Version continuity between separate Refs
-//
-//  private def CryptMask = 31
-//  private val crypts = Array.tabulate(CryptMask + 1)(_ => new AtomicLong)
-//
-//  def embalm(identity: Int, handle: Handle[_]) {
-//    val crypt = crypts(identity & CryptMask)
-//    val v = version(handle.meta)
-//    var old = crypt.get
-//    while (v > old && !crypt.compareAndSet(old, v))
-//      old = crypt.get
-//  }
-//
-//  def resurrect(identity: Int, handle: Handle[_]) {
-//    val v0 = crypts(identity & CryptMask).get
+  //////////////// Version continuity between separate Refs
+
+  private def CryptMask = 31
+  private val crypts = Array.tabulate(CryptMask + 1)(_ => new java.util.concurrent.atomic.AtomicLong)
+
+  def embalm(identity: Int, handle: Handle[_]) {
+    val crypt = crypts(identity & CryptMask)
+    val v = version(handle.meta)
+    var old = crypt.get
+    while (v > old && !crypt.compareAndSet(old, v))
+      old = crypt.get
+  }
+
+  def resurrect(identity: Int, handle: Handle[_]) {
+    val v0 = crypts(identity & CryptMask).get
+    // metaCAS is safer, but meta_= is faster
 //    if (!handle.metaCAS(0L, withVersion(0L, v0))) {
 //      throw new IllegalStateException("Refs may only be resurrected into an old identity before use")
 //    }
-//    handle.meta = withVersion(0L, v0)
-//  }
+    handle.meta = withVersion(0L, v0)
+  }
 
   //////////////// lock release helping
 

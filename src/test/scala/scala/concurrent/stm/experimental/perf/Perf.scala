@@ -2,12 +2,13 @@
 
 // Perf
 
-package scala.concurrent.stm.experimental.perf
+package scala.concurrent.stm
+package experimental
+package perf
 
 import java.util.concurrent.CyclicBarrier
 import management.{GarbageCollectorMXBean, ManagementFactory}
 import scala.collection.mutable.Map
-import scala.concurrent.stm.experimental.TMap
 import scala.concurrent.stm.experimental.impl.TMapFactory
 import scala.concurrent.stm._
 
@@ -322,55 +323,55 @@ object Perf {
     def doPut(key: Int, value: String) {
       counts += PutOp
       currentOp = PutOp
-      master.target.escaped(key) = value
+      master.target.single(key) = value
       currentOp = NoOp
     }
 
     def doRemove(key: Int) {
       counts += RemoveOp
       currentOp = RemoveOp
-      master.target.escaped -= key
+      master.target.single -= key
       currentOp = NoOp
     }
 
     def doClear {
       counts += ClearOp
       currentOp = ClearOp
-      master.target.escaped.clear
+      master.target.single.clear
       currentOp = NoOp
     }
 
     def doGet(key: Int): Option[String] = {
       counts += GetOp
       currentOp = GetOp
-      val z = master.target.escaped.get(key)
+      val z = master.target.single.get(key)
       currentOp = NoOp
       z
     }
 
-    def doHigher(key: Int): Option[(Int,String)] = {
-      counts += HigherOp
-      currentOp = HigherOp
-      val z = master.target.escaped.higher(key)
-      currentOp = NoOp
-      z
-    }
+//    def doHigher(key: Int): Option[(Int,String)] = {
+//      counts += HigherOp
+//      currentOp = HigherOp
+//      val z = master.target.single.higher(key)
+//      currentOp = NoOp
+//      z
+//    }
 
-    def doTxnPut(key: Int, value: String)(implicit txn: Txn) {
+    def doTxnPut(key: Int, value: String)(implicit txn: InTxn) {
       counts += PutOp
       currentOp = PutOp
       master.target(key) = value
       currentOp = NoOp
     }
 
-    def doTxnRemove(key: Int)(implicit txn: Txn) {
+    def doTxnRemove(key: Int)(implicit txn: InTxn) {
       counts += RemoveOp
       currentOp = RemoveOp
       master.target -= key
       currentOp = NoOp
     }
 
-    def doTxnGet(key: Int)(implicit txn: Txn): Option[String] = {
+    def doTxnGet(key: Int)(implicit txn: InTxn): Option[String] = {
       counts += GetOp
       currentOp = GetOp
       val z = master.target.get(key)
@@ -378,31 +379,31 @@ object Perf {
       z
     }
 
-    def doTxnHigher(key: Int)(implicit txn: Txn): Option[(Int,String)] = {
-      counts += HigherOp
-      currentOp = HigherOp
-      val z = master.target.bind.higher(key)
-      currentOp = NoOp
-      z
-    }
-
-    def doIteration {
-      //if (target.isInstanceOf[SnapMap[_,_]]) println(target)
-      var count = 0
-      currentOp = IterationOp
-      atomic { implicit t =>
-        //currentTxn.afterCompletion(t => { println(t.status + ", barging=" + t.barging)})
-
-        count = 0
-        val iter = master.target.bind.iterator
-        while (iter.hasNext) {
-          count += 1
-          iter.next()
-        }
-      }
-      currentOp = NoOp
-      counts.weightedAdd(IterationOp, count)
-    }
+//    def doTxnHigher(key: Int)(implicit txn: InTxn): Option[(Int,String)] = {
+//      counts += HigherOp
+//      currentOp = HigherOp
+//      val z = master.target.bind.higher(key)
+//      currentOp = NoOp
+//      z
+//    }
+//
+//    def doIteration {
+//      //if (target.isInstanceOf[SnapMap[_,_]]) println(target)
+//      var count = 0
+//      currentOp = IterationOp
+//      atomic { implicit t =>
+//        //currentTxn.afterCompletion(t => { println(t.status + ", barging=" + t.barging)})
+//
+//        count = 0
+//        val iter = master.target.bind.iterator
+//        while (iter.hasNext) {
+//          count += 1
+//          iter.next()
+//        }
+//      }
+//      currentOp = NoOp
+//      counts.weightedAdd(IterationOp, count)
+//    }
 
     ////////////// override this
 

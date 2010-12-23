@@ -2,104 +2,107 @@
 
 // PredicatedHashMap_GC
 
-package scala.concurrent.stm.experimental.impl
+package scala.concurrent.stm
+package experimental
+package impl
 
-import scala.concurrent.stm.experimental.TMap
-import scala.concurrent.stm.experimental.TMap.Bound
-import scala.concurrent.stm.{STM, Txn}
 import java.util.concurrent.ConcurrentHashMap
+import skel.TMapViaClone
+import annotation.tailrec
+import ccstm.CCSTMExtensions
 
 private object PredicatedHashMap_GC {
-  private class TokenRef[A,B](map: PredicatedHashMap_GC[A,B], key: A, token: Token) extends CleanableRef[Token](token) {
-    var pred: Predicate[B] = null
-    def cleanup(): Unit = map.predicates.remove(key, pred)
+  private class Predicate[A, B](map: PredicatedHashMap_GC[A, B], key: A, tok: Token, contents0: (Token, B)
+                                 ) extends CleanableRef[Token](tok) {
+    val contents = Ref(contents0)
+    def cleanup(): Unit = map.predicates.remove(key, this)
   }
 
-  private class Token
-
-  // we extend from TIdentityPairRef opportunistically
-  private class Predicate[B](val softRef: CleanableRef[Token], tok: Token, value: B) extends
-      TIdentityPairRef[Token,B](tok, value) {
-    def this(softRef0: CleanableRef[Token]) = this(softRef0, null, null.asInstanceOf[B])
+  private class Token extends (Txn.Status => Unit) {
+    def apply(status: Txn.Status) {}
   }
 }
 
-class PredicatedHashMap_GC[A,B] extends TMap[A,B] {
+class PredicatedHashMap_GC[A, B] extends TMapViaClone[A, B] {
   import PredicatedHashMap_GC._
 
-  private val predicates = new ConcurrentHashMap[A,Predicate[B]] {
-    override def putIfAbsent(key: A, value: Predicate[B]): Predicate[B] = {
-      STM.resurrect(key.hashCode, value)
+  private val predicates = new ConcurrentHashMap[A, Predicate[A, B]] {
+
+    override def putIfAbsent(key: A, value: Predicate[A, B]): Predicate[A, B] = {
+      CCSTMExtensions.resurrect(key.hashCode, value.contents)
       super.putIfAbsent(key, value)
     }
 
-    override def replace(key: A, oldValue: Predicate[B], newValue: Predicate[B]): Boolean = {
+    override def replace(key: A, oldValue: Predicate[A, B], newValue: Predicate[A, B]): Boolean = {
       val h = key.hashCode
-      STM.embalm(h, oldValue)
-      STM.resurrect(h, newValue)
+      CCSTMExtensions.embalm(h, oldValue.contents)
+      CCSTMExtensions.resurrect(h, newValue.contents)
       super.replace(key, oldValue, newValue)
     }
 
     override def remove(key: Any, value: Any): Boolean = {
-      STM.embalm(key.hashCode, value.asInstanceOf[Predicate[B]])
+      CCSTMExtensions.embalm(key.hashCode, value.asInstanceOf[Predicate[A, B]].contents)
       super.remove(key, value)
     }
   }
 
-  def escaped: Bound[A,B] = new TMap.AbstractNonTxnBound[A,B,PredicatedHashMap_GC[A,B]](this) {
+  //// TMap.View stuff
 
-    def get(key: A): Option[B] = {
-      // p may be missing (null), no longer active (weakRef.get == null), or
-      // active (weakRef.get != null).  We don't need to distinguish between
-      // the last two cases, since they will both have a null txn Token ref and
-      // both correspond to None
-      val p = predicates.get(key)
-      decodePair(if (null == p) null else p.escaped.get)
-    }
+  def get(key: A): Option[B] = {
+    // p may be missing (null), no longer active (weakRef.get == null), or
+    // active (weakRef.get != null).  We don't need to distinguish between
+    // the last two cases, since they will both have a null txn Token ref and
+    // both correspond to None
+    val p = predicates.get(key)
+    decodePair(if (null == p) null else p.contents.single.get)
+  }
 
-    override def put(key: A, value: B): Option[B] = putImpl(key, value, predicates.get(key))
+  override def put(key: A, value: B): Option[B] = singlePutImpl(key, value, predicates.get(key))
+  def +=(kv: (A, B)) = { single.put(kv._1, kv._2) ; this }
 
-    private def putImpl(key: A, value: B, pred: Predicate[B]): Option[B] = {    
-      val token = if (null == pred) null else pred.softRef.get
-      if (null != token) {
-        putImpl(value, token, pred)
-      } else {
-        val freshToken = new Token
-        val freshRef = new TokenRef(unbind, key, freshToken)
-        val freshPred = new Predicate[B](freshRef, freshToken, value)
-        freshRef.pred = freshPred
+  @tailrec private def singlePutImpl(key: A, value: B, pred: Predicate[A, B]): Option[B] = {
+    val token = if (null == pred) null else pred.get
+    if (null != token) {
+      singlePutImpl(value, token, pred)
+    } else {
+      val freshToken = new Token
+      val freshPred = new Predicate[A, B](this, key, freshToken, (freshToken -> value))
 
-        if (null == pred) {
-          val racingPred = predicates.putIfAbsent(key, freshPred)
-          if (null == racingPred) {
-            // our predicate was installed, no isolation barrier necessary
-            None
-          } else {
-            // we've got the predicate that beat us to it, try with that one
-            putImpl(key, value, racingPred)
-          }
+      if (null == pred) {
+        val existingPred = predicates.putIfAbsent(key, freshPred)
+        if (null == existingPred) {
+          // our predicate was installed, no isolation barrier necessary
+          None
         } else {
-          if (predicates.replace(key, pred, freshPred)) {
-            // successful
-            None
-          } else {
-            // failure, but replace doesn't give us the old one
-            putImpl(key, value, predicates.get(key))
-          }
+          // we've got the predicate that beat us to it, try with that one
+          singlePutImpl(key, value, existingPred)
+        }
+      } else {
+        if (predicates.replace(key, pred, freshPred)) {
+          // successful
+          None
+        } else {
+          // failure, but replace doesn't give us the old one
+          singlePutImpl(key, value, predicates.get(key))
         }
       }
     }
+  }
 
-    private def putImpl(value: B, token: Token, pred: Predicate[B]): Option[B] = {
-      decodePair(pred.escaped.swap(IdentityPair(token, value)))
-    }
+  private def singlePutImpl(value: B, token: Token, pred: Predicate[A, B]): Option[B] = {
+    decodePair(pred.contents.single.swap(token -> value))
+  }
 
-    override def remove(key: A): Option[B] = {
-      // if the pred is stale, then swap(None) is a no-op and doesn't harm
-      // anything
-      val p = predicates.get(key)
-      decodePair(if (null == p) null else p.escaped.swap(null))
-    }
+  override def remove(key: A): Option[B] = {
+    // if the pred is stale, then swap(null) is a no-op and doesn't harm
+    // anything
+    val p = predicates.get(key)
+    decodePair(if (null == p) null else p.contents.single.swap(null))
+  }
+
+  def -=(key: A) = { single.remove(key) ; this }
+
+  def iterator = throw new UnsupportedOperationException
 
 //    override def transform(key: A, f: (Option[B]) => Option[B]) {
 //      val tok = activeToken(key)
@@ -117,173 +120,160 @@ class PredicatedHashMap_GC[A,B] extends TMap[A,B] {
 //      throw new Error
 //    }
 
-    def iterator: Iterator[(A,B)] = new Iterator[(A,B)] {
-      val iter = predicates.keySet().iterator
-      var avail: (A,B) = null
-      advance()
+//    def iterator: Iterator[(A,B)] = new Iterator[(A,B)] {
+//      val iter = predicates.keySet().iterator
+//      var avail: (A,B) = null
+//      advance()
+//
+//      private def advance() {
+//        while (iter.hasNext) {
+//          val k = iter.next()
+//          get(k) match {
+//            case Some(v) => {
+//              avail = (k,v)
+//              return
+//            }
+//            case None => // keep looking
+//          }
+//        }
+//        avail = null
+//      }
+//
+//      def hasNext: Boolean = null != avail
+//      def next(): (A,B) = {
+//        val z = avail
+//        advance()
+//        z
+//      }
+//    }
 
-      private def advance() {
-        while (iter.hasNext) {
-          val k = iter.next()
-          get(k) match {
-            case Some(v) => {
-              avail = (k,v)
-              return
-            }
-            case None => // keep looking
-          }
-        }
-        avail = null
-      }
+  //// TMap stuff
 
-      def hasNext: Boolean = null != avail
-      def next(): (A,B) = {
-        val z = avail
-        advance()
-        z
-      }
-    }
-  }
-
-  def bind(implicit txn0: Txn): Bound[A, B] = new TMap.AbstractTxnBound[A,B,PredicatedHashMap_GC[A,B]](txn0, this) {
-    def iterator: Iterator[(A,B)] = throw new UnsupportedOperationException
-  }
-
-  def isEmpty(implicit txn: Txn): Boolean = throw new UnsupportedOperationException
-
-  def size(implicit txn: Txn): Int = throw new UnsupportedOperationException
-
-  def get(key: A)(implicit txn: Txn): Option[B] = {
+  override def get(key: A)(implicit txn: InTxn): Option[B] = {
     val pred = predicates.get(key)
     if (null != pred) {
-      val pair = pred.get
+      val pair = pred.contents.get
       if (null != pair) {
         // no access to the soft ref necessary
         return Some(pair._2)
       }
     }
-    return getImpl(key, pred)
+    return txnGetImpl(key, pred)
   }
 
-  private def getImpl(key: A, pred: Predicate[B])(implicit txn: Txn): Option[B] = {
-    val token = if (null == pred) null else pred.softRef.get
+  @tailrec private def txnGetImpl(key: A, pred: Predicate[A, B])(implicit txn: InTxn): Option[B] = {
+    val token = if (null == pred) null else pred.get
     if (null != token) {
-      getImpl(token, pred)
+      txnGetImpl(token, pred)
     } else {
       val freshToken = new Token
-      val freshRef = new TokenRef(this, key, freshToken)
-      val freshPred = new Predicate[B](freshRef)
-      freshRef.pred = freshPred
+      val freshPred = new Predicate[A, B](this, key, freshToken, null)
 
       if (null == pred) {
-        val racingPred = predicates.putIfAbsent(key, freshPred)
-        if (null == racingPred) {
+        val existingPred = predicates.putIfAbsent(key, freshPred)
+        if (null == existingPred) {
           // successful
-          getImpl(freshToken, freshPred)
+          txnGetImpl(freshToken, freshPred)
         } else {
           // we've got the predicate that beat us to it, try with that one
-          getImpl(key, racingPred)
+          txnGetImpl(key, existingPred)
         }
       } else {
         if (predicates.replace(key, pred, freshPred)) {
           // successful
-          getImpl(freshToken, freshPred)
+          txnGetImpl(freshToken, freshPred)
         } else {
           // failure, but replace doesn't give us the old one
-          getImpl(key, predicates.get(key))
+          txnGetImpl(key, predicates.get(key))
         }
       }
     }
   }
 
-  private def getImpl(token: Token, pred: Predicate[B])(implicit txn: Txn): Option[B] = {
-    decodePairAndPin(token, pred.get)
+  private def txnGetImpl(token: Token, pred: Predicate[A, B])(implicit txn: InTxn): Option[B] = {
+    decodePairAndPin(token, pred.contents.get)
   }
   
   
-  def put(key: A, value: B)(implicit txn: Txn): Option[B] = putImpl(key, value, predicates.get(key))
+  override def put(key: A, value: B)(implicit txn: InTxn): Option[B] = txnPutImpl(key, value, predicates.get(key))
 
-  private def putImpl(key: A, value: B, pred: Predicate[B])(implicit txn: Txn): Option[B] = {    
-    val token = if (null == pred) null else pred.softRef.get
+  @tailrec private def txnPutImpl(key: A, value: B, pred: Predicate[A, B])(implicit txn: InTxn): Option[B] = {
+    val token = if (null == pred) null else pred.get
     if (null != token) {
-      putImpl(value, token, pred)
+      txnPutImpl(value, token, pred)
     } else {
       val freshToken = new Token
-      val freshRef = new TokenRef(this, key, freshToken)
-      val freshPred = new Predicate[B](freshRef)
-      freshRef.pred = freshPred
+      val freshPred = new Predicate[A, B](this, key, freshToken, null)
 
       if (null == pred) {
-        val racingPred = predicates.putIfAbsent(key, freshPred)
-        if (null == racingPred) {
+        val existingPred = predicates.putIfAbsent(key, freshPred)
+        if (null == existingPred) {
           // successful
-          putImpl(value, freshToken, freshPred)
+          txnPutImpl(value, freshToken, freshPred)
         } else {
           // we've got the predicate that beat us to it, try with that one
-          putImpl(key, value, racingPred)
+          txnPutImpl(key, value, existingPred)
         }
       } else {
         if (predicates.replace(key, pred, freshPred)) {
           // successful
-          putImpl(value, freshToken, freshPred)
+          txnPutImpl(value, freshToken, freshPred)
         } else {
           // failure, but replace doesn't give us the old one
-          putImpl(key, value, predicates.get(key))
+          txnPutImpl(key, value, predicates.get(key))
         }
       }
     }
   }
 
-  private def putImpl(value: B, token: Token, pred: Predicate[B])(implicit txn: Txn): Option[B] = {
-    decodePair(pred.swap(IdentityPair(token, value)))
+  private def txnPutImpl(value: B, token: Token, pred: Predicate[A, B])(implicit txn: InTxn): Option[B] = {
+    decodePair(pred.contents.swap(token -> value))
   }
 
   
-  def remove(key: A)(implicit txn: Txn): Option[B] = removeImpl(key, predicates.get(key))
+  override def remove(key: A)(implicit txn: InTxn): Option[B] = txnRemoveImpl(key, predicates.get(key))
 
-  private def removeImpl(key: A, pred: Predicate[B])(implicit txn: Txn): Option[B] = {
-    val token = if (null == pred) null else pred.softRef.get
+  @tailrec private def txnRemoveImpl(key: A, pred: Predicate[A, B])(implicit txn: InTxn): Option[B] = {
+    val token = if (null == pred) null else pred.get
     if (null != token) {
-      removeImpl(token, pred)
+      txnRemoveImpl(token, pred)
     } else {
       val freshToken = new Token
-      val freshRef = new TokenRef(this, key, freshToken)
-      val freshPred = new Predicate[B](freshRef)
-      freshRef.pred = freshPred
+      val freshPred = new Predicate[A, B](this, key, freshToken, null)
 
       if (null == pred) {
-        val racingPred = predicates.putIfAbsent(key, freshPred)
-        if (null == racingPred) {
+        val existingPred = predicates.putIfAbsent(key, freshPred)
+        if (null == existingPred) {
           // successful
-          removeImpl(freshToken, freshPred)
+          txnRemoveImpl(freshToken, freshPred)
         } else {
           // we've got the predicate that beat us to it, try with that one
-          removeImpl(key, racingPred)
+          txnRemoveImpl(key, existingPred)
         }
       } else {
         if (predicates.replace(key, pred, freshPred)) {
           // successful
-          removeImpl(freshToken, freshPred)
+          txnRemoveImpl(freshToken, freshPred)
         } else {
           // failure, but replace doesn't give us the old one
-          removeImpl(key, predicates.get(key))
+          txnRemoveImpl(key, predicates.get(key))
         }
       }
     }
   }
 
-  private def removeImpl(token: Token, pred: Predicate[B])(implicit txn: Txn): Option[B] = {
-    decodePairAndPin(token, pred.swap(null))
+  private def txnRemoveImpl(token: Token, pred: Predicate[A, B])(implicit txn: InTxn): Option[B] = {
+    decodePairAndPin(token, pred.contents.swap(null))
   }
   
-//  override def transform(key: A, f: (Option[B]) => Option[B])(implicit txn: Txn) {
+//  override def transform(key: A, f: (Option[B]) => Option[B])(implicit txn: InTxn) {
 //    val tok = activeToken(key)
 //    // in some cases this is overkill, but it is always correct
 //    txn.addReference(tok)
 //    tok.pred.transform(liftF(tok, f))
 //  }
 //
-//  override def transformIfDefined(key: A, pf: PartialFunction[Option[B],Option[B]])(implicit txn: Txn): Boolean = {
+//  override def transformIfDefined(key: A, pf: PartialFunction[Option[B],Option[B]])(implicit txn: InTxn): Boolean = {
 //    val tok = activeToken(key)
 //    // in some cases this is overkill, but it is always correct
 //    txn.addReference(tok)
@@ -292,28 +282,28 @@ class PredicatedHashMap_GC[A,B] extends TMap[A,B] {
 //
 //  protected def transformIfDefined(key: A,
 //                                   pfOrNull: PartialFunction[Option[B],Option[B]],
-//                                   f: Option[B] => Option[B])(implicit txn: Txn): Boolean = {
+//                                   f: Option[B] => Option[B])(implicit txn: InTxn): Boolean = {
 //    throw new Error
 //  }
 
   //////////////// encoding and decoding into the pair
 
-  private def encodePair(token: Token, vOpt: Option[B]): IdentityPair[Token,B] = {
+  private def encodePair(token: Token, vOpt: Option[B]): (Token, B) = {
     vOpt match {
-      case Some(v) => IdentityPair(token, v)
+      case Some(v) => (token -> v)
       case None => null
     }
   }
 
-  private def decodePair(pair: IdentityPair[Token,B]): Option[B] = {
+  private def decodePair(pair: (Token, B)): Option[B] = {
     if (null == pair) None else Some(pair._2)
   }
 
-  private def decodePairAndPin(token: Token, pair: IdentityPair[Token,B])(implicit txn: Txn): Option[B] = {
+  private def decodePairAndPin(token: Token, pair: (Token, B))(implicit txn: InTxn): Option[B] = {
     if (null == pair) {
-      // We need to make sure that this TPairRef survives until the end of the
+      // We need to make sure that this token survives until the end of the
       // transaction.
-      txn.addReference(token)
+      Txn.afterRollback(token)
       None
     } else {
       // The token will survive on its own until the commit of a remove,
@@ -332,11 +322,11 @@ class PredicatedHashMap_GC[A,B] extends TMap[A,B] {
 
   //////////////// predicate management
 
-//  private def existingPred(key: A): Predicate[B] = predicates.get(key)
+//  private def existingPred(key: A): Predicate[A, B] = predicates.get(key)
 //
-//  private def activeToken(key: A): (Token,Predicate[B]) = activeToken(key, predicates.get(key))
+//  private def activeToken(key: A): (Token,Predicate[A, B]) = activeToken(key, predicates.get(key))
 //
-//  private def activeToken(key: A, pred: Predicate[B]): (Token,Predicate[B]) = {
+//  private def activeToken(key: A, pred: Predicate[A, B]): (Token,Predicate[A, B]) = {
 //    val token = if (null == pred) null else pred.softRef.get
 //    if (null != token) {
 //      (token, pred)

@@ -2,63 +2,39 @@
 
 // StripedHashMap
 
-package scala.concurrent.stm.experimental.impl
+package scala.concurrent.stm
+package experimental
+package impl
 
-import reflect.Manifest
-import scala.concurrent.stm.experimental.TMap
-import scala.concurrent.stm.experimental.TMap.{Sink, BoundSink}
-import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.stm._
+import reflect.ClassManifest
+import skel.TMapViaClone
 
 
-object StripedHashMap {
+class StripedHashMap[K,V](implicit km: ClassManifest[K], vm: ClassManifest[V]) extends TMapViaClone[K,V] {
+
   def NumStripes = 16
-}
-
-class StripedHashMap[K,V](implicit km: Manifest[K], vm: Manifest[V]) extends TMap[K,V] {
-  import StripedHashMap._
 
   private val underlying = Array.tabulate(NumStripes) { _ => new ChainingHashMap[K,V] }
 
-  private def mapFor(k: K) = underlying(k.hashCode & (NumStripes - 1))
+  private def mapFor(k: K) = underlying(k.## & (NumStripes - 1))
 
+  // TMap.View stuff
 
-  def bind(implicit txn: Txn): TMap.Bound[K,V] = new TMap.AbstractTxnBound[K,V,StripedHashMap[K,V]](txn, this) {
-    def iterator: Iterator[(K,V)] = {
-      underlying.flatMap({ u => u.bind(txn) }).iterator
-    }
-  }
+  override def get(key: K): Option[V] = mapFor(key).single.get(key)
 
-  def escaped: TMap.Bound[K,V] = new TMap.AbstractNonTxnBound[K,V,StripedHashMap[K,V]](this) {
-    override def get(key: K): Option[V] = mapFor(key).escaped.get(key)
+  override def put(key: K, value: V): Option[V] = mapFor(key).single.put(key, value)
+  def += (kv: (K, V)) = { single.put(kv._1, kv._2) ; this }
 
-    override def put(key: K, value: V): Option[V] = mapFor(key).escaped.put(key, value)
+  override def remove(key: K): Option[V] = mapFor(key).single.remove(key)
+  def -= (key: K) = { single.remove(key) ; this }
 
-    override def remove(key: K): Option[V] = mapFor(key).escaped.remove(key)
-    
-    def iterator: Iterator[(K,V)] = {
-      atomic { implicit t =>
-        val buf = new ArrayBuffer[(K,V)]
-        for (u <- underlying) buf ++= u.escaped
-        buf.iterator
-      }
-    }
-  }
+  def iterator = throw new UnsupportedOperationException
 
-  
-  def isEmpty(implicit txn: Txn): Boolean = {
-    !underlying.exists({ u => !u.isEmpty })
-  }
+  // TMap stuff
 
-  def size(implicit txn: Txn): Int = {
-    var s = 0
-    for (u <- underlying) s += u.size
-    s
-  }
+  override def get(key: K)(implicit txn: InTxn): Option[V] = mapFor(key).tmap.get(key)
 
-  def get(key: K)(implicit txn: Txn): Option[V] = mapFor(key).get(key)
+  override def put(key: K, value: V)(implicit txn: InTxn): Option[V] = mapFor(key).tmap.put(key, value)
 
-  def remove(key: K)(implicit txn: Txn): Option[V] = mapFor(key).remove(key)
-
-  def put(key: K, value: V)(implicit txn: Txn): Option[V] = mapFor(key).put(key, value)
+  override def remove(key: K)(implicit txn: InTxn): Option[V] = mapFor(key).tmap.remove(key)
 }
