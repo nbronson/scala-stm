@@ -8,9 +8,9 @@ object TxnExecutor {
   @volatile private var _default: TxnExecutor = impl.STMImpl.instance
 
   /** Returns the default `TxnExecutor`. */
-  def default: TxnExecutor = _default
+  def defaultAtomic: TxnExecutor = _default
 
-  /** Atomically replaces the default `TxnExecutor` with `f(default)`. */
+  /** Atomically replaces the default `TxnExecutor` with `f(defaultAtomic)`. */
   def transformDefault(f: TxnExecutor => TxnExecutor) {
     synchronized { _default = f(_default) }
   }
