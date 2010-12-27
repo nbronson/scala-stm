@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.mutable.Builder
 
-object HashTrieTSet {
+private[stm] object HashTrieTSet {
 
   def empty[A]: TSet[A] = new HashTrieTSet(Ref(TxnHashTrie.emptySetNode[A]).single)
 

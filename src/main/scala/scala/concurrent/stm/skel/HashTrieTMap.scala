@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.mutable.Builder
 
-object HashTrieTMap {
+private[stm] object HashTrieTMap {
   
   def empty[A, B]: TMap[A, B] = new HashTrieTMap(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
 

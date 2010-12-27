@@ -3,14 +3,14 @@ package ccstm
 
 // TxnLocalImpl
 
-class TxnLocalImpl[A](init: => A,
-                      initialValue: InTxn => A,
-                      beforeCommit: InTxn => Unit,
-                      whilePreparing: InTxnEnd => Unit,
-                      whileCommitting: InTxnEnd => Unit,
-                      afterCommit: A => Unit,
-                      afterRollback: Txn.Status => Unit,
-                      afterCompletion: Txn.Status => Unit) extends Handle[A] with TxnLocal[A] {
+private[ccstm] class TxnLocalImpl[A](init: => A,
+                                     initialValue: InTxn => A,
+                                     beforeCommit: InTxn => Unit,
+                                     whilePreparing: InTxnEnd => Unit,
+                                     whileCommitting: InTxnEnd => Unit,
+                                     afterCommit: A => Unit,
+                                     afterRollback: Txn.Status => Unit,
+                                     afterCompletion: Txn.Status => Unit) extends Handle[A] with TxnLocal[A] {
 
   //////// stateless Handle
 
