@@ -109,6 +109,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
       }
     }
 
+    @throws(classOf[InterruptedException])
     def await {
       if (!_triggered) {
         synchronized {

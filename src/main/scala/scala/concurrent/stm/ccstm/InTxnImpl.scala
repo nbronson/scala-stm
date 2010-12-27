@@ -116,6 +116,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel
   }
 
+  @throws(classOf[InterruptedException])
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     if (!_alternatives.isEmpty)
       atomicWithAlternatives(exec, block)
@@ -125,11 +126,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       nestedAtomicImpl(exec, block)
   }
 
+  @throws(classOf[InterruptedException])
   private def atomicWithAlternatives(exec: TxnExecutor, block: InTxn => Any): Nothing = {
     val z = atomicImpl(exec, block, takeAlternatives())
     throw new impl.AlternativeResult(z)
   }
 
+  @throws(classOf[InterruptedException])
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
     if (!_alternatives.isEmpty)
       throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
@@ -150,6 +153,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def topLevelAttempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
     checkBarging(prevFailures)
     topLevelBegin(level)
@@ -183,6 +187,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def topLevelAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     var prevFailures = 0
     (while (true) {
@@ -262,6 +267,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  level's status to `RolledBack(ExplicitRetryCause)`.  All other cases
    *  result in a retry within the method.
    */
+  @throws(classOf[InterruptedException])
   private def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z, alternatives: List[InTxn => Z]): Z = {
     if (Stats.top != null)
       recordAlternatives(alternatives)
@@ -513,6 +519,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     checkpointAccessHistory(reusedReadThreshold)
   }
 
+  @throws(classOf[InterruptedException])
   private def topLevelBegin(child: TxnLevelImpl) {
     if (_slot < 0) {
       _priority = skel.FastSimpleRandom.nextInt()
@@ -548,6 +555,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def awaitRetry() {
     assert(_slot >= 0)
     val rs = takeRetrySet(_slot)
@@ -779,11 +787,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// lock management - similar to NonTxn but we also check for remote rollback
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
     CCSTM.weakAwaitUnowned(handle, m0, _currentLevel)
   }
 
   /** Returns the pre-acquisition metadata. */
+  @throws(classOf[InterruptedException])
   private def acquireOwnership(handle: Handle[_]): Meta = {
     var m = handle.meta
     if (owner(m) == _slot)
@@ -803,6 +813,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// barrier implementations
   
+  @throws(classOf[InterruptedException])
   def get[T](handle: Handle[T]): T = {
     requireActive()
 
@@ -839,6 +850,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _barging && version(meta) >= _bargeVersion
   }
 
+  @throws(classOf[InterruptedException])
   private def bargingRead[T](handle: Handle[T]): T = {
     val mPrev = acquireOwnership(handle)
     recordBarge(handle)
@@ -846,6 +858,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return handle.data
   }
 
+  @throws(classOf[InterruptedException])
   def getWith[T,Z](handle: Handle[T], f: T => Z): Z = {
     if (_barging && version(handle.meta) >= _bargeVersion)
       return f(get(handle))
@@ -893,6 +906,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return result
   }
 
+  @throws(classOf[InterruptedException])
   def relaxedGet[T](handle: Handle[T], equiv: (T, T) => Boolean): T = {
     if (_barging && version(handle.meta) >= _bargeVersion)
       return get(handle)
@@ -940,6 +954,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return snapshot
   }
 
+  @throws(classOf[InterruptedException])
   def unrecordedRead[T](handle: Handle[T]): UnrecordedRead[T] = {
     requireNotDecided()
 
@@ -988,6 +1003,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def freshOwner(mPrev: Meta) = owner(mPrev) == unownedSlot
 
+  @throws(classOf[InterruptedException])
   def set[T](handle: Handle[T], v: T) {
     requireActive()
     val mPrev = acquireOwnership(handle)
@@ -1008,6 +1024,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       revalidateIfRequired(version(mPrev))
   }
   
+  @throws(classOf[InterruptedException])
   def swap[T](handle: Handle[T], v: T): T = {
     requireActive()
     val mPrev = acquireOwnership(handle)
@@ -1034,6 +1051,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return true
   }
 
+  @throws(classOf[InterruptedException])
   def compareAndSet[T](handle: Handle[T], before: T, after: T): Boolean = {
     transformIfDefined(handle, new PartialFunction[T,T] {
       def isDefinedAt(v: T): Boolean = before == v
@@ -1041,6 +1059,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     })
   }
 
+  @throws(classOf[InterruptedException])
   def compareAndSetIdentity[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
     transformIfDefined(handle, new PartialFunction[T,T] {
       def isDefinedAt(v: T): Boolean = (before eq v.asInstanceOf[AnyRef])
@@ -1048,6 +1067,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     })
   }
 
+  @throws(classOf[InterruptedException])
   def getAndTransform[T](handle: Handle[T], func: T => T): T = {
     requireActive()
     val mPrev = acquireOwnership(handle)
@@ -1058,6 +1078,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     v0
   }
 
+  @throws(classOf[InterruptedException])
   def transformAndGet[T](handle: Handle[T], func: T => T): T = {
     requireActive()
     val mPrev = acquireOwnership(handle)
@@ -1068,6 +1089,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     v1
   }
 
+  @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
     val u = unrecordedRead(handle)
     if (!pf.isDefinedAt(u.value)) {

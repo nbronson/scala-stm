@@ -29,6 +29,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
    */
   private val slots = new AtomicReferenceArray[AnyRef](range)
 
+  @throws(classOf[InterruptedException])
   def assign(txn: T, slotHint: Int): Int = {
     // We advance to the next slot number after the hint, wrapping around in a
     // 64 byte space.  This avoids rollback from late steals, but keeps us in

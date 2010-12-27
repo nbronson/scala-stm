@@ -91,6 +91,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   }
 
   /** Blocks until `status.completed`. */
+  @throws(classOf[InterruptedException])
   def awaitCompleted() {
     assert(parUndo == null)
 

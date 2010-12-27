@@ -10,6 +10,7 @@ private[ccstm] class ReadSet(val size: Int,
                              versions: Array[CCSTM.Version]) {
   import CCSTM._
 
+  @throws(classOf[InterruptedException])
   def awaitRetry() {
     // Spin a few times, counting one spin per read set element
     var spins = 0

@@ -16,12 +16,14 @@ private[ccstm] object NonTxn {
 
   //////////////// lock waiting
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
     CCSTM.weakAwaitUnowned(handle, m0, null)
   }
 
   //////////////// value waiting
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitNewVersion(handle: Handle[_], m0: Meta) {
     // spin a bit
     var m = 0L
@@ -41,6 +43,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta) {
     val event = wakeupManager.subscribe
     event.addSource(handle)
@@ -63,6 +66,7 @@ private[ccstm] object NonTxn {
 
   //////////////// lock acquisition
 
+  @throws(classOf[InterruptedException])
   private def acquireLock(handle: Handle[_], exclusive: Boolean): Meta = {
     var m0 = 0L
     var m1 = 0L
@@ -124,6 +128,7 @@ private[ccstm] object NonTxn {
 
   //////////////// public interface
 
+  @throws(classOf[InterruptedException])
   def get[T](handle: Handle[T]): T = {
     var tries = 0
     var m0 = 0L
@@ -143,6 +148,7 @@ private[ccstm] object NonTxn {
     return lockedGet(handle)
   }
 
+  @throws(classOf[InterruptedException])
   private def lockedGet[T](handle: Handle[T]): T = {
     val m0 = acquireLock(handle, false)
     val z = handle.data
@@ -150,6 +156,7 @@ private[ccstm] object NonTxn {
     z
   }
 
+  @throws(classOf[InterruptedException])
   def await[T](handle: Handle[T], pred: T => Boolean) {
     while (true) {
       val m0 = handle.meta
@@ -172,6 +179,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   @tailrec
   def unrecordedRead[T](handle: Handle[T]): UnrecordedRead[T] = {
     val m0 = handle.meta
@@ -193,11 +201,13 @@ private[ccstm] object NonTxn {
     return unrecordedRead(handle)
   }
 
+  @throws(classOf[InterruptedException])
   def set[T](handle: Handle[T], v: T) {
     val m0 = acquireLock(handle, true)
     commitUpdate(handle, m0, v)
   }
 
+  @throws(classOf[InterruptedException])
   def swap[T](handle: Handle[T], v: T): T = {
     val m0 = acquireLock(handle, true)
     val z = handle.data
@@ -215,6 +225,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   def compareAndSet[T](handle: Handle[T], before: T, after: T): Boolean = {
     // Try to acquire ownership.  If we can get it easily then we hold the lock
     // while evaluating before == handle.data, otherwise we try to perform an
@@ -243,6 +254,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def invisibleCAS[T](handle: Handle[T], before: T, after: T): Boolean = {
     // this is the code from get, inlined so that we have access to the version
     // number as well with no boxing
@@ -279,6 +291,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   def compareAndSetIdentity[T, R <: AnyRef with T](handle: Handle[T], before: R, after: T): Boolean = {
     // try to acquire exclusive ownership
     val m0 = handle.meta
@@ -299,6 +312,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def invisibleCASI[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
     if (before eq get(handle).asInstanceOf[AnyRef]) {
       // CASI is different than CAS, because we don't have to invoke user code to
@@ -317,6 +331,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   def getAndTransform[T](handle: Handle[T], f: T => T): T = {
     getAndTransformImpl(handle, f, acquireLock(handle, false))
   }
@@ -329,6 +344,7 @@ private[ccstm] object NonTxn {
     v0
   }
 
+  @throws(classOf[InterruptedException])
   def transformAndGet[T](handle: Handle[T], f: T => T): T = {
     transformAndGetImpl(handle, f, acquireLock(handle, false))
   }
@@ -350,6 +366,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
     if (pf.isDefinedAt(get(handle))) {
       val m0 = acquireLock(handle, false)
@@ -371,6 +388,7 @@ private[ccstm] object NonTxn {
 
   //////////////// multi-handle ops
 
+  @throws(classOf[InterruptedException])
   def transform2[A, B, Z](handleA: Handle[A], handleB: Handle[B], f: (A, B) => (A, B, Z)): Z = {
     var mA0: Long = 0L
     var mB0: Long = 0L
@@ -432,6 +450,7 @@ private[ccstm] object NonTxn {
     return z
   }
 
+  @throws(classOf[InterruptedException])
   def ccasi[A <: AnyRef, B <: AnyRef](handleA: Handle[A], a0: A, handleB: Handle[B], b0: B, b1: B): Boolean = {
     var tries = 0
     while (tries < 10) {
@@ -479,6 +498,7 @@ private[ccstm] object NonTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
   def getAndAdd(handle: Handle[Int], delta: Int): Int = {
     val m0 = acquireLock(handle, true)
     val v0 = handle.data
