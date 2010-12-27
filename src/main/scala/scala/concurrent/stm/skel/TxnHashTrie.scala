@@ -47,6 +47,7 @@ private[skel] object TxnHashTrie {
 
   sealed abstract class Node[A, B] {
     def cappedSize(cap: Int): Int
+    def txnIsEmpty(implicit txn: InTxn): Boolean
     def setForeach[U](f: A => U)
     def mapForeach[U](f: ((A, B)) => U)
     def setIterator: Iterator[A]
@@ -67,6 +68,7 @@ private[skel] object TxnHashTrie {
     def endBuild = this
 
     def cappedSize(cap: Int): Int = hashes.length
+    def txnIsEmpty(implicit txn: InTxn) = hashes.length == 0
 
     def getKey(i: Int): A = kvs(2 * i).asInstanceOf[A]
     def setKey(i: Int, k: A) { kvs(2 * i) = k.asInstanceOf[AnyRef] }
@@ -316,6 +318,17 @@ private[skel] object TxnHashTrie {
       }
     }
 
+    def txnIsEmpty(implicit txn: InTxn): Boolean = {
+      var i = 0
+      while (i < BF) {
+        val c = children(i).ref.get
+        if (!c.txnIsEmpty)
+          return false
+        i += 1
+      }
+      return true
+    }
+
     def withFreeze: Branch[A, B] = new Branch(gen, true, children)
 
     def clone(newGen: Long): Branch[A, B] = {
@@ -436,7 +449,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   private def isContended = contentionEstimate > contentionThreshold
 
-  //////////////// hash trie operations on Ref.View
+  //////////////// whole-trie operations
 
   protected def frozenRoot: Node[A, B] = {
     root() match {
@@ -454,9 +467,35 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   protected def cloneRoot: Ref.View[Node[A, B]] = Ref(frozenRoot).single
 
-  protected def singleSizeGE(n: Int): Boolean = frozenRoot.cappedSize(n) >= n
-  
+  protected def setIterator: Iterator[A] = frozenRoot.setIterator
+
+  protected def mapIterator: Iterator[(A, B)] = frozenRoot.mapIterator
+
+  //////////////// whole-trie operations on Ref.View
+
+  protected def singleIsEmpty: Boolean = impl.STMImpl.instance.dynCurrentOrNull match {
+    case null => frozenRoot.cappedSize(1) == 0
+    case txn => txnIsEmpty(txn)
+  }
+
   protected def singleSize: Int = frozenRoot.cappedSize(Int.MaxValue)
+
+  protected def singleSetForeach[U](f: A => U) {
+    // don't freeze the root if we use .single in a txn
+    impl.STMImpl.instance.dynCurrentOrNull match {
+      case null => frozenRoot.setForeach(f)
+      case txn => txnSetForeach(f)(txn)
+    }
+  }
+
+  protected def singleMapForeach[U](f: ((A, B)) => U) {
+    impl.STMImpl.instance.dynCurrentOrNull match {
+      case null => frozenRoot.mapForeach(f)
+      case txn => txnMapForeach(f)(txn)
+    }
+  }
+
+  //////// single-key operations for Ref.View
 
   protected def singleContains(key: A): Boolean = singleContains(root, 0, keyHash(key), key)
 
@@ -627,16 +666,19 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
       failingRemove(hash, key)
   }
 
-  protected def singleSetForeach[U](f: A => U) { frozenRoot.setForeach(f) }
 
-  protected def singleMapForeach[U](f: ((A, B)) => U) { frozenRoot.mapForeach(f) }
+  //////////////// whole-trie operations when an InTxn is available
 
-  protected def setIterator: Iterator[A] = frozenRoot.setIterator
+  // visitation doesn't need to freeze the root, because we know that the
+  // entire visit is part of an atomic block
 
-  protected def mapIterator: Iterator[(A, B)] = frozenRoot.mapIterator
+  protected def txnIsEmpty(implicit txn: InTxn): Boolean = root().txnIsEmpty
 
+  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) { root().setForeach(f) }
 
-  //////////////// hash trie operations on Ref, requiring an InTxn
+  protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
+
+  //////////////// per-key operations when an InTxn is available
 
   protected def txnContains(key: A)(implicit txn: InTxn): Boolean = txnContains(root.ref, 0, keyHash(key), key)(txn)
 
@@ -759,12 +801,4 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
       }
     }
   }
-
-  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) {
-    // no need to freeze the root, because we know that the entire visit is
-    // part of an atomic block
-    root().setForeach(f)
-  }
-
-  protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
 }

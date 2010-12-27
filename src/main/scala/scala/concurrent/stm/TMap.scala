@@ -86,25 +86,28 @@ trait TMap[A, B] {
   // used.  We add transactional versions of them to allow overrides to get
   // access to the InTxn instance without a ThreadLocal lookup.
 
-  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn) { single.foreach(f) }
-  def contains(key: A)(implicit txn: InTxn): Boolean = single.contains(key)
-  def apply(key: A)(implicit txn: InTxn): B = single(key)
-  def get(key: A)(implicit txn: InTxn): Option[B] = single.get(key)
-  def update(key: A, value: B)(implicit txn: InTxn) { single.update(key, value) }
-  def put(key: A, value: B)(implicit txn: InTxn): Option[B] = single.put(key, value)
-  def remove(key: A)(implicit txn: InTxn): Option[B] = single.remove(key)
+  def isEmpty(implicit txn: InTxn): Boolean
+  def size(implicit txn: InTxn): Int
+  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn)
+  def contains(key: A)(implicit txn: InTxn): Boolean
+  def apply(key: A)(implicit txn: InTxn): B
+  def get(key: A)(implicit txn: InTxn): Option[B]
+  def update(key: A, value: B)(implicit txn: InTxn) { put(key, value) }
+  def put(key: A, value: B)(implicit txn: InTxn): Option[B]
+  def remove(key: A)(implicit txn: InTxn): Option[B]
 
   // The following methods return the wrong receiver when invoked via the asMap
   // conversion.  They are exactly the methods of mutable.Map whose return type
   // is this.type.  Note that there are other methods of mutable.Map that we
   // allow to use the implicit mechanism, such as getOrElseUpdate(k).
   
-  def += (kv: (A, B))(implicit txn: InTxn): this.type = { single += kv ; this }
-  def += (kv1: (A, B), kv2: (A, B), kvs: (A, B)*)(implicit txn: InTxn): this.type = { single.+= (kv1, kv2, kvs: _*) ; this }
-  def ++= (kvs: TraversableOnce[(A, B)])(implicit txn: InTxn): this.type = { single ++= kvs ; this }
-  def -= (k: A)(implicit txn: InTxn): this.type = { single -= k ; this }
-  def -= (k1: A, k2: A, ks: A*)(implicit txn: InTxn): this.type = { single.-= (k1, k2, ks: _*) ; this }
-  def --= (ks: TraversableOnce[A])(implicit txn: InTxn): this.type = { single --= ks ; this }
-  def transform(f: (A, B) => B)(implicit txn: InTxn): this.type = { single transform f ; this }
-  def retain(p: (A, B) => Boolean)(implicit txn: InTxn): this.type = { single retain p ; this }
+  def += (kv: (A, B))(implicit txn: InTxn): this.type = { put(kv._1, kv._2) ; this }
+  def += (kv1: (A, B), kv2: (A, B), kvs: (A, B)*)(implicit txn: InTxn): this.type = { this += kv1 += kv2 ++= kvs }
+  def ++= (kvs: TraversableOnce[(A, B)])(implicit txn: InTxn): this.type = { for (kv <- kvs) this += kv ; this }
+  def -= (k: A)(implicit txn: InTxn): this.type = { remove(k) ; this }
+  def -= (k1: A, k2: A, ks: A*)(implicit txn: InTxn): this.type = { this -= k1 -= k2 --= ks }
+  def --= (ks: TraversableOnce[A])(implicit txn: InTxn): this.type = { for (k <- ks) this -= k ; this }
+
+  def transform(f: (A, B) => B)(implicit txn: InTxn): this.type
+  def retain(p: (A, B) => Boolean)(implicit txn: InTxn): this.type
 }

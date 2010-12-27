@@ -83,25 +83,27 @@ trait TSet[A] {
   def clone(implicit txn: InTxn): TSet[A] = single.clone.tset
 
   // The following methods work fine via the asSet mechanism, but are heavily
-  // used.  We add transactional versions of them to allow overrides to get
-  // access to the InTxn instance without a ThreadLocal lookup.
+  // used.  We add transactional versions of them to allow overrides.
 
-  def foreach[U](f: A => U)(implicit txn: InTxn) { single.foreach(f) }
-  def contains(elem: A)(implicit txn: InTxn): Boolean = single.contains(elem)
+  def isEmpty(implicit txn: InTxn): Boolean
+  def size(implicit txn: InTxn): Int
+  def foreach[U](f: A => U)(implicit txn: InTxn)
+  def contains(elem: A)(implicit txn: InTxn): Boolean
   def apply(elem: A)(implicit txn: InTxn): Boolean = contains(elem)
-  def add(elem: A)(implicit txn: InTxn): Boolean = single.add(elem)
-  def update(elem: A, included: Boolean)(implicit txn: InTxn) { if (included) this += elem else this -= elem }
-  def remove(elem: A)(implicit txn: InTxn): Boolean = single.remove(elem)
+  def add(elem: A)(implicit txn: InTxn): Boolean
+  def update(elem: A, included: Boolean)(implicit txn: InTxn) { if (included) add(elem) else remove(elem) }
+  def remove(elem: A)(implicit txn: InTxn): Boolean
 
   // The following methods return the wrong receiver when invoked via the asSet
   // conversion.  They are exactly the methods of mutable.Set whose return type
   // is this.type.
   
-  def += (x: A)(implicit txn: InTxn): this.type = { single += x ; this }
-  def += (x1: A, x2: A, xs: A*)(implicit txn: InTxn): this.type = { single.+= (x1, x2, xs: _*) ; this }
-  def ++= (xs: TraversableOnce[A])(implicit txn: InTxn): this.type = { single ++= xs ; this }
-  def -= (x: A)(implicit txn: InTxn): this.type = { single -= x ; this }
-  def -= (x1: A, x2: A, xs: A*)(implicit txn: InTxn): this.type = { single.-= (x1, x2, xs: _*) ; this }
-  def --= (xs: TraversableOnce[A])(implicit txn: InTxn): this.type = { single --= xs ; this }
-  def retain(p: A => Boolean)(implicit txn: InTxn): this.type = { single retain p ; this }
+  def += (x: A)(implicit txn: InTxn): this.type = { add(x) ; this }
+  def += (x1: A, x2: A, xs: A*)(implicit txn: InTxn): this.type = { this += x1 += x2 ++= xs }
+  def ++= (xs: TraversableOnce[A])(implicit txn: InTxn): this.type = { for (x <- xs) this += x ; this }
+  def -= (x: A)(implicit txn: InTxn): this.type = { remove(x) ; this }
+  def -= (x1: A, x2: A, xs: A*)(implicit txn: InTxn): this.type = { this -= x1 -= x2 --= xs }
+  def --= (xs: TraversableOnce[A])(implicit txn: InTxn): this.type = { for (x <- xs) this -= x ; this }
+
+  def retain(p: A => Boolean)(implicit txn: InTxn): this.type
 }
