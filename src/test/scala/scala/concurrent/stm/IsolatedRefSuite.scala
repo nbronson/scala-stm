@@ -43,7 +43,7 @@ class IsolatedRefSuite extends FunSuite {
     def get: A = ref.get
     def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
-    def retryUntil(f: A => Boolean) { if (!f(get)) retry }
+    def await(f: A => Boolean) { if (!f(get)) retry }
     def set(v: A) { ref.set(v) }
     def trySet(v: A) = ref.trySet(v)
     def swap(v: A): A = ref.swap(v)
@@ -76,7 +76,7 @@ class IsolatedRefSuite extends FunSuite {
     def get: A = wrap { view.get }
     def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
-    def retryUntil(f: (A) => Boolean) { wrap { view.retryUntil(f) } }
+    def await(f: (A) => Boolean) { wrap { view.await(f) } }
     def set(v: A) { wrap { view.set(v) } }
     def trySet(v: A) = wrap { view.trySet(v) }
     def swap(v: A): A = wrap { view.swap(v) }

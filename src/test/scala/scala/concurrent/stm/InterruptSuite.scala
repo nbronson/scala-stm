@@ -30,19 +30,19 @@ class InterruptSuite extends FunSuite {
     }
   }
 
-  test("single retryUntil arriving interrupt") {
+  test("single await arriving interrupt") {
     delayedInterrupt(100)
     val x = Ref(0)
     intercept[InterruptedException] {
-      x.single.retryUntil( _ != 0 )
+      x.single.await( _ != 0 )
     }
   }
 
-  test("single retryUntil pending interrupt") {
+  test("single await pending interrupt") {
     Thread.currentThread.interrupt
     val x = Ref(0)
     intercept[InterruptedException] {
-      x.single.retryUntil( _ != 0 )
+      x.single.await( _ != 0 )
     }
   }
 

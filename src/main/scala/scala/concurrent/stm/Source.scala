@@ -52,7 +52,7 @@ object Source {
      *  context.  Requires that the predicate be safe to reevaluate, and that
      *  `f(x) == f(y)` if `x == y`.
      *
-     *  `v.retryUntil(f)` is equivalent to {{{
+     *  `v.await(f)` is equivalent to {{{
      *    atomic { implicit t =>
      *      if (!f(v.get)) retry
      *    }
@@ -62,7 +62,7 @@ object Source {
      *  then use `retry` directly.
      *  @param f a predicate that is safe to evaluate multiple times.
      */
-    def retryUntil(f: A => Boolean)
+    def await(f: A => Boolean)
   }
 }
 

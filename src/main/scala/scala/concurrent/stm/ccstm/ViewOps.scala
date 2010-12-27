@@ -20,7 +20,7 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case null => NonTxn.get(handle)
     case txn => txn.relaxedGet(handle, equiv)
   }
-  def retryUntil(f: T => Boolean): Unit = InTxnImpl.dynCurrentOrNull match {
+  def await(f: T => Boolean): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.await(handle, f)
     case txn => if (!f(txn.get(handle))) Txn.retry(txn)
   }

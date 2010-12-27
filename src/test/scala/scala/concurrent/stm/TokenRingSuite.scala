@@ -54,7 +54,7 @@ class TokenRingSuite extends FunSuite {
           barrier.await
           for (h <- 0 until handoffsPerThread) {
             if (!useTxns) {
-              ready(index).single retryUntil { _ == true }
+              ready(index).single await { _ == true }
               ready(index).single() = false
               ready(next).single() = true
             } else {
