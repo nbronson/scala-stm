@@ -174,8 +174,11 @@ private[ccstm] object CCSTM extends GV6 {
     var spins = 0
     while (true) {
       spins += 1
-      if (spins > SpinCount)
+      if (spins > SpinCount) {
+        if (Thread.interrupted)
+          throw new InterruptedException
         Thread.`yield`
+      }
 
       val m = handle.meta
       if (ownerAndVersion(m) != ownerAndVersion(m0)) 

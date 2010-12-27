@@ -99,18 +99,10 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     if (Stats.top != null)
       Stats.top.blockingAcquires += 1
 
-    var interrupted = false
     synchronized {
-      while (!status.completed) {
-        try {
-          wait
-        } catch {
-          case _: InterruptedException => interrupted = true
-        }
-      }
+      while (!status.completed)
+        wait
     }
-    if (interrupted)
-      Thread.currentThread.interrupt()
   }
 
 

@@ -39,8 +39,11 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
     while (s < reservedSlots || slots.get(s) != null || !slots.compareAndSet(s, null, txn)) {
       s = nextSlot(tries)
       tries += 1
-      if (tries > 100)
+      if (tries > 100) {
+        if (Thread.interrupted)
+          throw new InterruptedException
         Thread.`yield`
+      }
     }
     s
   }

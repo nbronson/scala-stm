@@ -109,18 +109,11 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
       }
     }
 
-    def await() { await(null) }
-
-    def await(currentTxn: TxnLevelImpl) {
+    def await {
       if (!_triggered) {
-        if (null != currentTxn)
-          currentTxn.requireActive()
         synchronized {
-          while (!_triggered) {
-            if (null != currentTxn)
-              currentTxn.requireActive()
+          while (!_triggered)
             wait
-          }
         }
       }
     }
