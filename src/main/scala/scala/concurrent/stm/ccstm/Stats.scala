@@ -74,17 +74,17 @@ private[ccstm] object Stats {
     }
   }
 
-  class Level {
+  class Level(isTop: Boolean) {
     val commits = new Counter
     val alternatives = new Histo(10)
-    val retrySet = new ExponentialHisto
+    val retrySet = if (isTop) new ExponentialHisto else null
     val explicitRetries = new Counter
     val optimisticRetries = new LazyCounterMap[Symbol]
     val failures = new LazyCounterMap[Class[_]] { override def toStr(k: Class[_]) = k.getSimpleName }
     val blockingAcquires = new Counter
-    val commitReadSet = new ExponentialHisto
-    val commitBargeSet = new ExponentialHisto
-    val commitWriteSet = new ExponentialHisto
+    val commitReadSet = if (isTop) new ExponentialHisto else null
+    val commitBargeSet = if (isTop) new ExponentialHisto else null
+    val commitWriteSet = if (isTop) new ExponentialHisto else null
     val rollbackReadSet = new ExponentialHisto
     val rollbackBargeSet = new ExponentialHisto
     val rollbackWriteSet = new ExponentialHisto
@@ -95,6 +95,7 @@ private[ccstm] object Stats {
         val name = f.getName
         val value = getClass.getDeclaredMethod(name).invoke(this)
         value match {
+          case null =>
           case c: Counter => buf += "%17s= %d".format(name, c())
           case m: LazyCounterMap[_] => {
             for ((k, v) <- m.contents)
@@ -111,8 +112,8 @@ private[ccstm] object Stats {
     }
   }
 
-  val top = if (Enabled) new Level else null
-  val nested = if (Enabled) new Level else null
+  val top = if (Enabled) new Level(true) else null
+  val nested = if (Enabled) new Level(false) else null
   registerShutdownHook()
 
   private def registerShutdownHook() {
