@@ -244,6 +244,53 @@ private[ccstm] object CCSTM extends GV6 {
  *  overhead of non-transactional accesses, allow partial rollback, and include
  *  modular blocking and composition operators `retry` and `orAtomic`.
  *
+ *  During construction the system property "ccstm.stats" is checked.  If it is
+ *  "true" or "1" (actually if it starts with any of the characters 't', 'T',
+ *  'y', 'Y', or '1') then statistics are recorded while the program runs and
+ *  printed to `Console` during JVM shutdown.
+ *
+ *  Statistics are tracked separately for top-level transactions and true
+ *  nested transactions.  Many nested atomic blocks can be merged into the
+ *  top-level transaction by CCSTM for efficiency; these are not reported as
+ *  nested.
+ *
+ *  Reported statistics are either counts or exponential histograms.  For
+ *  histograms `sum` is the sum of the samples, `count` is the number of
+ *  transactions for which the statistic was non-zero, `avg` is `sum/count`
+ *  and the histogram reports in brackets the number of samples that had a
+ *  value of 1, 2..3, 4..7, 8..15, and so on.
+ *
+ *  Counters:
+ *  - `commits` -- committed transactions
+ *  - `alternatives` -- alternatives provided to `atomic`, one sample per call
+ *    to `atomic`
+ *  - `retrySet` -- memory locations watched while performing modular
+ *    blocking, one sample per top-level blocking event
+ *  - `explicitRetries` -- explicit retries using `retry` or
+ *    `Ref.View.retryUntil`
+ *  - `optimisticRetries` -- rollbacks that were automatically retried, one
+ *    line per `OptimisticFailureCause.category`
+ *  - `failures` -- rollbacks that were not retried, one line for each type of
+ *    exception in `UncaughtExceptionCause`
+ *  - `blockingAcquires` -- internal locks that could not be acquired
+ *    immediately
+ *  - `commitReadSet` -- optimistic `Ref` reads, one sample per committed
+ *    top-level transaction
+ *  - `commitBargeSet` -- locations read pessimistically, one sample per
+ *    committed top-level transaction
+ *  - `commitWriteSet` -- locations written, one sample per committed
+ *    top-level transaction
+ *  - `rollbackReadSet` -- optimistic `Ref` reads, one sample per transaction
+ *    that was rolled back
+ *  - `rollbackBargeSet` -- locations read pessimistically, one sample per
+ *    transaction that was rolled back
+ *  - `rollbackWriteSet` -- locations written pessimistically, one sample per
+ *    transaction that was rolled back
+ *
+ *  Read and write set counts for a nested transaction are merged into its
+ *  parent if it commits, they are not counted separately during the nested
+ *  commit.
+ *
  *  @author Nathan Bronson
  */
 class CCSTM extends CCSTMExecutor with impl.STMImpl with CCSTMRefs.Factory {
