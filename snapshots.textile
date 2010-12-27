@@ -3,18 +3,14 @@ layout: default
 title: Snapshot releases
 ---
 
-Changes between 0.1 and 0.2-SNAPSHOT:
-
-* Substantial performance improvements, especially for nested atomic blocks.  Nested atomic blocks without @orAtomic@ are optimistically subsumed, then retried without subsumption if partial rollback is needed.
-
-* @TSet.View@ and @TMap.View@ are integrated into the Scala collection class hierarchy, with factory companion objects and @Builder@ and @CanBuildFrom@ instances.
+There are no changes between 0.2 and 0.3-SNAPSHOT yet.
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.8.1-0.2-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.8.1/0.2-SNAPSHOT/scala-stm_2.8.1-0.2-SNAPSHOT.jar]
-* ScalaDoc: ["0.2-SNAPSHOT":api/0.2-SNAPSHOT/index.html]
+* Manual download: ["scala-stm_2.8.1-0.3-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.8.1/0.3-SNAPSHOT/scala-stm_2.8.1-0.3-SNAPSHOT.jar]
+* ScalaDoc: ["0.3-SNAPSHOT":api/0.3-SNAPSHOT/index.html]
 
 h2(#sbt). SBT
 
@@ -23,7 +19,7 @@ Tell @sbt@ about the @scala-tools.org@ snapshot repository and the ScalaSTM arti
 {% highlight scala %}
 val scala_tools_snapshots = ("Scala-Tools Maven2 Repository - snapshots" at
     "http://scala-tools.org/repo-snapshots")
-val scala_stm = "org.scala-tools" %% "scala-stm" % "0.2-SNAPSHOT"
+val scala_stm = "org.scala-tools" %% "scala-stm" % "0.3-SNAPSHOT"
 {% endhighlight %}
 
 @sbt update@ will download the latest @scala-stm@ snapshot JAR and make it available for building.
@@ -37,7 +33,7 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.8.1</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
   </dependency>
 </dependencies>
 {% endhighlight %}

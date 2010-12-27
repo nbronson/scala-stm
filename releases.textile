@@ -3,16 +3,25 @@ layout: default
 title: Releases
 ---
 
-The latest release of ScalaSTM is version 0.1.  To get it you can
-* use sbt or maven2 dependency management, or
-* download a prebuilt JAR: ["scala-stm_2.8.1-0.1.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.1/scala-stm_2.8.1-0.1.jar].
+The latest release of ScalaSTM is version 0.2.  To get it you can
+* follow "sbt instructions":#sbt or "maven2 instructions":#maven, or
+* download a prebuilt JAR: ["scala-stm_2.8.1-0.2.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.2/scala-stm_2.8.1-0.2.jar].
+
+h2(#notes). Release notes
+
+Changes between 0.1 and 0.2
+* Substantial performance improvements, especially for nested atomic blocks.  Nested atomic blocks without @orAtomic@ are optimistically subsumed (run directly in their parent transaction), then retried without subsumption if partial rollback is needed.
+* @TSet.View@ and @TMap.View@ are integrated into the Scala collection class hierarchy, with factory companion objects and @Builder@ and @CanBuildFrom@ instances.
+* A fix for @whileCommitting@ handlers (issue ["#3":https://github.com/nbronson/scala-stm/issues/closed#issue/3]).
+* @TxnLocal@ can now be read and written from while-preparing and while-committing handlers.  Combining @TxnLocal@ and life-cycle handlers is now more concise.
+* Transaction statistics can be enabled for the default algorithm with the VM argument @-Dccstm.stats=1@ (for more information see the ScalaDoc for @scala.concurrent.stm.ccstm.CCSTM@).
 
 h2(#sbt). SBT
 
 Tell @sbt@ about a dependency on ScalaSTM by adding the following line to your project definition class (in @project/build@)
 
 {% highlight scala %}
-val scala_stm = "org.scala-tools" %% "scala-stm" % "0.1"
+val scala_stm = "org.scala-tools" %% "scala-stm" % "0.2"
 {% endhighlight %}
 
 @sbt update@ will then download the correct @scala-stm@ JAR and use it for building.
@@ -26,9 +35,16 @@ Separate artifacts are published for each version of Scala, so the desired Scala
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.8.1</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
   </dependency>
 </dependencies>
 {% endhighlight %}
 
 The deployment tests inside the ScalaSTM source include a complete ["pom.xml":https://github.com/nbronson/scala-stm/blob/master/dep_tests/maven/pom.xml], including the repository configuration for @org.scala-tools@.
+
+h2(#previous). Previous releases
+
+Version 0.1
+* Manual download: ["scala-stm_2.8.1-0.1.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.1/scala-stm_2.8.1-0.1.jar]
+* ScalaDoc: "0.1":api/0.1/index.html
+

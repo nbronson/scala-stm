@@ -11,7 +11,7 @@ h2(#install).  Install
 If you use @sbt@, add the following dependency to your project definition class and then run @sbt update@.  Maven2 configuration and manual download links are "here":releases.html.
 
 {% highlight scala %}
-val scala_stm = "org.scala-tools" %% "scala-stm" % "0.1"
+val scala_stm = "org.scala-tools" %% "scala-stm" % "0.2"
 {% endhighlight %}
 
 
@@ -37,7 +37,7 @@ To make the code simpler we make the list circular, with an extra header node.  
 
 h2(#atomic).  Wrap your code in atomic
 
-If @x@ is a @Ref@, then @x()@ returns the value stored in @x@, and @x() = v@ updates it to the value @v@.
+If @x@ is a @Ref@, then @x()@ gets the value stored in @x@, and @x() = v@ sets it to the value @v@.
 
 @Ref@-s can only be read and written inside an atomic block.  This is checked at compile time by requiring that an implicit @InTxn@ value be available.  Atomic blocks are functions that take an @InTxn@ parameter, so this requirement can be satisfied by marking the parameter as implicit.
 
