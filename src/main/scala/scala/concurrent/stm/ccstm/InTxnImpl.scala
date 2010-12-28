@@ -110,7 +110,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   def currentLevel: NestingLevel = {
     if (_subsumptionParent != null) {
       _subsumptionAllowed = false
-      _subsumptionParent.forceRollback(Txn.OptimisticFailureCause('restart_to_materialize_current_level, None))
+      _subsumptionParent.forceRollback(OptimisticFailureCause('restart_to_materialize_current_level, None))
       throw RollbackError
     }
     _currentLevel
@@ -169,7 +169,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       block(this)
     } catch {
       case x if x != RollbackError && !exec.isControlFlow(x) => {
-        _currentLevel.forceRollback(Txn.UncaughtExceptionCause(x))
+        _currentLevel.forceRollback(UncaughtExceptionCause(x))
         null.asInstanceOf[Z]
       }
     }
@@ -177,9 +177,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def rethrowFromStatus(status: Status) {
     status match {
-      case rb: Txn.RolledBack => {
+      case rb: RolledBack => {
         rb.cause match {
-          case Txn.UncaughtExceptionCause(x) => throw x
+          case UncaughtExceptionCause(x) => throw x
           case _ => throw RollbackError
         }
       }
@@ -228,7 +228,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         case x if x != RollbackError && !exec.isControlFlow(x) => {
           // partial rollback is required, but we can't do it here
           _subsumptionAllowed = false
-          _currentLevel.forceRollback(Txn.OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
+          _currentLevel.forceRollback(OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
           throw RollbackError
         }
       }
@@ -378,7 +378,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       val h = readHandle(i)
       val problem = checkRead(h, readVersion(i))
       if (problem != null) {
-        readLocate(i).asInstanceOf[NestingLevel].requestRollback(Txn.OptimisticFailureCause(problem, Some(h)))
+        readLocate(i).asInstanceOf[NestingLevel].requestRollback(OptimisticFailureCause(problem, Some(h)))
         return false
       }
       i += 1
@@ -420,7 +420,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           val s = o.status
           val m2 = handle.meta
           if (changing(m2) && owner(m2) == owner(m1)) {
-            if (!s.isInstanceOf[Txn.RolledBack])
+            if (!s.isInstanceOf[RolledBack])
               return 'read_vs_pending_commit
 
             stealHandle(handle, m2, o)
@@ -447,7 +447,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       resolveAsWWLoser(owningRoot, contended, false, 'owner_has_priority)
     } else {
       // This will resolve the conflict regardless of whether it succeeds or fails.
-      val s = owningRoot.requestRollback(Txn.OptimisticFailureCause('steal_by_higher_priority, Some(contended)))
+      val s = owningRoot.requestRollback(OptimisticFailureCause('steal_by_higher_priority, Some(contended)))
       if (s == Preparing || s == Committing) {
         // owner can't be remotely canceled
         val msg = if (s == Preparing) 'owner_is_preparing else 'owner_is_committing
@@ -462,7 +462,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // invalidate one nested atomic block.  Nothing will get better for us
       // until the current owner completes or this txn has a higher priority,
       // however.
-      _currentLevel.forceRollback(Txn.OptimisticFailureCause(msg, Some(contended)))
+      _currentLevel.forceRollback(OptimisticFailureCause(msg, Some(contended)))
       throw RollbackError
     }
   }
@@ -530,7 +530,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel = child
   }
 
-  private def nestedComplete(exec: TxnExecutor): Txn.Status = {
+  private def nestedComplete(exec: TxnExecutor): Status = {
     val child = _currentLevel
     if (child.attemptMerge()) {
       // child was successfully merged
@@ -542,7 +542,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
       // we handle explicit retry by retaining (merging) the read set while
       // rolling back the writes and firing after-rollback handlers
-      if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
+      if (s.asInstanceOf[RolledBack].cause == ExplicitRetryCause)
         retainRetrySet()
 
       // callbacks must be last, because they might throw an exception
@@ -576,10 +576,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def topLevelComplete(exec: TxnExecutor): Status = {
     if (attemptTopLevelComplete(exec)) {
       finishTopLevelCommit(exec)
-      Txn.Committed
+      Committed
     } else {
       val s = this.status
-      if (s.asInstanceOf[Txn.RolledBack].cause == ExplicitRetryCause)
+      if (s.asInstanceOf[RolledBack].cause == ExplicitRetryCause)
         finishTopLevelRetry(exec, s)
       else
         finishTopLevelRollback(exec, s)
@@ -597,10 +597,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     val f = _pendingFailure
     _pendingFailure = null
-    fireAfterCompletionAndThrow(handlers, exec, Txn.Committed, f)
+    fireAfterCompletionAndThrow(handlers, exec, Committed, f)
   }
 
-  private def finishTopLevelRollback(exec: TxnExecutor, s: Txn.Status) {
+  private def finishTopLevelRollback(exec: TxnExecutor, s: Status) {
     rollbackAccessHistory(_slot, s)
     val handlers = rollbackCallbacks()
     detach()
@@ -610,7 +610,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     fireAfterCompletionAndThrow(handlers, exec, s, f)
   }
 
-  private def finishTopLevelRetry(exec: TxnExecutor, s: Txn.Status) {
+  private def finishTopLevelRetry(exec: TxnExecutor, s: Status) {
     retainRetrySet()
     rollbackAccessHistory(_slot, s)
     val handlers = rollbackCallbacks()
