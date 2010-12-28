@@ -11,9 +11,13 @@ p(faqq). *Q.* Why do you have both @Ref@ and @Ref.View@?
 
 p(faqa). *A.* @Ref@ operations can only be called inside an @atomic@ block.  @Ref.View@ allows access to the underlying mutable cell both inside or outside a transaction.  We separated them so that you have to take an explicit step to bypass the safety of @atomic@.  The implicit @InTxn@ instance passed to @Ref@ methods also provides a small performance boost.
 
-p(faqq). *Q.* Don't @Ref@-s and @Ref.View@-s result in a lot of wasted memory?
+p(faqq). *Q.* Can I use @Ref.View@ all the time if I want?
 
-p(faqa). *A.* Underneath, a single instance can implement both @Ref@ and @Ref.View@.  If it is known when creating a @Ref@ that it holds a primitive value, then the returned instance can be specialized to the primitive type to avoid long-term boxing.  In the reference implementation a @Ref[Int]@ is 8 bytes larger than a boxed @Int@.
+p(faqa). *A.* If your program is correct using @Ref@ then it will still be correct after replacing @Ref@ with @Ref.View@, but there will be no compile-time or run-time checking that accesses are inside an atomic block.
+
+p(faqq). *Q.* Doesn't having both @Ref@-s and @Ref.View@-s result in a lot of wasted memory?
+
+p(faqa). *A.* Underneath, a single instance can implement both @Ref@ and @Ref.View@.  Also, if it is known when creating a @Ref@ that it holds a primitive value, the returned instance can be specialized to the primitive type to avoid long-term boxing.  In the reference implementation a @Ref[Int]@ is 8 bytes larger than a boxed @Int@.
 
 p(faqq). *Q.* I want to make a big array of primitive values, won't @Array[Ref[Int]]@ be too wasteful then?
 
