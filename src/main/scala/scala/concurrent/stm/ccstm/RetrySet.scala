@@ -24,7 +24,7 @@ private[ccstm] class RetrySet(val size: Int,
 
     if (Stats.top != null) {
       Stats.top.retrySet += size
-      Stats.top.retryWaitElapsed += (actualElapsed max Int.MaxValue).asInstanceOf[Int]
+      Stats.top.retryWaitElapsed += (actualElapsed min Int.MaxValue).asInstanceOf[Int]
     }
 
     // to cause the proper retryFor to wake up we need to present an illusion

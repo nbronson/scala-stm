@@ -272,6 +272,8 @@ private[ccstm] object CCSTM extends GV6 {
  *    to `atomic`
  *  - `retrySet` -- memory locations watched while performing modular
  *    blocking, one sample per top-level blocking event
+ *  - `retryWaitElapsed` -- milliseconds elapsed during modular blocking, one
+ *    sample per top-level blocking event
  *  - `explicitRetries` -- explicit retries using `retry`, `retryFor`,
  *    `Ref.View.await` or `Ref.View.tryAwait`
  *  - `optimisticRetries` -- rollbacks that were automatically retried, one
