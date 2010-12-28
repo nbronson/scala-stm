@@ -420,6 +420,14 @@ class TxnSuite extends FunSuite {
     assert(buf.result === "aabc")
   }
 
+  test("retryFor as sleep") {
+    val begin = System.currentTimeMillis
+    atomic { implicit txn => retryFor(100) }
+    val elapsed = System.currentTimeMillis - begin
+    println("retryFor(100) as sleep took " + elapsed + " millis")
+    assert(elapsed >= 100 && elapsed < 200)
+  }
+
   test("View in txn") {
     val x = Ref(10)
     val xs = x.single

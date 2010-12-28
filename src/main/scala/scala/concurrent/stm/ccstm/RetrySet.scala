@@ -15,6 +15,9 @@ private[ccstm] class RetrySet(val size: Int,
     // this should be enforced by the logic in Txn
     assert(timeoutMillis.isEmpty || timeoutMillis.get > prevCumulativeWait)
 
+    if (size == 0 && timeoutMillis.isEmpty)
+      throw new IllegalStateException("explicit retries cannot succeed because cumulative read set is empty")
+
     val begin = System.currentTimeMillis
     val deadline = if (timeoutMillis.isEmpty) Long.MaxValue else begin + timeoutMillis.get - prevCumulativeWait
 
@@ -41,12 +44,10 @@ private[ccstm] class RetrySet(val size: Int,
   private def attemptAwait(deadline: Long): Boolean = {
     // Spin a few times, counting one spin per read set element
     var spins = 0
-    while (spins < SpinCount + YieldCount) {
+    while (size > 0 && spins < SpinCount + YieldCount) {
       if (changed)
         return true
       spins += size
-      if (spins == 0)
-        throw new IllegalStateException("explicit retries cannot succeed because cumulative read set is empty")
       if (spins > SpinCount) {
         Thread.`yield`
         if (deadline != Long.MaxValue && System.currentTimeMillis > deadline)
