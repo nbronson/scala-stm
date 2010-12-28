@@ -16,7 +16,7 @@ private[ccstm] class RetrySet(val size: Int,
     assert(timeoutMillis.isEmpty || timeoutMillis.get > prevCumulativeWait)
 
     val begin = System.currentTimeMillis
-    val deadline = timeoutMillis map { begin + _ - prevCumulativeWait } getOrElse Long.MaxValue
+    val deadline = if (timeoutMillis.isEmpty) Long.MaxValue else begin + timeoutMillis.get - prevCumulativeWait
 
     val timeoutExceeded = !attemptAwait(deadline)
 
@@ -24,7 +24,7 @@ private[ccstm] class RetrySet(val size: Int,
 
     if (Stats.top != null) {
       Stats.top.retrySet += size
-      Stats.top.retryWaitElapsed += (actualElapsed min Int.MaxValue).asInstanceOf[Int]
+      Stats.top.retryWaitElapsed += math.min(actualElapsed, Int.MaxValue).asInstanceOf[Int]
     }
 
     // to cause the proper retryFor to wake up we need to present an illusion
@@ -33,7 +33,7 @@ private[ccstm] class RetrySet(val size: Int,
     //  reportedElapsed = min(now, deadline) - begin
     //  reportedElapsed = min(now - begin, deadline - begin)
     //  newCumulativeWait = prevCumulativeWait + reportedElapsed
-    prevCumulativeWait + (actualElapsed min (deadline - begin))
+    prevCumulativeWait + math.min(actualElapsed, deadline - begin)
   }
 
   /** Returns true if something changed, false if the deadline was reached. */
@@ -49,7 +49,7 @@ private[ccstm] class RetrySet(val size: Int,
         throw new IllegalStateException("explicit retries cannot succeed because cumulative read set is empty")
       if (spins > SpinCount) {
         Thread.`yield`
-        if (deadline != 0L && System.currentTimeMillis > deadline)
+        if (deadline != Long.MaxValue && System.currentTimeMillis > deadline)
           return false
       }
     }
