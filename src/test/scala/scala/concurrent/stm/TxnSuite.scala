@@ -363,6 +363,63 @@ class TxnSuite extends FunSuite {
     assert(s === "second")
   }
 
+  test("retryFor ladder") {
+    val buf = new StringBuilder
+    val x = Ref(0)
+    atomic { implicit txn =>
+      buf += 'a'
+      retryFor(1)
+      buf += 'b'
+      retryFor(2)
+      buf += 'c'
+      retryFor(2)
+      buf += 'd'
+      retryFor(3)
+      buf += 'e'
+      retryFor(4)
+      buf += 'f'
+    } orAtomic { implicit txn =>
+      if (x() == 0) retry
+    }
+    assert(buf.result === "aababcdabcdeabcdef")
+  }
+
+  test("late start retryFor") {
+    val x = Ref(0)
+    val begin = System.currentTimeMillis
+    (new Thread { override def run { Thread.sleep(100) ; x.single() = 1 } }).start
+    val buf = new StringBuilder
+    atomic { implicit txn =>
+      buf += 'a'
+      if (x() == 0) retry
+      buf += 'b'
+      retryFor(200)
+      buf += 'c'
+    }
+    val elapsed = System.currentTimeMillis - begin
+    println("late start retryFor(200) inside atomic took " + elapsed + " millis")
+    assert(elapsed >= 200 && elapsed < 300)
+    assert(buf.result === "aababc")
+  }
+
+  test("expired start retryFor") {
+    val x = Ref(0)
+    val begin = System.currentTimeMillis
+    (new Thread { override def run { Thread.sleep(200) ; x.single() = 1 } }).start
+    val buf = new StringBuilder
+    atomic { implicit txn =>
+      buf += 'a'
+      if (x() == 0) retry
+      buf += 'b'
+      retryFor(100)
+      buf += 'c'
+    }
+    val elapsed = System.currentTimeMillis - begin
+    println("expired(200) start retryFor(100) inside atomic took " + elapsed + " millis")
+    assert(elapsed >= 200 && elapsed < 300)
+    assert(buf.result === "aabc")
+  }
+
   test("View in txn") {
     val x = Ref(10)
     val xs = x.single
