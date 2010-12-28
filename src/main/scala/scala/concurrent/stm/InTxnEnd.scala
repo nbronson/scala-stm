@@ -18,6 +18,7 @@ trait InTxnEnd extends MaybeTxn {
   protected[stm] def status: Status
   protected[stm] def rootLevel: NestingLevel
   protected[stm] def currentLevel: NestingLevel
+  protected[stm] def cumulativeBlockingMillis: Long
   protected[stm] def rollback(cause: RollbackCause): Nothing
   protected[stm] def beforeCommit(handler: InTxn => Unit)
   protected[stm] def whilePreparing(handler: InTxnEnd => Unit)

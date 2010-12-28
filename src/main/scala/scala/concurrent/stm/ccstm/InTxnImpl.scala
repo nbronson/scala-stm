@@ -90,6 +90,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   private var _readVersion: Version = 0
 
+  private var _cumulativeBlockingMillis = 0L
+
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" +
             (if (_currentLevel == null) "Detached" else status.toString) +
@@ -100,7 +102,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
             ", bargeCount=" + bargeCount +
             ", writeCount=" + writeCount +
             ", readVersion=0x" + _readVersion.toHexString +
-            (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") + ")")
+            (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") +
+            ", cumulativeBlockingMillis=" + _cumulativeBlockingMillis + ")")
   }
 
   //////////////// High-level behaviors
@@ -115,6 +118,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
     _currentLevel
   }
+
+  def cumulativeBlockingMillis = _cumulativeBlockingMillis
 
   @throws(classOf[InterruptedException])
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
@@ -200,14 +205,28 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         case RollbackError =>
       }
       // we are only here if it is a transient rollback or an explicit retry
-      if (level.status.asInstanceOf[RolledBack].cause == ExplicitRetryCause) {
+      if (isExplicitRetry(level.status)) {
+        val timeout = level.status.asInstanceOf[RolledBack].cause.asInstanceOf[ExplicitRetryCause].timeoutMillis
         level = null // help the GC while waiting
-        awaitRetry()
+        awaitRetry(timeout)
         prevFailures = 0
       } else {
         prevFailures += 1 // transient rollback, retry
       }
     }).asInstanceOf[Nothing]
+  }
+
+  private def isExplicitRetry(status: Status): Boolean = isExplicitRetry(status.asInstanceOf[RolledBack].cause)
+
+  private def isExplicitRetry(cause: RollbackCause): Boolean = cause.isInstanceOf[ExplicitRetryCause]
+
+  private def min(a: ExplicitRetryCause, b: ExplicitRetryCause): ExplicitRetryCause = {
+    if (a == null || a.timeoutMillis.isEmpty)
+      b
+    else if (b == null || b.timeoutMillis.isEmpty || a.timeoutMillis.get < b.timeoutMillis.get)
+      a
+    else
+      b
   }
 
   private def nestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
@@ -251,10 +270,11 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         case RollbackError =>
       }
       // we are only here if it is a transient rollback or an explicit retry
-      if (level.status.asInstanceOf[RolledBack].cause == ExplicitRetryCause) {
+      val cause = level.status.asInstanceOf[RolledBack].cause
+      if (isExplicitRetry(cause)) {
         // Reads are still in access history.  Retry the parent, which will
-        // treat the reads as its own
-        _currentLevel.forceRollback(ExplicitRetryCause)
+        // treat the reads as its own.  The cause holds the timeout, if any.
+        _currentLevel.forceRollback(cause)
         throw RollbackError
       }
       prevFailures += 1 // transient rollback, retry
@@ -264,7 +284,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   /** On commit, returns a Z or throws an exception other than `RollbackError`.
    *  On permanent rollback, throws an exception other than `RollbackError`.
    *  On nested explicit retry, throws `RollbackError` and sets the parent
-   *  level's status to `RolledBack(ExplicitRetryCause)`.  All other cases
+   *  level's status to `RolledBack(ExplicitRetryCause(_))`.  All other cases
    *  result in a retry within the method.
    */
   @throws(classOf[InterruptedException])
@@ -273,6 +293,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       recordAlternatives(alternatives)
 
     var reusedReadThreshold = -1
+    var prevRetryCause: Txn.ExplicitRetryCause = null
     (while (true) {
       var level: TxnLevelImpl = null
       var prevFailures = 0
@@ -296,7 +317,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
           case RollbackError =>
         }
         // we are only here if it is a transient rollback or an explicit retry
-        if (level.status.asInstanceOf[RolledBack].cause != ExplicitRetryCause) {
+        if (!isExplicitRetry(level.status)) {
           // transient rollback, retry (not as a phantom)
           prevFailures += 1
           reusedReadThreshold = -1
@@ -311,21 +332,24 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // (if all of the alternatives triggered retry), in which case we treat
       // them the same as a regular block with no alternatives.
       val phantom = reusedReadThreshold >= 0
+      val cause = level.status.asInstanceOf[RolledBack].cause.asInstanceOf[Txn.ExplicitRetryCause]
       if (!phantom && !alternatives.isEmpty) {
         // rerun a phantom
         reusedReadThreshold = level.prevReadCount
+        prevRetryCause = cause
       } else {
         level = null
+        prevRetryCause = min(prevRetryCause, cause)
 
         // no more alternatives, reads are still in access history
         if (_currentLevel != null) {
           // retry the parent, which will treat the reads as its own
-          _currentLevel.forceRollback(ExplicitRetryCause)
+          _currentLevel.forceRollback(prevRetryCause)
           throw RollbackError
         }
 
         // top-level retry after waiting for something to change
-        awaitRetry()
+        awaitRetry(prevRetryCause.timeoutMillis)
 
         // rerun the real block, now that the await has completed
         reusedReadThreshold = -1
@@ -342,7 +366,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     // before the status is set to rollback, because as soon as the top-level
     // txn is marked rollback other threads can steal ownership.  This is
     // harmless if some other type of rollback occurs.
-    if (cause == ExplicitRetryCause)
+    if (isExplicitRetry(cause))
       addLatestWritesAsReads(_barging)
 
     _currentLevel.forceRollback(cause)
@@ -540,13 +564,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     } else {
       val s = this.status
 
-      // we handle explicit retry by retaining (merging) the read set while
-      // rolling back the writes and firing after-rollback handlers
-      if (s.asInstanceOf[RolledBack].cause == ExplicitRetryCause)
-        retainRetrySet()
-
       // callbacks must be last, because they might throw an exception
-      rollbackAccessHistory(_slot, s)
+      rollbackAccessHistory(_slot, s.asInstanceOf[RolledBack].cause)
       val handlers = rollbackCallbacks()
       _currentLevel = child.parUndo
       if (handlers != null)
@@ -556,21 +575,21 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   @throws(classOf[InterruptedException])
-  private def awaitRetry() {
+  private def awaitRetry(timeoutMillis: Option[Long]) {
     assert(_slot >= 0)
     val rs = takeRetrySet(_slot)
+    val prevSum = _cumulativeBlockingMillis
     detach()
     val f = _pendingFailure
     if (f != null) {
       _pendingFailure = null
       throw f
     }
-    rs.awaitRetry()
-  }
-
-  private def retainRetrySet() {
-    // this will turn rollbackAccessHistory into a no-op for the reads
-    _currentLevel.retainReadsAndBarges = true
+    // Note that awaitRetry might throw an exception that cancels the retry
+    // forever.  In that case we have completely cleaned up, because detach()
+    // cleared _cumulativeBlockingMillis and the following assignment hasn't
+    // happened yet.
+    _cumulativeBlockingMillis = rs.awaitRetry(prevSum, timeoutMillis)
   }
 
   private def topLevelComplete(exec: TxnExecutor): Status = {
@@ -579,10 +598,11 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       Committed
     } else {
       val s = this.status
-      if (s.asInstanceOf[RolledBack].cause == ExplicitRetryCause)
-        finishTopLevelRetry(exec, s)
+      val c = s.asInstanceOf[RolledBack].cause
+      if (isExplicitRetry(c))
+        finishTopLevelRetry(exec, s, c)
       else
-        finishTopLevelRollback(exec, s)
+        finishTopLevelRollback(exec, s, c)
       s
     }
   }
@@ -600,8 +620,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     fireAfterCompletionAndThrow(handlers, exec, Committed, f)
   }
 
-  private def finishTopLevelRollback(exec: TxnExecutor, s: Status) {
-    rollbackAccessHistory(_slot, s)
+  private def finishTopLevelRollback(exec: TxnExecutor, s: Status, c: RollbackCause) {
+    rollbackAccessHistory(_slot, c)
     val handlers = rollbackCallbacks()
     detach()
 
@@ -610,9 +630,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     fireAfterCompletionAndThrow(handlers, exec, s, f)
   }
 
-  private def finishTopLevelRetry(exec: TxnExecutor, s: Status) {
-    retainRetrySet()
-    rollbackAccessHistory(_slot, s)
+  private def finishTopLevelRetry(exec: TxnExecutor, s: Status, c: RollbackCause) {
+    rollbackAccessHistory(_slot, c)
     val handlers = rollbackCallbacks()
 
     // don't detach, but we do need to give up the current level
@@ -693,6 +712,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _slot = ~_slot
     _currentLevel = null
     _barging = false
+    _cumulativeBlockingMillis = 0L
   }
 
   private def acquireLocks(): Boolean = {

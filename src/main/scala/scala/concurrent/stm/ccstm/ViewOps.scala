@@ -24,6 +24,10 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case null => NonTxn.await(handle, f)
     case txn => if (!f(txn.get(handle))) Txn.retry(txn)
   }
+  def tryAwait(f: T => Boolean, timeoutMillis: Long): Boolean = InTxnImpl.dynCurrentOrNull match {
+    case null => NonTxn.tryAwait(handle, f, timeoutMillis)
+    case txn => f(txn.get(handle)) || { Txn.retryFor(timeoutMillis)(txn) ; false }
+  }
   def set(v: T): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.set(handle, v)
     case txn => txn.set(handle, v)

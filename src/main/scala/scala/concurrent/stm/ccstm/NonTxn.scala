@@ -64,6 +64,56 @@ private[ccstm] object NonTxn {
     } while (!event.triggered)
   }
 
+  //////////////// value waiting with timeout
+
+  @throws(classOf[InterruptedException])
+  private def weakAwaitNewVersion(handle: Handle[_], m0: Meta, deadline: Long): Boolean = {
+    // spin a bit
+    var m = 0L
+    var spins = 0
+    do {
+      val m = handle.meta
+      if (version(m) != version(m0))
+        return true
+
+      spins += 1
+      if (spins > SpinCount) {
+        if (System.currentTimeMillis >= deadline)
+          return false
+        Thread.`yield`
+      }
+    } while (spins < SpinCount + YieldCount)
+
+    if (changing(m)) {
+      // ignore deadline for this, it should be fast
+      weakAwaitUnowned(handle, m)
+      return true
+    } else {
+      return weakNoSpinAwaitNewVersion(handle, m, deadline)
+    }
+  }
+
+  @throws(classOf[InterruptedException])
+  private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta, deadline: Long): Boolean = {
+    val event = wakeupManager.subscribe
+    event.addSource(handle)
+    do {
+      val m = handle.meta
+      if (version(m) != version(m0) || changing(m)) {
+        // observed new version, or likely new version (after unlock)
+        return true
+      }
+
+      // not changing, so okay to set PW bit
+      if (pendingWakeups(m) || handle.metaCAS(m, withPendingWakeups(m))) {
+        // after the block, things will have changed with reasonably high
+        // likelihood (spurious wakeups are okay)
+        return event.tryAwait(deadline)
+      }
+    } while (!event.triggered)
+    return true
+  }
+
   //////////////// lock acquisition
 
   @throws(classOf[InterruptedException])
@@ -177,6 +227,36 @@ private[ccstm] object NonTxn {
         }
       }
     }
+  }
+
+  def tryAwait[T](handle: Handle[T], pred: T => Boolean, timeoutMillis: Long): Boolean = {
+    var begin = 0L
+    (while (true) {
+      val m0 = handle.meta
+      if (changing(m0)) {
+        if (begin == 0L)
+          begin = System.currentTimeMillis
+        weakAwaitUnowned(handle, m0)
+      } else {
+        val v = handle.data
+        val m1 = handle.meta
+        if (changingAndVersion(m0) == changingAndVersion(m1)) {
+          // stable read of v
+          if (pred(v))
+            return true
+
+          // no need for base time with zero timeout
+          if (timeoutMillis <= 0)
+            return false
+
+          // wait for a new version
+          if (begin == 0L)
+            begin = System.currentTimeMillis
+          if (!weakAwaitNewVersion(handle, m1, begin + timeoutMillis))
+            return false
+        }
+      }
+    }).asInstanceOf[Nothing]
   }
 
   @throws(classOf[InterruptedException])

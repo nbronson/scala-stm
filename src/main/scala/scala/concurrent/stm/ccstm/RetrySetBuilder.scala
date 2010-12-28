@@ -10,7 +10,7 @@ import annotation.tailrec
  *
  *  @author Nathan Bronson
  */
-private[ccstm] final class ReadSetBuilder {
+private[ccstm] final class RetrySetBuilder {
   private var _size = 0
   private var _handles = new Array[Handle[_]](maxSizeForCap(InitialCap) + 1)
   private var _versions = new Array[CCSTM.Version](maxSizeForCap(InitialCap) + 1)
@@ -72,7 +72,7 @@ private[ccstm] final class ReadSetBuilder {
 
   private def hEq(a: Handle[_], b: Handle[_]) = (a eq b) || ((a.base eq b.base) && (a.offset == b.offset))
 
-  def ++= (rhs: ReadSetBuilder) {
+  def ++= (rhs: RetrySetBuilder) {
     var i = rhs.size - 1
     while (i >= 0) {
       this += (rhs._handles(i), rhs._versions(i))
@@ -80,9 +80,9 @@ private[ccstm] final class ReadSetBuilder {
     }
   }
 
-  def result(): ReadSet = {
+  def result(): RetrySet = {
     _dispatch = null
     _next = null
-    new ReadSet(_size, _handles, _versions)
+    new RetrySet(_size, _handles, _versions)
   }
 }

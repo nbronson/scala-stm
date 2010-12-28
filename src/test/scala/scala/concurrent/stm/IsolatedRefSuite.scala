@@ -44,6 +44,7 @@ class IsolatedRefSuite extends FunSuite {
     def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
     def await(f: A => Boolean) { if (!f(get)) retry }
+    def tryAwait(f: A => Boolean, timeoutMillis: Long): Boolean = f(get) || { retryFor(timeoutMillis) ; false }
     def set(v: A) { ref.set(v) }
     def trySet(v: A) = ref.trySet(v)
     def swap(v: A): A = ref.swap(v)
@@ -77,6 +78,7 @@ class IsolatedRefSuite extends FunSuite {
     def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
     def await(f: (A) => Boolean) { wrap { view.await(f) } }
+    def tryAwait(f: (A) => Boolean, timeoutMillis: Long): Boolean = wrap { view.tryAwait(f, timeoutMillis) }
     def set(v: A) { wrap { view.set(v) } }
     def trySet(v: A) = wrap { view.trySet(v) }
     def swap(v: A): A = wrap { view.swap(v) }
@@ -273,6 +275,18 @@ class IsolatedRefSuite extends FunSuite {
   createTests("relaxedGet ; write", 10) { view =>
     assert(view().relaxedGet( _ == _ ) === 10)
     view()() = 20
+  }
+
+  createTests("initially true await", 10) { view =>
+    view().await( _ == 10 )
+  }
+
+  createTests("initially true tryAwait", 10) { view =>
+    assert(view().tryAwait( _ == 10 , 10000 ))
+  }
+
+  createTests("false tryAwait with a zero timeout", 10) { view =>
+    assert(!view().tryAwait( _ == 20 , 0 ))
   }
 
   class UserException extends Exception

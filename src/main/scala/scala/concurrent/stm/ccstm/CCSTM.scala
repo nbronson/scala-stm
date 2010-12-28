@@ -158,6 +158,7 @@ private[ccstm] object CCSTM extends GV6 {
    *  blocking and `currentTxn.resolveWriteWriteConflict` will be
    *  called before waiting for a transaction.
    */
+  @throws(classOf[InterruptedException])
   def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     if (owner(m0) == nonTxnSlot)
       weakAwaitNonTxnUnowned(handle, m0, currentTxn)
@@ -165,6 +166,7 @@ private[ccstm] object CCSTM extends GV6 {
       weakAwaitTxnUnowned(handle, m0, currentTxn)
   }
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitNonTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     // Non-transaction owners only set the changing bit for a short time (no
     // user code and no loops), so we just wait them out.  Previously we used
@@ -189,6 +191,7 @@ private[ccstm] object CCSTM extends GV6 {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     if (null == currentTxn) {
       // Spin a bit, but only from a non-txn context.  If this is a txn context
@@ -269,7 +272,8 @@ private[ccstm] object CCSTM extends GV6 {
  *    to `atomic`
  *  - `retrySet` -- memory locations watched while performing modular
  *    blocking, one sample per top-level blocking event
- *  - `explicitRetries` -- explicit retries using `retry` or `Ref.View.await`
+ *  - `explicitRetries` -- explicit retries using `retry`, `retryFor`,
+ *    `Ref.View.await` or `Ref.View.tryAwait`
  *  - `optimisticRetries` -- rollbacks that were automatically retried, one
  *    line per `OptimisticFailureCause.category`
  *  - `failures` -- rollbacks that were not retried, one line for each type of

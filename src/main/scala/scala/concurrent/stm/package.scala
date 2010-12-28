@@ -12,6 +12,9 @@ package object stm {
   /** Equivalent to `Txn.retry`. */
   def retry(implicit txn: scala.concurrent.stm.InTxn): Nothing = scala.concurrent.stm.Txn.retry
 
+  /** Equivalent to `Txn.retryFor(timeoutMillis)`. */
+  def retryFor(timeoutMillis: Long)(implicit txn: scala.concurrent.stm.InTxn) { scala.concurrent.stm.Txn.retryFor(timeoutMillis) }
+
   /** This is the first half of the machinery for implementing `orAtomic`. */
   implicit def delayAtomic[A](lhs: => A) = new scala.concurrent.stm.DelayedAtomicBlock(lhs)
 }

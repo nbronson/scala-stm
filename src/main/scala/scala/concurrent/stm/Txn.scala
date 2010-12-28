@@ -134,7 +134,7 @@ object Txn {
    *  a call to `retry`.  The atomic block will be retried after some memory
    *  location read in the previous attempt has changed.
    */
-  case object ExplicitRetryCause extends TransientRollbackCause
+  case class ExplicitRetryCause(timeoutMillis: Option[Long]) extends TransientRollbackCause
 
   /** The `RollbackCause` for an atomic block that should not be restarted
    *  because it threw an exception.  The exception might have been thrown from
@@ -168,13 +168,25 @@ object Txn {
   // them from any thread.  Methods to add life-cycle callbacks are also object
   // methods for the same reason.
 
-  /** Causes the current nesting level to roll back.  It will not be retried
-   *  until a write has been performed to some memory location read by this
-   *  transaction.  If an alternative to this atomic block was provided via
-   *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
+  /** Rolls back the current nesting level for modular blocking.  It will be
+   *  retried, but only after some memory location observed by this transaction
+   *  has been changed.  If any alternatives to this atomic block were provided
+   *  via `orAtomic` or `atomic.oneOf`, then the alternative will be tried
+   *  before blocking.
    *  @throws IllegalStateException if the transaction is not active.
    */
-  def retry(implicit txn: InTxn): Nothing = rollback(ExplicitRetryCause)
+  def retry(implicit txn: InTxn): Nothing = rollback(ExplicitRetryCause(None))
+
+  /** Causes the transaction to roll back and retry using modular blocking,
+   *  until it has been blocked for a total of `timeoutMillis` milliseconds.
+   *  If the cumulative blocking time for the transaction (whether or not from
+   *  this `retryFor`) is &ge; than `timeoutMillis` this method will return
+   *  immediately.  `retryFor(0)` is a no-op.
+   */
+  def retryFor(timeoutMillis: Long)(implicit txn: InTxn) {
+    if (timeoutMillis > txn.cumulativeBlockingMillis)
+      rollback(ExplicitRetryCause(Some(timeoutMillis)))
+  }
 
   /** Causes the current nesting level to be rolled back due to the specified
    *  `cause`.  This method may only be called by the thread executing the

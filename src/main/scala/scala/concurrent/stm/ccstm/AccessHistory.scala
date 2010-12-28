@@ -52,7 +52,6 @@ private[ccstm] object AccessHistory {
   abstract class UndoLog {
     def parUndo: UndoLog
 
-    var retainReadsAndBarges = false
     var prevReadCount = 0
     var prevBargeCount = 0
     var prevWriteThreshold = 0
@@ -143,23 +142,25 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   /** Releases locks for discarded handles */
-  protected def rollbackAccessHistory(slot: CCSTM.Slot, status: Txn.Status) {
+  protected def rollbackAccessHistory(slot: CCSTM.Slot, cause: Txn.RollbackCause) {
     // nested or top-level rollback
     if (Stats.top != null)
-      recordRollback(status)
+      recordRollback(cause)
 
-    rollbackReadSet()
-    rollbackBargeSet(slot)
+    if (!cause.isInstanceOf[Txn.ExplicitRetryCause]) {
+      rollbackReadSet()
+      rollbackBargeSet(slot)
+    }
     rollbackWriteBuffer(slot)
   }
 
-  private def recordRollback(status: Txn.Status) {
+  private def recordRollback(cause: Txn.RollbackCause) {
     val stat = if (undoLog.parUndo == null) Stats.top else Stats.nested
     stat.rollbackReadSet += (readCount - undoLog.prevReadCount)
     stat.rollbackBargeSet += (bargeCount - undoLog.prevBargeCount)
     stat.rollbackWriteSet += (writeCount - undoLog.prevWriteThreshold)
-    status.asInstanceOf[Txn.RolledBack].cause match {
-      case Txn.ExplicitRetryCause => stat.explicitRetries += 1
+    cause match {
+      case Txn.ExplicitRetryCause(_) => stat.explicitRetries += 1
       case Txn.OptimisticFailureCause(tag, _) => stat.optimisticRetries += tag
       case Txn.UncaughtExceptionCause(x) => stat.failures += x.getClass
     }
@@ -184,10 +185,10 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     top.commits += 1
   }
 
-  /** Clears the read set and barge set, returning a `ReadSet` that holds the
+  /** Clears the read set and barge set, returning a `RetrySet` that holds the
    *  values that were removed.  Releases any ownership held by the barge set.
    */
-  protected def takeRetrySet(slot: CCSTM.Slot): ReadSet = {
+  protected def takeRetrySet(slot: CCSTM.Slot): RetrySet = {
     // barge entries were copied to the read set by addLatestWritesAsReads
     var i = 0
     while (i < _bCount) {
@@ -196,19 +197,14 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     }
     resetBargeSet()
 
-    val accum = new ReadSetBuilder
+    val accum = new RetrySetBuilder
     i = 0
     while (i < _rCount) {
       accum += (_rHandles(i), _rVersions(i))
       i += 1
     }
     resetReadSet()
-    val result = accum.result()
-
-    if (Stats.top != null)
-      Stats.top.retrySet += result.size
-
-    result
+    accum.result()
   }
 
   //////////// read set
@@ -249,15 +245,13 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def rollbackReadSet() {
-    if (!undoLog.retainReadsAndBarges) {
-      val n = undoLog.prevReadCount
-      var i = n
-      while (i < _rCount) {
-        _rHandles(i) = null
-        i += 1
-      }
-      _rCount = n
+    val n = undoLog.prevReadCount
+    var i = n
+    while (i < _rCount) {
+      _rHandles(i) = null
+      i += 1
     }
+    _rCount = n
   }
 
   private def resetReadSet() {
@@ -312,16 +306,14 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def rollbackBargeSet(slot: CCSTM.Slot) {
-    if (!undoLog.retainReadsAndBarges) {
-      val n = undoLog.prevBargeCount
-      var i = n
-      while (i < _bCount) {
-        rollbackHandle(_bHandles(i), slot)
-        _bHandles(i) = null
-        i += 1
-      }
-      _bCount = n
+    val n = undoLog.prevBargeCount
+    var i = n
+    while (i < _bCount) {
+      rollbackHandle(_bHandles(i), slot)
+      _bHandles(i) = null
+      i += 1
     }
+    _bCount = n
   }
 
   private def resetBargeSet() {

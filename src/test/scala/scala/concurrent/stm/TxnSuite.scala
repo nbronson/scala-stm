@@ -255,6 +255,114 @@ class TxnSuite extends FunSuite {
     }
   }
 
+  test("tryAwait is conservative") {
+    val x = Ref(10)
+    val t0 = System.currentTimeMillis
+    assert(!x.single.tryAwait( _ == 0 , 250))
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 250)
+    println("tryAwait(.., 250) took " + elapsed + " millis")
+  }
+
+  test("tryAwait in atomic is conservative") {
+    val x = Ref(10)
+    val t0 = System.currentTimeMillis
+    val f = atomic { implicit txn => x.single.tryAwait( _ == 0 , 250) }
+    assert(!f)
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 250)
+    println("tryAwait(.., 250) inside atomic took " + elapsed + " millis")
+  }
+
+  test("retryFor is conservative") {
+    val x = Ref(false)
+    val t0 = System.currentTimeMillis
+    val s = atomic { implicit txn =>
+      if (!x()) retryFor(250)
+      "timeout"
+    }
+    assert(s === "timeout")
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 250)
+    println("retryFor(250) took " + elapsed + " millis")
+  }
+
+  test("retryFor earliest is first") {
+    val x = Ref(false)
+    val s = atomic { implicit txn =>
+      if (!x()) retryFor(100)
+      "first"
+    } orAtomic { implicit txn =>
+      if (!x()) retryFor(200)
+      "second"
+    }
+    assert(s === "first")
+  }
+
+  test("retryFor earliest is second") {
+    val x = Ref(false)
+    val s = atomic { implicit txn =>
+      if (!x()) retryFor(300)
+      "first"
+    } orAtomic { implicit txn =>
+      if (!x()) retryFor(100)
+      "second"
+    }
+    assert(s === "second")
+  }
+
+  test("retryFor earliest is first nested") {
+    val x = Ref(false)
+    val s = atomic { implicit txn =>
+      atomic { implicit txn =>
+        if (!x()) retryFor(100)
+        "first"
+      } orAtomic { implicit txn =>
+        if (!x()) retryFor(200)
+        "second"
+      }
+    }
+    assert(s === "first")
+  }
+
+  test("retryFor earliest is second nested") {
+    val x = Ref(false)
+    val s = atomic { implicit txn =>
+      atomic { implicit txn =>
+        if (!x()) retryFor(300)
+        "first"
+      } orAtomic { implicit txn =>
+        if (!x()) retryFor(100)
+        "second"
+      }
+    }
+    assert(s === "second")
+  }
+
+  test("retryFor only is first") {
+    val x = Ref(false)
+    val s = atomic { implicit txn =>
+      if (!x()) retryFor(100)
+      "first"
+    } orAtomic { implicit txn =>
+      if (!x()) retry
+      "second"
+    }
+    assert(s === "first")
+  }
+
+  test("retryFor only is second") {
+    val x = Ref(false)
+    val s = atomic { implicit txn =>
+      if (!x()) retry
+      "first"
+    } orAtomic { implicit txn =>
+      if (!x()) retryFor(100)
+      "second"
+    }
+    assert(s === "second")
+  }
+
   test("View in txn") {
     val x = Ref(10)
     val xs = x.single

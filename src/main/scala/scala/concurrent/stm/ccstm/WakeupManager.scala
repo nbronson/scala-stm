@@ -5,6 +5,21 @@ package scala.concurrent.stm.ccstm
 
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
 
+private[ccstm] object WakeupManager {
+  abstract class Event {
+    def triggered: Boolean
+
+    /** Returns false if triggered. */
+    def addSource(handle: Handle[_]): Boolean
+
+    @throws(classOf[InterruptedException])
+    def await
+
+    @throws(classOf[InterruptedException])
+    def tryAwait(deadline: Long): Boolean
+  }
+}
+
 /** Provides a service that extends the paradigm of wait+notifyAll to allow
  *  bulk wait and bulk notification; also does not require that the waiter and
  *  the notifier share an object reference.  There is a chance of a false
@@ -24,7 +39,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   private def ChannelSpacing = 16
 
   private val pending = new AtomicLongArray(numSources)
-  private val events = new AtomicReferenceArray[Event](numChannels * ChannelSpacing)
+  private val events = new AtomicReferenceArray[EventImpl](numChannels * ChannelSpacing)
   
   /** The returned value must later be passed to `trigger`.
    *  Multiple return values may be passed to a single invocation of
@@ -67,7 +82,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   }
 
   /** See `trigger`. */
-  def subscribe: Event = {
+  def subscribe: WakeupManager.Event = {
     // Picking the waiter's identity using the thread hash means that there is
     // a possibility that we will get repeated interference with another thread
     // in a per-VM way, but it minimizes saturation of the pending wakeups,
@@ -75,19 +90,19 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     subscribe(hash(Thread.currentThread) & (numChannels - 1))
   }
 
-  private def subscribe(channel: Int): Event = {
+  private def subscribe(channel: Int): EventImpl = {
     val i = channel * ChannelSpacing
     (while (true) {
       val existing = events.get(i)
       if (null != existing)
         return existing
-      val fresh = new Event(channel)
+      val fresh = new EventImpl(channel)
       if (events.compareAndSet(i, null, fresh))
         return fresh
     }).asInstanceOf[Nothing]
   }
 
-  class Event(channel: Int) {
+  class EventImpl(channel: Int) extends WakeupManager.Event {
     private val mask = 1L << channel
     @volatile private var _triggered = false
 
@@ -117,6 +132,21 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
             wait
         }
       }
+    }
+
+    @throws(classOf[InterruptedException])
+    def tryAwait(deadline: Long): Boolean = {
+      if (!_triggered) {
+        synchronized {
+          while (!_triggered) {
+            val remaining = deadline - System.currentTimeMillis
+            if (remaining <= 0)
+              return false
+            wait(remaining)
+          }
+        }
+      }
+      return true
     }
 
     private[WakeupManager] def trigger() {
