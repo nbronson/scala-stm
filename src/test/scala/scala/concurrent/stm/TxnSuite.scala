@@ -104,58 +104,67 @@ class TxnSuite extends FunSuite {
   }
 
   test("atomic.oneOf") {
-    val x = Ref(false)
-    val y = Ref(false)
-    val z = Ref(false)
-    runOneOfTest(x, y, z)
+    val refs = Array(Ref(false), Ref(false), Ref(false))
+    for (w <- 0 until 3) {
+      new Thread("wakeup") {
+        override def run {
+          Thread.sleep(200)
+          refs(w).single() = true
+        }
+      }.start()
+      oneOfExpect(refs, w, Array(0))
+    }
   }
 
   test("nested atomic.oneOf") {
-    val x = Ref(false)
-    val y = Ref(false)
-    val z = Ref(false)
-    atomic { implicit txn =>
-      runOneOfTest(x, y, z)
+    val refs = Array(Ref(false), Ref(false), Ref(false))
+    for (w <- 0 until 3) {
+      new Thread("wakeup") {
+        override def run {
+          Thread.sleep(200)
+          refs(w).single() = true
+        }
+      }.start()
+      val retries = Array(0)
+      atomic { implicit txn => oneOfExpect(refs, w, retries) }
     }
   }
 
   test("alternative atomic.oneOf") {
     val a = Ref(0)
-    val x = Ref(false)
-    val y = Ref(false)
-    val z = Ref(false)
-    val f = atomic { implicit txn =>
-      if (a() == 0)
-        retry
-      false
-    } orAtomic { implicit txn =>
-      runOneOfTest(x, y, z)
-      true
-    }
-    assert(f)
-  }
-
-  private def runOneOfTest(x: Ref[Boolean], y: Ref[Boolean], z: Ref[Boolean]) {
-    for ((ref,name) <- List((x,"x"), (y,"y"), (z,"z"))) {
+    val refs = Array(Ref(false), Ref(false), Ref(false))
+    for (w <- 0 until 3) {
       new Thread("wakeup") {
         override def run {
           Thread.sleep(200)
-          ref.single() = true
+          refs(w).single() = true
         }
       }.start()
-
-      val result = Ref("")
-      var sleeps = 0
-      atomic.oneOf(
-          { t: InTxn => implicit val txn = t; result() = "x" ; if (!x()) retry },
-          { t: InTxn => implicit val txn = t; if (y()) result() = "y" else retry },
-          { t: InTxn => implicit val txn = t; if (z()) result() = "z" else retry },
-          { t: InTxn => implicit val txn = t; sleeps += 1 ; retry }
-        )
-      ref.single() = false
-      assert(result.single.get === name)
-      assert(sleeps <= 1)
+      val retries = Array(0)
+      val f = atomic { implicit txn =>
+        if (a() == 0)
+          retry
+        false
+      } orAtomic { implicit txn =>
+        oneOfExpect(refs, w, retries)
+        true
+      }
+      assert(f)
     }
+  }
+
+  private def oneOfExpect(refs: Array[Ref[Boolean]], which: Int, sleeps: Array[Int]) {
+    val result = Ref(-1)
+    atomic.oneOf(
+        { t: InTxn => implicit val txn = t; result() = 0 ; if (!refs(0)()) retry },
+        { t: InTxn => implicit val txn = t; if (refs(1)()) result() = 1 else retry },
+        { t: InTxn => implicit val txn = t; if (refs(2)()) result() = 2 else retry },
+        { t: InTxn => implicit val txn = t; sleeps(0) += 1 ; retry }
+      )
+    refs(which).single() = false
+    assert(result.single.get === which)
+    if (sleeps(0) != 0)
+      assert(sleeps(0) === 1)
   }
 
   test("orAtomic w/ exception") {
