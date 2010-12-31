@@ -4,9 +4,11 @@ package scala.concurrent.stm.ccstm
 
 
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
+import java.util.concurrent.{TimeUnit, CountDownLatch}
+import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 private[ccstm] object WakeupManager {
-  abstract class Event {
+  trait Event {
     def triggered: Boolean
 
     /** Returns false if triggered. */
@@ -15,6 +17,7 @@ private[ccstm] object WakeupManager {
     @throws(classOf[InterruptedException])
     def await
 
+    /** A deadline of `Long.MaxValue` waits forever. */
     @throws(classOf[InterruptedException])
     def tryAwait(deadline: Long): Boolean
   }
@@ -77,16 +80,18 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   private def trigger(channel: Int) {
     val i = channel * ChannelSpacing
     val e = events.get(i)
-    if (e != null && events.compareAndSet(i, e, null))
+    if (e != null) {
       e.trigger
+      events.compareAndSet(i, e, null)
+    }
   }
 
   /** See `trigger`. */
   def subscribe: WakeupManager.Event = {
     // Picking the waiter's identity using the thread hash means that there is
     // a possibility that we will get repeated interference with another thread
-    // in a per-VM way, but it minimizes saturation of the pending wakeups,
-    // which is quite important.
+    // in a per-program-run way, but it minimizes saturation of the pending
+    // wakeups, which is quite important.
     subscribe(hash(Thread.currentThread) & (numChannels - 1))
   }
 
@@ -94,29 +99,38 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     val i = channel * ChannelSpacing
     (while (true) {
       val existing = events.get(i)
-      if (null != existing)
+      if (existing != null && !existing.triggered)
         return existing
       val fresh = new EventImpl(channel)
-      if (events.compareAndSet(i, null, fresh))
+      if (events.compareAndSet(i, existing, fresh))
         return fresh
     }).asInstanceOf[Nothing]
   }
 
-  class EventImpl(channel: Int) extends WakeupManager.Event {
+  class EventImpl(channel: Int) extends AbstractQueuedSynchronizer() with WakeupManager.Event {
     private val mask = 1L << channel
-    @volatile private var _triggered = false
 
-    def triggered = _triggered
+    setState(1)
+
+    //// adapted from CountDown.Sync
+
+    override def tryAcquireShared(acquires: Int): Int = if (getState == 0) 1 else -1
+
+    override def tryReleaseShared(releases: Int): Boolean = getState == 1 && compareAndSetState(1, 0)
+
+    //// Event
+
+    def triggered = getState == 0
 
     /** Returns false if triggered. */
     def addSource(handle: Handle[_]): Boolean = {
-      if (_triggered) {
+      if (triggered) {
         return false
       } else {
         val i = hash(handle.base, handle.metaOffset) & (numSources - 1)
         var p = pending.get(i)
         while((p & mask) == 0 && !pending.compareAndSet(i, p, p | mask)) {
-          if (_triggered)
+          if (triggered)
             return false
           p = pending.get(i)
         }
@@ -126,38 +140,24 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
 
     @throws(classOf[InterruptedException])
     def await {
-      if (!_triggered) {
-        synchronized {
-          while (!_triggered)
-            wait
-        }
-      }
+      val f = tryAwait(Long.MaxValue)
+      assert(f)
     }
 
     @throws(classOf[InterruptedException])
     def tryAwait(deadline: Long): Boolean = {
-      if (!_triggered) {
-        synchronized {
-          while (!_triggered) {
-            val remaining = deadline - System.currentTimeMillis
-            if (remaining <= 0)
-              return false
-            wait(remaining)
-          }
-        }
+      if (triggered) {
+        true
+      } else if (deadline == Long.MaxValue) {
+        acquireSharedInterruptibly(1)
+        true
+      } else {
+        // be careful about overflow when converting to nanos
+        val remaining = deadline - System.currentTimeMillis
+        remaining > 0 && tryAcquireSharedNanos(1, TimeUnit.MILLISECONDS.toNanos(remaining))
       }
-      return true
     }
 
-    private[WakeupManager] def trigger() {
-      if (!_triggered) {
-        synchronized {
-          if (!_triggered) {
-            _triggered = true
-            notifyAll
-          }
-        }
-      }
-    }
+    private[WakeupManager] def trigger() { releaseShared(1) }
   }
 }
