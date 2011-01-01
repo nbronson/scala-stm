@@ -235,7 +235,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     _rVersions = copyTo(_rVersions, new Array[CCSTM.Version](_rVersions.length * 2))
   }
 
-  @inline private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
+  private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
     System.arraycopy(src, 0, dst, 0, src.length)
     dst
   }
@@ -377,11 +377,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     java.util.Arrays.fill(_wDispatch, 0, InitialWriteCapacity, -1)
   }
 
-  @inline private def refI(i: Int) = 3 * i
-  @inline private def specValueI(i: Int) = 3 * i + 1
-  @inline private def handleI(i: Int) = 3 * i + 2
-  @inline private def offsetI(i: Int) = 2 * i
-  @inline private def nextI(i: Int) = 2 * i + 1 // bits 31..1 are the next, bit 0 is set iff freshOwner
+  private def refI(i: Int) = 3 * i
+  private def specValueI(i: Int) = 3 * i + 1
+  private def handleI(i: Int) = 3 * i + 2
+  private def offsetI(i: Int) = 2 * i
+  private def nextI(i: Int) = 2 * i + 1 // bits 31..1 are the next, bit 0 is set iff freshOwner
 
   private def bucketAnysLen(c: Int) = 3 * (maxSizeForCap(c) + 1)
   private def bucketIntsLen(c: Int) = 2 * (maxSizeForCap(c) + 1)
@@ -394,20 +394,20 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   //////// accessors
 
-  @inline private def getRef(i: Int) = _wAnys(refI(i))
-  @inline final protected def getWriteHandle(i: Int) = _wAnys(handleI(i)).asInstanceOf[Handle[_]]
-  @inline final protected def getWriteSpecValue[T](i: Int) = _wAnys(specValueI(i)).asInstanceOf[T]
-  @inline private def getOffset(i: Int) = _wInts(offsetI(i))
-  @inline private def getNext(i: Int): Int = _wInts(nextI(i)) >> 1
-  @inline final protected def wasWriteFreshOwner(i: Int): Boolean = (_wInts(nextI(i)) & 1) != 0
+  private def getRef(i: Int) = _wAnys(refI(i))
+  final protected def getWriteHandle(i: Int) = _wAnys(handleI(i)).asInstanceOf[Handle[_]]
+  final protected def getWriteSpecValue[T](i: Int) = _wAnys(specValueI(i)).asInstanceOf[T]
+  private def getOffset(i: Int) = _wInts(offsetI(i))
+  private def getNext(i: Int): Int = _wInts(nextI(i)) >> 1
+  final protected def wasWriteFreshOwner(i: Int): Boolean = (_wInts(nextI(i)) & 1) != 0
 
-  @inline private def setRef(i: Int, r: AnyRef) { _wAnys(refI(i)) = r }
-  @inline private def setHandle(i: Int, h: Handle[_]) { _wAnys(handleI(i)) = h }
-  @inline final private[AccessHistory] def setSpecValue[T](i: Int, v: T) { _wAnys(specValueI(i)) = v.asInstanceOf[AnyRef] }
-  @inline private def setOffset(i: Int, o: Int) { _wInts(offsetI(i)) = o }
-  @inline private def setNextAndFreshOwner(i: Int, n: Int, freshOwner: Boolean) { _wInts(nextI(i)) = (n << 1) | (if (freshOwner) 1 else 0) }
-  @inline private def setNext(i: Int, n: Int) { _wInts(nextI(i)) = (n << 1) | (_wInts(nextI(i)) & 1) }
-  @inline private def setFreshOwner(i: Int, freshOwner: Boolean) { setNextAndFreshOwner(i, getNext(i), freshOwner) }
+  private def setRef(i: Int, r: AnyRef) { _wAnys(refI(i)) = r }
+  private def setHandle(i: Int, h: Handle[_]) { _wAnys(handleI(i)) = h }
+  final private[AccessHistory] def setSpecValue[T](i: Int, v: T) { _wAnys(specValueI(i)) = v.asInstanceOf[AnyRef] }
+  private def setOffset(i: Int, o: Int) { _wInts(offsetI(i)) = o }
+  private def setNextAndFreshOwner(i: Int, n: Int, freshOwner: Boolean) { _wInts(nextI(i)) = (n << 1) | (if (freshOwner) 1 else 0) }
+  private def setNext(i: Int, n: Int) { _wInts(nextI(i)) = (n << 1) | (_wInts(nextI(i)) & 1) }
+  private def setFreshOwner(i: Int, freshOwner: Boolean) { setNextAndFreshOwner(i, getNext(i), freshOwner) }
 
   //////// bulk access
 

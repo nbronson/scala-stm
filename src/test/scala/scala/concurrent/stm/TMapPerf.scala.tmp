@@ -1,0 +1,238 @@
+/* scala-stm - (c) 2010, LAMP/EPFL */
+
+package scala.concurrent.stm
+
+import skel._
+
+object TMapPerf {
+
+  def main(args: Array[String]) {
+    for (p <- 0 until 30) {
+      runNonTxnReads()
+      runNonTxnBuild()
+      runNonTxnUpdates()
+      runNonTxnWrites()
+      runNonTxnMix()
+      for (txnSize <- List(2, 16, 64)) {
+        runTxnReads(txnSize)
+        runTxnBuild(txnSize)
+        runTxnUpdates(txnSize)
+        runTxnWrites(txnSize)
+        runTxnMix(txnSize)
+      }
+    }
+  }
+
+  private val prefix = "" // bf= " + Args.BF + " max_leaf= " + Args.MAX_LEAF_SIZE
+
+  private def value(k: Int) = "x" + k
+  private def kvRange(b: Int, e: Int) = (b until e) map { i => (i -> value(i)) }
+
+  private def now = System.currentTimeMillis
+  private val rand = new FastSimpleRandom
+
+  private def randSize = rand.nextInt(1 << (3 + rand.nextInt(17))) max 1
+
+  def runNonTxnReads() {
+    val size = randSize
+    val m = TMap(kvRange(0, size): _*).single
+    val t0 = now
+    var i = 0
+    var k = 0
+    while (i < 1000000) {
+      assert(m.contains(k) == (k < size))
+      i += 1
+      k = if (k == 2 * size - 1) 0 else k + 1
+    }
+    val elapsed = now - t0
+    println(prefix + " test= nt_reads size= " + size + " nanos= " + elapsed)
+  }
+
+  def runNonTxnBuild() {
+    val size = randSize
+    val src = kvRange(0, size).toArray
+    val t0 = now
+    var outer = 0
+    while (outer < 1000000) {
+      val m = TMap.empty[Int, String].single
+      var i = 0
+      while (i < size) {
+        m.put(i, "foobar")
+        i += 1
+      }
+      outer += size
+    }
+    val elapsed = now - t0
+    println(prefix + " test= nt_build size= " + size + " nanos= " + elapsed)
+  }
+
+  def runNonTxnUpdates() {
+    val size = randSize
+    val m = TMap(kvRange(0, size): _*).single
+    val t0 = now
+    var i = 0
+    var k = 0
+    while (i < 1000000) {
+      val prev = m.put(k, "foobar")
+      assert(!prev.isEmpty)
+      i += 1
+      k = if (k == size - 1) 0 else k + 1
+    }
+    val elapsed = now - t0
+    println(prefix + " test= nt_update size= " + size + " nanos= " + elapsed)
+  }
+
+  def runNonTxnWrites() {
+    val size = randSize
+    val m = TMap(kvRange(0, size): _*).single
+    val t0 = now
+    var i = 0
+    while (i < 1000000) {
+      val r = rand.nextInt
+      val k = math.abs(r % size)
+      if (r > 0)
+        m.put(k, "foobar")
+      else
+        m.remove(k)
+      i += 1
+    }
+    val elapsed = now - t0
+    println(prefix + " test= nt_writes size= " + size + " nanos= " + elapsed)
+  }
+
+  def runNonTxnMix() {
+    val size = randSize
+    var m = TMap(kvRange(0, size): _*).single
+    val t0 = now
+    var i = 0
+    while (i < 1000000) {
+      val r = rand.nextInt
+      val k = math.abs(r % size)
+      if ((r & 63) == 0)
+        m = m.clone
+      else if (r > 0)
+        m.put(k, "foobar")
+      else
+        m.remove(k)
+      i += 1
+    }
+    val elapsed = now - t0
+    println(prefix + " test= nt_mix size= " + size + " nanos= " + elapsed)
+  }
+
+  def runTxnReads(txnSize: Int) {
+    val size = randSize
+    val m = TMap(kvRange(0, size): _*)
+    val t0 = now
+    var i = 0
+    var k = 0
+    while (i < 1000000) {
+      atomic { implicit txn =>
+        var j = 0
+        while (j < txnSize) {
+          assert(m.contains(k) == (k < size))
+          i += 1
+          k = if (k == 2 * size - 1) 0 else k + 1
+          j += 1
+        }
+      }
+    }
+    val elapsed = now - t0
+    println(prefix + " test= txn_reads size= " + size + " nanos= " + elapsed + " txn_size= " + txnSize)
+  }
+
+  def runTxnBuild(txnSize: Int) {
+    val size = randSize
+    var m: TMap[Int, String] = null
+    val t0 = now
+    var i = 0
+    while (i < 1000000) {
+      atomic { implicit txn =>
+        var j = 0
+        while (j < txnSize) {
+          if ((i % size) == 0)
+            m = TMap.empty[Int, String]
+          m.put(i, "foobar")
+          i += 1
+          j += 1
+        }
+      }
+    }
+    val elapsed = now - t0
+    println(prefix + " test= txn_build size= " + size + " nanos= " + elapsed + " txn_size= " + txnSize)
+  }
+
+  def runTxnUpdates(txnSize: Int) {
+    val size = randSize
+    val m = TMap(kvRange(0, size): _*)
+    val t0 = now
+    var i = 0
+    var k = 0
+    while (i < 1000000) {
+      atomic { implicit txn =>
+        var j = 0
+        while (j < txnSize) {
+          val prev = m.put(k, "foobar")
+          assert(!prev.isEmpty)
+          i += 1
+          k = if (k == size - 1) 0 else k + 1
+          j += 1
+        }
+      }
+    }
+    val elapsed = now - t0
+    println(prefix + " test= txn_update size= " + size + " nanos= " + elapsed + " txn_size= " + txnSize)
+  }
+
+  def runTxnWrites(txnSize: Int) {
+    val size = randSize
+    val m = TMap(kvRange(0, size): _*)
+    val t0 = now
+    var i = 0
+    var k = 0
+    while (i < 1000000) {
+      atomic { implicit txn =>
+        var j = 0
+        while (j < txnSize) {
+          val r = rand.nextInt
+          val k = math.abs(r % size)
+          if (r > 0)
+            m.put(k, "foobar")
+          else
+            m.remove(k)
+          i += 1
+          j += 1
+        }
+      }
+    }
+    val elapsed = now - t0
+    println(prefix + " test= txn_writes size= " + size + " nanos= " + elapsed + " txn_size= " + txnSize)
+  }
+
+  def runTxnMix(txnSize: Int) {
+    val size = randSize
+    var m = TMap(kvRange(0, size): _*)
+    val t0 = now
+    var i = 0
+    var k = 0
+    while (i < 1000000) {
+      atomic { implicit txn =>
+        var j = 0
+        while (j < txnSize) {
+          val r = rand.nextInt
+          val k = math.abs(r % size)
+          if ((r % 63) == 0)
+            m = m.clone
+          else if (r > 0)
+            m.put(k, "foobar")
+          else
+            m.remove(k)
+          i += 1
+          j += 1
+        }
+      }
+    }
+    val elapsed = now - t0
+    println(prefix + " test= txn_mix size= " + size + " nanos= " + elapsed + " txn_size= " + txnSize)
+  }
+}
