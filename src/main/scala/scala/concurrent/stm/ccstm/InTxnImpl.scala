@@ -141,8 +141,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  rollback or `RollbackError` on a transient rollback.
    */
   private def nestedAttempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z, reusedReadThreshold: Int): Z = {
-    checkBarging(prevFailures)
     nestedBegin(level, reusedReadThreshold)
+    checkBarging(prevFailures)
     try {
       runBlock(exec, block)
     } finally {
@@ -151,8 +151,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def topLevelAttempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
-    checkBarging(prevFailures)
     topLevelBegin(level)
+    checkBarging(prevFailures)
     try {
       runBlock(exec, block)
     } finally {
@@ -493,10 +493,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   //////////////// begin + commit
 
   private def checkBarging(prevFailures: Int) {
-    if (prevFailures >= BargeThreshold && !_barging) {
-      _barging = true
-      _bargeVersion = freshReadVersion
-    }
+    // once we start barging we will use the original read version
+    if (prevFailures == 0)
+      _bargeVersion = _readVersion
+
+    if (prevFailures == BargeAllThreshold)
+      _bargeVersion = 0L
+
+    _barging = prevFailures >= BargeRecentThreshold
   }
 
   private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int) {

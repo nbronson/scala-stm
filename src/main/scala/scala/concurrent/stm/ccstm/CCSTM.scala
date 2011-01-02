@@ -24,9 +24,17 @@ private[ccstm] object CCSTM extends GV6 {
   val YieldCount = System.getProperty("ccstm.yield", "2").toInt
 
   /** The number of optimistic failures to tolerate before switching to
-   *  pessimistic reads.  Set to zero to always use pessimistic reads.
+   *  pessimistic reads for recently modified memory locations.  Set to zero to
+   *  always use pessimistic reads for memory locations modified since the
+   *  beginning of the first transaction attempt.
    */
-  val BargeThreshold = System.getProperty("ccstm.barge.threshold", "3").toInt
+  val BargeRecentThreshold = System.getProperty("ccstm.barge.recent.threshold", "3").toInt
+
+  /** The number of optimistic failures to tolerate before switching to
+   *  pessimistic reads for all reads.  Set to zero to always use pessimistic
+   *  reads.
+   */
+  val BargeAllThreshold = System.getProperty("ccstm.barge.all.threshold", "30").toInt
 
   /** `slotManager` maps slot number to root `TxnLevelImpl`. */
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
