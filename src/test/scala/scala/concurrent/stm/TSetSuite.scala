@@ -370,13 +370,17 @@ class TSetSuite extends FunSuite {
   }
 
   test("iterator after many removes") {
-    val m = TSet.View.empty[Int]
+    val s = TSet.View.empty[Int]
     for (i <- 0 until 100000)
-      m += i
+      s += i
     for (i <- 0 until 100000)
-      m -= i
-    assert(!m.iterator.hasNext)
-    for (e <- m) { assert(false) }
+      s -= i
+    assert(!s.iterator.hasNext)
+    for (e <- s) { assert(false) }
+    atomic { implicit txn => assert(s.tset.isEmpty) }
+    atomic { implicit txn => assert(s.tset.size === 0) }
+    assert(s.isEmpty)
+    assert(s.size === 0)
   }
 
   test("view snapshot foreach") {

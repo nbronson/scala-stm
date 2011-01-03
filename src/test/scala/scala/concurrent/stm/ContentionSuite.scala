@@ -58,6 +58,11 @@ class ContentionSuite extends FunSuite {
                 refs(key)() = values(r.nextInt(values.length))
               j += 1
             }
+            if (r.nextInt(100) < 10) {
+              Txn.whilePreparing { _ => }
+              Txn.whileCommitting { _ => }
+              Txn.setExternalDecider(new Txn.ExternalDecider { def shouldCommit(implicit txn: InTxnEnd) = true })
+            }
             r
           }
           if (!nested)
