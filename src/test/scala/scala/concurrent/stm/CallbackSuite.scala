@@ -268,6 +268,14 @@ class CallbackSuite extends FunSuite {
     assert(i == 4)
   }
 
+  test("whilePreparing throws exception") {
+    intercept[UserException] {
+      atomic { implicit txn =>
+        Txn.whilePreparing { _ => throw new UserException }
+      }
+    }
+  }
+
   test("whileCommitting") {
     var count = 0
     val x = Ref(0)
@@ -276,6 +284,14 @@ class CallbackSuite extends FunSuite {
       Txn.whileCommitting { _ => count += 1 }
     }
     assert(x.single() == 1)
+    assert(count == 1)
+  }
+
+  test("whileCommitting without any accesses") {
+    var count = 0
+    atomic { implicit txn =>
+      Txn.whileCommitting { _ => count += 1 }
+    }
     assert(count == 1)
   }
 
@@ -485,4 +501,18 @@ class CallbackSuite extends FunSuite {
     assert(x.single() === 0)
     assert(swallowed.isInstanceOf[UserException])
   }
+
+  test("rethrow afterRollback exception cancels retry") {
+    val x = Ref(0)
+    intercept[UserException] {
+      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      customAtomic { implicit txn =>
+        Txn.afterRollback { _ => throw new UserException }
+        if (x() == 0)
+          retry
+      }
+    }
+    assert(x.single() === 0)
+  }
+
 }

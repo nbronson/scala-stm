@@ -91,6 +91,29 @@ class TxnSuite extends FunSuite {
     assert(y.single())
   }
 
+  test("nested retry") {
+    val x = Ref(0)
+    val y = Ref(false)
+    new Thread {
+      override def run() {
+        Thread.sleep(200)
+        y.single() = true
+        x.single() = 1
+      }
+    } start
+
+    atomic { implicit txn =>
+      atomic { implicit txn =>
+        // this will cause the nesting to materialize
+        NestingLevel.current
+
+        if (x() == 0)
+          retry
+      }
+    }
+    assert(y.single())
+  }
+
   test("simple orAtomic") {
     val x = Ref(0)
     val f = atomic { implicit txn =>
@@ -101,6 +124,14 @@ class TxnSuite extends FunSuite {
       true
     }
     assert(f)    
+  }
+
+  test("single atomic.oneOf") {
+    val x = Ref("zero")
+    atomic.oneOf({ implicit txn =>
+      x() = "one"
+    })
+    assert(x.single() === "one")
   }
 
   test("atomic.oneOf") {
@@ -300,6 +331,39 @@ class TxnSuite extends FunSuite {
     assert(n1.parent.get eq n0)
     assert(n1.root eq n0)
     assert(n0.parent.isEmpty)
+  }
+
+  test("persistent rollback") {
+    val x = Ref(0)
+    var okay = true
+    intercept[UserException] {
+      atomic { implicit txn =>
+        x() = 1
+        try {
+          Txn.rollback(Txn.UncaughtExceptionCause(new UserException()))
+        } catch {
+          case _ => // swallow
+        }
+        x()
+        okay = false
+      }
+    }
+    assert(okay)
+  }
+
+  test("persistent rollback via exception") {
+    val x = Ref(0)
+    intercept[UserException] {
+      atomic { implicit txn =>
+        x() = 1
+        try {
+          Txn.rollback(Txn.UncaughtExceptionCause(new UserException()))
+        } catch {
+          case _ => // swallow
+        }
+        throw new InterruptedException // this should be swallowed
+      }
+    }
   }
 
   test("toString") {
