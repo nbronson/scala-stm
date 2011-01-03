@@ -1153,6 +1153,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  @throws(classOf[InterruptedException])
+  def getAndAdd(handle: Handle[Int], delta: Int): Int = {
+    requireActive()
+    val mPrev = acquireOwnership(handle)
+    val f = freshOwner(mPrev)
+    val v0 = getAndAdd(handle, f, delta)
+    if (f)
+      revalidateIfRequired(version(mPrev))
+    v0
+  }
+
   //////////// TxnLocal stuff
 
   // We store transactional local values in the write buffer by pretending
