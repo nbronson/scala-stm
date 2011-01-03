@@ -5,7 +5,12 @@ title: Snapshot releases
 
 Changes between 0.2 and 0.3-SNAPSHOT:
 
-* Bug fixes (["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11], ["#12":https://github.com/nbronson/scala-stm/issues/closed#issue/12], ["#13":https://github.com/nbronson/scala-stm/issues/closed#issue/13])
+* Bug fixes
+["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11] -- fix for two-@Ref@ form of @compareAndSet@;
+["#12":https://github.com/nbronson/scala-stm/issues/closed#issue/12] -- rare @StackOverflowException@ under heavy contention and true nesting;
+["#13":https://github.com/nbronson/scala-stm/issues/closed#issue/13] -- contention management improvements;
+["#14":https://github.com/nbronson/scala-stm/issues/closed#issue/14] -- fix for external decision support; and
+["#15":https://github.com/nbronson/scala-stm/issues/closed#issue/15] -- NPE if a post-decision handler threw an exception.
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
