@@ -109,11 +109,11 @@ class TSetSuite extends FunSuite {
 
 
   test("random sequential") {
-    randomTest(1000)
+    randomTest(1500)
   }
 
   test("more random sequential", Slow) {
-    randomTest(20000)
+    randomTest(30000)
   }
 
   def randomTest(total: Int) {
@@ -125,7 +125,7 @@ class TSetSuite extends FunSuite {
     val base = mutable.Set.empty[String]
 
     for (i <- 0 until total) {
-      val pct = rand.nextInt(225)
+      val pct = rand.nextInt(250)
       val k = nextKey
       if (pct < 15) {
         assert(base.contains(k) === mut.contains(k))
@@ -167,6 +167,8 @@ class TSetSuite extends FunSuite {
         val k3 = nextKey
         assert(base eq (base ++= Array(k, k2, k3)))
         assert(mut eq (mut ++= Array(k, k2, k3)))
+      } else if (pct < 82) {
+        assert(mut eq (mut ++= Nil))
       } else if (pct < 88) {
         assert(base eq (base -= k))
         assert(mut eq (mut -= k))
@@ -175,11 +177,13 @@ class TSetSuite extends FunSuite {
         val k3 = nextKey
         assert(base eq (base -= (k, k2, k3)))
         assert(mut eq (mut -= (k, k2, k3)))
-      } else if (pct < 94) {
+      } else if (pct < 93) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut eq (mut --= Array(k, k2, k3)))
+      } else if (pct < 94) {
+        assert(mut eq (mut --= Nil))
       } else if (pct < 95) {
         mut = TSet(mut.toArray: _*).single
       } else if (pct < 96) {
@@ -227,11 +231,13 @@ class TSetSuite extends FunSuite {
         val k3 = nextKey
         assert(base eq (base += (k, k2, k3)))
         assert(mut.tset eq atomic { implicit txn => mut.tset += (k, k2, k3) })
-      } else if (pct < 183) {
+      } else if (pct < 182) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base ++= Array(k, k2, k3)))
         assert(mut.tset eq atomic { implicit txn => mut.tset ++= Array(k, k2, k3) })
+      } else if (pct < 183) {
+        assert(mut.tset eq atomic { implicit txn => mut.tset ++= Nil })
       } else if (pct < 188) {
         assert(base eq (base -= k))
         assert(mut.tset eq atomic { implicit txn => mut.tset -= k })
@@ -240,11 +246,13 @@ class TSetSuite extends FunSuite {
         val k3 = nextKey
         assert(base eq (base -= (k, k2, k3)))
         assert(mut.tset eq atomic { implicit txn => mut.tset -= (k, k2, k3) })
-      } else if (pct < 194) {
+      } else if (pct < 193) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut.tset eq atomic { implicit txn => mut.tset --= Array(k, k2, k3) })
+      } else if (pct < 194) {
+        assert(mut.tset eq atomic { implicit txn => mut.tset --= Nil })
       } else if (pct < 195) {
         mut = atomic { implicit txn => TSet(mut.tset.toArray: _*).single }
       } else if (pct < 196) {
@@ -297,8 +305,43 @@ class TSetSuite extends FunSuite {
         assert(b2 === m2)
         assert(m2 eq m2.tset.single)
         mut = m2 map { v => "key" + v }
+      } else if (pct < 217) {
+        mut = TSet.View.empty[String] ++ mut
+      } else if (pct < 219) {
+        mut = atomic { implicit txn => mut.tset.empty ++ mut.tset }
+      } else if (pct < 221) {
+        val b = TSet.View.newBuilder[String]
+        b ++= mut
+        b.clear()
+        b ++= mut
+        mut = b.result
+      } else if (pct < 223) {
+        mut = (atomic { implicit txn =>
+          val b = TSet.newBuilder[String]
+          b ++= mut.tset
+          b.clear()
+          b ++= mut.tset
+          b.result
+        }).single
       }
     }
+  }
+
+  test("tset clear") {
+    val s = TSet(1, 2)
+    atomic { implicit txn => s.clear() }
+    assert(s.single.isEmpty)
+    assert(s.single.size === 0)
+    assert(!s.single.iterator.hasNext)
+    for (e <- s.single) { assert(false) }
+  }
+
+  test("view clear") {
+    val s = TSet(1, 2)
+    s.single.clear()
+    assert(s.single.size === 0)
+    assert(!s.single.iterator.hasNext)
+    for (e <- s.single) { assert(false) }
   }
 
   test("null entry") {
@@ -324,5 +367,31 @@ class TSetSuite extends FunSuite {
     val s = TSet(ks: _*)
     val iter = atomic { implicit txn => s.iterator }
     assert(iter.toSet === ks.toSet)
+  }
+
+  test("iterator after many removes") {
+    val m = TSet.View.empty[Int]
+    for (i <- 0 until 100000)
+      m += i
+    for (i <- 0 until 100000)
+      m -= i
+    assert(!m.iterator.hasNext)
+    for (e <- m) { assert(false) }
+  }
+
+  test("view snapshot foreach") {
+    val ks = (0 until 100)
+    val s = TSet(ks: _*)
+    var n = 0
+    for (k <- s.single.snapshot) n += k
+    assert(n === 4950)
+  }
+
+  test("txn snapshot foreach") {
+    val ks = (0 until 100)
+    val s = TSet(ks: _*)
+    var n = 0
+    for (k <- atomic { implicit txn => s.snapshot }) n += k
+    assert(n === 4950)
   }
 }
