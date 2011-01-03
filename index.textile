@@ -15,15 +15,15 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
-* 2011 Jan 2 -- ["0.3-SNAPHOT":snapshots.html]: Bug fixes (["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11], ["#12":https://github.com/nbronson/scala-stm/issues/closed#issue/12], ["#13":https://github.com/nbronson/scala-stm/issues/closed#issue/13])
+* _2011 Jan 2_ -- ["0.3-SNAPHOT":snapshots.html]: Bug fixes (["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11], ["#12":https://github.com/nbronson/scala-stm/issues/closed#issue/12], ["#13":https://github.com/nbronson/scala-stm/issues/closed#issue/13])
 
-* 2010 Dec 27 -- ScalaSTM version 0.2 ["released":releases.html], including
-  - Performance improvements and bug fixes
-  - Better @TSet@, @TMap@ and @TxnLocal@
-  - Transaction statistics
+*(major) _2010 Dec 27_ -- ScalaSTM version 0.2 ["released":releases.html], including
+** Performance improvements and bug fixes
+** Better @TSet@, @TMap@ and @TxnLocal@
+** Transaction statistics
 
-* 2010 Dec 16 -- ["0.2-SNAPSHOT":snapshots.html]: Bug fix for while-committing handlers (["#3":https://github.com/nbronson/scala-stm/issues/closed#issue/3]).  @TxnLocal@ can now be read and written from while-preparing and while-committing handlers.
+* _2010 Dec 16_ -- ["0.2-SNAPSHOT":snapshots.html]: Bug fix for while-committing handlers (["#3":https://github.com/nbronson/scala-stm/issues/closed#issue/3]).  @TxnLocal@ can now be read and written from while-preparing and while-committing handlers.
 
-* 2010 Dec 8 -- ["0.2-SNAPSHOT":snapshots.html]: Substantial performance improvements, especially for nested atomic blocks.  @TMap.View@ and @TSet.View@ are integrated with Scala collection class hierarchy.
+* _2010 Dec 8_ -- ["0.2-SNAPSHOT":snapshots.html]: Substantial performance improvements, especially for nested atomic blocks.  @TMap.View@ and @TSet.View@ are integrated with Scala collection class hierarchy.
 
-* 2010 Dec 6 -- ScalaSTM version 0.1 released.  "Get it...":releases.html
+*(major) _2010 Dec 6_ -- ScalaSTM version 0.1 released.  "Get it...":releases.html
