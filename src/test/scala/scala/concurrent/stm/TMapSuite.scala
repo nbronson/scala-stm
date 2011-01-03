@@ -112,11 +112,11 @@ class TMapSuite extends FunSuite {
   }
 
   test("random sequential") {
-    randomTest(1000)
+    randomTest(1500)
   }
 
   test("more random sequential", Slow) {
-    randomTest(20000)
+    randomTest(30000)
   }
 
   def randomTest(total: Int) {
@@ -129,7 +129,7 @@ class TMapSuite extends FunSuite {
     val base = mutable.Map.empty[String, Int]
 
     for (i <- 0 until total) {
-      val pct = rand.nextInt(225)
+      val pct = rand.nextInt(250)
       val k = nextKey
       val v = nextValue
       if (pct < 15) {
@@ -170,11 +170,13 @@ class TMapSuite extends FunSuite {
         val kv3 = (nextKey -> nextValue)
         assert(base eq (base += ((k -> v), kv2, kv3)))
         assert(mut eq (mut += ((k -> v), kv2, kv3)))
-      } else if (pct < 83) {
+      } else if (pct < 82) {
         val kv2 = (nextKey -> nextValue)
         val kv3 = (nextKey -> nextValue)
         assert(base eq (base ++= Array((k -> v), kv2, kv3)))
         assert(mut eq (mut ++= Array((k -> v), kv2, kv3)))
+      } else if (pct < 83) {
+        assert(mut eq (mut ++= Nil))
       } else if (pct < 88) {
         assert(base eq (base -= k))
         assert(mut eq (mut -= k))
@@ -183,11 +185,13 @@ class TMapSuite extends FunSuite {
         val k3 = nextKey
         assert(base eq (base -= (k, k2, k3)))
         assert(mut eq (mut -= (k, k2, k3)))
-      } else if (pct < 94) {
+      } else if (pct < 93) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut eq (mut --= Array(k, k2, k3)))
+      } else if (pct < 94) {
+        assert(mut eq (mut --= Nil))
       } else if (pct < 95) {
         mut = TMap(mut.toArray: _*).single
       } else if (pct < 96) {
@@ -238,11 +242,13 @@ class TMapSuite extends FunSuite {
         val kv3 = (nextKey -> nextValue)
         assert(base eq (base += ((k -> v), kv2, kv3)))
         assert(mut.tmap eq atomic { implicit t => mut.tmap += ((k -> v), kv2, kv3) })
-      } else if (pct < 183) {
+      } else if (pct < 182) {
         val kv2 = (nextKey -> nextValue)
         val kv3 = (nextKey -> nextValue)
         assert(base eq (base ++= Array((k -> v), kv2, kv3)))
         assert(mut.tmap eq atomic { implicit t => mut.tmap ++= Array((k -> v), kv2, kv3) })
+      } else if (pct < 183) {
+        assert(mut.tmap eq atomic { implicit t => mut.tmap ++= Nil })
       } else if (pct < 188) {
         assert(base eq (base -= k))
         assert(mut.tmap eq atomic { implicit t => mut.tmap -= k })
@@ -251,11 +257,13 @@ class TMapSuite extends FunSuite {
         val k3 = nextKey
         assert(base eq (base -= (k, k2, k3)))
         assert(mut.tmap eq atomic { implicit t => mut.tmap -= (k, k2, k3) })
-      } else if (pct < 194) {
+      } else if (pct < 193) {
         val k2 = nextKey
         val k3 = nextKey
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut.tmap eq atomic { implicit t => mut.tmap --= Array(k, k2, k3) })
+      } else if (pct < 194) {
+        assert(mut.tmap eq atomic { implicit t => mut.tmap --= Nil })
       } else if (pct < 195) {
         mut = atomic { implicit t => TMap(mut.tmap.toArray: _*).single }
       } else if (pct < 196) {
@@ -328,10 +336,44 @@ class TMapSuite extends FunSuite {
         assert(b2 === m2)
         assert(m2 eq m2.tmap.single)
         mut = m2 map { kv => (kv._1 -> kv._2.asInstanceOf[Int]) }
+      } else if (pct < 227) {
+        mut = TMap.View.empty[String, Int] ++ mut
+      } else if (pct < 229) {
+        mut = atomic { implicit txn => mut.tmap.empty ++ mut.tmap }
+      } else if (pct < 231) {
+        val b = TMap.View.newBuilder[String, Int]
+        b ++= mut
+        b.clear()
+        b ++= mut
+        mut = b.result
+      } else if (pct < 233) {
+        mut = (atomic { implicit txn =>
+          val b = TMap.newBuilder[String, Int]
+          b ++= mut.tmap
+          b.clear()
+          b ++= mut.tmap
+          b.result
+        }).single
       }
     }
   }
+
+  test("tmap clear") {
+    val m = TMap(1 -> "one", 2 -> "two")
+    atomic { implicit txn => m.clear() }
+    assert(m.single.size === 0)
+    assert(!m.single.iterator.hasNext)
+    for (e <- m.single) { assert(false) }
+  }
   
+  test("view clear") {
+    val m = TMap(1 -> "one", 2 -> "two")
+    m.single.clear()
+    assert(m.single.size === 0)
+    assert(!m.single.iterator.hasNext)
+    for (e <- m.single) { assert(false) }
+  }
+
   test("null key") {
     val m = TMap((null : AnyRef) -> "abc", "def" -> "ghi")
     assert(m.single.size === 2)
@@ -366,6 +408,32 @@ class TMapSuite extends FunSuite {
     val m = TMap(kvs: _*)
     val iter = atomic { implicit txn => m.iterator }
     assert(iter.toMap === kvs.toMap)
+  }
+
+  test("iterator after many removes") {
+    val m = TMap.View.empty[Int, Int]
+    for (i <- 0 until 100000)
+      m(i) = i
+    for (i <- 0 until 100000)
+      m -= i
+    assert(!m.iterator.hasNext)
+    for (e <- m) { assert(false) }
+  }
+
+  test("view snapshot foreach") {
+    val kvs = (0 until 100) map { i => (i -> ("x" + (i % 37))) }
+    val m = TMap(kvs: _*)
+    var n = 0
+    for ((k, v) <- m.single.snapshot) n += k
+    assert(n === 4950)
+  }
+
+  test("txn snapshot foreach") {
+    val kvs = (0 until 100) map { i => (i -> ("x" + (i % 37))) }
+    val m = TMap(kvs: _*)
+    var n = 0
+    for ((k, v) <- atomic { implicit txn => m.snapshot }) n += k
+    assert(n === 4950)
   }
 
   test("contention") {

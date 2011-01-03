@@ -59,6 +59,11 @@ class IsolatedRefSuite extends FunSuite {
     def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
 
+    override def +=(rhs: A)(implicit num: Numeric[A]) = ref += rhs
+    override def -=(rhs: A)(implicit num: Numeric[A]) = ref -= rhs
+    override def *=(rhs: A)(implicit num: Numeric[A]) = ref *= rhs
+    override def /=(rhs: A)(implicit num: Numeric[A]) = ref /= rhs
+
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
   }
@@ -88,6 +93,11 @@ class IsolatedRefSuite extends FunSuite {
     def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
     def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
+
+    override def +=(rhs: A)(implicit num: Numeric[A]) = wrap { view += rhs }
+    override def -=(rhs: A)(implicit num: Numeric[A]) = wrap { view -= rhs }
+    override def *=(rhs: A)(implicit num: Numeric[A]) = wrap { view *= rhs }
+    override def /=(rhs: A)(implicit num: Numeric[A]) = wrap { view /= rhs }
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -345,6 +355,14 @@ class IsolatedRefSuite extends FunSuite {
     assert(!view().compareAndSetIdentity(new String("orig"), "equal"))
     assert(view().compareAndSetIdentity("orig", "eq"))
     assert(view().get === "eq")
+  }
+
+  createTests("-= -1 long", 1L) { view =>
+    for (i <- 1 until 10) {
+      assert(view()() === i)
+      view() -= -1
+    }
+    assert(view()() === 10L)
   }
 
   createTests("/=", 11) { view =>

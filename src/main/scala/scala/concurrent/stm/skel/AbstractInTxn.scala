@@ -3,17 +3,7 @@
 package scala.concurrent.stm
 package skel
 
-import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
-import collection.mutable.ArrayBuffer
 import annotation.tailrec
-
-private[stm] object AbstractInTxn {
-  abstract class SuccessCallback[A, B] {
-    protected def buffer(owner: A): ArrayBuffer[B => Unit]
-
-    def add(owner: A, handler: B => Unit) { }
-  }
-}
 
 private[stm] trait AbstractInTxn extends InTxn {
   import Txn._
