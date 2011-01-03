@@ -133,12 +133,11 @@ private[ccstm] object NonTxn {
   }
 
   /** Returns 0L on failure. */
-  private def tryAcquireLock(handle: Handle[_], exclusive: Boolean): Meta = {
+  private def tryAcquireExclusiveLock(handle: Handle[_]): Meta = {
     val m0 = handle.meta
     if (owner(m0) != unownedSlot) return 0L
 
-    val mOwned = withOwner(m0, nonTxnSlot)
-    val m1 = if (exclusive) withChanging(mOwned) else mOwned
+    val m1 = withChanging(withOwner(m0, nonTxnSlot))
 
     if (!handle.metaCAS(m0, m1)) return 0L
 
@@ -260,28 +259,6 @@ private[ccstm] object NonTxn {
   }
 
   @throws(classOf[InterruptedException])
-  @tailrec
-  def unrecordedRead[T](handle: Handle[T]): UnrecordedRead[T] = {
-    val m0 = handle.meta
-    if (changing(m0)) {
-      weakAwaitUnowned(handle, m0)
-    } else {
-      val v = handle.data
-      val m1 = handle.meta
-      if (changingAndVersion(m0) == changingAndVersion(m1)) {
-        // stable read of v
-        return new UnrecordedRead[T] {
-          def context = None
-          val value = v
-          def stillValid = changingAndVersion(handle.meta) == changingAndVersion(m1)
-          def recorded = false
-        }
-      }
-    }
-    return unrecordedRead(handle)
-  }
-
-  @throws(classOf[InterruptedException])
   def set[T](handle: Handle[T], v: T) {
     val m0 = acquireLock(handle, true)
     commitUpdate(handle, m0, v)
@@ -296,7 +273,7 @@ private[ccstm] object NonTxn {
   }
 
   def trySet[T](handle: Handle[T], v: T): Boolean = {
-    val m0 = tryAcquireLock(handle, true)
+    val m0 = tryAcquireExclusiveLock(handle)
     if (m0 == 0L) {
       false
     } else {
@@ -436,16 +413,6 @@ private[ccstm] object NonTxn {
     repl
   }
 
-  def tryTransform[T](handle: Handle[T], f: T => T): Boolean = {
-    val m0 = tryAcquireLock(handle, false)
-    if (m0 == 0L) {
-      false
-    } else {
-      transformAndGetImpl(handle, f, m0)
-      true
-    }
-  }
-
   @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
     if (pf.isDefinedAt(get(handle))) {
@@ -475,7 +442,7 @@ private[ccstm] object NonTxn {
     var tries = 0
     do {
       mA0 = acquireLock(handleA, true)
-      mB0 = tryAcquireLock(handleB, true)
+      mB0 = tryAcquireExclusiveLock(handleB)
       if (mB0 == 0) {
         // tryAcquire failed
         discardLock(handleA, mA0)
@@ -487,7 +454,7 @@ private[ccstm] object NonTxn {
 
         // try it in the opposite direction
         mB0 = acquireLock(handleB, true)
-        mA0 = tryAcquireLock(handleA, true)
+        mA0 = tryAcquireExclusiveLock(handleA)
 
         if (mA0 == 0) {
           // tryAcquire failed
