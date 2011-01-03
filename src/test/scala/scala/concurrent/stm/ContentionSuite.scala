@@ -12,7 +12,7 @@ class ContentionSuite extends FunSuite {
   var count = 0
   for (numRefs <- List(1000, 100000)) {
     for (readPct <- List(80)) {
-      for (numThreads <- List(32, 4)) {
+      for (numThreads <- List(4, 32)) {
         for (txnSize <- List(8, 64, 16)) {
           for (nested <- List(false, true)) {
             val opsPerThread = 20000000 / numThreads
@@ -20,8 +20,12 @@ class ContentionSuite extends FunSuite {
             val numWrites = opsPerThread - numReads
             val name = "%d refs, %d %% read, %d threads, %d ops/txn, nested=%s".format(
                 numRefs, readPct, numThreads, txnSize, nested)
-            val tags = if (count < 4) Nil else List(Slow)
-            test(name, tags: _*) {
+            if (count < 4) {
+              test("small " + name) {
+                runTest(numRefs, numReads / 10, numWrites / 10, numThreads, txnSize, nested, "small " + name)
+              }
+            }
+            test(name, Slow) {
               runTest(numRefs, numReads, numWrites, numThreads, txnSize, nested, name)
             }
             count += 1
