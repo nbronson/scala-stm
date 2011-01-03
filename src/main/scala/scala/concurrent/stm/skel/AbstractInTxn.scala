@@ -92,7 +92,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     var failure: Throwable = null
     var i = 0
     while (i < _whileCommittingList.size) {
-      failure = firePostDecision(_whileCommittingList(i), this, exec, failure)
+      failure = firePostDecision(_whileCommittingList(i), this, exec, Txn.Committing, failure)
       i += 1
     }
     failure
@@ -111,21 +111,21 @@ private[stm] trait AbstractInTxn extends InTxn {
     var j = if (inOrder) 0 else handlers.length - 1
     var dj = if (inOrder) 1 else -1
     while (i < handlers.length) {
-      failure = firePostDecision(handlers(j), s, exec, failure)
+      failure = firePostDecision(handlers(j), s, exec, s, failure)
       i += 1
       j += dj
     }
     failure
   }
 
-  private def firePostDecision[A](handler: A => Unit, arg: A, exec: TxnExecutor, f: Throwable): Throwable = {
+  private def firePostDecision[A](handler: A => Unit, arg: A, exec: TxnExecutor, s: Status, f: Throwable): Throwable = {
     try {
       handler(arg)
       f
     } catch {
       case x => {
         try {
-          exec.postDecisionFailureHandler(status, x)
+          exec.postDecisionFailureHandler(s, x)
           f
         } catch {
           case xx => xx
