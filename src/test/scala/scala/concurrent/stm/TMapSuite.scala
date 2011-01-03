@@ -418,6 +418,10 @@ class TMapSuite extends FunSuite {
       m -= i
     assert(!m.iterator.hasNext)
     for (e <- m) { assert(false) }
+    atomic { implicit txn => assert(m.tmap.isEmpty) }
+    atomic { implicit txn => assert(m.tmap.size === 0) }
+    assert(m.isEmpty)
+    assert(m.size === 0)
   }
 
   test("view snapshot foreach") {

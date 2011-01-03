@@ -386,6 +386,24 @@ class TxnSuite extends FunSuite {
     }
   }
 
+  test("many multi-level reads") {
+    val refs = Array.tabulate(10000) { _ => Ref(0) }
+    atomic { implicit txn =>
+      for (r <- refs) r() = 1
+      val f = atomic { implicit txn =>
+        for (r <- refs) r() = 2
+        if (refs(0)() != 0)
+          retry
+        false
+      } orAtomic { implicit txn =>
+        true
+      }
+      assert(f)
+    }
+    for (r <- refs)
+      assert(r.single() === 1)
+  }
+
   test("barging retry") {
     // the code to trigger barging is CCSTM-specific, but this test should pass regardless
     var tries = 0
@@ -404,7 +422,8 @@ class TxnSuite extends FunSuite {
           Txn.rollback(Txn.OptimisticFailureCause('test, None))
 
         z() = 3
-        if (x() != 1 || y.swap(2) != 1)
+        x()
+        if (y.swap(2) != 1)
           retry
       }
     }
@@ -425,6 +444,62 @@ class TxnSuite extends FunSuite {
       val sum = refs.foldLeft(0)( _ + _.get )
       if (sum == 0)
         retry
+    }
+  }
+
+  test("retry with many accesses to TArray") {
+    // the code to trigger barging is CCSTM-specific, but this test should pass regardless
+    var tries = 0
+    val refs = TArray.ofDim[Int](10000).refs
+
+    (new Thread { override def run { Thread.sleep(100) ; refs(500).single() = 1 } }).start
+
+    atomic { implicit txn =>
+      tries += 1
+      if (tries < 50)
+        Txn.rollback(Txn.OptimisticFailureCause('test, None))
+
+      for (r <- refs.take(500))
+        r *= 2
+      val sum = refs.foldLeft(0)( _ + _.get )
+      if (sum == 0)
+        retry
+    }
+  }
+
+  test("partial rollback of invalid read") {
+    val x = Ref(0)
+    var xtries = 0
+    val y = Ref(0)
+    var ytries = 0
+
+    (new Thread { override def run { Thread.sleep(100) ; y.single() = 1 } }).start
+
+    atomic { implicit txn =>
+      xtries += 1
+      x += 1
+      atomic { implicit txn =>
+        ytries += 1
+        y()
+        Thread.sleep(200)
+        y()
+      } orAtomic { implicit txn =>
+        throw new Error("should not be run")
+      }
+    }
+
+    // We can't assert, because different STMs might do different things.
+    // For CCSTM it should be 1, 2
+    println("xtries = " + xtries + ", ytries = " + ytries)
+  }
+
+  test("futile retry should fail") {
+    val x = true
+    intercept[IllegalStateException] {
+      atomic { implicit txn =>
+        if (x)
+          retry
+      }
     }
   }
 
@@ -501,7 +576,8 @@ class TxnSuite extends FunSuite {
             val active = NestingLevel.current
             (new Thread {
               override def run {
-                Thread.sleep(50)
+                Thread.`yield`
+                Thread.`yield`
                 val cause = Txn.UncaughtExceptionCause(new UserException)
                 assert(active.requestRollback(cause) == Txn.RolledBack(cause))
               }

@@ -225,6 +225,14 @@ class IsolatedRefSuite extends FunSuite {
     assert(view()() === 10)
   }
 
+  createTests("transformAndGet", 1) { view =>
+    for (i <- 1 until 10) {
+      assert(view()() === i)
+      assert(view().transformAndGet(_ + 1) === i + 1)
+    }
+    assert(view()() === 10)
+  }
+
   createTests("transformIfDefined", 1) { view =>
     for (i <- 1 until 10) {
       assert(view()() === i)
