@@ -153,7 +153,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
       // already merged with parent, roll back both
       parUndo.rollbackImpl(rb)
     }
-    case ch: TxnLevelImpl if !ch.status.isInstanceOf[Txn.RolledBack] => {
+    case ch: TxnLevelImpl if !ch.rolledBackOrMerged => {
       // roll back the child first, then try again
       ch.rollbackImpl(rb)
       rollbackImpl(rb)
@@ -173,4 +173,9 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     }
   }
 
+  private def rolledBackOrMerged = _state match {
+    case null => true
+    case Txn.RolledBack(_) => true
+    case _ => false
+  }
 }
