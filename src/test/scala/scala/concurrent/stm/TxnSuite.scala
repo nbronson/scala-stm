@@ -603,6 +603,18 @@ class TxnSuite extends FunSuite {
     }).toString
   }
 
+  test("many simultaneous Txns", Slow) {
+    // CCSTM supports 2046 simultaneous transactions
+    val threads = Array.tabulate(2500) { _ => new Thread {
+      override def run { atomic { implicit txn => Thread.sleep(1000) } }
+    }}
+    val begin = System.currentTimeMillis
+    for (t <- threads) t.start
+    for (t <- threads) t.join
+    val elapsed = System.currentTimeMillis - begin
+    println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
+  }
+
   perfTest("uncontended R+W txn perf") { (x, y) =>
     var i = 0
     while (i < 5) {
