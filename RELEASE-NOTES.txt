@@ -2,7 +2,7 @@ ScalaSTM - 0.3-SNAPSHOT RELEASE NOTES
 
 Changes between 0.2 and 0.3-SNAPSHOT:
 
-* None yet
+* Bug fixes (issues #11, #12, and #13).
 
 Snapshot releases deployed to the scala-tools.org repository are tested
 and functional, but may have changing APIs.
