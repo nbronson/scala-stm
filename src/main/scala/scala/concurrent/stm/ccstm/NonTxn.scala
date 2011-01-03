@@ -483,7 +483,7 @@ private[ccstm] object NonTxn {
 
         // did it fail because the handles are equal?
         if (handleA == handleB)
-          throw new IllegalArgumentException("transform2 targets must be distinct")
+          return fallbackTransform2(handleA, handleB, f)
 
         // try it in the opposite direction
         mB0 = acquireLock(handleB, true)
@@ -495,18 +495,8 @@ private[ccstm] object NonTxn {
           mB0 = 0
 
           tries += 1
-          if (tries > 10) {
-            // fall back to a txn, which is guaranteed to eventually succeed
-            return atomic { t =>
-              val txn = t.asInstanceOf[InTxnImpl]
-              val a0 = txn.get(handleA)
-              val b0 = txn.get(handleB)
-              val (a1, b1, z) = f(a0, b0)
-              txn.set(handleA, a1)
-              txn.set(handleB, b1)
-              z
-            }
-          }
+          if (tries > 10)
+            return fallbackTransform2(handleA, handleB, f)
         }
       }
     } while (mB0 == 0)
@@ -528,6 +518,19 @@ private[ccstm] object NonTxn {
     releaseLock(handleA, mA0, wv)
     releaseLock(handleB, mB0, wv)
     return z
+  }
+
+  @throws(classOf[InterruptedException])
+  private def fallbackTransform2[A, B, Z](handleA: Handle[A], handleB: Handle[B], f: (A, B) => (A, B, Z)): Z = {
+    atomic { t =>
+      val txn = t.asInstanceOf[InTxnImpl]
+      val a0 = txn.get(handleA)
+      val b0 = txn.get(handleB)
+      val (a1, b1, z) = f(a0, b0)
+      txn.set(handleA, a1)
+      txn.set(handleB, b1)
+      z
+    }
   }
 
   @throws(classOf[InterruptedException])
