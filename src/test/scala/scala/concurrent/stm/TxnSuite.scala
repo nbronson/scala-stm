@@ -268,6 +268,26 @@ class TxnSuite extends FunSuite {
     assert(x.single() === "outer")
   }
 
+  test("partial rollback due to invalid read") {
+    val x = Ref(0)
+    val y = Ref(0)
+
+    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start
+
+    atomic { implicit t =>
+      x()
+      atomic { implicit t =>
+        y()
+        Thread.sleep(200)
+        y()
+      } orAtomic { implicit t =>
+        throw new Error("should not be run")
+      }
+    } orAtomic { implicit t =>
+      throw new Error("should not be run")
+    }
+  }
+
   test("retry set accumulation across alternatives") {
     val x = Ref(false)
 
@@ -366,6 +386,136 @@ class TxnSuite extends FunSuite {
     }
   }
 
+  test("barging retry") {
+    // the code to trigger barging is CCSTM-specific, but this test should pass regardless
+    var tries = 0
+    val x = Ref(0)
+    val y = Ref(0)
+    val z = Ref(0)
+
+    (new Thread { override def run { Thread.sleep(100) ; x.single() = 1 ; y.single() = 1 } }).start
+
+    atomic { implicit txn =>
+      z() = 2
+      atomic { implicit txn =>
+        NestingLevel.current
+        tries += 1
+        if (tries < 50)
+          Txn.rollback(Txn.OptimisticFailureCause('test, None))
+
+        z() = 3
+        if (x() != 1 || y.swap(2) != 1)
+          retry
+      }
+    }
+  }
+
+  test("retry with many pessimistic reads") {
+    // the code to trigger barging is CCSTM-specific, but this test should pass regardless
+    var tries = 0
+    val refs = Array.tabulate(10000) { _ => Ref(0) }
+
+    (new Thread { override def run { Thread.sleep(100) ; refs(500).single() = 1 } }).start
+
+    atomic { implicit txn =>
+      tries += 1
+      if (tries < 50)
+        Txn.rollback(Txn.OptimisticFailureCause('test, None))
+
+      val sum = refs.foldLeft(0)( _ + _.get )
+      if (sum == 0)
+        retry
+    }
+  }
+
+  test("remote cancel") {
+    val x = Ref(0)
+
+    val finished = atomic { implicit txn =>
+      x += 1
+      NestingLevel.current
+    }
+    assert(x.single() === 1)
+
+    for (i <- 0 until 100) {
+      intercept[UserException] {
+        atomic { implicit txn =>
+          val active = NestingLevel.current
+          (new Thread {
+            override def run {
+              val cause = Txn.UncaughtExceptionCause(new UserException)
+              assert(finished.requestRollback(cause) === Txn.Committed)
+              assert(active.requestRollback(cause) == Txn.RolledBack(cause))
+            }
+          }).start
+
+          while (true)
+            x() = x() + 1
+        }
+      }
+      assert(x.single() === 1)
+    }
+  }
+
+  test("remote cancel of root") {
+    val x = Ref(0)
+
+    val finished = atomic { implicit txn =>
+      x += 1
+      NestingLevel.current
+    }
+    assert(x.single() === 1)
+
+    for (i <- 0 until 100) {
+      intercept[UserException] {
+        atomic { implicit txn =>
+          // this is to force true nesting for CCSTM, but the test should pass for any STM
+          atomic { implicit txn => NestingLevel.current }
+
+          val active = NestingLevel.current
+          (new Thread {
+            override def run {
+              Thread.`yield`
+              Thread.`yield`
+              val cause = Txn.UncaughtExceptionCause(new UserException)
+              assert(finished.requestRollback(cause) === Txn.Committed)
+              assert(active.requestRollback(cause) == Txn.RolledBack(cause))
+            }
+          }).start
+
+          while (true)
+            atomic { implicit txn => x += 1 }
+        }
+      }
+      assert(x.single() === 1)
+    }
+  }
+
+  test("remote cancel of child") {
+    val x = Ref(0)
+
+    for (i <- 0 until 100) {
+      intercept[UserException] {
+        atomic { implicit txn =>
+          atomic { implicit txn =>
+            val active = NestingLevel.current
+            (new Thread {
+              override def run {
+                Thread.sleep(50)
+                val cause = Txn.UncaughtExceptionCause(new UserException)
+                assert(active.requestRollback(cause) == Txn.RolledBack(cause))
+              }
+            }).start
+
+            while (true)
+              x() = x() + 1
+          }
+        }
+      }
+      assert(x.single() === 0)
+    }
+  }
+
   test("toString") {
     (atomic { implicit txn =>
       txn.toString
@@ -376,12 +526,6 @@ class TxnSuite extends FunSuite {
       NestingLevel.current
     }).toString
   }
-
-  // TODO: more whilePreparing and whileCommitting callback usage
-
-  // TODO: exception behavior from all types of callbacks
-
-  // TODO: tests for external decider
 
   perfTest("uncontended R+W txn perf") { (x, y) =>
     var i = 0
