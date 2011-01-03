@@ -262,8 +262,8 @@ private[stm] trait AbstractInTxn extends InTxn {
         throw new IllegalArgumentException("can't set two different ExternalDecider-s in the same top-level atomic block")
     } else {
       _decider = decider
-      // if this nesting level rolls back then the decider should be unregistered
-      afterRollback { status =>
+      // the decider should be unregistered after either rollback or commit
+      afterCompletion { status =>
         assert(_decider eq decider)
         _decider = null
       }
