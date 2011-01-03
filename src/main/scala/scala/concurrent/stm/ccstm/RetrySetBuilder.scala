@@ -72,14 +72,6 @@ private[ccstm] final class RetrySetBuilder {
 
   private def hEq(a: Handle[_], b: Handle[_]) = (a eq b) || ((a.base eq b.base) && (a.offset == b.offset))
 
-  def ++= (rhs: RetrySetBuilder) {
-    var i = rhs.size - 1
-    while (i >= 0) {
-      this += (rhs._handles(i), rhs._versions(i))
-      i -= 1
-    }
-  }
-
   def result(): RetrySet = {
     _dispatch = null
     _next = null
