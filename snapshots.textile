@@ -3,7 +3,9 @@ layout: default
 title: Snapshot releases
 ---
 
-There are no changes between 0.2 and 0.3-SNAPSHOT yet.
+Changes between 0.2 and 0.3-SNAPSHOT:
+
+* Bug fixes (["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11], ["#12":https://github.com/nbronson/scala-stm/issues/closed#issue/12], ["#13":https://github.com/nbronson/scala-stm/issues/closed#issue/13])
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
