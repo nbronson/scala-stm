@@ -488,6 +488,46 @@ class TxnSuite extends FunSuite {
     assert(elapsed >= 100 && elapsed < 200)
   }
 
+  test("second retryFor has shorter timeout") {
+    val x = Ref(0)
+    (new Thread {
+      override def run {
+        Thread.sleep(50)
+        x.single() = 1
+        Thread.sleep(100)
+        x.single += 1
+      }
+    }).start
+    atomic { implicit txn =>
+      x() = x() + 10
+      if (x() == 10)
+        retryFor(200)
+      else if (x() == 11)
+        retryFor(50)
+    }
+    assert(x.single() === 11)
+    x.single.await( _ == 12 )
+  }
+
+  test("retryFor via View await") {
+    val x = Ref(0)
+    (new Thread {
+      override def run {
+        Thread.sleep(50)
+        x.single() = 1
+        Thread.sleep(100)
+        x.single += 1
+      }
+    }).start
+    atomic { implicit txn =>
+      x() = x() + 10
+      x.single.await( _ == 11 )
+      assert(!x.single.tryAwait( _ == 12 , 50))
+    }
+    assert(x.single() === 11)
+    x.single.await( _ == 12 )
+  }
+
   test("View in txn") {
     val x = Ref(10)
     val xs = x.single
