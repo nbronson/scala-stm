@@ -82,24 +82,40 @@ class ContentionSuite extends FunSuite {
 
   def runElderTest(writerCount: Int, numElders: Int) {
     val writersStarted = Ref(0) // elder can't run until all writers are started
-    val refs = Array.tabulate(1000) { i => Ref(i) }
+    val refs = Array.tabulate(1000) { i => Ref(i.toString) }
     val eldersLeft = Ref(numElders) // writers end after all elders are done
 
     val writers = for(i <- 0 until writerCount) yield new Thread("writer " + i) {
       override def run {
         writersStarted.single += 1
 
-        var rand = new skel.FastSimpleRandom
+        val rand = new skel.FastSimpleRandom
         while (true) {
-          rand = atomic { implicit txn =>
-            val r = rand.clone
-            if (eldersLeft() == 0)
+          val a = refs(rand.nextInt(refs.length))
+          val b = refs(rand.nextInt(refs.length))
+          val pct = rand.nextInt(100)
+          if (pct < 70) {
+            // swap in a txn
+            atomic { implicit txn =>
+              if (eldersLeft() == 0)
+                return
+
+              a() = b.swap(a())
+            }
+          } else {
+            if (eldersLeft.single() == 0)
               return
 
-            val a = refs(r.nextInt(refs.length))
-            val b = refs(r.nextInt(refs.length))
-            a() = b.swap(a())
-            r
+            // swap using DCAS or DCASI
+            var done = false
+            while (!done) {
+              val a0 = a.single()
+              val b0 = b.single()
+              if (pct < 85)
+                done = atomic.compareAndSet(a, a0, b0, b, b0, a0)
+              else
+                done = atomic.compareAndSetIdentity(a, a0, b0, b, b0, a0)
+            }
           }
         }
       }
@@ -113,7 +129,7 @@ class ContentionSuite extends FunSuite {
         tries += 1
         if (writersStarted() < writerCount)
           retry
-        refs.foldLeft(0) { _ + _.get }
+        refs.foldLeft(0) { _ + _.get.toInt }
       }
       val n = refs.length
       assert(sum === n * (n - 1) / 2)
