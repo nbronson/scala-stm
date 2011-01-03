@@ -419,6 +419,7 @@ class IsolatedRefSuite extends FunSuite {
       assert(view().ref == view().ref)
       assert(view().ref.single == view())
       assert(view() != Ref(v0))
+      assert(view() != "abc")
     }
 
     test(name + " TArray Ref equality") {
@@ -429,9 +430,10 @@ class IsolatedRefSuite extends FunSuite {
       assert(a.single.refViews(0) == a.single.refViews(0))
       assert(a.refs(0) == a.refs(0).single)
       assert(a.single.tarray.refs(0) == a.refs(0).single)
+      assert(a.refs(0) != "abc")
     }
 
-    test(name + " TArray Ref inequality") {
+    test(name + " TArray Ref inequality between arrays") {
       val a = TArray(Seq(v0))
       val b = TArray(Seq(v1))
       assert(b.refs(0) != a.refs(0))
@@ -453,4 +455,65 @@ class IsolatedRefSuite extends FunSuite {
   perTypeTests(1.0, 2.0)
   perTypeTests((), ())
   perTypeTests("1", "2")
+
+  test("TArray Ref inequality between indices") {
+    val a = TArray.ofDim[Int](1000)
+    println(a.refs(0))
+    for (i <- 1 until 1000) {
+      assert(a.refs(i) != a.refs(0))
+      assert(a.single.refViews(i) != a.refs(0))
+      assert(a.single.refViews(i).ref != a.refs(0))
+      assert(a.single.refViews(i) != a.single.refViews(0))
+      assert(a.refs(i) != a.refs(0).single)
+      assert(a.single.tarray.refs(i) != a.refs(0).single)
+    }
+  }
+
+  test("TArray index checking") {
+    val a = TArray.ofDim[String](10)
+    for (i <- List(-1, 10, Int.MinValue, Int.MaxValue)) {
+      intercept[ArrayIndexOutOfBoundsException] { a.single(i) }
+      intercept[ArrayIndexOutOfBoundsException] { a.single(i) = "abc" }
+      intercept[ArrayIndexOutOfBoundsException] { a.single.refViews(i) }
+      intercept[ArrayIndexOutOfBoundsException] { a.refs(i) }
+      intercept[ArrayIndexOutOfBoundsException] { atomic { implicit txn => a(i) } }
+      intercept[ArrayIndexOutOfBoundsException] { atomic { implicit txn => a(i) = "abc" } }
+    }
+  }
+
+  test("TArray length") {
+    val a = TArray.ofDim[String](10)
+    assert(a.length === 10)
+    assert(a.single.length === 10)
+    assert(a.refs.length === 10)
+    assert(a.single.refViews.length === 10)
+
+    val b = TArray.ofDim[String](0)
+    assert(b.single.isEmpty)
+  }
+
+  class ProxyRef[A](underlying: Ref[A]) extends Ref[A] {
+    override def single = throw new AbstractMethodError
+    def get(implicit txn: InTxn) = throw new AbstractMethodError
+    def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
+    def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError
+    def set(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def trySet(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def swap(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def transform(f: (A) => A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxn) = throw new AbstractMethodError
+
+    override def hashCode = underlying.hashCode
+    override def equals(rhs: Any) = underlying.equals(rhs)
+  }
+
+  test("proxy Ref equality") {
+    val lhs = Ref(10)
+    val rhs = new ProxyRef(lhs)
+    assert(lhs == rhs)
+    assert(rhs == lhs)
+    assert(rhs == rhs)
+    assert(rhs != Ref(5))
+    assert(Ref(5) != rhs)
+  }
 }
