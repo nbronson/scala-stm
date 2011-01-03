@@ -133,16 +133,23 @@ class IsolatedRefSuite extends FunSuite {
   // configuration.
 
   private def createTests[A : ClassManifest](name: String, v0: A)(block: (() => Ref.View[A]) => Unit) {
-    for (outerLevels <- 0 until 2;
-         innerLevels <- 0 until 2;
-         refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
-         viewFactory <- List(SingleAccess, RefAccess);
-         if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
-      test("outer=" + outerLevels + ", inner=" + innerLevels + ", " +
-              refFactory + ", " + viewFactory + ": " + name) {
-        val ref = refFactory(v0)
-        def getView = viewFactory(ref, innerLevels)
-        nest(outerLevels) { block(getView _) }
+    test(name) {
+      for (outerLevels <- 0 until 2;
+           innerLevels <- 0 until 2;
+           refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
+           viewFactory <- List(SingleAccess, RefAccess);
+           if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
+        val current = "outer=" + outerLevels + ", inner=" + innerLevels + ", " + refFactory + ", " + viewFactory
+        try {
+          val ref = refFactory(v0)
+          def getView = viewFactory(ref, innerLevels)
+          nest(outerLevels) { block(getView _) }
+        } catch {
+          case x => {
+            println(name + " failed for " + current)
+            fail(current + ": " + name + " failure", x)
+          }
+        }
       }
     }
   }
