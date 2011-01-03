@@ -397,4 +397,92 @@ class CallbackSuite extends FunSuite {
     assert(tries === 1)
     assert(x.single() === 0)
   }
+
+  test("rethrown exception from whileCommitting handler") {
+    val x = Ref(0)
+    intercept[UserException] {
+      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      customAtomic { implicit txn =>
+        Txn.whileCommitting { _ => throw new UserException }
+        x() = 1
+      }
+    }
+    assert(x.single() === 1)
+  }
+
+  test("swallowed exception from whileCommitting handler") {
+    var swallowed: Throwable = null
+    val x = Ref(0)
+    val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) =>
+      assert(swallowed === null)
+      assert(status == Txn.Committing)
+      swallowed = failure
+    }
+    customAtomic { implicit txn =>
+      Txn.whileCommitting { _ => throw new UserException }
+      x() = 1
+    }
+    assert(x.single() === 1)
+    assert(swallowed.isInstanceOf[UserException])
+  }
+
+  test("rethrown exception from afterCommit handler") {
+    val x = Ref(0)
+    intercept[UserException] {
+      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      customAtomic { implicit txn =>
+        Txn.afterCommit { _ => throw new UserException }
+        x() = 1
+      }
+    }
+    assert(x.single() === 1)
+  }
+
+  test("swallowed exception from afterCommit handler") {
+    var swallowed: Throwable = null
+    val x = Ref(0)
+    val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) =>
+      assert(swallowed === null)
+      assert(status == Txn.Committed)
+      swallowed = failure
+    }
+    customAtomic { implicit txn =>
+      Txn.afterCommit { _ => throw new UserException }
+      x() = 1
+    }
+    assert(x.single() === 1)
+    assert(swallowed.isInstanceOf[UserException])
+  }
+
+  test("rethrown exception from afterRollback handler") {
+    val x = Ref(0)
+    intercept[UserException] {
+      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      customAtomic { implicit txn =>
+        Txn.afterRollback { _ => throw new UserException }
+        x() = 1
+        throw new InterruptedException
+      }
+    }
+    assert(x.single() === 0)
+  }
+
+  test("swallowed exception from afterRollback handler") {
+    var swallowed: Throwable = null
+    val x = Ref(0)
+    val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) =>
+      assert(swallowed === null)
+      assert(status.isInstanceOf[Txn.RolledBack])
+      swallowed = failure
+    }
+    intercept[InterruptedException] {
+      customAtomic { implicit txn =>
+        Txn.afterRollback { _ => throw new UserException }
+        x() = 1
+        throw new InterruptedException
+      }
+    }
+    assert(x.single() === 0)
+    assert(swallowed.isInstanceOf[UserException])
+  }
 }
