@@ -323,4 +323,78 @@ class CallbackSuite extends FunSuite {
     if (failure.single() != null)
       throw failure.single()
   }
+
+  test("accepting external decider") {
+    val x = Ref(0)
+    atomic { implicit txn =>
+      x() = 1
+      Txn.setExternalDecider(new Txn.ExternalDecider {
+        def shouldCommit(implicit txn: InTxnEnd): Boolean = {
+          assert(txn.status == Txn.Prepared)
+          true
+        }
+      })
+    }
+    assert(x.single() === 1)
+  }
+
+  test("transient reject external decider") {
+    val x = Ref(0)
+    var tries = 0
+    atomic { implicit txn =>
+      tries += 1
+      x() = tries
+      Txn.setExternalDecider(new Txn.ExternalDecider {
+        def shouldCommit(implicit txn: InTxnEnd): Boolean = {
+          assert(txn.status == Txn.Prepared)
+          tries == 3
+        }
+      })
+    }
+    assert(tries === 3)
+    assert(x.single() === 3)
+  }
+
+  test("nested external deciders") {
+    val x = Ref(0)
+    var which = 0
+    atomic { implicit txn =>
+      atomic { implicit txn =>
+        Txn.setExternalDecider(new Txn.ExternalDecider {
+          def shouldCommit(implicit txn: InTxnEnd): Boolean = { which = 1 ; true }
+        })
+        if (x.swap(1) == 0)
+          retry
+      } orAtomic { implicit txn =>
+        Txn.setExternalDecider(new Txn.ExternalDecider {
+          def shouldCommit(implicit txn: InTxnEnd): Boolean = { which = 2 ; true }
+        })
+        if (x.swap(2) == 0)
+          retry
+      } orAtomic { implicit txn =>
+        Txn.setExternalDecider(new Txn.ExternalDecider {
+          def shouldCommit(implicit txn: InTxnEnd): Boolean = { which = 3 ; true }
+        })
+        x.swap(3)
+      }
+    }
+    assert(which === 3)
+    assert(x.single() === 3)
+  }
+
+  test("external decider throws exception") {
+    var tries = 0
+    val x = Ref(0)
+    intercept[UserException] {
+      atomic { implicit txn =>
+        tries += 1
+        x() = 1
+        Txn.setExternalDecider(new Txn.ExternalDecider {
+          def shouldCommit(implicit txn: InTxnEnd): Boolean = throw new UserException
+        })
+      }
+    }
+    assert(tries === 1)
+    assert(x.single() === 0)
+  }
 }
