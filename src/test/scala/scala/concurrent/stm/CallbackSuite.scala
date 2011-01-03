@@ -515,4 +515,17 @@ class CallbackSuite extends FunSuite {
     assert(x.single() === 0)
   }
 
+  test("UserException as control flow") {
+    val x = Ref(0)
+    intercept[UserException] {
+      val customAtomic = atomic.withControlFlowRecognizer {
+        case x: UserException => true
+      }
+      customAtomic { implicit txn =>
+        x() = 1
+        throw new UserException
+      }
+    }
+    assert(x.single() === 1)
+  }
 }
