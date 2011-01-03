@@ -665,10 +665,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (writeCount == 0 && !writeResourcesPresent) {
       if (bargeCount > 0)
         readOnlyCommitBarges()
-      return root.setCommittedIfActive()
+      return root.tryActiveToCommitted()
     }
 
-    if (!root.statusCAS(Active, Preparing) || !acquireLocks())
+    if (!root.tryActiveToPreparing() || !acquireLocks())
       return false
 
     // this is our linearization point
@@ -683,13 +683,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
     if (externalDecider != null) {
       // external decider doesn't have to content with cancel by other threads
-      if (!root.statusCAS(Preparing, Prepared) || !consultExternalDecider())
+      if (!root.tryPreparingToPrepared() || !consultExternalDecider())
         return false
 
       root.setCommitting()
     } else {
       // attempt to decide commit
-      if (!root.statusCAS(Preparing, Committing))
+      if (!root.tryPreparingToCommitting())
         return false
     }
 
