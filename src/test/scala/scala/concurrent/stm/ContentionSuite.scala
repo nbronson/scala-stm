@@ -148,4 +148,23 @@ class ContentionSuite extends FunSuite {
 
     for (w <- writers) w.join()
   }
+
+  test("colliding trySet") {
+    val x = Ref(0)
+    val total = Ref(0)
+    val threads = for (t <- 0 until 10) yield new Thread {
+      override def run {
+        var failures = 0
+        for (i <- 0 until 1000000) {
+          if (!x.single.trySet(t))
+            failures += 1
+        }
+        total.single += failures
+      }
+    }
+    for (t <- threads) t.start
+    for (t <- threads) t.join
+    assert(total.single() > 0)
+    println(total.single() + " rejected trySet-s")
+  }
 }

@@ -887,6 +887,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (_barging && version(handle.meta) >= _bargeVersion)
       return f(get(handle))
 
+    requireActive()
     val u = unrecordedRead(handle)
     val result = f(u.value)
     if (!u.recorded) {
@@ -935,6 +936,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     if (_barging && version(handle.meta) >= _bargeVersion)
       return get(handle)
 
+    requireActive()
     val u = unrecordedRead(handle)
     val snapshot = u.value
     if (!u.recorded) {
@@ -943,7 +945,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
         def apply(level: NestingLevel) {
           if (!isValid)
-            level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
+            level.requestRollback(OptimisticFailureCause('invalid_relaxed_get, Some(handle)))
         }
 
         private def isValid: Boolean = {
@@ -980,6 +982,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   @throws(classOf[InterruptedException])
   def unrecordedRead[T](handle: Handle[T]): UnrecordedRead[T] = {
+    // unrecorded read might be needed to update validation state of getWith or
+    // relaxedGet during the Preparing stage
     requireNotDecided()
 
     var m1 = handle.meta
@@ -1015,7 +1019,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     })
 
     new UnrecordedRead[T] {
-      def context: Option[InTxnImpl] = Some(InTxnImpl.this.asInstanceOf[InTxnImpl])
       def value: T = v
       def stillValid = {
         val m = handle.meta
@@ -1115,6 +1118,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
+    requireActive()
     val u = unrecordedRead(handle)
     if (!pf.isDefinedAt(u.value)) {
       // make sure it stays undefined

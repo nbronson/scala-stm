@@ -178,7 +178,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     if (i >= 0) {
       if (i < level._whileValidatingSize)
         fireWhileValidating(i, level.parLevel)
-      else if (level.status ne Txn.Active)
+      else if (level.status.isInstanceOf[Txn.RolledBack])
         fireWhileValidating(level._whileValidatingSize - 1, level.parLevel) // skip the rest at this level
       else {
         try {
