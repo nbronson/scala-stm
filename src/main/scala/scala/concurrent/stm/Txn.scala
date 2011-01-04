@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -154,7 +154,6 @@ object Txn {
    */
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
-
   /** Returns the status of the current nesting level of the current
    *  transaction, equivalent to `NestingLevel.current.status`.
    */
@@ -186,6 +185,19 @@ object Txn {
   def retryFor(timeoutMillis: Long)(implicit txn: InTxn) {
     if (timeoutMillis > txn.cumulativeBlockingMillis)
       rollback(ExplicitRetryCause(Some(timeoutMillis)))
+  }
+
+  /** Returns true if the transaction has waited at least `milli` milliseconds
+   *  during explicit retries, false otherwise.  If modular blocking is
+   *  performed that changes the correct return value, the atomic block that
+   *  called this method will be rerun.  (This is similar to accessing a `Ref`
+   *  whose value changes before the transaction can be committed.)
+   */
+  def hasElapsed(millis: Long)(implicit txn: scala.concurrent.stm.InTxn): Boolean = {
+    atomic.oneOf(
+      { implicit txn => retryFor(millis) ; true },
+      { implicit txn => false }
+    )
   }
 
   /** Causes the current nesting level to be rolled back due to the specified

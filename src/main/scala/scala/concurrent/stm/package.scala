@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent
 
@@ -11,6 +11,8 @@ package object stm {
 
   /** Equivalent to `Txn.retry`. */
   def retry(implicit txn: scala.concurrent.stm.InTxn): Nothing = scala.concurrent.stm.Txn.retry
+
+  def hasElapsed(millis: Long)(implicit txn: scala.concurrent.stm.InTxn): Boolean = scala.concurrent.stm.Txn.hasElapsed(millis)
 
   /** Equivalent to `Txn.retryFor(timeoutMillis)`. */
   def retryFor(timeoutMillis: Long)(implicit txn: scala.concurrent.stm.InTxn) { scala.concurrent.stm.Txn.retryFor(timeoutMillis) }
