@@ -503,6 +503,22 @@ class TxnSuite extends FunSuite {
     }
   }
 
+  test("retryUntil") {
+    val x = Ref(0)
+
+    (new Thread {
+      override def run {
+        Thread.sleep(50)
+        x.single() = 1
+        Thread.sleep(50)
+        x.single() = 2
+      }
+    }).start
+
+    x.single.retryUntil( _ == 2 )
+    assert(x.single() === 2)
+  }
+
   test("remote cancel") {
     val x = Ref(0)
 
