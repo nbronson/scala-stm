@@ -980,7 +980,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     })
 
     new UnrecordedRead[T] {
-      def context: Option[InTxnImpl] = Some(InTxnImpl.this.asInstanceOf[InTxnImpl])
       def value: T = v
       def stillValid = {
         val m = handle.meta
