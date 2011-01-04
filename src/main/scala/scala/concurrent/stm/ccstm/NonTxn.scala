@@ -30,17 +30,15 @@ private[ccstm] object NonTxn {
     var spins = 0
     do {
       val m = handle.meta
-      if (version(m) != version(m0)) return
+      if (version(m) != version(m0))
+        return
 
       spins += 1
-      if (spins > SpinCount) Thread.`yield`
+      if (spins > SpinCount)
+        Thread.`yield`
     } while (spins < SpinCount + YieldCount)
 
-    if (changing(m)) {
-      weakAwaitUnowned(handle, m)
-    } else {
-      weakNoSpinAwaitNewVersion(handle, m)
-    }
+    weakNoSpinAwaitNewVersion(handle, m)
   }
 
   @throws(classOf[InterruptedException])
