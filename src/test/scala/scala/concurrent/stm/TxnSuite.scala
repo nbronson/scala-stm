@@ -528,6 +528,22 @@ class TxnSuite extends FunSuite {
     x.single.await( _ == 12 )
   }
 
+  test("skipped retryFor deadline is retained") {
+    val begin = System.currentTimeMillis
+    atomic { implicit txn =>
+      val f = atomic { implicit txn =>
+        retryFor(50)
+        false
+      } orAtomic { implicit txn =>
+        true
+      }
+      if (f)
+        retryFor(1000)
+    }
+    val elapsed = System.currentTimeMillis - begin
+    assert(elapsed < 500)
+  }
+
   test("View in txn") {
     val x = Ref(10)
     val xs = x.single
