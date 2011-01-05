@@ -109,6 +109,22 @@ trait TxnExecutor {
    */
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean
 
+  /** Returns `Some(t)` if `t` is the timeout in milliseconds used by this
+   *  `TxnExecutor`, or `None` otherwise.
+   */
+  def timeout: Option[Long]
+
+  /** Returns a `TxnExecutor` that is identical to this one, except that it
+   *  will cancel atomic blocks that take longer than `timeoutMillis` to
+   *  execute.  See `Txn.TimeoutCause`.
+   */
+  def withTimeout(timeoutMillis: Long): TxnExecutor
+
+  /** Returns a `TxnExecutor` that is identical to this one, except that it
+   *  has no timeout.
+   */
+  def withNoTimeout: TxnExecutor
+
   /** Returns true if `x` should be treated as a transfer of control, rather
    *  than an error.  Atomic blocks that end with an uncaught control flow
    *  exception are committed, while atomic blocks that end with an uncaught

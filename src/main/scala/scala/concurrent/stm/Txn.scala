@@ -154,6 +154,12 @@ object Txn {
    */
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
+  /** The `RollbackCause` for an atomic block that should be rolled back and
+   *  not restarted because it has exceeded the maximum allotted time.  This
+   *  will be delivered to the caller as an `InterruptedException`.
+   */
+  case class TimeoutCause(timeoutMillis: Long) extends PermanentRollbackCause
+
   /** Returns the status of the current nesting level of the current
    *  transaction, equivalent to `NestingLevel.current.status`.
    */

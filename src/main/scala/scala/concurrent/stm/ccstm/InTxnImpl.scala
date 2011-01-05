@@ -3,6 +3,8 @@
 package scala.concurrent.stm
 package ccstm
 
+import java.lang.ref.WeakReference
+
 
 private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
@@ -18,6 +20,39 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
   def dynCurrentOrNull: InTxnImpl = active(get)
 
   def currentOrNull(implicit mt: MaybeTxn) = active(apply())
+
+  def newTimeoutTask(timeoutMillis: Long): TimeoutTask = {
+    val tt = new TimeoutTask(timeoutMillis)
+    timeoutQueue.schedule(tt, timeoutMillis)
+    tt
+  }
+
+  private val timeoutQueue = new java.util.Timer("Txn timeout queue", true)
+
+  class TimeoutTask(timeoutMillis: Long) extends java.util.TimerTask {
+    @volatile private var _targetRef: WeakReference[NestingLevel] = null
+    @volatile private var _triggered = false
+
+    def run() {
+      _triggered = true
+      val r = _targetRef
+      _targetRef = null
+      if (r != null) {
+        val t = r.get
+        if (t != null)
+          t.requestRollback(Txn.TimeoutCause(timeoutMillis))
+      }
+    }
+
+    def targetSelf(implicit txn: InTxn) {
+      if (_triggered)
+        Txn.rollback(Txn.TimeoutCause(timeoutMillis))
+
+      _targetRef = new WeakReference(NestingLevel.current)
+      if (_triggered)
+        run()
+    }
+  }
 }
 
 /** In CCSTM there is one `InTxnImpl` per thread, and it is reused across all
@@ -28,6 +63,7 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   import CCSTM._
   import Txn._
+  import InTxnImpl._
   import skel.RollbackError
 
   //////////////// pre-transaction state
@@ -125,15 +161,19 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     if (!_alternatives.isEmpty)
       atomicWithAlternatives(exec, block)
-    else if (_currentLevel == null)
-      topLevelAtomicImpl(exec, block)
-    else
-      nestedAtomicImpl(exec, block)
+    else {
+      val b = wrapForTimeout(exec, block)
+      if (_currentLevel == null)
+        topLevelAtomicImpl(exec, b)
+      else
+        nestedAtomicImpl(exec, b)
+    }
   }
 
   @throws(classOf[InterruptedException])
   private def atomicWithAlternatives(exec: TxnExecutor, block: InTxn => Any): Nothing = {
-    val z = atomicImpl(exec, block, takeAlternatives())
+    val b = wrapForTimeout(exec, block :: takeAlternatives())
+    val z = atomicImpl(exec, b.head, b.tail)
     throw new impl.AlternativeResult(z)
   }
 
@@ -141,7 +181,29 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
     if (!_alternatives.isEmpty)
       throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
-    atomicImpl(exec, blocks(0), blocks.toList.tail)
+    val b = wrapForTimeout(exec, blocks.toList)
+    atomicImpl(exec, b.head, b.tail)
+  }
+
+  private def wrapForTimeout[Z](exec: TxnExecutor, block: InTxn => Z): InTxn => Z = {
+    exec.timeout match {
+      case None => block
+      case Some(m) => wrap(newTimeoutTask(m), block)
+    }
+  }
+
+  private def wrapForTimeout[Z](exec: TxnExecutor, blocks: List[InTxn => Z]): List[InTxn => Z] = {
+    exec.timeout match {
+      case None => blocks
+      case Some(m) => {
+        val tt = newTimeoutTask(m)
+        blocks map { wrap(tt, _) }
+      }
+    }
+  }
+
+  private def wrap[Z](tt: TimeoutTask, block: InTxn => Z): InTxn => Z = {
+    { implicit txn => tt.targetSelf ; block(txn) }
   }
 
   /** On commit, either returns a Z or throws the control-flow exception from
@@ -185,7 +247,8 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       case rb: RolledBack => {
         rb.cause match {
           case UncaughtExceptionCause(x) => throw x
-          case _ => throw RollbackError
+          case TimeoutCause(x) => throw new InterruptedException("timeout of " + x + " millis exceeded")
+          case _: TransientRollbackCause => throw RollbackError
         }
       }
       case _ =>

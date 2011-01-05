@@ -13,10 +13,19 @@ private[ccstm] object CCSTMExecutor {
   }
 }
 
-private[ccstm] class CCSTMExecutor(val controlFlowTest: Throwable => Boolean,
-                                   val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit) extends TxnExecutor {
+private[ccstm] class CCSTMExecutor private (
+       val timeout: Option[Long],
+       val controlFlowTest: Throwable => Boolean,
+       val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit
+    ) extends TxnExecutor {
 
-  def this() = this(CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
+  def this() = this(None, CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
+
+  private def copy(timeout: Option[Long] = timeout,
+           controlFlowTest: Throwable => Boolean = controlFlowTest,
+           postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = postDecisionFailureHandler): CCSTMExecutor = {
+    new CCSTMExecutor(timeout, controlFlowTest, postDecisionFailureHandler)
+  }
 
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
 
@@ -60,13 +69,17 @@ private[ccstm] class CCSTMExecutor(val controlFlowTest: Throwable => Boolean,
     }
   }
 
+  def withTimeout(timeoutMillis: Long): TxnExecutor = copy(timeout = Some(timeoutMillis))
+
+  def withNoTimeout: TxnExecutor = copy(timeout = None)
+
   def isControlFlow(x: Throwable): Boolean = controlFlowTest(x)
   
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = {
-    val chained = { x: Throwable => if (pf.isDefinedAt(x)) pf(x) else controlFlowTest(x) }
-    new CCSTMExecutor(chained, postDecisionFailureHandler)
+    copy(controlFlowTest = { x: Throwable => if (pf.isDefinedAt(x)) pf(x) else controlFlowTest(x) })
   }
 
-  def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor =
-      new CCSTMExecutor(controlFlowTest, handler)
+  def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor = {
+    copy(postDecisionFailureHandler = handler)
+  }
 }
