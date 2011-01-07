@@ -30,6 +30,9 @@ object TxnExecutor {
  *  @author Nathan Bronson
  */
 trait TxnExecutor {
+
+  //////// functionality
+
   /** Executes `block` one or more times until an atomic execution is achieved,
    *  buffering and/or locking writes so they are not visible until success.
    *
@@ -109,21 +112,25 @@ trait TxnExecutor {
    */
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean
 
-  /** Returns `Some(t)` if `t` is the timeout in milliseconds used by this
-   *  `TxnExecutor`, or `None` otherwise.
-   */
-  def timeout: Option[Long]
+  //////// configuration
 
-  /** Returns a `TxnExecutor` that is identical to this one, except that it
-   *  will cancel atomic blocks that take longer than `timeoutMillis` to
-   *  execute.  See `Txn.TimeoutCause`.
+  /** Returns `Some(t)` if `t` is the retry timeout in milliseconds used by
+   *  this `TxnExecutor`, or `None` otherwise.  If the retry timeout is
+   *  `Some(m)` and an atomic block executed by the returned executor blocks
+   *  with `retry` or `retryFor` for more than `m` milliseconds the retry will
+   *  be cancelled.
    */
-  def withTimeout(timeoutMillis: Long): TxnExecutor
+  def retryTimeout: Option[Long]
 
-  /** Returns a `TxnExecutor` that is identical to this one, except that it
-   *  has no timeout.
+  /** Returns a `TxnExecutor` that is identical to this one except that it has
+   *  a `retryTimeout` of `Some(timeoutMillis)`.
    */
-  def withNoTimeout: TxnExecutor
+  def withRetryTimeout(timeoutMillis: Long): TxnExecutor = withRetryTimeout(Some(timeoutMillis))
+
+  /** Returns a `TxnExecutor` that is identical to this one, except that it has
+   *  a `retryTimeout` of `timeoutMillis`.
+   */
+  def withRetryTimeout(timeoutMillis: Option[Long]): TxnExecutor
 
   /** Returns true if `x` should be treated as a transfer of control, rather
    *  than an error.  Atomic blocks that end with an uncaught control flow

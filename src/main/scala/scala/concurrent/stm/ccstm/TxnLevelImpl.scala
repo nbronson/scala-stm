@@ -46,7 +46,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   @volatile private var _waiters = false
 
   @tailrec final def effectiveTimeout(accum: Long = Long.MaxValue): Long = {
-    val z = math.max(accum, executor.timeout.getOrElse(Long.MaxValue))
+    val z = math.max(accum, executor.retryTimeout.getOrElse(Long.MaxValue))
     if (parUndo == null) z else parUndo.effectiveTimeout(z)
   }
 

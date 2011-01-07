@@ -288,8 +288,6 @@ private[ccstm] object CCSTM extends GV6 {
  *    line per `OptimisticFailureCause.category`
  *  - `failures` -- rollbacks that were not retried, one line for each type of
  *    exception in `UncaughtExceptionCause`
- *  - `timeouts` -- millisecond timeout of rollbacks caused by timeout, one
- *    sample per rollback
  *  - `blockingAcquires` -- internal locks that could not be acquired
  *    immediately
  *  - `commitReadSet` -- optimistic `Ref` reads, one sample per committed

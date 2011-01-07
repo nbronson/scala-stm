@@ -14,17 +14,18 @@ private[ccstm] object CCSTMExecutor {
 }
 
 private[ccstm] class CCSTMExecutor private (
-       val timeout: Option[Long],
+       val retryTimeout: Option[Long],
        val controlFlowTest: Throwable => Boolean,
        val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit
     ) extends TxnExecutor {
 
   def this() = this(None, CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
 
-  private def copy(timeout: Option[Long] = timeout,
-           controlFlowTest: Throwable => Boolean = controlFlowTest,
-           postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = postDecisionFailureHandler): CCSTMExecutor = {
-    new CCSTMExecutor(timeout, controlFlowTest, postDecisionFailureHandler)
+  private def copy(
+      retryTimeout: Option[Long] = retryTimeout,
+      controlFlowTest: Throwable => Boolean = controlFlowTest,
+      postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = postDecisionFailureHandler): CCSTMExecutor = {
+    new CCSTMExecutor(retryTimeout, controlFlowTest, postDecisionFailureHandler)
   }
 
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
@@ -69,9 +70,7 @@ private[ccstm] class CCSTMExecutor private (
     }
   }
 
-  def withTimeout(timeoutMillis: Long): TxnExecutor = copy(timeout = Some(timeoutMillis))
-
-  def withNoTimeout: TxnExecutor = copy(timeout = None)
+  def withRetryTimeout(timeoutMillis: Option[Long]): TxnExecutor = copy(retryTimeout = timeoutMillis)
 
   def isControlFlow(x: Throwable): Boolean = controlFlowTest(x)
   
