@@ -11,15 +11,18 @@ private[ccstm] class RetrySet(val size: Int,
   import CCSTM._
 
   @throws(classOf[InterruptedException])
-  def awaitRetry(prevCumulativeWait: Long, timeoutMillis: Option[Long]): Long = {
+  def awaitRetry(prevCumulativeWait: Long, timeoutMillis: Long): Long = {
     // this should be enforced by the logic in Txn
-    assert(timeoutMillis.isEmpty || timeoutMillis.get > prevCumulativeWait)
+    if (timeoutMillis <= prevCumulativeWait)
+      assert(timeoutMillis > prevCumulativeWait)
 
-    if (size == 0 && timeoutMillis.isEmpty)
+    if (size == 0 && timeoutMillis == Long.MaxValue)
       throw new IllegalStateException("explicit retries cannot succeed because cumulative read set is empty")
 
     val begin = System.currentTimeMillis
-    val deadline = if (timeoutMillis.isEmpty) Long.MaxValue else begin + timeoutMillis.get - prevCumulativeWait
+
+    val d = begin + timeoutMillis - prevCumulativeWait
+    val deadline = if (d < 0) Long.MaxValue else d // handle arithmetic overflow
 
     val timeoutExceeded = !attemptAwait(deadline)
 

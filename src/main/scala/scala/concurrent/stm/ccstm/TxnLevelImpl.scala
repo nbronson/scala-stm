@@ -9,7 +9,7 @@ import skel.{AbstractNestingLevel, RollbackError}
 
 private[ccstm] object TxnLevelImpl {
 
-  private val stateUpdater = new TxnLevelImpl(null, null, false).newStateUpdater
+  private val stateUpdater = new TxnLevelImpl(null, null, null, false).newStateUpdater
 }
 
 /** `TxnLevelImpl` bundles the data and behaviors from `AccessHistory.UndoLog`
@@ -18,6 +18,7 @@ private[ccstm] object TxnLevelImpl {
  *  @author Nathan Bronson
  */
 private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
+                                  val executor: TxnExecutor,
                                   val parUndo: TxnLevelImpl,
                                   val phantom: Boolean)
         extends AccessHistory.UndoLog with AbstractNestingLevel {
@@ -43,6 +44,11 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
 
   /** True if anybody is waiting for `status.completed`. */
   @volatile private var _waiters = false
+
+  @tailrec final def effectiveTimeout(accum: Long = Long.MaxValue): Long = {
+    val z = math.max(accum, executor.timeout.getOrElse(Long.MaxValue))
+    if (parUndo == null) z else parUndo.effectiveTimeout(z)
+  }
 
   @tailrec final def status: Txn.Status = {
     val raw = _state

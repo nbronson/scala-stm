@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package ccstm
 
-import java.lang.ref.WeakReference
+import actors.threadpool.TimeUnit
 
 
 private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
@@ -20,39 +20,6 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
   def dynCurrentOrNull: InTxnImpl = active(get)
 
   def currentOrNull(implicit mt: MaybeTxn) = active(apply())
-
-  def newTimeoutTask(timeoutMillis: Long): TimeoutTask = {
-    val tt = new TimeoutTask(timeoutMillis)
-    timeoutQueue.schedule(tt, timeoutMillis)
-    tt
-  }
-
-  private val timeoutQueue = new java.util.Timer("Txn timeout queue", true)
-
-  class TimeoutTask(timeoutMillis: Long) extends java.util.TimerTask {
-    @volatile private var _targetRef: WeakReference[NestingLevel] = null
-    @volatile private var _triggered = false
-
-    def run() {
-      _triggered = true
-      val r = _targetRef
-      _targetRef = null
-      if (r != null) {
-        val t = r.get
-        if (t != null)
-          t.requestRollback(Txn.TimeoutCause(timeoutMillis))
-      }
-    }
-
-    def targetSelf(implicit txn: InTxn) {
-      if (_triggered)
-        Txn.rollback(Txn.TimeoutCause(timeoutMillis))
-
-      _targetRef = new WeakReference(NestingLevel.current)
-      if (_triggered)
-        run()
-    }
-  }
 }
 
 /** In CCSTM there is one `InTxnImpl` per thread, and it is reused across all
@@ -104,7 +71,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private var _pendingFailure: Throwable = null
 
-  /** This is the inner-most level that contains all subsumption, or null if
+  /** This is the outer-most level that contains any subsumption, or null if
    *  there is no subsumption taking place.
    */
   private var _subsumptionParent: TxnLevelImpl = null
@@ -155,25 +122,36 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel
   }
 
-  def cumulativeBlockingMillis = _cumulativeBlockingMillis
+  protected[stm] def retry(): Nothing = {
+    val timeout = _currentLevel.effectiveTimeout()
+    if (_cumulativeBlockingMillis < timeout)
+      rollback(ExplicitRetryCause(if (timeout == Long.MaxValue) None else Some(timeout)))
+    else
+      rollback(TimeoutCause(timeout))
+  }
+
+  protected[stm] def retryFor(timeoutMillis: Long) {
+    if (timeoutMillis > _currentLevel.effectiveTimeout())
+      retry() // timeout is tighter than elapsed
+    if (_cumulativeBlockingMillis < timeoutMillis)
+      rollback(ExplicitRetryCause(Some(timeoutMillis)))
+  }
 
   @throws(classOf[InterruptedException])
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     if (!_alternatives.isEmpty)
       atomicWithAlternatives(exec, block)
     else {
-      val b = wrapForTimeout(exec, block)
       if (_currentLevel == null)
-        topLevelAtomicImpl(exec, b)
+        topLevelAtomicImpl(exec, block)
       else
-        nestedAtomicImpl(exec, b)
+        nestedAtomicImpl(exec, block)
     }
   }
 
   @throws(classOf[InterruptedException])
   private def atomicWithAlternatives(exec: TxnExecutor, block: InTxn => Any): Nothing = {
-    val b = wrapForTimeout(exec, block :: takeAlternatives())
-    val z = atomicImpl(exec, b.head, b.tail)
+    val z = atomicImpl(exec, block, takeAlternatives())
     throw new impl.AlternativeResult(z)
   }
 
@@ -181,61 +159,40 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
     if (!_alternatives.isEmpty)
       throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
-    val b = wrapForTimeout(exec, blocks.toList)
+    val b = blocks.toList
     atomicImpl(exec, b.head, b.tail)
-  }
-
-  private def wrapForTimeout[Z](exec: TxnExecutor, block: InTxn => Z): InTxn => Z = {
-    exec.timeout match {
-      case None => block
-      case Some(m) => wrap(newTimeoutTask(m), block)
-    }
-  }
-
-  private def wrapForTimeout[Z](exec: TxnExecutor, blocks: List[InTxn => Z]): List[InTxn => Z] = {
-    exec.timeout match {
-      case None => blocks
-      case Some(m) => {
-        val tt = newTimeoutTask(m)
-        blocks map { wrap(tt, _) }
-      }
-    }
-  }
-
-  private def wrap[Z](tt: TimeoutTask, block: InTxn => Z): InTxn => Z = {
-    { implicit txn => tt.targetSelf ; block(txn) }
   }
 
   /** On commit, either returns a Z or throws the control-flow exception from
    *  the committed attempted; on rollback, throws an exception on a permanent
    *  rollback or `RollbackError` on a transient rollback.
    */
-  private def nestedAttempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z, reusedReadThreshold: Int): Z = {
+  private def nestedAttempt[Z](prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z, reusedReadThreshold: Int): Z = {
     nestedBegin(level, reusedReadThreshold)
     checkBarging(prevFailures)
     try {
-      runBlock(exec, block)
+      runBlock(block)
     } finally {
-      rethrowFromStatus(nestedComplete(exec))
+      rethrowFromStatus(nestedComplete())
     }
   }
 
   @throws(classOf[InterruptedException])
-  private def topLevelAttempt[Z](exec: TxnExecutor, prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
+  private def topLevelAttempt[Z](prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
     topLevelBegin(level)
     checkBarging(prevFailures)
     try {
-      runBlock(exec, block)
+      runBlock(block)
     } finally {
-      rethrowFromStatus(topLevelComplete(exec))
+      rethrowFromStatus(topLevelComplete())
     }
   }
 
-  private def runBlock[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+  private def runBlock[Z](block: InTxn => Z): Z = {
     try {
       block(this)
     } catch {
-      case x if x != RollbackError && !exec.isControlFlow(x) => {
+      case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) => {
         _currentLevel.forceRollback(UncaughtExceptionCause(x))
         null.asInstanceOf[Z]
       }
@@ -259,17 +216,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def topLevelAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     var prevFailures = 0
     (while (true) {
-      var level = new TxnLevelImpl(this, null, false)
+      var level = new TxnLevelImpl(this, exec, null, false)
       try {
         // successful attempt or permanent rollback either returns a Z or
         // throws an exception != RollbackError
-        return topLevelAttempt(exec, prevFailures, level, block)
+        return topLevelAttempt(prevFailures, level, block)
       } catch {
         case RollbackError =>
       }
       // we are only here if it is a transient rollback or an explicit retry
       if (isExplicitRetry(level.status)) {
-        val timeout = level.status.asInstanceOf[RolledBack].cause.asInstanceOf[ExplicitRetryCause].timeoutMillis
+        val timeout = level.minRetryTimeout
         level = null // help the GC while waiting
         awaitRetry(timeout)
         prevFailures = 0
@@ -283,23 +240,14 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   private def isExplicitRetry(cause: RollbackCause): Boolean = cause.isInstanceOf[ExplicitRetryCause]
 
-  private def min(a: ExplicitRetryCause, b: ExplicitRetryCause): ExplicitRetryCause = {
-    if (a == null || a.timeoutMillis.isEmpty)
-      b
-    else if (b == null || b.timeoutMillis.isEmpty || a.timeoutMillis.get < b.timeoutMillis.get)
-      a
-    else
-      b
-  }
-
   private def nestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
-    if (_subsumptionAllowed)
-      subsumedNestedAtomicImpl(exec, block)
+    if (_subsumptionAllowed && (exec eq _currentLevel.executor))
+      subsumedNestedAtomicImpl(block)
     else
       trueNestedAtomicImpl(exec, block)
   }
 
-  private def subsumedNestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+  private def subsumedNestedAtomicImpl[Z](block: InTxn => Z): Z = {
     val outermost = _subsumptionParent == null
     if (outermost)
       _subsumptionParent = _currentLevel
@@ -307,7 +255,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       try {
         block(this)
       } catch {
-        case x if x != RollbackError && !exec.isControlFlow(x) => {
+        case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) => {
           // partial rollback is required, but we can't do it here
           _subsumptionAllowed = false
           _currentLevel.forceRollback(OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
@@ -326,9 +274,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // fail back to parent if it has been rolled back
       _currentLevel.requireActive()
 
-      val level = new TxnLevelImpl(this, _currentLevel, false)
+      val level = new TxnLevelImpl(this, exec, _currentLevel, false)
       try {
-        return nestedAttempt(exec, prevFailures, level, block, -1)
+        return nestedAttempt(prevFailures, level, block, -1)
       } catch {
         case RollbackError =>
       }
@@ -356,7 +304,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       recordAlternatives(alternatives)
 
     var reusedReadThreshold = -1
-    var prevRetryCause: Txn.ExplicitRetryCause = null
+    var minRetryTimeout = Long.MaxValue
     (while (true) {
       var level: TxnLevelImpl = null
       var prevFailures = 0
@@ -367,15 +315,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
         // phantom attempts reuse reads from the previous one
         val phantom = reusedReadThreshold >= 0
-        level = new TxnLevelImpl(this, _currentLevel, phantom)
+        level = new TxnLevelImpl(this, exec, _currentLevel, phantom)
+        level.minRetryTimeout = minRetryTimeout
         try {
           // successful attempt or permanent rollback either returns a Z or
           // throws an exception != RollbackError
           val b = if (phantom) { (_: InTxn) => atomicImpl(exec, alternatives.head, alternatives.tail) } else block
           if (_currentLevel != null)
-            return nestedAttempt(exec, prevFailures, level, b, reusedReadThreshold)
+            return nestedAttempt(prevFailures, level, b, reusedReadThreshold)
           else
-            return topLevelAttempt(exec, prevFailures, level, b)
+            return topLevelAttempt(prevFailures, level, b)
         } catch {
           case RollbackError =>
         }
@@ -396,23 +345,23 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // them the same as a regular block with no alternatives.
       val phantom = reusedReadThreshold >= 0
       val cause = level.status.asInstanceOf[RolledBack].cause.asInstanceOf[Txn.ExplicitRetryCause]
+      minRetryTimeout = level.minRetryTimeout
       if (!phantom && !alternatives.isEmpty) {
         // rerun a phantom
         reusedReadThreshold = level.prevReadCount
-        prevRetryCause = cause
       } else {
         level = null
-        prevRetryCause = min(prevRetryCause, cause)
 
         // no more alternatives, reads are still in access history
         if (_currentLevel != null) {
           // retry the parent, which will treat the reads as its own
-          _currentLevel.forceRollback(prevRetryCause)
+          _currentLevel.forceRollback(ExplicitRetryCause(None))
           throw RollbackError
         }
 
         // top-level retry after waiting for something to change
-        awaitRetry(prevRetryCause.timeoutMillis)
+        awaitRetry(minRetryTimeout)
+        minRetryTimeout = Long.MaxValue
 
         // rerun the real block, now that the await has completed
         reusedReadThreshold = -1
@@ -621,7 +570,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel = child
   }
 
-  private def nestedComplete(exec: TxnExecutor): Status = {
+  private def nestedComplete(): Status = {
     val child = _currentLevel
     if (child.attemptMerge()) {
       // child was successfully merged
@@ -636,13 +585,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       val handlers = rollbackCallbacks()
       _currentLevel = child.parUndo
       if (handlers != null)
-        fireAfterCompletionAndThrow(handlers, exec, s, null)
+        fireAfterCompletionAndThrow(handlers, child.executor, s, null)
       s
     }
   }
 
   @throws(classOf[InterruptedException])
-  private def awaitRetry(timeoutMillis: Option[Long]) {
+  private def awaitRetry(timeoutMillis: Long) {
     assert(_slot >= 0)
     val rs = takeRetrySet(_slot)
     val prevSum = _cumulativeBlockingMillis
@@ -659,27 +608,28 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _cumulativeBlockingMillis = rs.awaitRetry(prevSum, timeoutMillis)
   }
 
-  private def topLevelComplete(exec: TxnExecutor): Status = {
-    if (attemptTopLevelComplete(exec)) {
-      finishTopLevelCommit(exec)
+  private def topLevelComplete(): Status = {
+    if (attemptTopLevelComplete()) {
+      finishTopLevelCommit()
       Committed
     } else {
       val s = this.status
       val c = s.asInstanceOf[RolledBack].cause
       if (isExplicitRetry(c))
-        finishTopLevelRetry(exec, s, c)
+        finishTopLevelRetry(s, c)
       else
-        finishTopLevelRollback(exec, s, c)
+        finishTopLevelRollback(s, c)
       s
     }
   }
 
-  private def finishTopLevelCommit(exec: TxnExecutor) {
+  private def finishTopLevelCommit() {
     // we can start subsuming again
     _subsumptionAllowed = true
 
     resetAccessHistory()
     val handlers = resetCallbacks()
+    val exec = _currentLevel.executor
     detach()
 
     val f = _pendingFailure
@@ -687,9 +637,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     fireAfterCompletionAndThrow(handlers, exec, Committed, f)
   }
 
-  private def finishTopLevelRollback(exec: TxnExecutor, s: Status, c: RollbackCause) {
+  private def finishTopLevelRollback(s: Status, c: RollbackCause) {
     rollbackAccessHistory(_slot, c)
     val handlers = rollbackCallbacks()
+    val exec = _currentLevel.executor
     detach()
 
     val f = _pendingFailure
@@ -697,11 +648,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     fireAfterCompletionAndThrow(handlers, exec, s, f)
   }
 
-  private def finishTopLevelRetry(exec: TxnExecutor, s: Status, c: RollbackCause) {
+  private def finishTopLevelRetry(s: Status, c: RollbackCause) {
     rollbackAccessHistory(_slot, c)
     val handlers = rollbackCallbacks()
 
     // don't detach, but we do need to give up the current level
+    val exec = _currentLevel.executor
     _currentLevel = null
     assert(writeCount == 0)
 
@@ -717,7 +669,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
-  private def attemptTopLevelComplete(exec: TxnExecutor): Boolean = {
+  private def attemptTopLevelComplete(): Boolean = {
     val root = _currentLevel
 
     fireBeforeCommitCallbacks()
@@ -756,7 +708,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         return false
     }
 
-    _pendingFailure = fireWhileCommittingCallbacks(exec)
+    _pendingFailure = fireWhileCommittingCallbacks(_currentLevel.executor)
     commitWrites(cv)
     root.setCommitted()
 

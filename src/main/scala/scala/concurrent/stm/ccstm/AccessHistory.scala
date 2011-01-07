@@ -53,9 +53,14 @@ private[ccstm] object AccessHistory {
   abstract class UndoLog {
     def parUndo: UndoLog
 
+    var minRetryTimeout = Long.MaxValue
     var prevReadCount = 0
     var prevBargeCount = 0
     var prevWriteThreshold = 0
+
+    def addRetryTimeout(timeoutMillis: Long) {
+      minRetryTimeout = math.min(minRetryTimeout, timeoutMillis)
+    }
 
     @tailrec final def readLocate(index: Int): UndoLog = {
       if (index >= prevReadCount) this else parUndo.readLocate(index)
@@ -135,6 +140,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     if (Stats.nested != null)
       recordMerge()
 
+    mergeRetryTimeout()
     mergeWriteBuffer()
   }
 
@@ -151,6 +157,12 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     if (!cause.isInstanceOf[Txn.ExplicitRetryCause]) {
       rollbackReadSet()
       rollbackBargeSet(slot)
+    } else {
+      cause.asInstanceOf[Txn.ExplicitRetryCause].timeoutMillis match {
+        case Some(t) => undoLog.addRetryTimeout(t)
+        case None =>
+      }
+      mergeRetryTimeout()
     }
     rollbackWriteBuffer(slot)
   }
@@ -208,6 +220,15 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     resetReadSet()
     accum.result()
   }
+
+
+  //////////// retry timeout
+
+  protected def mergeRetryTimeout() {
+    if (undoLog.parUndo != null)
+      undoLog.parUndo.addRetryTimeout(undoLog.minRetryTimeout)
+  }
+
 
   //////////// read set
 
