@@ -133,8 +133,8 @@ object Txn {
   case class OptimisticFailureCause(category: Symbol, trigger: Option[Any]) extends TransientRollbackCause
 
   /** The `RollbackCause` for an atomic block execution attempt that ended with
-   *  a call to `retry`.  The atomic block will be retried after some memory
-   *  location read in the previous attempt has changed.
+   *  a call to `retry` or `retryFor`.  The atomic block will be retried after
+   *  some memory location read in the previous attempt has changed.
    */
   case class ExplicitRetryCause(timeoutMillis: Option[Long]) extends TransientRollbackCause
 
@@ -155,12 +155,6 @@ object Txn {
    *  `TxnExecutor.transformDefault` to change the default rules.
    */
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
-
-  /** The `RollbackCause` for an atomic block that should be rolled back and
-   *  not restarted because it has exceeded the maximum allotted time.  This
-   *  will be delivered to the caller as an `InterruptedException`.
-   */
-  case class TimeoutCause(timeoutMillis: Long) extends PermanentRollbackCause
 
   /** Returns the status of the current nesting level of the current
    *  transaction, equivalent to `NestingLevel.current.status`.

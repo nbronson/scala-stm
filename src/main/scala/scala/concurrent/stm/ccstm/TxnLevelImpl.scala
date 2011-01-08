@@ -45,9 +45,9 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   /** True if anybody is waiting for `status.completed`. */
   @volatile private var _waiters = false
 
-  @tailrec final def effectiveTimeout(accum: Long = Long.MaxValue): Long = {
-    val z = math.max(accum, executor.retryTimeout.getOrElse(Long.MaxValue))
-    if (parUndo == null) z else parUndo.effectiveTimeout(z)
+  @tailrec final def minEnclosingRetryTimeout(accum: Long = Long.MaxValue): Long = {
+    val z = math.min(accum, executor.retryTimeout.getOrElse(Long.MaxValue))
+    if (parUndo == null) z else parUndo.minEnclosingRetryTimeout(z)
   }
 
   @tailrec final def status: Txn.Status = {

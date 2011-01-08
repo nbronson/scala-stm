@@ -122,19 +122,31 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel
   }
 
+  @throws(classOf[InterruptedException])
   protected[stm] def retry(): Nothing = {
-    val timeout = _currentLevel.effectiveTimeout()
-    if (_cumulativeBlockingMillis < timeout)
-      rollback(ExplicitRetryCause(if (timeout == Long.MaxValue) None else Some(timeout)))
-    else
-      rollback(TimeoutCause(timeout))
+    val timeout = _currentLevel.minEnclosingRetryTimeout()
+    if (timeout == Long.MaxValue)
+      rollback(ExplicitRetryCause(None))
+
+    val consumed = _currentLevel.consumedRetryTotal()
+    if (_cumulativeBlockingMillis < timeout + consumed)
+      rollback(ExplicitRetryCause(Some(timeout + consumed)))
+
+    _currentLevel.consumedRetryDelta += timeout
+    throw new InterruptedException
   }
 
+  @throws(classOf[InterruptedException])
   protected[stm] def retryFor(timeoutMillis: Long) {
-    if (timeoutMillis > _currentLevel.effectiveTimeout())
-      retry() // timeout is tighter than elapsed
-    if (_cumulativeBlockingMillis < timeoutMillis)
-      rollback(ExplicitRetryCause(Some(timeoutMillis)))
+    val effectiveTimeout = _currentLevel.minEnclosingRetryTimeout()
+    if (effectiveTimeout < timeoutMillis)
+      retry() // timeout imposed by TxnExecutor is tighter than timeoutMillis
+
+    val consumed = _currentLevel.consumedRetryTotal()
+    if (_cumulativeBlockingMillis < timeoutMillis + consumed)
+      rollback(ExplicitRetryCause(Some(timeoutMillis + consumed)))
+
+    _currentLevel.consumedRetryDelta += timeoutMillis
   }
 
   @throws(classOf[InterruptedException])
@@ -204,7 +216,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       case rb: RolledBack => {
         rb.cause match {
           case UncaughtExceptionCause(x) => throw x
-          case TimeoutCause(x) => throw new InterruptedException("timeout of " + x + " millis exceeded")
           case _: TransientRollbackCause => throw RollbackError
         }
       }

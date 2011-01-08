@@ -54,12 +54,18 @@ private[ccstm] object AccessHistory {
     def parUndo: UndoLog
 
     var minRetryTimeout = Long.MaxValue
+    var consumedRetryDelta = 0L
     var prevReadCount = 0
     var prevBargeCount = 0
     var prevWriteThreshold = 0
 
     def addRetryTimeout(timeoutMillis: Long) {
       minRetryTimeout = math.min(minRetryTimeout, timeoutMillis)
+    }
+
+    @tailrec final def consumedRetryTotal(accum: Long = 0L): Long = {
+      val z = accum + consumedRetryDelta
+      if (parUndo == null) z else parUndo.consumedRetryTotal(z)
     }
 
     @tailrec final def readLocate(index: Int): UndoLog = {
@@ -157,13 +163,8 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     if (!cause.isInstanceOf[Txn.ExplicitRetryCause]) {
       rollbackReadSet()
       rollbackBargeSet(slot)
-    } else {
-      cause.asInstanceOf[Txn.ExplicitRetryCause].timeoutMillis match {
-        case Some(t) => undoLog.addRetryTimeout(t)
-        case None =>
-      }
-      mergeRetryTimeout()
     }
+    rollbackRetryTimeout(cause)
     rollbackWriteBuffer(slot)
   }
 
@@ -176,7 +177,6 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       case Txn.ExplicitRetryCause(_) => stat.explicitRetries += 1
       case Txn.OptimisticFailureCause(tag, _) => stat.optimisticRetries += tag
       case Txn.UncaughtExceptionCause(x) => stat.failures += x.getClass
-      case Txn.TimeoutCause(millis) => stat.timeouts += millis.toInt
     }
   }
 
@@ -224,11 +224,29 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   //////////// retry timeout
 
-  protected def mergeRetryTimeout() {
-    if (undoLog.parUndo != null)
-      undoLog.parUndo.addRetryTimeout(undoLog.minRetryTimeout)
+  private def mergeRetryTimeout() {
+    // nested commit
+    val u = undoLog
+    val p = u.parUndo
+    p.addRetryTimeout(u.minRetryTimeout)
+    p.consumedRetryDelta += u.consumedRetryDelta
   }
 
+  private def rollbackRetryTimeout(cause: Txn.RollbackCause) {
+    cause match {
+      case Txn.ExplicitRetryCause(timeoutMillis) => {
+        if (!timeoutMillis.isEmpty)
+          undoLog.addRetryTimeout(timeoutMillis.get)
+        if (undoLog.parUndo != null)
+          undoLog.parUndo.addRetryTimeout(undoLog.minRetryTimeout)
+      }
+      case _: Txn.PermanentRollbackCause => {
+        if (undoLog.parUndo != null)
+          undoLog.parUndo.consumedRetryDelta += undoLog.consumedRetryDelta
+      }
+      case _ =>
+    }
+  }
 
   //////////// read set
 

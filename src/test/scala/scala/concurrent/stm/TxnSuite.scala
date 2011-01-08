@@ -430,13 +430,13 @@ class TxnSuite extends FunSuite {
       buf += 'a'
       retryFor(1)
       buf += 'b'
-      retryFor(2)
+      retryFor(1)
       buf += 'c'
-      retryFor(2)
+      retryFor(0)
       buf += 'd'
-      retryFor(3)
+      retryFor(1)
       buf += 'e'
-      retryFor(4)
+      retryFor(1)
       buf += 'f'
     } orAtomic { implicit txn =>
       if (x() == 0) retry
@@ -542,6 +542,19 @@ class TxnSuite extends FunSuite {
     }
     val elapsed = System.currentTimeMillis - begin
     assert(elapsed < 500)
+  }
+
+  test("concatenated failing tryAwait") {
+    val begin = System.currentTimeMillis
+    val x = Ref(0)
+    atomic { implicit txn =>
+      x.single.tryAwait(50)( _ != 0 )
+      x.single.tryAwait(50)( _ != 0 )
+      x.single.tryAwait(50)( _ != 0 )
+    }
+    val elapsed = System.currentTimeMillis - begin
+    assert(elapsed > 150)
+    assert(elapsed < 200)
   }
 
   test("View in txn") {
