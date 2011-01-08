@@ -318,7 +318,7 @@ class TxnSuite extends FunSuite {
   test("tryAwait is conservative") {
     val x = Ref(10)
     val t0 = System.currentTimeMillis
-    assert(!x.single.tryAwait( _ == 0 , 250))
+    assert(!x.single.tryAwait(250)( _ == 0 ))
     val elapsed = System.currentTimeMillis - t0
     assert(elapsed >= 250)
     println("tryAwait(.., 250) took " + elapsed + " millis")
@@ -327,7 +327,7 @@ class TxnSuite extends FunSuite {
   test("tryAwait in atomic is conservative") {
     val x = Ref(10)
     val t0 = System.currentTimeMillis
-    val f = atomic { implicit txn => x.single.tryAwait( _ == 0 , 250) }
+    val f = atomic { implicit txn => x.single.tryAwait(250)( _ == 0 ) }
     assert(!f)
     val elapsed = System.currentTimeMillis - t0
     assert(elapsed >= 250)
@@ -522,7 +522,7 @@ class TxnSuite extends FunSuite {
     atomic { implicit txn =>
       x() = x() + 10
       x.single.await( _ == 11 )
-      assert(!x.single.tryAwait( _ == 12 , 50))
+      assert(!x.single.tryAwait(50)( _ == 12 ))
     }
     assert(x.single() === 11)
     x.single.await( _ == 12 )

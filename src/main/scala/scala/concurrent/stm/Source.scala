@@ -65,10 +65,10 @@ object Source {
     def await(f: A => Boolean)
 
     /** Blocks until `f(get)` is true and returns true, or returns false if
-     *  more than `timeout` milliseconds have elapsed since the current atomic
-     *  execution context was started.
+     *  more than `timeoutMillis` milliseconds have elapsed since the current
+     *  atomic execution context was started.
      *
-     *  `v.tryAwait(f, timeoutMillis)` is equivalent to {{{
+     *  `v.tryAwait(timeoutMillis)(f)` is equivalent to {{{
      *    atomic { implicit t =>
      *      f(v.get) || { retryFor(timeoutMillis) ; false }
      *    }
@@ -79,7 +79,7 @@ object Source {
      *  @return true if the predicate was satisfied, false if the wait timed
      *      out.
      */
-    def tryAwait(f: A => Boolean, timeoutMillis: Long): Boolean
+    def tryAwait(timeoutMillis: Long)(f: A => Boolean): Boolean
   }
 }
 
