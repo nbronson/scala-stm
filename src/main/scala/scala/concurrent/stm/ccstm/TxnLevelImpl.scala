@@ -158,7 +158,8 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     rollbackImpl(Txn.RolledBack(cause))
   }
 
-  @tailrec private def rollbackImpl(rb: Txn.RolledBack): Txn.Status = {
+  // this is tailrec for retries, but not when we forward to child
+  private def rollbackImpl(rb: Txn.RolledBack): Txn.Status = {
     val raw = _state
     if (raw == null || canAttemptLocalRollback(raw)) {
       // normal case
