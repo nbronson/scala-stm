@@ -3,6 +3,8 @@
 package scala.concurrent.stm
 package ccstm
 
+import actors.threadpool.TimeUnit
+
 /** The default implementation of `Ref.View`'s operations in CCSTM. */
 private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
   
@@ -24,9 +26,9 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case null => NonTxn.await(handle, f)
     case txn => if (!f(txn.get(handle))) Txn.retry(txn)
   }
-  def tryAwait(timeoutMillis: Long)(f: T => Boolean): Boolean = InTxnImpl.dynCurrentOrNull match {
-    case null => NonTxn.tryAwait(handle, f, timeoutMillis)
-    case txn => f(txn.get(handle)) || { Txn.retryFor(timeoutMillis)(txn) ; false }
+  def tryAwait(timeout: Long, unit: TimeUnit)(f: T => Boolean): Boolean = InTxnImpl.dynCurrentOrNull match {
+    case null => NonTxn.tryAwait(handle, f, unit.toNanos(timeout))
+    case txn => f(txn.get(handle)) || { Txn.retryFor(timeout, unit)(txn) ; false }
   }
   def set(v: T): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.set(handle, v)

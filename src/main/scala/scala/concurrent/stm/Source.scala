@@ -2,6 +2,8 @@
 
 package scala.concurrent.stm
 
+import actors.threadpool.TimeUnit
+
 object Source {
 
   /** `Source.View[+A]` consists of the covariant read-only operations of
@@ -65,21 +67,22 @@ object Source {
     def await(f: A => Boolean)
 
     /** Blocks until `f(get)` is true and returns true, or returns false if
-     *  more than `timeoutMillis` milliseconds have elapsed since the current
-     *  atomic execution context was started.
+     *  the condition does not become true within within the specified timeout.
      *
-     *  `v.tryAwait(timeoutMillis)(f)` is equivalent to {{{
+     *  `v.tryAwait(timeout)(f)` is equivalent to {{{
      *    atomic { implicit t =>
-     *      f(v.get) || { retryFor(timeoutMillis) ; false }
+     *      f(v.get) || { retryFor(timeout) ; false }
      *    }
      *  }}}
      *
      *  @param f a predicate that is safe to evaluate multiple times.
-     *  @param timeoutMillis in milliseconds.
+     *  @param timeout the maximum amount of time to wait, in units of `unit`.
+     *  @param unit the units in which the timeout is measured, defaulting to
+     *      milliseconds.
      *  @return true if the predicate was satisfied, false if the wait timed
      *      out.
      */
-    def tryAwait(timeoutMillis: Long)(f: A => Boolean): Boolean
+    def tryAwait(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(f: A => Boolean): Boolean
   }
 }
 

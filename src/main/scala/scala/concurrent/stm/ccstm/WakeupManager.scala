@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm.ccstm
 
@@ -17,9 +17,9 @@ private[ccstm] object WakeupManager {
     @throws(classOf[InterruptedException])
     def await
 
-    /** A deadline of `Long.MaxValue` waits forever. */
+    /** Use a nanoDeadline of `Long.MaxValue` to wait forever. */
     @throws(classOf[InterruptedException])
-    def tryAwait(deadline: Long): Boolean
+    def tryAwaitUntil(nanoDeadline: Long): Boolean
   }
 }
 
@@ -140,21 +140,20 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
 
     @throws(classOf[InterruptedException])
     def await {
-      val f = tryAwait(Long.MaxValue)
+      val f = tryAwaitUntil(Long.MaxValue)
       assert(f)
     }
 
     @throws(classOf[InterruptedException])
-    def tryAwait(deadline: Long): Boolean = {
+    def tryAwaitUntil(nanoDeadline: Long): Boolean = {
       if (triggered) {
         true
-      } else if (deadline == Long.MaxValue) {
+      } else if (nanoDeadline == Long.MaxValue) {
         acquireSharedInterruptibly(1)
         true
       } else {
-        // be careful about overflow when converting to nanos
-        val remaining = deadline - System.currentTimeMillis
-        remaining > 0 && tryAcquireSharedNanos(1, TimeUnit.MILLISECONDS.toNanos(remaining))
+        val remaining = nanoDeadline - System.nanoTime
+        remaining > 0 && tryAcquireSharedNanos(1, remaining)
       }
     }
 

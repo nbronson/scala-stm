@@ -3,6 +3,7 @@
 package scala.concurrent.stm.ccstm
 
 import annotation.tailrec
+import actors.threadpool.TimeUnit
 
 /** A retry set representation. */
 private[ccstm] class RetrySet(val size: Int,
@@ -10,27 +11,25 @@ private[ccstm] class RetrySet(val size: Int,
                               versions: Array[CCSTM.Version]) {
   import CCSTM._
 
+  /** Returns the number of nanoseconds of blocking that was performed. */
   @throws(classOf[InterruptedException])
-  def awaitRetry(prevCumulativeWait: Long, timeoutMillis: Long): Long = {
-    // this should be enforced by the logic in Txn
-    if (timeoutMillis <= prevCumulativeWait)
-      assert(timeoutMillis > prevCumulativeWait)
-
-    if (size == 0 && timeoutMillis == Long.MaxValue)
+  def awaitRetry(timeoutNanos: Long): Long = {
+    if (size == 0 && timeoutNanos == Long.MaxValue)
       throw new IllegalStateException("explicit retries cannot succeed because cumulative read set is empty")
 
-    val begin = System.currentTimeMillis
+    val begin = System.nanoTime
 
-    val d = begin + timeoutMillis - prevCumulativeWait
+    val d = begin + timeoutNanos
     val deadline = if (d < 0) Long.MaxValue else d // handle arithmetic overflow
 
     val timeoutExceeded = !attemptAwait(deadline)
 
-    val actualElapsed = System.currentTimeMillis - begin
+    val actualElapsed = System.nanoTime - begin
 
     if (Stats.top != null) {
       Stats.top.retrySet += size
-      Stats.top.retryWaitElapsed += math.min(actualElapsed, Int.MaxValue).asInstanceOf[Int]
+      val millis = TimeUnit.NANOSECONDS.toMillis(actualElapsed)
+      Stats.top.retryWaitElapsed += millis.asInstanceOf[Int]
     }
 
     // to cause the proper retryFor to wake up we need to present an illusion
@@ -38,13 +37,12 @@ private[ccstm] class RetrySet(val size: Int,
     //
     //  reportedElapsed = min(now, deadline) - begin
     //  reportedElapsed = min(now - begin, deadline - begin)
-    //  newCumulativeWait = prevCumulativeWait + reportedElapsed
-    prevCumulativeWait + math.min(actualElapsed, deadline - begin)
+    math.min(actualElapsed, deadline - begin)
   }
 
   /** Returns true if something changed, false if the deadline was reached. */
   @throws(classOf[InterruptedException])
-  private def attemptAwait(deadline: Long): Boolean = {
+  private def attemptAwait(nanoDeadline: Long): Boolean = {
     // Spin a few times, counting one spin per read set element
     var spins = 0
     while (size > 0 && spins < SpinCount + YieldCount) {
@@ -53,34 +51,34 @@ private[ccstm] class RetrySet(val size: Int,
       spins += size
       if (spins > SpinCount) {
         Thread.`yield`
-        if (deadline != Long.MaxValue && System.currentTimeMillis > deadline)
+        if (nanoDeadline != Long.MaxValue && System.nanoTime > nanoDeadline)
           return false
       }
     }
 
-    return blockingAttemptAwait(deadline)
+    return blockingAttemptAwait(nanoDeadline)
   }
 
   @throws(classOf[InterruptedException])
   @tailrec
-  private def blockingAttemptAwait(deadline: Long,
+  private def blockingAttemptAwait(nanoDeadline: Long,
                                    event: WakeupManager.Event = wakeupManager.subscribe,
                                    i: Int = size - 1): Boolean = {
     if (i < 0) {
       // event has been completed, time to block
-      if (!event.tryAwait(deadline))
+      if (!event.tryAwaitUntil(nanoDeadline))
         false // timed out
       else
-        changed || blockingAttemptAwait(deadline) // event fired
+        changed || blockingAttemptAwait(nanoDeadline) // event fired
     } else {
       // still building the event
       val h = handles(i)
       if (!event.addSource(h))
-        changed || blockingAttemptAwait(deadline) // event fired
+        changed || blockingAttemptAwait(nanoDeadline) // event fired
       else if (!addPendingWakeup(h, versions(i)))
         true // direct evidence of change
       else
-        blockingAttemptAwait(deadline, event, i - 1) // keep building
+        blockingAttemptAwait(nanoDeadline, event, i - 1) // keep building
     }
   }
 

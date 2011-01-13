@@ -53,16 +53,21 @@ private[ccstm] object AccessHistory {
   abstract class UndoLog {
     def parUndo: UndoLog
 
-    var minRetryTimeout = Long.MaxValue
+    var minRetryTimeoutNanos = Long.MaxValue
     var consumedRetryDelta = 0L
     var prevReadCount = 0
     var prevBargeCount = 0
     var prevWriteThreshold = 0
 
-    def addRetryTimeout(timeoutMillis: Long) {
-      minRetryTimeout = math.min(minRetryTimeout, timeoutMillis)
+    def addRetryTimeoutNanos(timeoutNanos: Long) {
+      minRetryTimeoutNanos = math.min(minRetryTimeoutNanos, timeoutNanos)
     }
 
+    /** Returns the sum of the timeouts of the retries that have timed out.
+     *  Included levels are this one, parents of this one, levels that have
+     *  been merged into an included level, and levels that were ended with a
+     *  permanent rollback and whose parent was included.
+     */
     @tailrec final def consumedRetryTotal(accum: Long = 0L): Long = {
       val z = accum + consumedRetryDelta
       if (parUndo == null) z else parUndo.consumedRetryTotal(z)
@@ -228,17 +233,17 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     // nested commit
     val u = undoLog
     val p = u.parUndo
-    p.addRetryTimeout(u.minRetryTimeout)
+    p.addRetryTimeoutNanos(u.minRetryTimeoutNanos)
     p.consumedRetryDelta += u.consumedRetryDelta
   }
 
   private def rollbackRetryTimeout(cause: Txn.RollbackCause) {
     cause match {
-      case Txn.ExplicitRetryCause(timeoutMillis) => {
-        if (!timeoutMillis.isEmpty)
-          undoLog.addRetryTimeout(timeoutMillis.get)
+      case Txn.ExplicitRetryCause(timeoutNanos) => {
+        if (!timeoutNanos.isEmpty)
+          undoLog.addRetryTimeoutNanos(timeoutNanos.get)
         if (undoLog.parUndo != null)
-          undoLog.parUndo.addRetryTimeout(undoLog.minRetryTimeout)
+          undoLog.parUndo.addRetryTimeoutNanos(undoLog.minRetryTimeoutNanos)
       }
       case _: Txn.PermanentRollbackCause => {
         if (undoLog.parUndo != null)

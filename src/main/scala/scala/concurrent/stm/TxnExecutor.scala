@@ -2,6 +2,8 @@
 
 package scala.concurrent.stm
 
+import actors.threadpool.TimeUnit
+
 
 /** `object TxnExecutor` manages the system-wide default `TxnExecutor`. */
 object TxnExecutor {
@@ -114,23 +116,24 @@ trait TxnExecutor {
 
   //////// configuration
 
-  /** Returns `Some(t)` if `t` is the retry timeout in milliseconds used by
+  /** Returns `Some(t)` if `t` is the retry timeout in nanoseconds used by
    *  this `TxnExecutor`, or `None` otherwise.  If the retry timeout is
-   *  `Some(m)` and an atomic block executed by the returned executor blocks
-   *  with `retry` or `retryFor` for more than `m` milliseconds the retry will
+   *  `Some(t)` and an atomic block executed by the returned executor blocks
+   *  with `retry` or `retryFor` for more than `t` nanoseconds the retry will
    *  be cancelled.
    */
-  def retryTimeout: Option[Long]
-
-  /** Returns a `TxnExecutor` that is identical to this one except that it has
-   *  a `retryTimeout` of `Some(timeoutMillis)`.
-   */
-  def withRetryTimeout(timeoutMillis: Long): TxnExecutor = withRetryTimeout(Some(timeoutMillis))
+  def retryTimeoutNanos: Option[Long]
 
   /** Returns a `TxnExecutor` that is identical to this one, except that it has
    *  a `retryTimeout` of `timeoutMillis`.
    */
-  def withRetryTimeout(timeoutMillis: Option[Long]): TxnExecutor
+  def withRetryTimeoutNanos(timeoutNanos: Option[Long]): TxnExecutor
+
+  /** Returns a `TxnExecutor` that is identical to this one except that it has
+   *  the specified retry timeout.  The default time unit is milliseconds.
+   */
+  def withRetryTimeout(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): TxnExecutor =
+      withRetryTimeoutNanos(Some(unit.toNanos(timeout)))
 
   /** Returns true if `x` should be treated as a transfer of control, rather
    *  than an error.  Atomic blocks that end with an uncaught control flow

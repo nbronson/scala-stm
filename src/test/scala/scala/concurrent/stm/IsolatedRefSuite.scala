@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
+import actors.threadpool.TimeUnit
 
 
 /** Performs single-threaded tests of `Ref`. */
@@ -44,7 +45,7 @@ class IsolatedRefSuite extends FunSuite {
     def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
     def await(f: A => Boolean) { if (!f(get)) retry }
-    def tryAwait(timeoutMillis: Long)(f: A => Boolean): Boolean = f(get) || { retryFor(timeoutMillis) ; false }
+    def tryAwait(timeout: Long, unit: TimeUnit)(f: A => Boolean): Boolean = f(get) || { retryFor(timeout, unit) ; false }
     def set(v: A) { ref.set(v) }
     def trySet(v: A) = ref.trySet(v)
     def swap(v: A): A = ref.swap(v)
@@ -83,7 +84,7 @@ class IsolatedRefSuite extends FunSuite {
     def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
     def await(f: (A) => Boolean) { wrap { view.await(f) } }
-    def tryAwait(timeoutMillis: Long)(f: (A) => Boolean): Boolean = wrap { view.tryAwait(timeoutMillis)(f) }
+    def tryAwait(timeout: Long, unit: TimeUnit)(f: (A) => Boolean): Boolean = wrap { view.tryAwait(timeout, unit)(f) }
     def set(v: A) { wrap { view.set(v) } }
     def trySet(v: A) = wrap { view.trySet(v) }
     def swap(v: A): A = wrap { view.swap(v) }

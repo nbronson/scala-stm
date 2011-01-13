@@ -65,7 +65,7 @@ private[ccstm] object NonTxn {
   //////////////// value waiting with timeout
 
   @throws(classOf[InterruptedException])
-  private def weakAwaitNewVersion(handle: Handle[_], m0: Meta, deadline: Long): Boolean = {
+  private def weakAwaitNewVersion(handle: Handle[_], m0: Meta, nanoDeadline: Long): Boolean = {
     // spin a bit
     var m = 0L
     var spins = 0
@@ -76,7 +76,7 @@ private[ccstm] object NonTxn {
 
       spins += 1
       if (spins > SpinCount) {
-        if (System.currentTimeMillis >= deadline)
+        if (System.nanoTime >= nanoDeadline)
           return false
         Thread.`yield`
       }
@@ -87,12 +87,12 @@ private[ccstm] object NonTxn {
       weakAwaitUnowned(handle, m)
       return true
     } else {
-      return weakNoSpinAwaitNewVersion(handle, m, deadline)
+      return weakNoSpinAwaitNewVersion(handle, m, nanoDeadline)
     }
   }
 
   @throws(classOf[InterruptedException])
-  private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta, deadline: Long): Boolean = {
+  private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta, nanoDeadline: Long): Boolean = {
     val event = wakeupManager.subscribe
     event.addSource(handle)
     do {
@@ -106,7 +106,7 @@ private[ccstm] object NonTxn {
       if (pendingWakeups(m) || handle.metaCAS(m, withPendingWakeups(m))) {
         // after the block, things will have changed with reasonably high
         // likelihood (spurious wakeups are okay)
-        return event.tryAwait(deadline)
+        return event.tryAwaitUntil(nanoDeadline)
       }
     } while (!event.triggered)
     return true
@@ -226,13 +226,13 @@ private[ccstm] object NonTxn {
     }
   }
 
-  def tryAwait[T](handle: Handle[T], pred: T => Boolean, timeoutMillis: Long): Boolean = {
+  def tryAwait[T](handle: Handle[T], pred: T => Boolean, timeoutNanos: Long): Boolean = {
     var begin = 0L
     (while (true) {
       val m0 = handle.meta
       if (changing(m0)) {
         if (begin == 0L)
-          begin = System.currentTimeMillis
+          begin = System.nanoTime
         weakAwaitUnowned(handle, m0)
       } else {
         val v = handle.data
@@ -243,13 +243,13 @@ private[ccstm] object NonTxn {
             return true
 
           // no need for base time with zero timeout
-          if (timeoutMillis <= 0)
+          if (timeoutNanos <= 0)
             return false
 
           // wait for a new version
           if (begin == 0L)
-            begin = System.currentTimeMillis
-          if (!weakAwaitNewVersion(handle, m1, begin + timeoutMillis))
+            begin = System.nanoTime
+          if (!weakAwaitNewVersion(handle, m1, begin + timeoutNanos))
             return false
         }
       }

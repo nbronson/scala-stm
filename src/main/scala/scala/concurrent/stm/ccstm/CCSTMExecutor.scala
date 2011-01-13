@@ -14,7 +14,7 @@ private[ccstm] object CCSTMExecutor {
 }
 
 private[ccstm] class CCSTMExecutor private (
-       val retryTimeout: Option[Long],
+       val retryTimeoutNanos: Option[Long],
        val controlFlowTest: Throwable => Boolean,
        val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit
     ) extends TxnExecutor {
@@ -22,10 +22,10 @@ private[ccstm] class CCSTMExecutor private (
   def this() = this(None, CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
 
   private def copy(
-      retryTimeout: Option[Long] = retryTimeout,
+      retryTimeoutNanos: Option[Long] = retryTimeoutNanos,
       controlFlowTest: Throwable => Boolean = controlFlowTest,
       postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = postDecisionFailureHandler): CCSTMExecutor = {
-    new CCSTMExecutor(retryTimeout, controlFlowTest, postDecisionFailureHandler)
+    new CCSTMExecutor(retryTimeoutNanos, controlFlowTest, postDecisionFailureHandler)
   }
 
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
@@ -70,7 +70,7 @@ private[ccstm] class CCSTMExecutor private (
     }
   }
 
-  def withRetryTimeout(timeoutMillis: Option[Long]): TxnExecutor = copy(retryTimeout = timeoutMillis)
+  def withRetryTimeoutNanos(timeout: Option[Long]): TxnExecutor = copy(retryTimeoutNanos = timeout)
 
   def isControlFlow(x: Throwable): Boolean = controlFlowTest(x)
   
@@ -80,5 +80,15 @@ private[ccstm] class CCSTMExecutor private (
 
   def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor = {
     copy(postDecisionFailureHandler = handler)
+  }
+
+  override def toString: String = {
+    ("CCSTMExecutor@" + hashCode.toHexString +
+      "(retryTimeoutNanos=" + retryTimeoutNanos +
+      ", controlFlowTest=" +
+      (if (controlFlowTest eq CCSTMExecutor.DefaultControlFlowTest) "default" else controlFlowTest) +
+      ", postDecisionFailureHandler=" +
+      (if (postDecisionFailureHandler eq CCSTMExecutor.DefaultPostDecisionFailureHandler) "default" else postDecisionFailureHandler) +
+      ")")
   }
 }

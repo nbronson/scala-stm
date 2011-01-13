@@ -93,7 +93,10 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   private var _readVersion: Version = 0
 
-  private var _cumulativeBlockingMillis = 0L
+  /** The total amount of modular blocking time performed on this thread since
+   *  the last top-level commit or top-level permanent rollback.
+   */
+  private var _cumulativeBlockingNanos = 0L
 
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" +
@@ -106,7 +109,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
             ", writeCount=" + writeCount +
             ", readVersion=0x" + _readVersion.toHexString +
             (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") +
-            ", cumulativeBlockingMillis=" + _cumulativeBlockingMillis + ")")
+            ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos + ")")
   }
 
   //////////////// High-level behaviors
@@ -129,7 +132,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       rollback(ExplicitRetryCause(None))
 
     val consumed = _currentLevel.consumedRetryTotal()
-    if (_cumulativeBlockingMillis < timeout + consumed)
+    if (_cumulativeBlockingNanos < timeout + consumed)
       rollback(ExplicitRetryCause(Some(timeout + consumed)))
 
     _currentLevel.consumedRetryDelta += timeout
@@ -137,16 +140,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   @throws(classOf[InterruptedException])
-  protected[stm] def retryFor(timeoutMillis: Long) {
+  protected[stm] def retryFor(timeoutNanos: Long) {
     val effectiveTimeout = _currentLevel.minEnclosingRetryTimeout()
-    if (effectiveTimeout < timeoutMillis)
-      retry() // timeout imposed by TxnExecutor is tighter than timeoutMillis
+    if (effectiveTimeout < timeoutNanos)
+      retry() // timeout imposed by TxnExecutor is tighter than this one
 
     val consumed = _currentLevel.consumedRetryTotal()
-    if (_cumulativeBlockingMillis < timeoutMillis + consumed)
-      rollback(ExplicitRetryCause(Some(timeoutMillis + consumed)))
+    if (_cumulativeBlockingNanos < timeoutNanos + consumed)
+      rollback(ExplicitRetryCause(Some(timeoutNanos + consumed)))
 
-    _currentLevel.consumedRetryDelta += timeoutMillis
+    _currentLevel.consumedRetryDelta += timeoutNanos
   }
 
   @throws(classOf[InterruptedException])
@@ -237,7 +240,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       }
       // we are only here if it is a transient rollback or an explicit retry
       if (isExplicitRetry(level.status)) {
-        val timeout = level.minRetryTimeout
+        val timeout = level.minRetryTimeoutNanos
         level = null // help the GC while waiting
         awaitRetry(timeout)
         prevFailures = 0
@@ -327,7 +330,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
         // phantom attempts reuse reads from the previous one
         val phantom = reusedReadThreshold >= 0
         level = new TxnLevelImpl(this, exec, _currentLevel, phantom)
-        level.minRetryTimeout = minRetryTimeout
+        level.minRetryTimeoutNanos = minRetryTimeout
         try {
           // successful attempt or permanent rollback either returns a Z or
           // throws an exception != RollbackError
@@ -356,7 +359,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       // them the same as a regular block with no alternatives.
       val phantom = reusedReadThreshold >= 0
       val cause = level.status.asInstanceOf[RolledBack].cause.asInstanceOf[Txn.ExplicitRetryCause]
-      minRetryTimeout = level.minRetryTimeout
+      minRetryTimeout = level.minRetryTimeoutNanos
       if (!phantom && !alternatives.isEmpty) {
         // rerun a phantom
         reusedReadThreshold = level.prevReadCount
@@ -602,21 +605,23 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   @throws(classOf[InterruptedException])
-  private def awaitRetry(timeoutMillis: Long) {
+  private def awaitRetry(timeoutNanos: Long) {
     assert(_slot >= 0)
     val rs = takeRetrySet(_slot)
-    val prevSum = _cumulativeBlockingMillis
+    val prevSum = _cumulativeBlockingNanos
     detach()
+    assert(prevSum < timeoutNanos)
     val f = _pendingFailure
     if (f != null) {
       _pendingFailure = null
       throw f
     }
-    // Note that awaitRetry might throw an exception that cancels the retry
-    // forever.  In that case we have completely cleaned up, because detach()
-    // cleared _cumulativeBlockingMillis and the following assignment hasn't
-    // happened yet.
-    _cumulativeBlockingMillis = rs.awaitRetry(prevSum, timeoutMillis)
+    // Note that awaitRetry might throw an InterruptedException that cancels
+    // the retry forever.  In that case we have completely cleaned up, because
+    // detach() cleared _cumulativeBlockingMillis and the following assignment
+    // hasn't happened yet.
+    val remaining = timeoutNanos - (if (timeoutNanos == Long.MaxValue) 0 else prevSum)
+    _cumulativeBlockingNanos = prevSum + rs.awaitRetry(remaining)
   }
 
   private def topLevelComplete(): Status = {
@@ -742,7 +747,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _slot = ~_slot
     _currentLevel = null
     _barging = false
-    _cumulativeBlockingMillis = 0L
+    _cumulativeBlockingNanos = 0L
   }
 
   private def acquireLocks(): Boolean = {

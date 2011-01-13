@@ -12,7 +12,7 @@ private[stm] class StubInTxn extends InTxn {
   def currentLevel: NestingLevel = throw new AbstractMethodError
   def rollback(cause: RollbackCause): Nothing = throw new AbstractMethodError
   def retry(): Nothing = throw new AbstractMethodError
-  def retryFor(timeoutMillis: Long) { throw new AbstractMethodError }
+  def retryFor(timeoutNanos: Long) { throw new AbstractMethodError }
   def beforeCommit(handler: InTxn => Unit) = throw new AbstractMethodError
   def whilePreparing(handler: InTxnEnd => Unit) = throw new AbstractMethodError
   def whileCommitting(handler: InTxnEnd => Unit) = throw new AbstractMethodError

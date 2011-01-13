@@ -46,7 +46,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   @volatile private var _waiters = false
 
   @tailrec final def minEnclosingRetryTimeout(accum: Long = Long.MaxValue): Long = {
-    val z = math.min(accum, executor.retryTimeout.getOrElse(Long.MaxValue))
+    val z = math.min(accum, executor.retryTimeoutNanos.getOrElse(Long.MaxValue))
     if (parUndo == null) z else parUndo.minEnclosingRetryTimeout(z)
   }
 

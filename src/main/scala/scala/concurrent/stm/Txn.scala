@@ -136,7 +136,7 @@ object Txn {
    *  a call to `retry` or `retryFor`.  The atomic block will be retried after
    *  some memory location read in the previous attempt has changed.
    */
-  case class ExplicitRetryCause(timeoutMillis: Option[Long]) extends TransientRollbackCause
+  case class ExplicitRetryCause(timeoutNanos: Option[Long]) extends TransientRollbackCause
 
   /** The `RollbackCause` for an atomic block that should not be restarted
    *  because it threw an exception.  The exception might have been thrown from
@@ -178,36 +178,21 @@ object Txn {
    */
   def retry(implicit txn: InTxn): Nothing = txn.retry()
 
-  /** Causes the transaction to roll back and retry using modular blocking,
-   *  until it has been blocked for a total of `timeoutMillis` milliseconds.
-   *  If the cumulative blocking time for the transaction (whether or not from
-   *  this `retryFor`) is &ge; than `timeoutMillis` this method will return
-   *  immediately.  `retryFor(0)` is a no-op.
+  /** Causes the transaction to roll back and retry using modular blocking with
+   *  a timeout, or returns immediately if the timeout has already expired.
+   *  The STM keeps track of the total amount of blocking that has occurred
+   *  during modular blocking; this time is apportioned among the calls to
+   *  `View.tryAwait` and `retryFor` that are part of the current attempt.
+   *  `retryFor(0)` is a no-op.
+   *  @param timeout the maximum amount of time that this `retryFor` should
+   *      block, in units of `unit`.
+   *  @param unit the units in which to measure `timeout`, by default
+   *      milliseconds.
+   *  @returns only if the timeout has expired.
    */
-  def retryFor(timeoutMillis: Long)(implicit txn: InTxn) = txn.retryFor(timeoutMillis)
-
-//  /** Returns true if the transaction has waited at least `milli` milliseconds
-//   *  during explicit retries, false otherwise.  If modular blocking is
-//   *  performed that changes the correct return value, the atomic block that
-//   *  called this method will be rerun.  (This is similar to accessing a `Ref`
-//   *  whose value changes before the transaction can be committed.)
-//   */
-//  def hasElapsed(millis: Long)(implicit txn: scala.concurrent.stm.InTxn): Boolean = {
-//    atomic.oneOf(
-//      { implicit txn => retryFor(millis) ; true },
-//      { implicit txn => false }
-//    )
-//    if (millis <= txn.cumulativeBlockingMillis) {
-//      // answer will never change
-//      true
-//    } else {
-//      atomic.oneOf(
-//        { implicit txn => rollback(ExplicitRetryCause(Some(millis))) },
-//        { implicit txn => null }
-//      )
-//      false
-//    }
-//  }
+  def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: InTxn) {
+    txn.retryFor(unit.toNanos(timeout))
+  }
 
   /** Causes the current nesting level to be rolled back due to the specified
    *  `cause`.  This method may only be called by the thread executing the
