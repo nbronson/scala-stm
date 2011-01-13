@@ -125,7 +125,7 @@ trait TxnExecutor {
   def retryTimeoutNanos: Option[Long]
 
   /** Returns a `TxnExecutor` that is identical to this one, except that it has
-   *  a `retryTimeout` of `timeoutMillis`.
+   *  a `retryTimeout` of `timeoutNanos`.
    */
   def withRetryTimeoutNanos(timeoutNanos: Option[Long]): TxnExecutor
 

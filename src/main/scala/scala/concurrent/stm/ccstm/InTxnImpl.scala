@@ -618,7 +618,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
     // Note that awaitRetry might throw an InterruptedException that cancels
     // the retry forever.  In that case we have completely cleaned up, because
-    // detach() cleared _cumulativeBlockingMillis and the following assignment
+    // detach() cleared _cumulativeBlockingNanos and the following assignment
     // hasn't happened yet.
     val remaining = timeoutNanos - (if (timeoutNanos == Long.MaxValue) 0 else prevSum)
     _cumulativeBlockingNanos = prevSum + rs.awaitRetry(remaining)
