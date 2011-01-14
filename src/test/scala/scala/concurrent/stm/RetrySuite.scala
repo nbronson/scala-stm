@@ -418,4 +418,17 @@ class RetrySuite extends FunSuite {
       TxnExecutor.transformDefault( _ => orig )
     }
   }
+
+  test("tighter timeout wins") {
+    val t0 = System.currentTimeMillis
+    intercept[InterruptedException] {
+      atomic.withRetryTimeout(100) { implicit txn =>
+        atomic.withRetryTimeout(1000) { implicit txn =>
+          retry
+        }
+      }
+    }
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 100 && elapsed < 150)
+  }
 }
