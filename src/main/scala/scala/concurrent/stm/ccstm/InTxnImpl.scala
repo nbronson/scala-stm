@@ -49,6 +49,19 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     z
   }
 
+  //////////////// per-attempt history
+
+  /** Subsumption dramatically reduces the overhead of nesting, but it doesn't
+   *  allow partial rollback.  If we find out that partial rollback was needed
+   *  then we disable subsumption and rerun the parent.
+   */
+  private var _subsumptionAllowed = true
+
+  /** The total amount of modular blocking time performed on this thread since
+   *  the last top-level commit or top-level permanent rollback.
+   */
+  private var _cumulativeBlockingNanos = 0L
+
   //////////////// per-transaction state
 
   private var _barging: Boolean = false
@@ -62,12 +75,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private var _currentLevel: TxnLevelImpl = null
   protected def undoLog: TxnLevelImpl = _currentLevel
   protected def internalCurrentLevel: TxnLevelImpl = _currentLevel
-
-  /** Subsumption dramatically reduces the overhead of nesting, but it doesn't
-   *  allow partial rollback.  If we find out that partial rollback was needed
-   *  then we disable subsumption and rerun the parent.
-   */
-  private var _subsumptionAllowed = true
 
   private var _pendingFailure: Throwable = null
 
@@ -92,11 +99,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    *  changed the read set must be revalidated.  Lazily assigned.
    */
   private var _readVersion: Version = 0
-
-  /** The total amount of modular blocking time performed on this thread since
-   *  the last top-level commit or top-level permanent rollback.
-   */
-  private var _cumulativeBlockingNanos = 0L
 
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" +
@@ -228,6 +230,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   @throws(classOf[InterruptedException])
   private def topLevelAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    clearAttemptHistory()
     var prevFailures = 0
     (while (true) {
       var level = new TxnLevelImpl(this, exec, null, false)
@@ -250,12 +253,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }).asInstanceOf[Nothing]
   }
 
+  private def clearAttemptHistory() {
+    _subsumptionAllowed = true
+    _cumulativeBlockingNanos = 0L
+  }
+
   private def isExplicitRetry(status: Status): Boolean = isExplicitRetry(status.asInstanceOf[RolledBack].cause)
 
   private def isExplicitRetry(cause: RollbackCause): Boolean = cause.isInstanceOf[ExplicitRetryCause]
 
   private def nestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
-    if (_subsumptionAllowed && (exec eq _currentLevel.executor))
+    if (_subsumptionAllowed && (exec == _currentLevel.executor))
       subsumedNestedAtomicImpl(block)
     else
       trueNestedAtomicImpl(exec, block)
@@ -316,6 +324,9 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def atomicImpl[Z](exec: TxnExecutor, block: InTxn => Z, alternatives: List[InTxn => Z]): Z = {
     if (Stats.top != null)
       recordAlternatives(alternatives)
+
+    if (_currentLevel == null)
+      clearAttemptHistory()
 
     var reusedReadThreshold = -1
     var minRetryTimeout = Long.MaxValue
@@ -608,20 +619,17 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   private def awaitRetry(timeoutNanos: Long) {
     assert(_slot >= 0)
     val rs = takeRetrySet(_slot)
-    val prevSum = _cumulativeBlockingNanos
     detach()
-    assert(prevSum < timeoutNanos)
     val f = _pendingFailure
     if (f != null) {
       _pendingFailure = null
       throw f
     }
     // Note that awaitRetry might throw an InterruptedException that cancels
-    // the retry forever.  In that case we have completely cleaned up, because
-    // detach() cleared _cumulativeBlockingNanos and the following assignment
-    // hasn't happened yet.
-    val remaining = timeoutNanos - (if (timeoutNanos == Long.MaxValue) 0 else prevSum)
-    _cumulativeBlockingNanos = prevSum + rs.awaitRetry(remaining)
+    // the retry forever.
+    val remaining = timeoutNanos - (if (timeoutNanos == Long.MaxValue) 0 else _cumulativeBlockingNanos)
+    assert(remaining > 0)
+    _cumulativeBlockingNanos += rs.awaitRetry(remaining)
   }
 
   private def topLevelComplete(): Status = {
@@ -640,9 +648,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   private def finishTopLevelCommit() {
-    // we can start subsuming again
-    _subsumptionAllowed = true
-
     resetAccessHistory()
     val handlers = resetCallbacks()
     val exec = _currentLevel.executor
@@ -746,8 +751,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     slotManager.release(_slot)
     _slot = ~_slot
     _currentLevel = null
-    _barging = false
-    _cumulativeBlockingNanos = 0L
   }
 
   private def acquireLocks(): Boolean = {
