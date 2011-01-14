@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
+import actors.threadpool.TimeUnit
 
 /** Contains extended tests of `retry`, `retryFor` and `tryAwait`.  Some basic
  *  tests are included in `TxnSuite`.
@@ -351,4 +352,70 @@ class RetrySuite extends FunSuite {
     }
   }
 
+  test("withRetryTimeout") {
+    val x = Ref(0)
+    val t0 = System.currentTimeMillis
+    intercept[InterruptedException] {
+      atomic.withRetryTimeout(100000, TimeUnit.MICROSECONDS) { implicit txn =>
+        if (x() == 0)
+          retry
+      }
+    }
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 100 && elapsed < 150)
+  }
+
+  test("retryFor wins over withRetryTimeout") {
+    val x = Ref(0)
+    val t0 = System.currentTimeMillis
+    val f = atomic.withRetryTimeout(100) { implicit txn =>
+      if (x() == 0) {
+        retryFor(100)
+        true
+      } else
+        false
+    }
+    assert(f)
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 100 && elapsed < 150)
+  }
+
+  test("withRetryTimeout applies to retryFor") {
+    val x = Ref(0)
+    val t0 = System.currentTimeMillis
+    intercept[InterruptedException] {
+      atomic.withRetryTimeout(100) { implicit txn =>
+        if (x() == 0)
+          retryFor(101)
+        assert(false)
+      }
+    }
+    val elapsed = System.currentTimeMillis - t0
+    assert(elapsed >= 100 && elapsed < 150)
+  }
+
+  test("nested global withRetryTimeout") {
+    val orig = TxnExecutor.defaultAtomic
+    try {
+      TxnExecutor.transformDefault( _.withRetryTimeout(100) )
+      val x = Ref(0)
+      val t0 = System.currentTimeMillis
+      intercept[InterruptedException] {
+        atomic { implicit txn =>
+          atomic { implicit txn =>
+            atomic { implicit txn =>
+              if (x() == 0)
+                retry
+              assert(false)
+            }
+          }
+        }
+      }
+      val elapsed = System.currentTimeMillis - t0
+      println(elapsed)
+      assert(elapsed >= 100 && elapsed < 150)
+    } finally {
+      TxnExecutor.transformDefault( _ => orig )
+    }
+  }
 }
