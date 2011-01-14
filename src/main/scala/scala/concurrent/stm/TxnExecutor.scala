@@ -120,7 +120,7 @@ trait TxnExecutor {
    *  this `TxnExecutor`, or `None` otherwise.  If the retry timeout is
    *  `Some(t)` and an atomic block executed by the returned executor blocks
    *  with `retry` or `retryFor` for more than `t` nanoseconds the retry will
-   *  be cancelled.
+   *  be cancelled with an `InterruptedException`.
    */
   def retryTimeoutNanos: Option[Long]
 
