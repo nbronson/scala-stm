@@ -102,14 +102,14 @@ trait TxnExecutor {
   /** Atomically compares and sets two `Ref`s using identity comparison,
    *  probably more efficiently then the corresponding transaction.  Equivalent
    *  to {{{
-   *     atomic { implicit t =>
-   *       val f = (a() eq a0) && (b() eq b0)
-   *       if (f && (a0 ne a1))
-   *         a() = a1
-   *       if (f && (b0 ne b1))
-   *         b() = b1
-   *       f
-   *     }
+   *    atomic { implicit t =>
+   *      val f = (a() eq a0) && (b() eq b0)
+   *      if (f && (a0 ne a1))
+   *        a() = a1
+   *      if (f && (b0 ne b1))
+   *        b() = b1
+   *      f
+   *    }
    *  }}}
    */
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean
@@ -121,6 +121,17 @@ trait TxnExecutor {
    *  `Some(t)` and an atomic block executed by the returned executor blocks
    *  with `retry` or `retryFor` for more than `t` nanoseconds the retry will
    *  be cancelled with an `InterruptedException`.
+   *
+   *  The retry timeout has essentially the same effect as replacing calls to
+   *  `retry` with
+   *  `{ retryFor(timeout, NANOS) ; throw new InterruptedException }`.
+   *  Alternately, `retryFor(timeout)` has roughly the same effect as {{{
+   *    try {
+   *      atomic.withRetryTimeout(timeout) { implicit txn => retry }
+   *    } catch {
+   *      case _: InterruptedException =>
+   *    }
+   *  }}}
    */
   def retryTimeoutNanos: Option[Long]
 
