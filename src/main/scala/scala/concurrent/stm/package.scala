@@ -20,5 +20,5 @@ package object stm {
   }
 
   /** This is the first half of the machinery for implementing `orAtomic`. */
-  implicit def delayAtomic[A](lhs: => A) = new scala.concurrent.stm.DelayedAtomicBlock(lhs)
+  implicit def wrapChainedAtomic[A](lhs: => A) = new scala.concurrent.stm.PendingAtomicBlock(lhs)
 }

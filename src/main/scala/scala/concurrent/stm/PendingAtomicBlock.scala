@@ -1,16 +1,16 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
-/** Instances of `DelayedAtomicBlock` delay the execution of an atomic block
+/** Instances of `PendingAtomicBlock` defer the execution of an atomic block
  *  until all of the alternatives can be gathered from the user.  There is an
  *  implicit conversion in the `stm` package object from any type `A` to a
- *  `DelayedAtomicBlock[A]`, which will kick in if there is an attempt to call
+ *  `PendingAtomicBlock[A]`, which will kick in if there is an attempt to call
  *  `.orAtomic` on a value.
  *
  *  @author Nathan Bronson
  */
-class DelayedAtomicBlock[A](above: => A) {
+class PendingAtomicBlock[A](above: => A) {
 
   /** See `atomic.oneOf`. */
   def orAtomic[B >: A](below: InTxn => B)(implicit mt: MaybeTxn): B = {
