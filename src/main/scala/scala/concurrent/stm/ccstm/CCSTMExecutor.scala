@@ -13,20 +13,13 @@ private[ccstm] object CCSTMExecutor {
   }
 }
 
-private[ccstm] class CCSTMExecutor private (
-       val retryTimeoutNanos: Option[Long],
-       val controlFlowTest: Throwable => Boolean,
-       val postDecisionFailureHandler: (Txn.Status, Throwable) => Unit
+private[ccstm] case class CCSTMExecutor private (
+       retryTimeoutNanos: Option[Long],
+       controlFlowTest: Throwable => Boolean,
+       postDecisionFailureHandler: (Txn.Status, Throwable) => Unit
     ) extends TxnExecutor {
 
   def this() = this(None, CCSTMExecutor.DefaultControlFlowTest, CCSTMExecutor.DefaultPostDecisionFailureHandler)
-
-  private def copy(
-      retryTimeoutNanos: Option[Long] = retryTimeoutNanos,
-      controlFlowTest: Throwable => Boolean = controlFlowTest,
-      postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = postDecisionFailureHandler): CCSTMExecutor = {
-    new CCSTMExecutor(retryTimeoutNanos, controlFlowTest, postDecisionFailureHandler)
-  }
 
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
 
