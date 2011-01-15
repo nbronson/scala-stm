@@ -3,8 +3,6 @@
 package scala.concurrent.stm
 package ccstm
 
-import actors.threadpool.TimeUnit
-
 
 private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
@@ -27,29 +25,17 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
  *
  *  @author Nathan Bronson
  */
-private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
+private[ccstm] class InTxnImpl extends InTxnRefOps {
   import CCSTM._
   import Txn._
-  import InTxnImpl._
   import skel.RollbackError
 
-  //////////////// pre-transaction state
+  //////////// pre-transaction state
 
   private var _alternatives: List[InTxn => Any] = Nil
 
-  def pushAlternative(block: InTxn => Any): Boolean = {
-    val z = _alternatives.isEmpty
-    _alternatives ::= block
-    z
-  }
 
-  def takeAlternatives(): List[InTxn => Any] = {
-    val z = _alternatives
-    _alternatives = Nil
-    z
-  }
-
-  //////////////// per-attempt history
+  //////////// per-attempt history
 
   /** Subsumption dramatically reduces the overhead of nesting, but it doesn't
    *  allow partial rollback.  If we find out that partial rollback was needed
@@ -64,17 +50,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
 
   //////////////// per-transaction state
 
-  private var _barging: Boolean = false
-  private var _bargeVersion: Version = 0
+  /** A read will barge if `_barding && version(meta) >= _bargeVersion`. */
+  protected var _barging: Boolean = false
+  protected var _bargeVersion: Version = 0
 
   /** Non-negative values are assigned slots, negative values are the bitwise
    *  complement of the last used slot value.
    */
-  private var _slot: Slot = ~0
+  protected var _slot: Slot = ~0
 
   private var _currentLevel: TxnLevelImpl = null
-  protected def undoLog: TxnLevelImpl = _currentLevel
-  protected def internalCurrentLevel: TxnLevelImpl = _currentLevel
 
   private var _pendingFailure: Throwable = null
 
@@ -100,6 +85,20 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
    */
   private var _readVersion: Version = 0
 
+
+  //////////// value-like operations
+
+  def status: Status = _currentLevel.statusAsCurrent
+
+  def currentLevel: NestingLevel = {
+    if (_subsumptionParent != null) {
+      _subsumptionAllowed = false
+      _subsumptionParent.forceRollback(OptimisticFailureCause('restart_to_materialize_current_level, None))
+      throw RollbackError
+    }
+    _currentLevel
+  }
+
   override def toString = {
     ("InTxnImpl@" + hashCode.toHexString + "(" +
             (if (_currentLevel == null) "Detached" else status.toString) +
@@ -114,18 +113,94 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
             ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos + ")")
   }
 
-  //////////////// High-level behaviors
 
-  def status: Status = _currentLevel.statusAsCurrent
+  //////////// methods for use by other CCSTM components
 
-  def currentLevel: NestingLevel = {
-    if (_subsumptionParent != null) {
-      _subsumptionAllowed = false
-      _subsumptionParent.forceRollback(OptimisticFailureCause('restart_to_materialize_current_level, None))
+  protected def undoLog: TxnLevelImpl = _currentLevel
+
+  protected def internalCurrentLevel: TxnLevelImpl = _currentLevel
+
+  /** After this method returns, either the current transaction will have been
+   *  rolled back, or it is safe to wait for `currentOwner` to be `Committed`
+   *  or doomed.
+   */
+  def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
+    // if write is not allowed, throw an exception of some sort
+    requireActive()
+
+    // TODO: boost our priority if we have written?
+
+    // This test is _almost_ symmetric.  Tie goes to neither.
+    if (this._priority <= owningRoot.txn._priority) {
+      resolveAsWWLoser(owningRoot, contended, false, 'owner_has_priority)
+    } else {
+      // This will resolve the conflict regardless of whether it succeeds or fails.
+      val s = owningRoot.requestRollback(OptimisticFailureCause('steal_by_higher_priority, Some(contended)))
+      if (s == Preparing || s == Committing) {
+        // owner can't be remotely canceled
+        val msg = if (s == Preparing) 'owner_is_preparing else 'owner_is_committing
+        resolveAsWWLoser(owningRoot, contended, true, msg)
+      }
+    }
+  }
+
+  private def resolveAsWWLoser(owningRoot: TxnLevelImpl, contended: AnyRef, ownerIsCommitting: Boolean, msg: Symbol) {
+    if (!shouldWaitAsWWLoser(owningRoot, ownerIsCommitting)) {
+      // The failed write is in the current nesting level, so we only need to
+      // invalidate one nested atomic block.  Nothing will get better for us
+      // until the current owner completes or this txn has a higher priority,
+      // however.
+      _currentLevel.forceRollback(OptimisticFailureCause(msg, Some(contended)))
       throw RollbackError
     }
-    _currentLevel
   }
+
+  private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
+    // If we haven't performed any writes, there is no point in not waiting.
+    if (writeCount == 0 && !writeResourcesPresent)
+      return true
+
+    // If the current owner is in the process of committing then we should
+    // wait, because we can't succeed until their commit is done.  This means
+    // that regardless of priority all of this txn's retries are just useless
+    // spins.  This is especially important in the case of external resources
+    // that perform I/O during commit.
+    if (ownerIsCommitting)
+      return true
+
+    // We know that priority <= currentOwner.priority, because we're the loser.
+    // If the priorities match exactly (unlikely but possible) then we can't
+    // have both losers wait or we will get a deadlock.
+    if (_priority == owningRoot.txn._priority)
+      return false
+
+    // Now we're in heuristic territory, waiting or rolling back are both
+    // reasonable choices.  Waiting might reduce rollbacks, but it increases
+    // the number of thread sleep/wakeup transitions, each of which is
+    // expensive.  Our heuristic is to wait only if we are barging, which
+    // indicates that we are having trouble making forward progress using
+    // just blind optimism.  This also guarantees that doomed transactions
+    // never block anybody, because barging txns have visible readers.
+    return _barging
+  }
+
+
+  //////////// pre-txn state manipulation
+
+  def pushAlternative(block: InTxn => Any): Boolean = {
+    val z = _alternatives.isEmpty
+    _alternatives ::= block
+    z
+  }
+
+  private def takeAlternatives(): List[InTxn => Any] = {
+    val z = _alternatives
+    _alternatives = Nil
+    z
+  }
+
+
+  //////////// high-level atomic block operations
 
   @throws(classOf[InterruptedException])
   protected[stm] def retry(): Nothing = {
@@ -167,12 +242,6 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
   }
 
   @throws(classOf[InterruptedException])
-  private def atomicWithAlternatives(exec: TxnExecutor, block: InTxn => Any): Nothing = {
-    val z = atomicImpl(exec, block, takeAlternatives())
-    throw new impl.AlternativeResult(z)
-  }
-
-  @throws(classOf[InterruptedException])
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
     if (!_alternatives.isEmpty)
       throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
@@ -180,87 +249,48 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     atomicImpl(exec, b.head, b.tail)
   }
 
-  /** On commit, either returns a Z or throws the control-flow exception from
-   *  the committed attempted; on rollback, throws an exception on a permanent
-   *  rollback or `RollbackError` on a transient rollback.
-   */
-  private def nestedAttempt[Z](prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z, reusedReadThreshold: Int): Z = {
-    nestedBegin(level, reusedReadThreshold)
-    checkBarging(prevFailures)
-    try {
-      runBlock(block)
-    } finally {
-      rethrowFromStatus(nestedComplete())
-    }
+  def rollback(cause: RollbackCause): Nothing = {
+    // We need to grab the version numbers from writes and pessimistic reads
+    // before the status is set to rollback, because as soon as the top-level
+    // txn is marked rollback other threads can steal ownership.  This is
+    // harmless if some other type of rollback occurs.
+    if (isExplicitRetry(cause))
+      addLatestWritesAsReads(_barging)
+
+    _currentLevel.forceRollback(cause)
+    throw RollbackError
   }
+
+
+  //////////// per-block logic (includes reexecution loops)
 
   @throws(classOf[InterruptedException])
-  private def topLevelAttempt[Z](prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
-    topLevelBegin(level)
-    checkBarging(prevFailures)
-    try {
-      runBlock(block)
-    } finally {
-      rethrowFromStatus(topLevelComplete())
+  private def awaitRetry(timeoutNanos: Long) {
+    assert(_slot >= 0)
+    val rs = takeRetrySet(_slot)
+    detach()
+    val f = _pendingFailure
+    if (f != null) {
+      _pendingFailure = null
+      throw f
     }
+    // Note that awaitRetry might throw an InterruptedException that cancels
+    // the retry forever.
+    val remaining = timeoutNanos - (if (timeoutNanos == Long.MaxValue) 0 else _cumulativeBlockingNanos)
+    assert(remaining > 0)
+    _cumulativeBlockingNanos += rs.awaitRetry(remaining)
   }
 
-  private def runBlock[Z](block: InTxn => Z): Z = {
-    try {
-      block(this)
-    } catch {
-      case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) => {
-        _currentLevel.forceRollback(UncaughtExceptionCause(x))
-        null.asInstanceOf[Z]
-      }
-    }
-  }
+  private def isExplicitRetry(status: Status): Boolean = isExplicitRetry(status.asInstanceOf[RolledBack].cause)
 
-  private def rethrowFromStatus(status: Status) {
-    status match {
-      case rb: RolledBack => {
-        rb.cause match {
-          case UncaughtExceptionCause(x) => throw x
-          case _: TransientRollbackCause => throw RollbackError
-        }
-      }
-      case _ =>
-    }
-  }
-
-  @throws(classOf[InterruptedException])
-  private def topLevelAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
-    clearAttemptHistory()
-    var prevFailures = 0
-    (while (true) {
-      var level = new TxnLevelImpl(this, exec, null, false)
-      try {
-        // successful attempt or permanent rollback either returns a Z or
-        // throws an exception != RollbackError
-        return topLevelAttempt(prevFailures, level, block)
-      } catch {
-        case RollbackError =>
-      }
-      // we are only here if it is a transient rollback or an explicit retry
-      if (isExplicitRetry(level.status)) {
-        val timeout = level.minRetryTimeoutNanos
-        level = null // help the GC while waiting
-        awaitRetry(timeout)
-        prevFailures = 0
-      } else {
-        prevFailures += 1 // transient rollback, retry
-      }
-    }).asInstanceOf[Nothing]
-  }
+  private def isExplicitRetry(cause: RollbackCause): Boolean = cause.isInstanceOf[ExplicitRetryCause]
 
   private def clearAttemptHistory() {
     _subsumptionAllowed = true
     _cumulativeBlockingNanos = 0L
   }
 
-  private def isExplicitRetry(status: Status): Boolean = isExplicitRetry(status.asInstanceOf[RolledBack].cause)
-
-  private def isExplicitRetry(cause: RollbackCause): Boolean = cause.isInstanceOf[ExplicitRetryCause]
+  //// nested, no alternatives
 
   private def nestedAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
     if (_subsumptionAllowed && (exec == _currentLevel.executor))
@@ -312,6 +342,41 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       }
       prevFailures += 1 // transient rollback, retry
     }).asInstanceOf[Nothing]
+  }
+
+  //// top-level, no alternatives
+
+  @throws(classOf[InterruptedException])
+  private def topLevelAtomicImpl[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
+    clearAttemptHistory()
+    var prevFailures = 0
+    (while (true) {
+      var level = new TxnLevelImpl(this, exec, null, false)
+      try {
+        // successful attempt or permanent rollback either returns a Z or
+        // throws an exception != RollbackError
+        return topLevelAttempt(prevFailures, level, block)
+      } catch {
+        case RollbackError =>
+      }
+      // we are only here if it is a transient rollback or an explicit retry
+      if (isExplicitRetry(level.status)) {
+        val timeout = level.minRetryTimeoutNanos
+        level = null // help the GC while waiting
+        awaitRetry(timeout)
+        prevFailures = 0
+      } else {
+        prevFailures += 1 // transient rollback, retry
+      }
+    }).asInstanceOf[Nothing]
+  }
+
+  //// nested or top-level, with alternatives
+
+  @throws(classOf[InterruptedException])
+  private def atomicWithAlternatives(exec: TxnExecutor, block: InTxn => Any): Nothing = {
+    val z = atomicImpl(exec, block, takeAlternatives())
+    throw new impl.AlternativeResult(z)
   }
 
   /** On commit, returns a Z or throws an exception other than `RollbackError`.
@@ -398,166 +463,32 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     (if (_currentLevel == null) Stats.top else Stats.nested).alternatives += alternatives.size
   }
 
-  def rollback(cause: RollbackCause): Nothing = {
-    // We need to grab the version numbers from writes and pessimistic reads
-    // before the status is set to rollback, because as soon as the top-level
-    // txn is marked rollback other threads can steal ownership.  This is
-    // harmless if some other type of rollback occurs.
-    if (isExplicitRetry(cause))
-      addLatestWritesAsReads(_barging)
+  //////////// per-attempt logic
 
-    _currentLevel.forceRollback(cause)
-    throw RollbackError
-  }
-
-
-  //////////////// Implementation
-
-  /** On return, the read version will have been the global version at some
-   *  point during the call, the read version will be >= minReadVersion, and
-   *  all reads will have been validated against the new read version.  Throws
-   *  `RollbackError` if invalid.
+  /** On commit, either returns a Z or throws the control-flow exception from
+   *  the committed attempted; on rollback, throws an exception on a permanent
+   *  rollback or `RollbackError` on a transient rollback.
    */
-  private def revalidate(minReadVersion: Version) {
-    _readVersion = freshReadVersion(minReadVersion)
-    if (!revalidateImpl())
-      throw RollbackError
-  }
-
-  /** Calls revalidate(version) if version > _readVersion. */
-  private def revalidateIfRequired(version: Version) {
-    if (version > _readVersion)
-      revalidate(version)
-  }
-
-  /** Returns true if valid. */
-  private def revalidateImpl(): Boolean = {
-    // we check the oldest reads first, so that we roll back all intervening
-    // invalid nesting levels
-    var i = 0
-    while (i < readCount) {
-      val h = readHandle(i)
-      val problem = checkRead(h, readVersion(i))
-      if (problem != null) {
-        readLocate(i).asInstanceOf[NestingLevel].requestRollback(OptimisticFailureCause(problem, Some(h)))
-        return false
-      }
-      i += 1
-    }
-    fireWhileValidating()
-    
-    !this.status.isInstanceOf[RolledBack]
-  }
-
-  /** Returns the name of the problem on failure, null on success. */ 
-  private def checkRead(handle: Handle[_], ver: CCSTM.Version): Symbol = {
-    (while (true) {
-      val m1 = handle.meta
-      if (!changing(m1) || owner(m1) == _slot) {
-        if (version(m1) != ver)
-          return 'stale_read
-        // okay
-        return null
-      } else if (owner(m1) == nonTxnSlot) {
-        // non-txn updates don't set changing unless they will install a new
-        // value, so we are the only party that can yield
-        return 'read_vs_nontxn_write
-      } else {
-        // Either this txn or the owning txn must roll back.  We choose to
-        // give precedence to the owning txn, as it is the writer and is
-        // trying to commit.  There's a bit of trickiness since o may not be
-        // the owning transaction, it may be a new txn that reused the same
-        // slot.  If the actual owning txn committed then the version
-        // number will have changed, which we will detect on the next pass
-        // (because we aren't incrementing i, so we will revisit this
-        // entry).  If it rolled back then we don't have to roll back, so
-        // looking at o to make the decision doesn't affect correctness
-        // (although it might result in an unnecessary rollback).  If the
-        // owner slot is the same but the changing bit is not set (or if
-        // the owner txn is null) then we are definitely observing a reused
-        // slot and we can avoid the spurious rollback.
-        val o = slotManager.lookup(owner(m1))
-        if (null != o) {
-          val s = o.status
-          val m2 = handle.meta
-          if (changing(m2) && owner(m2) == owner(m1)) {
-            if (!s.isInstanceOf[RolledBack])
-              return 'read_vs_pending_commit
-
-            stealHandle(handle, m2, o)
-          }
-        }
-      }
-      // try again
-    }).asInstanceOf[Nothing]
-  }
-
-
-  /** After this method returns, either the current transaction will have been
-   *  rolled back, or it is safe to wait for `currentOwner` to be `Committed`
-   *  or doomed.  
-   */
-  def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
-    // if write is not allowed, throw an exception of some sort
-    requireActive()
-
-    // TODO: boost our priority if we have written?
-
-    // This test is _almost_ symmetric.  Tie goes to neither.
-    if (this._priority <= owningRoot.txn._priority) {
-      resolveAsWWLoser(owningRoot, contended, false, 'owner_has_priority)
-    } else {
-      // This will resolve the conflict regardless of whether it succeeds or fails.
-      val s = owningRoot.requestRollback(OptimisticFailureCause('steal_by_higher_priority, Some(contended)))
-      if (s == Preparing || s == Committing) {
-        // owner can't be remotely canceled
-        val msg = if (s == Preparing) 'owner_is_preparing else 'owner_is_committing
-        resolveAsWWLoser(owningRoot, contended, true, msg)
-      }
+  private def nestedAttempt[Z](prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z, reusedReadThreshold: Int): Z = {
+    nestedBegin(level, reusedReadThreshold)
+    checkBarging(prevFailures)
+    try {
+      runBlock(block)
+    } finally {
+      rethrowFromStatus(nestedComplete())
     }
   }
 
-  private def resolveAsWWLoser(owningRoot: TxnLevelImpl, contended: AnyRef, ownerIsCommitting: Boolean, msg: Symbol) {
-    if (!shouldWaitAsWWLoser(owningRoot, ownerIsCommitting)) {
-      // The failed write is in the current nesting level, so we only need to
-      // invalidate one nested atomic block.  Nothing will get better for us
-      // until the current owner completes or this txn has a higher priority,
-      // however.
-      _currentLevel.forceRollback(OptimisticFailureCause(msg, Some(contended)))
-      throw RollbackError
+  @throws(classOf[InterruptedException])
+  private def topLevelAttempt[Z](prevFailures: Int, level: TxnLevelImpl, block: InTxn => Z): Z = {
+    topLevelBegin(level)
+    checkBarging(prevFailures)
+    try {
+      runBlock(block)
+    } finally {
+      rethrowFromStatus(topLevelComplete())
     }
   }
-
-  private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
-    // If we haven't performed any writes, there is no point in not waiting.
-    if (writeCount == 0 && !writeResourcesPresent)
-      return true
-
-    // If the current owner is in the process of committing then we should
-    // wait, because we can't succeed until their commit is done.  This means
-    // that regardless of priority all of this txn's retries are just useless
-    // spins.  This is especially important in the case of external resources
-    // that perform I/O during commit.
-    if (ownerIsCommitting)
-      return true
-
-    // We know that priority <= currentOwner.priority, because we're the loser.
-    // If the priorities match exactly (unlikely but possible) then we can't
-    // have both losers wait or we will get a deadlock.
-    if (_priority == owningRoot.txn._priority)
-      return false
-
-    // Now we're in heuristic territory, waiting or rolling back are both
-    // reasonable choices.  Waiting might reduce rollbacks, but it increases
-    // the number of thread sleep/wakeup transitions, each of which is
-    // expensive.  Our heuristic is to wait only if we are barging, which
-    // indicates that we are having trouble making forward progress using
-    // just blind optimism.  This also guarantees that doomed transactions
-    // never block anybody, because barging txns have visible readers.
-    return _barging
-  }
-
-  //////////////// begin + commit
 
   private def checkBarging(prevFailures: Int) {
     // once we start barging we will use the original read version
@@ -595,6 +526,31 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     _currentLevel = child
   }
 
+  private def runBlock[Z](block: InTxn => Z): Z = {
+    try {
+      block(this)
+    } catch {
+      case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) => {
+        _currentLevel.forceRollback(UncaughtExceptionCause(x))
+        null.asInstanceOf[Z]
+      }
+    }
+  }
+
+  private def rethrowFromStatus(status: Status) {
+    status match {
+      case rb: RolledBack => {
+        rb.cause match {
+          case UncaughtExceptionCause(x) => throw x
+          case _: TransientRollbackCause => throw RollbackError
+        }
+      }
+      case _ =>
+    }
+  }
+
+  //////////// completion
+
   private def nestedComplete(): Status = {
     val child = _currentLevel
     if (child.attemptMerge()) {
@@ -615,22 +571,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
-  @throws(classOf[InterruptedException])
-  private def awaitRetry(timeoutNanos: Long) {
-    assert(_slot >= 0)
-    val rs = takeRetrySet(_slot)
-    detach()
-    val f = _pendingFailure
-    if (f != null) {
-      _pendingFailure = null
-      throw f
-    }
-    // Note that awaitRetry might throw an InterruptedException that cancels
-    // the retry forever.
-    val remaining = timeoutNanos - (if (timeoutNanos == Long.MaxValue) 0 else _cumulativeBlockingNanos)
-    assert(remaining > 0)
-    _cumulativeBlockingNanos += rs.awaitRetry(remaining)
-  }
+  //// top-level completion
 
   private def topLevelComplete(): Status = {
     if (attemptTopLevelComplete()) {
@@ -690,6 +631,13 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     }
   }
 
+  private def detach() {
+    //assert(_slot >= 0 && readCount == 0 && bargeCount == 0 && writeCount == 0)
+    slotManager.release(_slot)
+    _slot = ~_slot
+    _currentLevel = null
+  }
+
   private def attemptTopLevelComplete(): Boolean = {
     val root = _currentLevel
 
@@ -700,7 +648,7 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     // barging locks, though.
     if (writeCount == 0 && !writeResourcesPresent) {
       if (bargeCount > 0)
-        readOnlyCommitBarges()
+        releaseBargeLocks()
       return root.tryActiveToCommitted()
     }
 
@@ -736,21 +684,12 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     return true
   }
 
-  private def consultExternalDecider(): Boolean = {
-    try {
-      if (!externalDecider.shouldCommit(this))
-        _currentLevel.forceRollback(OptimisticFailureCause('external_decision, None))
-    } catch {
-      case x => _currentLevel.forceRollback(UncaughtExceptionCause(x))
+  private def releaseBargeLocks() {
+    var i = bargeCount - 1
+    while (i >= 0) {
+      rollbackHandle(bargeHandle(i), _slot)
+      i -= 1
     }
-    this.status eq Prepared
-  }
-
-  private def detach() {
-    assert(_slot >= 0 && readCount == 0 && bargeCount == 0 && writeCount == 0)
-    slotManager.release(_slot)
-    _slot = ~_slot
-    _currentLevel = null
   }
 
   private def acquireLocks(): Boolean = {
@@ -768,6 +707,16 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       i -= 1
     }
     return true
+  }
+
+  private def consultExternalDecider(): Boolean = {
+    try {
+      if (!externalDecider.shouldCommit(this))
+        _currentLevel.forceRollback(OptimisticFailureCause('external_decision, None))
+    } catch {
+      case x => _currentLevel.forceRollback(UncaughtExceptionCause(x))
+    }
+    this.status eq Prepared
   }
 
   private def commitWrites(cv: Long) {
@@ -826,15 +775,72 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
       wakeupManager.trigger(wakeups)
   }
 
-  private def readOnlyCommitBarges() {
-    var i = bargeCount - 1
-    while (i >= 0) {
-      rollbackHandle(bargeHandle(i), _slot)
-      i -= 1
+  //////////// validation
+
+  /** Returns true if valid. */
+  private def revalidateImpl(): Boolean = {
+    // we check the oldest reads first, so that we roll back all intervening
+    // invalid nesting levels
+    var i = 0
+    while (i < readCount) {
+      val h = readHandle(i)
+      val problem = checkRead(h, readVersion(i))
+      if (problem != null) {
+        readLocate(i).asInstanceOf[NestingLevel].requestRollback(OptimisticFailureCause(problem, Some(h)))
+        return false
+      }
+      i += 1
     }
+    fireWhileValidating()
+
+    !this.status.isInstanceOf[RolledBack]
   }
 
-  //////////////// status checks
+  /** Returns the name of the problem on failure, null on success. */
+  private def checkRead(handle: Handle[_], ver: CCSTM.Version): Symbol = {
+    (while (true) {
+      val m1 = handle.meta
+      if (!changing(m1) || owner(m1) == _slot) {
+        if (version(m1) != ver)
+          return 'stale_read
+        // okay
+        return null
+      } else if (owner(m1) == nonTxnSlot) {
+        // non-txn updates don't set changing unless they will install a new
+        // value, so we are the only party that can yield
+        return 'read_vs_nontxn_write
+      } else {
+        // Either this txn or the owning txn must roll back.  We choose to
+        // give precedence to the owning txn, as it is the writer and is
+        // trying to commit.  There's a bit of trickiness since o may not be
+        // the owning transaction, it may be a new txn that reused the same
+        // slot.  If the actual owning txn committed then the version
+        // number will have changed, which we will detect on the next pass
+        // (because we aren't incrementing i, so we will revisit this
+        // entry).  If it rolled back then we don't have to roll back, so
+        // looking at o to make the decision doesn't affect correctness
+        // (although it might result in an unnecessary rollback).  If the
+        // owner slot is the same but the changing bit is not set (or if
+        // the owner txn is null) then we are definitely observing a reused
+        // slot and we can avoid the spurious rollback.
+        val o = slotManager.lookup(owner(m1))
+        if (null != o) {
+          val s = o.status
+          val m2 = handle.meta
+          if (changing(m2) && owner(m2) == owner(m1)) {
+            if (!s.isInstanceOf[RolledBack])
+              return 'read_vs_pending_commit
+
+            stealHandle(handle, m2, o)
+          }
+        }
+      }
+      // try again
+    }).asInstanceOf[Nothing]
+  }
+
+
+  //////////// implementations of InTnRefOps abstract operations
 
   override def requireActive() {
     val cur = _currentLevel
@@ -843,373 +849,25 @@ private[ccstm] class InTxnImpl extends AccessHistory with skel.AbstractInTxn {
     cur.requireActive()
   }
 
-  //////////////// lock management - similar to NonTxn but we also check for remote rollback
+  protected def isNewerThanReadVersion(version: Version): Boolean = version > _readVersion
+
+  /** On return, the read version will have been the global version at some
+   *  point during the call, the read version will be >= minReadVersion, and
+   *  all reads will have been validated against the new read version.  Throws
+   *  `RollbackError` if invalid.
+   */
+  protected def revalidate(minReadVersion: Version) {
+    _readVersion = freshReadVersion(minReadVersion)
+    if (!revalidateImpl())
+      throw RollbackError
+  }
+
+  protected def forceRollback(cause: RollbackCause) {
+    _currentLevel.forceRollback(cause)
+  }
 
   @throws(classOf[InterruptedException])
-  private def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
+  protected def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
     CCSTM.weakAwaitUnowned(handle, m0, _currentLevel)
   }
-
-  /** Returns the pre-acquisition metadata. */
-  @throws(classOf[InterruptedException])
-  private def acquireOwnership(handle: Handle[_]): Meta = {
-    var m = handle.meta
-    if (owner(m) == _slot)
-      return m
-    (while (true) {
-      if (owner(m) != unownedSlot)
-        weakAwaitUnowned(handle, m)
-      else if (handle.metaCAS(m, withOwner(m, _slot)))
-        return m
-      m = handle.meta
-    }).asInstanceOf[Nothing]
-  }
-
-  private def tryAcquireOwnership(handle: Handle[_], m0: Meta): Boolean = {
-    owner(m0) == unownedSlot && handle.metaCAS(m0, withOwner(m0, _slot))
-  }
-
-  //////////////// barrier implementations
-  
-  @throws(classOf[InterruptedException])
-  def get[T](handle: Handle[T]): T = {
-    requireActive()
-
-    var m1 = handle.meta
-    if (owner(m1) == _slot) {
-      // Self-owned.  This particular base+offset might not be in the write
-      // buffer, but it's definitely not in anybody else's.
-      return stableGet(handle)
-    }
-
-    if (readShouldBarge(m1))
-      return bargingRead(handle)
-
-    var m0 = 0L
-    var value: T = null.asInstanceOf[T]
-    do {
-      m0 = m1
-      while (changing(m0)) {
-        weakAwaitUnowned(handle, m0)
-        m0 = handle.meta
-      }
-      revalidateIfRequired(version(m0))
-      value = handle.data
-      m1 = handle.meta
-    } while (changingAndVersion(m0) != changingAndVersion(m1))
-
-    // Stable read.  The second read of handle.meta is required for
-    // opacity, and it also enables the read-only commit optimization.
-    recordRead(handle, version(m1))
-    return value
-  }
-
-  private def readShouldBarge(meta: Meta): Boolean = {
-    _barging && version(meta) >= _bargeVersion
-  }
-
-  @throws(classOf[InterruptedException])
-  private def bargingRead[T](handle: Handle[T]): T = {
-    val mPrev = acquireOwnership(handle)
-    recordBarge(handle)
-    revalidateIfRequired(version(mPrev))
-    return handle.data
-  }
-
-  @throws(classOf[InterruptedException])
-  def getWith[T,Z](handle: Handle[T], f: T => Z): Z = {
-    if (_barging && version(handle.meta) >= _bargeVersion)
-      return f(get(handle))
-
-    requireActive()
-    val u = unrecordedRead(handle)
-    val result = f(u.value)
-    if (!u.recorded) {
-      val callback = new Function[NestingLevel, Unit] {
-        var _latestRead = u
-
-        def apply(level: NestingLevel) {
-          if (!isValid)
-            level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-        }
-
-        private def isValid: Boolean = {
-          if (_latestRead == null || _latestRead.stillValid)
-            return true
-
-          val m1 = handle.meta
-          if (owner(m1) == _slot) {
-            // We know that our original read did not come from the write
-            // buffer, because !u.recorded.  That means that to redo this
-            // read we should go to handle.data, which has the most recent
-            // value from which we should read.
-            _latestRead = null
-            return (result == f(handle.data))
-          }
-
-          // reread, and see if that changes the result
-          _latestRead = unrecordedRead(handle)
-
-          return (result == f(_latestRead.value))
-        }
-      }
-
-      // It is safe to skip calling callback.valid() here, because we
-      // have made no calls into the txn that might have resulted in it
-      // moving its virtual snapshot forward.  This means that the
-      // unrecorded read that initialized u is consistent with all of the
-      // reads performed so far.
-      whileValidating(callback)
-    }
-
-    return result
-  }
-
-  @throws(classOf[InterruptedException])
-  def relaxedGet[T](handle: Handle[T], equiv: (T, T) => Boolean): T = {
-    if (_barging && version(handle.meta) >= _bargeVersion)
-      return get(handle)
-
-    requireActive()
-    val u = unrecordedRead(handle)
-    val snapshot = u.value
-    if (!u.recorded) {
-      val callback = new Function[NestingLevel, Unit] {
-        var _latestRead = u
-
-        def apply(level: NestingLevel) {
-          if (!isValid)
-            level.requestRollback(OptimisticFailureCause('invalid_relaxed_get, Some(handle)))
-        }
-
-        private def isValid: Boolean = {
-          if (_latestRead == null || _latestRead.stillValid)
-            return true
-
-          val m1 = handle.meta
-          if (owner(m1) == _slot) {
-            // We know that our original read did not come from the write
-            // buffer, because !u.recorded.  That means that to redo this
-            // read we should go to handle.data, which has the most recent
-            // value from which we should read.
-            _latestRead = null
-            return equiv(snapshot, handle.data)
-          }
-
-          // reread, and see if that changes the result
-          _latestRead = unrecordedRead(handle)
-
-          return equiv(snapshot, _latestRead.value)
-        }
-      }
-
-      // It is safe to skip calling callback.valid() here, because we
-      // have made no calls into the txn that might have resulted in it
-      // moving its virtual snapshot forward.  This means that the
-      // unrecorded read that initialized u is consistent with all of the
-      // reads performed so far.
-      whileValidating(callback)
-    }
-
-    return snapshot
-  }
-
-  @throws(classOf[InterruptedException])
-  def unrecordedRead[T](handle: Handle[T]): UnrecordedRead[T] = {
-    // unrecorded read might be needed to update validation state of getWith or
-    // relaxedGet during the Preparing stage
-    requireNotDecided()
-
-    var m1 = handle.meta
-    var v: T = null.asInstanceOf[T]
-    val rec = (if (owner(m1) == _slot) {
-      v = stableGet(handle)
-      true
-    } else {
-      var m0 = 0L
-      do {
-        m0 = m1
-        while (changing(m0)) {
-          if (status != Active) {
-            // can't wait
-            _currentLevel.forceRollback(OptimisticFailureCause('late_invalid_unrecordedRead, Some(handle)))
-            throw RollbackError
-          }
-          weakAwaitUnowned(handle, m0)
-          m0 = handle.meta
-        }
-        if (version(m0) > _readVersion) {
-          if (status != Active) {
-            // can't wait
-            _currentLevel.forceRollback(OptimisticFailureCause('late_invalid_unrecordedRead, Some(handle)))
-            throw RollbackError
-          }
-          revalidate(version(m0))
-        }
-        v = handle.data
-        m1 = handle.meta
-      } while (changingAndVersion(m0) != changingAndVersion(m1))
-      false
-    })
-
-    new UnrecordedRead[T] {
-      def value: T = v
-      def stillValid = {
-        val m = handle.meta
-        version(m) == version(m1) && (!changing(m) || owner(m) == _slot)
-      }
-      def recorded = rec
-    }
-  }
-
-  private def freshOwner(mPrev: Meta) = owner(mPrev) == unownedSlot
-
-  @throws(classOf[InterruptedException])
-  def set[T](handle: Handle[T], v: T) {
-    requireActive()
-    val mPrev = acquireOwnership(handle)
-    val f = freshOwner(mPrev)
-    put(handle, f, v)
-
-    // This might not be a blind write, because meta might be shared with other
-    // values that are subsequently read by the transaction.  We don't need to
-    // record a read set entry, however, because nobody can modify it after we
-    // grab ownership.  This means it suffices to check against _readVersion.
-    // We must put something in the buffer before calling revalidate in case we
-    // roll back, so that the ownership gets released.
-    //
-    // If not f, then this was already self-owned.  This particular base+offset
-    // might not be in the write buffer, but it's definitely not in anybody
-    // else's.
-    if (f)
-      revalidateIfRequired(version(mPrev))
-  }
-  
-  @throws(classOf[InterruptedException])
-  def swap[T](handle: Handle[T], v: T): T = {
-    requireActive()
-    val mPrev = acquireOwnership(handle)
-    val f = freshOwner(mPrev)
-    val v0 = swap(handle, f, v)
-    if (f)
-      revalidateIfRequired(version(mPrev))
-    v0
-  }
-
-  def trySet[T](handle: Handle[T], v: T): Boolean = {
-    requireActive()
-
-    val m0 = handle.meta
-    if (owner(m0) == _slot) {
-      put(handle, false, v)
-      return true
-    }
-
-    if (!tryAcquireOwnership(handle, m0))
-      return false
-    put(handle, true, v)
-    revalidateIfRequired(version(m0))
-    return true
-  }
-
-  @throws(classOf[InterruptedException])
-  def compareAndSet[T](handle: Handle[T], before: T, after: T): Boolean = {
-    transformIfDefined(handle, new PartialFunction[T,T] {
-      def isDefinedAt(v: T): Boolean = before == v
-      def apply(v: T): T = after
-    })
-  }
-
-  @throws(classOf[InterruptedException])
-  def compareAndSetIdentity[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
-    transformIfDefined(handle, new PartialFunction[T,T] {
-      def isDefinedAt(v: T): Boolean = (before eq v.asInstanceOf[AnyRef])
-      def apply(v: T): T = after
-    })
-  }
-
-  @throws(classOf[InterruptedException])
-  def getAndTransform[T](handle: Handle[T], func: T => T): T = {
-    requireActive()
-    val mPrev = acquireOwnership(handle)
-    val f = freshOwner(mPrev)
-    val v0 = getAndTransform(handle, f, func)
-    if (f)
-      revalidateIfRequired(version(mPrev))
-    v0
-  }
-
-  @throws(classOf[InterruptedException])
-  def transformAndGet[T](handle: Handle[T], func: T => T): T = {
-    requireActive()
-    val mPrev = acquireOwnership(handle)
-    val f = freshOwner(mPrev)
-    val v1 = transformAndGet(handle, f, func)
-    if (f)
-      revalidateIfRequired(version(mPrev))
-    v1
-  }
-
-  @throws(classOf[InterruptedException])
-  def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
-    requireActive()
-    val u = unrecordedRead(handle)
-    if (!pf.isDefinedAt(u.value)) {
-      // make sure it stays undefined
-      if (!u.recorded) {        
-        val callback = new Function[NestingLevel, Unit] {
-          var _latestRead = u
-
-          def apply(level: NestingLevel) {
-            if (!isValid)
-              level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-          }
-
-          private def isValid: Boolean = {
-            if (!_latestRead.stillValid) {
-              // if defined after reread then return false==invalid
-              _latestRead = unrecordedRead(handle)
-              !pf.isDefinedAt(_latestRead.value)
-            } else {
-              true
-            }
-          }
-        }
-        whileValidating(callback)
-      }
-      false
-    } else {
-      val v = get(handle)
-      if (!u.stillValid && !pf.isDefinedAt(v)) {
-        // value changed after unrecordedRead
-        false
-      } else {
-        // still defined, do the actual getAndTransform
-        set(handle, pf(v))
-        true
-      }
-    }
-  }
-
-  @throws(classOf[InterruptedException])
-  def getAndAdd(handle: Handle[Int], delta: Int): Int = {
-    requireActive()
-    val mPrev = acquireOwnership(handle)
-    val f = freshOwner(mPrev)
-    val v0 = getAndAdd(handle, f, delta)
-    if (f)
-      revalidateIfRequired(version(mPrev))
-    v0
-  }
-
-  //////////// TxnLocal stuff
-
-  // We store transactional local values in the write buffer by pretending
-  // that they are proper handles, but their data and metadata aren't actually
-  // backed by anything.
-
-  def txnLocalFind(local: TxnLocalImpl[_]): Int = findWrite(local)
-  def txnLocalGet[T](index: Int): T = getWriteSpecValue[T](index)
-  def txnLocalInsert[T](local: TxnLocalImpl[T], v: T) { writeAppend(local, false, v) }
-  def txnLocalUpdate[T](index: Int, v: T) { writeUpdate(index, v) }
 }
