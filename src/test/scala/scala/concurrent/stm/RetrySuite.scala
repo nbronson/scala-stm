@@ -431,4 +431,20 @@ class RetrySuite extends FunSuite {
     val elapsed = System.currentTimeMillis - t0
     assert(elapsed >= 100 && elapsed < 150)
   }
+
+  test("non-timeout elapsed") {
+    val x = Ref(0)
+    (new Thread { override def run { Thread.sleep(100) ; x.single() = 1 } }).start
+    intercept[InterruptedException] {
+      atomic { implicit txn =>
+        atomic.withRetryTimeout(200) { implicit txn =>
+          if (x() == 0)
+            retry
+        }
+        atomic.withRetryTimeout(50) { implicit txn =>
+          retryFor(51)
+        }
+      }
+    }
+  }
 }
