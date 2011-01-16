@@ -4,6 +4,9 @@ Changes between 0.2 and 0.3-SNAPSHOT:
 
 * Bug fixes (see https://github.com/nbronson/scala-stm/issues/closed )
 
+* Timeouts for modular blocking.  Set timeouts at the atomic block using
+  atomic.withRetryTimeout, or at the retry site using retryFor.
+
 Snapshot releases deployed to the scala-tools.org repository are tested
 and functional, but may have changing APIs.
 
