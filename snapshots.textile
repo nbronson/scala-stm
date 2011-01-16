@@ -12,6 +12,8 @@ Changes between 0.2 and 0.3-SNAPSHOT:
 ["#14":https://github.com/nbronson/scala-stm/issues/closed#issue/14] -- fix for external decision support; and
 ["#15":https://github.com/nbronson/scala-stm/issues/closed#issue/15] -- NPE if a post-decision handler threw an exception.
 
+* Timeouts for modular blocking using @retry@.  Read more at ["Waiting : Timeouts":modular_blocking.html#timeouts].
+
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
