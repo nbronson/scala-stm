@@ -346,14 +346,14 @@ part of compilation it is not possible to check whether the contents of the list
             <div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s using identity comparison,
  probably more efficiently then the corresponding transaction.  Equivalent
  to </p><pre>
-    atomic { implicit t =&gt;
-      val f = (a() eq a0) &amp;&amp; (b() eq b0)
-      if (f &amp;&amp; (a0 ne a1))
-        a() = a1
-      if (f &amp;&amp; (b0 ne b1))
-        b() = b1
-      f
-    }
+   atomic { implicit t =&gt;
+     val f = (a() eq a0) &amp;&amp; (b() eq b0)
+     if (f &amp;&amp; (a0 ne a1))
+       a() = a1
+     if (f &amp;&amp; (b0 ne b1))
+       b() = b1
+     f
+   }
 </pre></div><div class="block">
           attributes: abstract 
         </div><div class="block">
@@ -1119,6 +1119,43 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#retryTimeoutNanos">
+      <a id="retryTimeoutNanos:Option[Long]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">retryTimeoutNanos</span>
+        
+        
+        <span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
+ this <code>TxnExecutor</code>, or <code>None</code> otherwise.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
+ this <code>TxnExecutor</code>, or <code>None</code> otherwise.  If the retry timeout is
+ <code>Some(t)</code> and an atomic block executed by the returned executor blocks
+ with <code>retry</code> or <code>retryFor</code> for more than <code>t</code> nanoseconds the retry will
+ be cancelled with an <code>InterruptedException</code>.</p><p> The retry timeout has essentially the same effect as replacing calls to
+ <code>retry</code> with
+ <code>{ retryFor(timeout, NANOS) ; throw new InterruptedException }</code>.
+ Alternately, <code>retryFor(timeout)</code> has roughly the same effect as </p><pre>
+   try {
+     atomic.withRetryTimeout(timeout) { implicit txn =&gt; retry }
+   } catch {
+     case _: InterruptedException =&gt;
+   }
+</pre></div><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>
       <h4 class="signature">
@@ -1271,6 +1308,56 @@ possible to check whether the contents of the list are of the requested typed.
             <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor e</code> that is identical to this one, except that
  <code>e.postDecisionFailureHandler</code> will return <code>handler</code>.  This function may
  be called from inside a function passed to <code>TxnExecutor.transformDefault</code> to change the system-wide post-decision failure handler.
+</p></div><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnExecutor#withRetryTimeout">
+      <a id="withRetryTimeout(Long,TimeUnit):TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withRetryTimeout</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="scala.actors.threadpool.TimeUnit">TimeUnit</span> =<span class="defval" name="TimeUnit.MILLISECONDS"> ...</span></span>)</span>
+        <span class="result">: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
+ the specified retry timeout.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one except that it has
+ the specified retry timeout.  The default time unit is milliseconds.
+</p></div><div class="block">
+          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnExecutor#withRetryTimeoutNanos">
+      <a id="withRetryTimeoutNanos(Option[Long]):TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withRetryTimeoutNanos</span>
+        
+        <span class="params">(<span name="timeoutNanos">timeoutNanos: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>)</span>
+        <span class="result">: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
+ a <code>retryTimeout</code> of <code>timeoutNanos</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
+ a <code>retryTimeout</code> of <code>timeoutNanos</code>.
 </p></div><div class="block">
           attributes: abstract 
         </div><div class="block">

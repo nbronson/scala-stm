@@ -52,20 +52,7 @@
 
         <div class="types members" id="types">
               <h3>Type Members</h3>
-              <ol><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.DelayedAtomicBlock">
-      <a id="DelayedAtomicBlock:DelayedAtomicBlock[A]"></a>
-      <h4 class="signature"><a href="DelayedAtomicBlock.html">
-      <span class="kind">class</span>
-      <span class="symbol">
-        <span class="name">DelayedAtomicBlock</span>
-        <span class="tparams">[<span name="A">A</span>]</span>
-        
-        <span class="result"> extends AnyRef</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">Instances of <code>DelayedAtomicBlock</code> delay the execution of an atomic block
- until all of the alternatives can be gathered from the user.</p>
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.InTxn">
+              <ol><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.InTxn">
       <a id="InTxn:InTxn"></a>
       <h4 class="signature"><a href="InTxn.html">
       <span class="kind">trait</span>
@@ -119,6 +106,19 @@
       </a></h4>
       <p class="comment cmt">A <code>NestingLevel</code> instance describes a single attempt to execute an atomic
  block inside a transaction.</p>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.PendingAtomicBlock">
+      <a id="PendingAtomicBlock:PendingAtomicBlock[A]"></a>
+      <h4 class="signature"><a href="PendingAtomicBlock.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">PendingAtomicBlock</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">Instances of <code>PendingAtomicBlock</code> defer the execution of an atomic block
+ until all of the alternatives can be gathered from the user.</p>
     </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Ref">
       <a id="Ref:Ref[A]"></a>
       <h4 class="signature"><a href="Ref.html">
@@ -458,29 +458,6 @@
       </span>
       </a></h4>
       
-    </li><li visbl="pub" data-isabs="false" name="_root_#delayAtomic">
-      <a id="delayAtomic[A](⇒ A):DelayedAtomicBlock[A]"></a>
-      <h4 class="signature">
-      <span class="kind">implicit def</span>
-      <span class="symbol">
-        <span class="name">delayAtomic</span>
-        <span class="tparams">[<span name="A">A</span>]</span>
-        <span class="params">(<span name="lhs">lhs: ⇒ A</span>)</span>
-        <span class="result">: <a href="DelayedAtomicBlock.html" class="extype" name="scala.concurrent.stm.DelayedAtomicBlock">DelayedAtomicBlock</a>[A]</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This is the first half of the machinery for implementing <code>orAtomic</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This is the first half of the machinery for implementing <code>orAtomic</code>.</p></div><div class="block">
-          attributes: implicit 
-        </div><div class="block">
-          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
-        </div>
-            
-            
-            
-          </div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.impl">
       <a id="impl:impl"></a>
       <h4 class="signature"><a href="impl/package.html">
@@ -507,6 +484,50 @@
       
             <p class="shortcomment cmt">Equivalent to <code>Txn.retry</code>.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Equivalent to <code>Txn.retry</code>.</p></div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="_root_#retryFor">
+      <a id="retryFor(Long,TimeUnit)(InTxn):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">retryFor</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="scala.actors.threadpool.TimeUnit">TimeUnit</span> =<span class="defval" name="TimeUnit.MILLISECONDS"> ...</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Equivalent to <code>Txn.retryFor(timeout, unit)</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Equivalent to <code>Txn.retryFor(timeout, unit)</code>.</p></div><div class="block">
+          definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="_root_#wrapChainedAtomic">
+      <a id="wrapChainedAtomic[A](⇒ A):PendingAtomicBlock[A]"></a>
+      <h4 class="signature">
+      <span class="kind">implicit def</span>
+      <span class="symbol">
+        <span class="name">wrapChainedAtomic</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="params">(<span name="lhs">lhs: ⇒ A</span>)</span>
+        <span class="result">: <a href="PendingAtomicBlock.html" class="extype" name="scala.concurrent.stm.PendingAtomicBlock">PendingAtomicBlock</a>[A]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This is the first half of the machinery for implementing <code>orAtomic</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This is the first half of the machinery for implementing <code>orAtomic</code>.</p></div><div class="block">
+          attributes: implicit 
+        </div><div class="block">
           definition classes: <a href="../../../package.html" class="extype" name="_root_">root</a>
         </div>
             

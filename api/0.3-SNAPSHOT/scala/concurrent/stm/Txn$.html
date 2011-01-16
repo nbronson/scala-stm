@@ -69,7 +69,20 @@
 
         <div class="types members" id="types">
               <h3>Type Members</h3>
-              <ol><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.ExternalDecider">
+              <ol><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.ExplicitRetryCause">
+      <a id="ExplicitRetryCause:ExplicitRetryCause"></a>
+      <h4 class="signature"><a href="Txn$$ExplicitRetryCause.html">
+      <span class="kind">case class</span>
+      <span class="symbol">
+        <span class="name">ExplicitRetryCause</span>
+        
+        <span class="params">(<span name="timeoutNanos">timeoutNanos: Option[Long]</span>)</span>
+        <span class="result"> extends TransientRollbackCause with Product</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt">The <code>RollbackCause</code> for an atomic block execution attempt that ended with
+ a call to <code>retry</code> or <code>retryFor</code>.</p>
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.ExternalDecider">
       <a id="ExternalDecider:ExternalDecider"></a>
       <h4 class="signature"><a href="Txn$$ExternalDecider.html">
       <span class="kind">trait</span>
@@ -366,19 +379,6 @@
       </a></h4>
       <p class="comment cmt">The <code>Status</code> for the nesting levels of a transaction that has decided to
  commit, but whose <code>Ref</code> writes are not yet visible to other threads.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.ExplicitRetryCause">
-      <a id="ExplicitRetryCause:ExplicitRetryCause"></a>
-      <h4 class="signature"><a href="Txn$$ExplicitRetryCause$.html">
-      <span class="kind">object</span>
-      <span class="symbol">
-        <span class="name">ExplicitRetryCause</span>
-        
-        
-        <span class="result"> extends TransientRollbackCause with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>RollbackCause</code> for an atomic block execution attempt that ended with
- a call to <code>retry</code>.</p>
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.Prepared">
       <a id="Prepared:Prepared"></a>
       <h4 class="signature"><a href="Txn$$Prepared$.html">
@@ -837,11 +837,39 @@ possible to check whether the contents of the list are of the requested typed.
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Causes the current nesting level to roll back.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Causes the current nesting level to roll back.  It will not be retried
- until a write has been performed to some memory location read by this
- transaction.  If an alternative to this atomic block was provided via
- <code>orAtomic</code> or <code>atomic.oneOf</code>, then the alternative will be tried.</p></div>
+            <p class="shortcomment cmt">Rolls back the current nesting level for modular blocking.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Rolls back the current nesting level for modular blocking.  It will be
+ retried, but only after some memory location observed by this transaction
+ has been changed.  If any alternatives to this atomic block were provided
+ via <code>orAtomic</code> or <code>atomic.oneOf</code>, then the alternative will be tried
+ before blocking.</p></div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#retryFor">
+      <a id="retryFor(Long,TimeUnit)(InTxn):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">retryFor</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="scala.actors.threadpool.TimeUnit">TimeUnit</span> =<span class="defval" name="TimeUnit.MILLISECONDS"> ...</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Causes the transaction to roll back and retry using modular blocking with
+ a timeout, or returns immediately if the timeout has already expired.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Causes the transaction to roll back and retry using modular blocking with
+ a timeout, or returns immediately if the timeout has already expired.
+ The STM keeps track of the total amount of blocking that has occurred
+ during modular blocking; this time is apportioned among the calls to
+ <code>View.tryAwait</code> and <code>retryFor</code> that are part of the current attempt.
+ <code>retryFor(0)</code> is a no-op.</p></div><dl class="paramcmts block"><dt class="param">timeout</dt><dd class="cmt"><p>the maximum amount of time that this <code>retryFor</code> should
+     block, in units of <code>unit</code>.</p></dd><dt class="param">unit</dt><dd class="cmt"><p>the units in which to measure <code>timeout</code>, by default
+     milliseconds.</p></dd></dl>
             
             
             

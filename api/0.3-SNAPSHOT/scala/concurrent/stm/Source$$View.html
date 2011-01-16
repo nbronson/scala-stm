@@ -267,6 +267,35 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source.View#await">
+      <a id="await((A) ⇒ Boolean):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">await</span>
+        
+        <span class="params">(<span name="f">f: (A) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Blocks until <code>f(get)</code> is true, in a manner consistent with the current
+ context.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Blocks until <code>f(get)</code> is true, in a manner consistent with the current
+ context.  Requires that the predicate be safe to reevaluate, and that
+ <code>f(x) == f(y)</code> if <code>x == y</code>.</p><p> <code>v.await(f)</code> is equivalent to </p><pre>
+   atomic { implicit t =&gt;
+     if (!f(v.get)) retry
+   }
+</pre><p> If you want to wait for a predicate that involves more than one <code>Ref</code> then use <code>retry</code> directly.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>a predicate that is safe to evaluate multiple times.
+</p></dd></dl><div class="block">
+          attributes: abstract 
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
@@ -630,35 +659,6 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source.View#retryUntil">
-      <a id="retryUntil((A) ⇒ Boolean):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">retryUntil</span>
-        
-        <span class="params">(<span name="f">f: (A) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Blocks until <code>f(get)</code> is true, in a manner consistent with the current
- context.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Blocks until <code>f(get)</code> is true, in a manner consistent with the current
- context.  Requires that the predicate be safe to reevaluate, and that
- <code>f(x) == f(y)</code> if <code>x == y</code>.</p><p> <code>v.retryUntil(f)</code> is equivalent to </p><pre>
-   atomic { implicit t =&gt;
-     if (!f(v.get)) retry
-   }
-</pre><p> If you want to wait for a predicate that involves more than one <code>Ref</code> then use <code>retry</code> directly.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>a predicate that is safe to evaluate multiple times.
-</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-          </div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>
       <h4 class="signature">
@@ -694,6 +694,36 @@ possible to check whether the contents of the list are of the requested typed.
             <div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the object.</p><p>The default representation is platform dependent.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a string representation of the object.</p></dd></dl><div class="block">
           definition classes: AnyRef → Any
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Source.View#tryAwait">
+      <a id="tryAwait(Long,TimeUnit)((A) ⇒ Boolean):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">tryAwait</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="scala.actors.threadpool.TimeUnit">TimeUnit</span> =<span class="defval" name="TimeUnit.MILLISECONDS"> ...</span></span>)</span><span class="params">(<span name="f">f: (A) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Blocks until <code>f(get)</code> is true and returns true, or returns false if
+ the condition does not become true within within the specified timeout.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Blocks until <code>f(get)</code> is true and returns true, or returns false if
+ the condition does not become true within within the specified timeout.</p><p> <code>v.tryAwait(timeout)(f)</code> is equivalent to </p><pre>
+   atomic { implicit t =&gt;
+     f(v.get) || { retryFor(timeout) ; false }
+   }
+</pre></div><dl class="paramcmts block"><dt class="param">timeout</dt><dd class="cmt"><p>the maximum amount of time to wait, in units of <code>unit</code>.</p></dd><dt class="param">unit</dt><dd class="cmt"><p>the units in which the timeout is measured, defaulting to
+     milliseconds.</p></dd><dt class="param">f</dt><dd class="cmt"><p>a predicate that is safe to evaluate multiple times.</p></dd><dt>returns</dt><dd class="cmt"><p>true if the predicate was satisfied, false if the wait timed
+     out.
+</p></dd></dl><div class="block">
+          attributes: abstract 
         </div>
             
             

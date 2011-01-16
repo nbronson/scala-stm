@@ -44,8 +44,9 @@
  transactions for which the statistic was non-zero, <code>avg</code> is <code>sum/count</code> and the histogram reports in brackets the number of samples that had a
  value of 1, 2..3, 4..7, 8..15, and so on.</p><p> Counters:</p><ul><li><code>commits</code> -- committed transactions</li><li><code>alternatives</code> -- alternatives provided to <code>atomic</code>, one sample per call
    to <code>atomic</code></li><li><code>retrySet</code> -- memory locations watched while performing modular
-   blocking, one sample per top-level blocking event</li><li><code>explicitRetries</code> -- explicit retries using <code>retry</code> or
-   <code>Ref.View.retryUntil</code></li><li><code>optimisticRetries</code> -- rollbacks that were automatically retried, one
+   blocking, one sample per top-level blocking event</li><li><code>retryWaitElapsed</code> -- milliseconds elapsed during modular blocking, one
+   sample per top-level blocking event</li><li><code>explicitRetries</code> -- explicit retries using <code>retry</code>, <code>retryFor</code>,
+   <code>Ref.View.await</code> or <code>Ref.View.tryAwait</code></li><li><code>optimisticRetries</code> -- rollbacks that were automatically retried, one
    line per <code>OptimisticFailureCause.category</code></li><li><code>failures</code> -- rollbacks that were not retried, one line for each type of
    exception in <code>UncaughtExceptionCause</code></li><li><code>blockingAcquires</code> -- internal locks that could not be acquired
    immediately</li><li><code>commitReadSet</code> -- optimistic <code>Ref</code> reads, one sample per committed
@@ -60,7 +61,7 @@
 </p></div><div class="block">
             go to: <a href="CCSTM$.html">companion</a>
           </div><div class="block">
-            linear super types: <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMRefs.Factory">Factory</span>, <a href="../impl/STMImpl.html" class="extype" name="scala.concurrent.stm.impl.STMImpl">STMImpl</a>, <a href="../impl/TxnContext.html" class="extype" name="scala.concurrent.stm.impl.TxnContext">TxnContext</a>, <a href="../impl/RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>, <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMExecutor">CCSTMExecutor</span>, <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>, AnyRef, <span class="extype" name="scala.Any">Any</span>
+            linear super types: <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMRefs.Factory">Factory</span>, <a href="../impl/STMImpl.html" class="extype" name="scala.concurrent.stm.impl.STMImpl">STMImpl</a>, <a href="../impl/TxnContext.html" class="extype" name="scala.concurrent.stm.impl.TxnContext">TxnContext</a>, <a href="../impl/RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a>, <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMExecutor">CCSTMExecutor</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>, AnyRef, <span class="extype" name="scala.Any">Any</span>
           </div>
             
             
@@ -78,7 +79,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.ccstm.CCSTM">CCSTM</li><li class="in" name="scala.concurrent.stm.ccstm.CCSTMRefs.Factory">Factory</li><li class="in" name="scala.concurrent.stm.impl.STMImpl">STMImpl</li><li class="in" name="scala.concurrent.stm.impl.TxnContext">TxnContext</li><li class="in" name="scala.concurrent.stm.impl.RefFactory">RefFactory</li><li class="in" name="scala.concurrent.stm.ccstm.CCSTMExecutor">CCSTMExecutor</li><li class="in" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.ccstm.CCSTM">CCSTM</li><li class="in" name="scala.concurrent.stm.ccstm.CCSTMRefs.Factory">Factory</li><li class="in" name="scala.concurrent.stm.impl.STMImpl">STMImpl</li><li class="in" name="scala.concurrent.stm.impl.TxnContext">TxnContext</li><li class="in" name="scala.concurrent.stm.impl.RefFactory">RefFactory</li><li class="in" name="scala.concurrent.stm.ccstm.CCSTMExecutor">CCSTMExecutor</li><li class="in" name="scala.Product">Product</li><li class="in" name="scala.Equals">Equals</li><li class="in" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -310,6 +311,23 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#canEqual">
+      <a id="canEqual(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">canEqual</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: CCSTMExecutor → Equals
+        </div></div>
+          
     </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
@@ -378,14 +396,14 @@ part of compilation it is not possible to check whether the contents of the list
             <div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s using identity comparison,
  probably more efficiently then the corresponding transaction.  Equivalent
  to </p><pre>
-    atomic { implicit t =&gt;
-      val f = (a() eq a0) &amp;&amp; (b() eq b0)
-      if (f &amp;&amp; (a0 ne a1))
-        a() = a1
-      if (f &amp;&amp; (b0 ne b1))
-        b() = b1
-      f
-    }
+   atomic { implicit t =&gt;
+     val f = (a() eq a0) &amp;&amp; (b() eq b0)
+     if (f &amp;&amp; (a0 ne a1))
+       a() = a1
+     if (f &amp;&amp; (b0 ne b1))
+       b() = b1
+     f
+   }
 </pre></div><div class="block">
           definition classes: CCSTMExecutor → <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
         </div>
@@ -473,7 +491,7 @@ should be equal to each other (<code>o1 == o2</code>) and they should hash to th
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#equals">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#equals">
       <a id="equals(Any):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -498,7 +516,7 @@ that are &quot;equal&quot; (<code>o1.equals(o2)</code> returns <code>true</code>
 scala.Int
 (<code>o1.hashCode.equals(o2.hashCode)</code>).
 </p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
+          definition classes: CCSTMExecutor → Equals → AnyRef → Any
         </div>
             
             
@@ -578,7 +596,7 @@ there are no more references to the object.</p><p>The details of when and if the
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#hashCode">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#hashCode">
       <a id="hashCode():Int"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -597,7 +615,7 @@ However, it is required that if two objects are equal (<code>o1.equals(o2)</code
 identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>).  Therefore, when overriding this method, be sure
 to verify that the behavior is consistent with the <code>equals</code> method.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the hash code value for the object.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
+          definition classes: CCSTMExecutor → AnyRef → Any
         </div>
             
             
@@ -1091,6 +1109,93 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#productArity">
+      <a id="productArity:Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productArity</span>
+        
+        
+        <span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: CCSTMExecutor → Product
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#productElement">
+      <a id="productElement(Int):Any"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productElement</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Int">Int</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Any">Any</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: CCSTMExecutor → Product
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.Product#productElements">
+      <a id="productElements:Iterator[Any]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">productElements</span>
+        
+        
+        <span class="result">: Iterator[<span class="extype" name="scala.Any">Any</span>]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Product
+        </div><div class="block"><ol>deprecated:
+          <li><p>use productIterator instead</p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.Product#productIterator">
+      <a id="productIterator:Iterator[Any]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productIterator</span>
+        
+        
+        <span class="result">: Iterator[<span class="extype" name="scala.Any">Any</span>]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Product
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#productPrefix">
+      <a id="productPrefix:String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">productPrefix</span>
+        
+        
+        <span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: CCSTMExecutor → Product
+        </div></div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#pushAlternative">
       <a id="pushAlternative[Z](MaybeTxn,(InTxn) ⇒ Z):Boolean"></a>
       <h4 class="signature">
@@ -1120,6 +1225,41 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#retryTimeoutNanos">
+      <a id="retryTimeoutNanos:Option[Long]"></a>
+      <h4 class="signature">
+      <span class="kind">val</span>
+      <span class="symbol">
+        <span class="name">retryTimeoutNanos</span>
+        
+        
+        <span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
+ this <code>TxnExecutor</code>, or <code>None</code> otherwise.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
+ this <code>TxnExecutor</code>, or <code>None</code> otherwise.  If the retry timeout is
+ <code>Some(t)</code> and an atomic block executed by the returned executor blocks
+ with <code>retry</code> or <code>retryFor</code> for more than <code>t</code> nanoseconds the retry will
+ be cancelled with an <code>InterruptedException</code>.</p><p> The retry timeout has essentially the same effect as replacing calls to
+ <code>retry</code> with
+ <code>{ retryFor(timeout, NANOS) ; throw new InterruptedException }</code>.
+ Alternately, <code>retryFor(timeout)</code> has roughly the same effect as </p><pre>
+   try {
+     atomic.withRetryTimeout(timeout) { implicit txn =&gt; retry }
+   } catch {
+     case _: InterruptedException =&gt;
+   }
+</pre></div><div class="block">
+          definition classes: CCSTMExecutor → <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>
       <h4 class="signature">
@@ -1139,7 +1279,7 @@ possible to check whether the contents of the list are of the requested typed.
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#toString">
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#toString">
       <a id="toString():String"></a>
       <h4 class="signature">
       <span class="kind">def</span>
@@ -1147,14 +1287,14 @@ possible to check whether the contents of the list are of the requested typed.
         <span class="name">toString</span>
         
         <span class="params">()</span>
-        <span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+        <span class="result">: String</span>
       </span>
       </h4>
       
             <p class="shortcomment cmt">Returns a string representation of the object.</p>
             <div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the object.</p><p>The default representation is platform dependent.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a string representation of the object.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
+          definition classes: CCSTMExecutor → AnyRef → Any
         </div>
             
             
@@ -1278,6 +1418,54 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.TxnExecutor#withRetryTimeout">
+      <a id="withRetryTimeout(Long,TimeUnit):TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withRetryTimeout</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="scala.actors.threadpool.TimeUnit">TimeUnit</span> =<span class="defval" name="TimeUnit.MILLISECONDS"> ...</span></span>)</span>
+        <span class="result">: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
+ the specified retry timeout.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one except that it has
+ the specified retry timeout.  The default time unit is milliseconds.
+</p></div><div class="block">
+          definition classes: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.ccstm.CCSTMExecutor#withRetryTimeoutNanos">
+      <a id="withRetryTimeoutNanos(Option[Long]):TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withRetryTimeoutNanos</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>)</span>
+        <span class="result">: <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
+ a <code>retryTimeout</code> of <code>timeoutNanos</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
+ a <code>retryTimeout</code> of <code>timeoutNanos</code>.
+</p></div><div class="block">
+          definition classes: CCSTMExecutor → <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a>
+        </div>
+            
+            
+            
+          </div>
+          
     </li></ol>
             </div>
 
@@ -1291,6 +1479,10 @@ possible to check whether the contents of the list are of the requested typed.
               <h3>Inherited from <a href="../impl/RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a></h3>
             </div><div class="parent" name="scala.concurrent.stm.ccstm.CCSTMExecutor">
               <h3>Inherited from <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMExecutor">CCSTMExecutor</span></h3>
+            </div><div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
             </div><div class="parent" name="scala.concurrent.stm.TxnExecutor">
               <h3>Inherited from <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></h3>
             </div><div class="parent" name="scala.AnyRef">
