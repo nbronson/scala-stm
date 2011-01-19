@@ -1,3 +1,5 @@
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+
 package scala.concurrent.stm
 package ccstm
 
@@ -23,6 +25,12 @@ private[ccstm] class TxnLocalImpl[A](init: => A,
   def data: A = throw new Error
   def data_=(v: A) {}
 
+
+  //////// TxnLocal
+
+  def isInitialized(implicit txn: InTxn): Boolean = {
+    txn.asInstanceOf[InTxnImpl].txnLocalFind(this) >= 0
+  }
 
   //////// SourceLike
 

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -93,14 +93,19 @@ class TxnLocalSuite extends FunSuite {
     val tl = TxnLocal( { x.single() } )
     atomic { implicit txn =>
       x() = 1
+      assert(!tl.isInitialized)
       intercept[RuntimeException] {
         atomic { implicit txn =>
+          assert(!tl.isInitialized)
           x() = 2
           assert(tl() === 2)
+          assert(tl.isInitialized)
           throw new RuntimeException
         }
       }
+      assert(!tl.isInitialized)
       assert(tl() === 1)
+      assert(tl.isInitialized)
     }
   }
 
