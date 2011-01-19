@@ -547,6 +547,35 @@ private[ccstm] object NonTxn {
   }
 
   @throws(classOf[InterruptedException])
+  def cci[A <: AnyRef, B <: AnyRef](handleA: Handle[A], a0: A, handleB: Handle[B], b0: B): Boolean = {
+    var tries = 0
+    while (tries < 10) {
+      val mA0 = handleA.meta
+      val mB0 = handleB.meta
+      if (!changing(mA0) && !changing(mB0)) {
+        val b = handleB.data
+        val a = handleA.data
+        val mA1 = handleA.meta
+        val mB1 = handleB.meta
+        if (changingAndVersion(mA0) == changingAndVersion(mA1) && changingAndVersion(mB0) == changingAndVersion(mB1))
+          return (a0 eq a) && (b0 eq b)
+      }
+      if (changing(mA0))
+        weakAwaitUnowned(handleA, mA0)
+      if (changing(mB0))
+        weakAwaitUnowned(handleB, mB0)
+
+      tries += 1
+    }
+
+    // fall back on a transaction
+    return atomic { t =>
+      val txn = t.asInstanceOf[InTxnImpl]
+      (txn.get(handleA) eq a0) && (txn.get(handleB) eq b0)
+    }
+  }
+
+  @throws(classOf[InterruptedException])
   def getAndAdd(handle: Handle[Int], delta: Int): Int = {
     val m0 = acquireLock(handle, true)
     val v0 = handle.data

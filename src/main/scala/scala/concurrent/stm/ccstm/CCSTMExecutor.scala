@@ -37,12 +37,25 @@ private[ccstm] case class CCSTMExecutor private (
   }
 
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = {
-    if (a0 eq a1)
+    val aRead = a0 eq a1
+    val bRead = b0 eq b1
+    if (aRead && bRead)
+      cci(a, a0, b, b0)
+    else if (aRead)
       ccasi(a, a0, b, b0, b1)
-    else if (b0 eq b1)
+    else if (bRead)
       ccasi(b, b0, a, a0, a1)
     else
       dcasi(a, a0, a1, b, b0, b1)
+  }
+
+  private def cci[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, b: Ref[B], b0: B): Boolean = {
+    val ah = a.asInstanceOf[Handle.Provider[A]].handle
+    val bh = b.asInstanceOf[Handle.Provider[B]].handle
+    InTxnImpl.dynCurrentOrNull match {
+      case null => NonTxn.cci(ah, a0, bh, b0)
+      case txn => (a0 eq txn.get(ah)) && (b0 eq txn.get(bh))
+    }
   }
 
   private def ccasi[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, b: Ref[B], b0: B, b1: B): Boolean = {

@@ -531,4 +531,50 @@ class IsolatedRefSuite extends FunSuite {
     assert(rhs != Ref(5))
     assert(Ref(5) != rhs)
   }
+
+  test("TxnExecutor.compareAndSet") {
+    val x = Ref("abc")
+    val y = Ref("10")
+    assert(!atomic.compareAndSet(x, "abc", "def", y, "11", "20"))
+    assert(x.single() === "abc")
+    assert(y.single() === "10")
+    assert(!atomic.compareAndSet(x, "ABC", "def", y, "10", "20"))
+    assert(x.single() === "abc")
+    assert(y.single() === "10")
+    assert(atomic.compareAndSet(x, "abc", "def", y, 10.toString, "20"))
+    assert(x.single() === "def")
+    assert(y.single() === "20")
+  }
+
+  test("TxnExecutor.compareAndSet exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic.compareAndSet(x, x0, x1, y, y0, y1)
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
+
+  test("TxnExecutor.compareAndSetIdentity exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic.compareAndSetIdentity(x, x0, x1, y, y0, y1)
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
 }
