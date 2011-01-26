@@ -308,9 +308,11 @@ object Txn {
    *  commit.  This method can succeed with at most one value per top-level
    *  transaction.
    *  @throws IllegalStateException if the current transaction's status is not
-   *      `Active` or `Preparing`; or if `setExternalDecider(d)` was previously
-   *      called in this transaction, `d != decider`, and the nesting level
-   *      from which `setExternalDecider(d)` was called has not rolled back.
+   *      `Active` or `Preparing`
+   *  @throws IllegalArgumentException if `setExternalDecider(d)` was
+   *      previously called in this transaction, `d != decider`, and the
+   *      nesting level from which `setExternalDecider(d)` was called has not
+   *      rolled back.
    */
   def setExternalDecider(decider: ExternalDecider)(implicit txn: InTxnEnd) { txn.setExternalDecider(decider) }
 }
