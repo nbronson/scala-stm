@@ -9,6 +9,18 @@ class CallbackSuite extends FunSuite {
 
   class UserException extends Exception
 
+  test("many callbacks") {
+    var n = 0
+    val x = Ref(0)
+    atomic { implicit t =>
+      x() = 1
+      for (i <- 0 until 10000)
+        Txn.afterCommit { _ => n += 1 }
+    }
+    assert(n === 10000)
+    assert(x.single() === 1)
+  }
+
   test("beforeCommit upgrade on read-only commit") {
     val x = Ref(0)
     var ran = false
@@ -352,6 +364,38 @@ class CallbackSuite extends FunSuite {
       })
     }
     assert(x.single() === 1)
+  }
+
+  test("valid duplicate external decider") {
+    val x = Ref(0)
+    atomic { implicit txn =>
+      x() = 1
+      val d = new Txn.ExternalDecider {
+        def shouldCommit(implicit txn: InTxnEnd): Boolean = {
+          assert(txn.status == Txn.Prepared)
+          true
+        }
+      }
+      assert(d == d)
+      Txn.setExternalDecider(d)
+      Txn.setExternalDecider(d)
+    }
+    assert(x.single() === 1)
+  }
+
+  test("invalid duplicate external decider") {
+    val x = Ref(0)
+    intercept[IllegalArgumentException] {
+      atomic { implicit txn =>
+        x() = 1
+        val d1 = new Txn.ExternalDecider { def shouldCommit(implicit txn: InTxnEnd): Boolean = true }
+        val d2 = new Txn.ExternalDecider { def shouldCommit(implicit txn: InTxnEnd): Boolean = true }
+        assert(d1 != d2)
+        Txn.setExternalDecider(d1)
+        Txn.setExternalDecider(d2)
+      }
+    }
+    assert(x.single() === 0)
   }
 
   test("transient reject external decider") {

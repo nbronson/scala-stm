@@ -546,7 +546,7 @@ class IsolatedRefSuite extends FunSuite {
     assert(y.single() === "20")
   }
 
-  test("TxnExecutor.compareAndSet exhaustive") {
+  test("TxnExecutor.compareAndSet non-txn exhaustive") {
     for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
       val x = Ref("abc")
       val y = Ref("def")
@@ -562,11 +562,43 @@ class IsolatedRefSuite extends FunSuite {
     }
   }
 
-  test("TxnExecutor.compareAndSetIdentity exhaustive") {
+  test("TxnExecutor.compareAndSet txn exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic { implicit txn => atomic.compareAndSet(x, x0, x1, y, y0, y1) }
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
+
+  test("TxnExecutor.compareAndSetIdentity non-txn exhaustive") {
     for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
       val x = Ref("abc")
       val y = Ref("def")
       val f = atomic.compareAndSetIdentity(x, x0, x1, y, y0, y1)
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
+
+  test("TxnExecutor.compareAndSetIdentity txn exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic { implicit txn => atomic.compareAndSetIdentity(x, x0, x1, y, y0, y1) }
       if (f) {
         assert(x0 === "abc")
         assert(y0 === "def")

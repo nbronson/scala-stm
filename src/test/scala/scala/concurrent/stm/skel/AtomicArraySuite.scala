@@ -52,6 +52,10 @@ class AtomicArraySuite extends FunSuite {
   }
 
   def runIsolatedTest[A](values: Seq[A])(implicit am: ClassManifest[A]) {
+    val singleton = AtomicArray[A](1)
+    if (am != implicitly[ClassManifest[Unit]])
+      assert(singleton(0) === am.newArray(1)(0))
+
     val aa = AtomicArray(values)
     for (i <- 0 until aa.length)
       assert(values(i) === aa(i))
@@ -116,6 +120,13 @@ class AtomicArraySuite extends FunSuite {
     val seq1 = aa.iterator.toList
     for (i <- 0 until aa.length)
       assert(aa(i) == seq1(i))
+
+    val bb = aa ++ seq0
+    assert(bb.length === aa.length * 2)
+    for (i <- 0 until aa.length) {
+      assert(aa(i) === bb(i))
+      assert(aa(i) === bb(i + aa.length))
+    }
 
     assert(aa.toString.startsWith("AtomicArray"))
   }

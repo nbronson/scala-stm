@@ -73,6 +73,13 @@ class TxnSuite extends FunSuite {
     return -1
   }
 
+  test("strings") {
+    atomic.toString
+    atomic.withRetryTimeout(100).toString
+    atomic { implicit txn => txn.toString }
+    atomic { implicit txn => NestingLevel.root.toString }
+  }
+
   test("basic retry") {
     val x = Ref(0)
     val y = Ref(false)
