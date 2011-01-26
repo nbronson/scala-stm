@@ -184,11 +184,12 @@ object Txn {
    *  during modular blocking; this time is apportioned among the calls to
    *  `View.tryAwait` and `retryFor` that are part of the current attempt.
    *  `retryFor(0)` is a no-op.
+   *
+   *  Returns only if the timeout has expired.
    *  @param timeout the maximum amount of time that this `retryFor` should
    *      block, in units of `unit`.
    *  @param unit the units in which to measure `timeout`, by default
    *      milliseconds.
-   *  @returns only if the timeout has expired.
    */
   def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: InTxn) {
     txn.retryFor(unit.toNanos(timeout))
