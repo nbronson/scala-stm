@@ -2,46 +2,37 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.TxnLocal</title>
+          <title>scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link href="../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
-      <script type="text/javascript" src="../../../lib/jquery.js"></script>
-      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
-      <script type="text/javascript" src="../../../lib/template.js"></script>
-      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      <link href="../../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
     
         </head>
         <body class="type" onload="windowTitle();">
 
-      <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a></p>
+      <p id="owner"><a href="../../../package.html" class="extype" name="scala">scala</a>.<a href="../../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="../package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="package.html" class="extype" name="scala.concurrent.stm.skel">skel</a>.<a href="AtomicArrayBuilder$.html" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder">AtomicArrayBuilder</a></p>
 
       <div id="definition">
-        <img src="../../../lib/trait_big.png" />
-        <h1>TxnLocal</h1>
+        <img src="../../../../lib/class_big.png" />
+        <h1>ofRef</h1>
       </div>
 
       <h4 class="signature" id="signature">
-      <span class="kind">trait</span>
+      <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">TxnLocal</span>
-        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="name">ofRef</span>
+        <span class="tparams">[<span name="T">T &lt;: AnyRef</span>]</span>
         
-        <span class="result"> extends <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>]</span>
+        <span class="result"> extends <a href="AtomicArrayBuilder.html" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder">AtomicArrayBuilder</a>[T]</span>
       </span>
       </h4>
-      <div class="fullcomment" id="comment"><div class="comment cmt"><p><code>TxnLocal[A]</code> holds an instance of <code>A</code> that is local to an atomic block.
- See the factory method in the companion object for information about the
- life-cycle.
-</p></div><div class="block">
-            go to: <a href="TxnLocal$.html">companion</a>
-          </div><div class="block">
-            linear super types: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>], <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>], <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>], AnyRef, <span class="extype" name="scala.Any">Any</span>
-          </div>
-            
-            
-            
-          </div>
+      <div class="fullcomment" id="comment"><div class="block">
+            linear super types: <a href="AtomicArrayBuilder.html" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder">AtomicArrayBuilder</a>[T], <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[T, <a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]], <span class="extype" name="scala.collection.generic.Growable">Growable</span>[T], AnyRef, <span class="extype" name="scala.Any">Any</span>
+          </div></div>
 
       <div id="template">
 
@@ -54,7 +45,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.TxnLocal">TxnLocal</li><li class="in" name="scala.concurrent.stm.RefLike">RefLike</li><li class="in" name="scala.concurrent.stm.SinkLike">SinkLike</li><li class="in" name="scala.concurrent.stm.SourceLike">SourceLike</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef">ofRef</li><li class="in" name="scala.concurrent.stm.skel.AtomicArrayBuilder">AtomicArrayBuilder</li><li class="in" name="scala.collection.mutable.Builder">Builder</li><li class="in" name="scala.collection.generic.Growable">Growable</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -66,7 +57,22 @@
             </div>
         </div>
 
+        <div class="members" id="constructors">
+              <h3>Instance constructors</h3>
+              <ol><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#this">
+      <a id="this:ofRef[T]"></a>
+      <h4 class="signature">
+      <span class="kind">new</span>
+      <span class="symbol">
+        <span class="name">ofRef</span>
         
+        <span class="params">()</span>
+        
+      </span>
+      </h4>
+      
+    </li></ol>
+            </div>
 
         
 
@@ -172,97 +178,56 @@
           definition classes: AnyRef
         </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#*=">
-      <a id="*=(A)(InTxnEnd,Numeric[A]):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.Growable#++=">
+      <a id="++=(TraversableOnce[T]):ofRef.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">*=</span>
+        <span class="name">++=</span>
         
-        <span class="params">(<span name="rhs">rhs: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>, <span name="num">num: Numeric[A]</span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="params">(<span name="xs">xs: <span class="extype" name="scala.collection.TraversableOnce">TraversableOnce</span>[T]</span>)</span>
+        <span class="result">: ofRef.this.type</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Transforms the value stored in the <code>Ref</code> by multiplying it.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by multiplying it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to multiply the value of this <code>Ref</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
             
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          definition classes: Growable
+        </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#+=">
-      <a id="+=(A)(InTxnEnd,Numeric[A]):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#+=">
+      <a id="+=(T):ofRef.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
         <span class="name">+=</span>
         
-        <span class="params">(<span name="rhs">rhs: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>, <span name="num">num: Numeric[A]</span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="params">(<span name="elem">elem: T</span>)</span>
+        <span class="result">: ofRef.this.type</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Transforms the value stored in the <code>Ref</code> by incrementing it.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by incrementing it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to increment the value of this <code>Ref</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
             
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef">ofRef</a> → Builder → Growable
+        </div></div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#-=">
-      <a id="-=(A)(InTxnEnd,Numeric[A]):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.generic.Growable#+=">
+      <a id="+=(T,T,T*):ofRef.this.type"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">-=</span>
+        <span class="name">+=</span>
         
-        <span class="params">(<span name="rhs">rhs: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>, <span name="num">num: Numeric[A]</span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="params">(<span name="elem1">elem1: T</span>, <span name="elem2">elem2: T</span>, <span name="elems">elems: T*</span>)</span>
+        <span class="result">: ofRef.this.type</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Transforms the value stored in the <code>Ref</code> by decrementing it.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored in the <code>Ref</code> by decrementing it.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to decrement the value of this <code>Ref</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
             
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.RefLike#/=">
-      <a id="/=(A)(InTxnEnd,Numeric[A]):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">/=</span>
-        
-        <span class="params">(<span name="rhs">rhs: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>, <span name="num">num: Numeric[A]</span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Transforms the value stored the <code>Ref</code> by performing a division on it,
- throwing away the remainder if division is not exact for instances of
- type <code>A</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value stored the <code>Ref</code> by performing a division on it,
- throwing away the remainder if division is not exact for instances of
- type <code>A</code>.  The careful reader will note that division is actually
- provided by <code>Fractional[A]</code> or <code>Integral[A]</code>, it is not defined on
- <code>Numeric[A]</code>.  To avoid compile-time ambiguity this method accepts a
- <code>Numeric[A]</code> and assumes that it can be converted at runtime into
- either a <code>Fractional[A]</code> or an <code>Integral[A]</code>.</p><p> <b>Note: Implementations may choose to ignore the provided <code>Numeric[A]</code> instance if <code>A</code> is a primitive type.</b></p></div><dl class="paramcmts block"><dt class="param">rhs</dt><dd class="cmt"><p>the quantity by which to divide the value of this <code>Ref</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
-            
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          definition classes: Growable
+        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#==">
       <a id="==(AnyRef):Boolean"></a>
@@ -312,36 +277,6 @@
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SourceLike#apply">
-      <a id="apply()(InTxnEnd):A"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">apply</span>
-        
-        <span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: A</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Performs a transactional read and checks that it is consistent with all
- reads already made by <code>txn</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Performs a transactional read and checks that it is consistent with all
- reads already made by <code>txn</code>.  Equivalent to <code>get</code>.</p><p> Example: </p><pre>
-   val x = Ref(0)
-   atomic { implicit t =&gt;
-     ...
-     val v = x() // perform a read inside a transaction
-     ...
-   }
-</pre></div><dl class="paramcmts block"><dt class="param">txn</dt><dd class="cmt"><p>an active transaction.</p></dd><dt>returns</dt><dd class="cmt"><p>the value of the <code>Ref</code> as observed by <code>txn</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
-        </div>
-            
-            
-            
-          </div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.Any#asInstanceOf">
       <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
@@ -367,6 +302,23 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#clear">
+      <a id="clear():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">clear</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef">ofRef</a> → Builder → Growable
+        </div></div>
+          
     </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
@@ -390,6 +342,40 @@ part of compilation it is not possible to check whether the contents of the list
             
             
           </div>
+          
+    </li><li visbl="prt" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#elems">
+      <a id="elems:Array[AnyRef]"></a>
+      <h4 class="signature">
+      <span class="kind">var</span>
+      <span class="symbol">
+        <span class="name">elems</span>
+        
+        
+        <span class="result">: <span class="extype" name="scala.Array">Array</span>[AnyRef]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected 
+        </div></div>
+          
+    </li><li visbl="prt" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#ensureSpace">
+      <a id="ensureSpace():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">ensureSpace</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected 
+        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#eq">
       <a id="eq(AnyRef):Boolean"></a>
@@ -485,32 +471,6 @@ there are no more references to the object.</p><p>The details of when and if the
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#get">
-      <a id="get(InTxnEnd):A"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">get</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: A</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Performs a transactional read and checks that it is consistent with all
- reads already made by <code>txn</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Performs a transactional read and checks that it is consistent with all
- reads already made by <code>txn</code>.  Equivalent to <code>apply()</code>, which is more
- concise in many situations.</p></div><dl class="paramcmts block"><dt class="param">txn</dt><dd class="cmt"><p>an active transaction.</p></dd><dt>returns</dt><dd class="cmt"><p>the value of the <code>Ref</code> as observed by <code>txn</code>.</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
-        </div>
-            
-            
-            
-          </div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#getClass">
       <a id="getClass():java.lang.Class[_]"></a>
       <h4 class="signature">
@@ -529,35 +489,6 @@ there are no more references to the object.</p><p>The details of when and if the
           attributes: final 
         </div><div class="block">
           definition classes: AnyRef
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#getWith">
-      <a id="getWith[Z]((A) ⇒ Z)(InTxnEnd):Z"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">getWith</span>
-        <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="f">f: (A) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: Z</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns <code>f(get)</code>, possibly reevaluating <code>f</code> to avoid rollback if a
- conflicting change is made but the old and new values are equal after
- application of <code>f</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns <code>f(get)</code>, possibly reevaluating <code>f</code> to avoid rollback if a
- conflicting change is made but the old and new values are equal after
- application of <code>f</code>.  Requires that <code>f(x) == f(y)</code> if <code>x == y</code>.</p><p> <code>getWith(f)</code> is equivalent to <code>f(relaxedGet({ f(_) == f(_) }))</code>, although
- perhaps more efficient.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>an idempotent function.</p></dd><dt>returns</dt><dd class="cmt"><p>the result of applying <code>f</code> to the value contained in this <code>Ref</code>.
-</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
         </div>
             
             
@@ -590,30 +521,6 @@ to verify that the behavior is consistent with the <code>equals</code> method.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.TxnLocal#isInitialized">
-      <a id="isInitialized(InTxn):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">isInitialized</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns true if a value is already associated with this <code>TxnLocal</code> in the
- current transactional context, false otherwise.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns true if a value is already associated with this <code>TxnLocal</code> in the
- current transactional context, false otherwise.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-          </div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.Any#isInstanceOf">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <h4 class="signature">
@@ -639,6 +546,23 @@ possible to check whether the contents of the list are of the requested typed.
             
             
           </div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.Builder#mapResult">
+      <a id="mapResult[NewTo]((AtomicArray[T]) ⇒ NewTo):Builder[T, NewTo]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">mapResult</span>
+        <span class="tparams">[<span name="NewTo">NewTo</span>]</span>
+        <span class="params">(<span name="f">f: (<a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]) ⇒ NewTo</span>)</span>
+        <span class="result">: <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[T, NewTo]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#ne">
       <a id="ne(AnyRef):Boolean"></a>
@@ -710,95 +634,107 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SourceLike#relaxedGet">
-      <a id="relaxedGet((A, A) ⇒ Boolean)(InTxnEnd):A"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#result">
+      <a id="result():AtomicArray[T]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">relaxedGet</span>
+        <span class="name">result</span>
         
-        <span class="params">(<span name="equiv">equiv: (A, A) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: A</span>
+        <span class="params">()</span>
+        <span class="result">: <a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Returns the same value as <code>get</code>, but allows the caller to determine
- whether <code>txn</code> should be rolled back if another thread changes the value
- of this <code>Ref</code> before <code>txn</code> is committed.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns the same value as <code>get</code>, but allows the caller to determine
- whether <code>txn</code> should be rolled back if another thread changes the value
- of this <code>Ref</code> before <code>txn</code> is committed.  If <code>ref.relaxedGet(equiv)</code> returns <code>v0</code> in <code>txn</code>, another context changes <code>ref</code> to <code>v1</code>, and
- <code>equiv(v0, v1) == true</code>, then <code>txn</code> won't be required to roll back (at
- least not due to this read).  If additional changes are made to <code>ref</code> additional calls to the equivalence function will be made, always with
- <code>v0</code> as the first parameter.</p><p> <code>equiv</code> will always be invoked on the current thread.  Extreme care
- should be taken if the equivalence function accesses any <code>Ref</code>s.</p><p> As an example, to perform a read that will not be validated during commit
- you can use the maximally permissive equivalence function: </p><pre>
-   val unvalidatedValue = ref.relaxedGet({ (_, _) =&gt; true })
-</pre><p> To check view serializability rather than conflict serializability for a
- read: </p><pre>
-   val viewSerializableValue = ref.relaxedGet({ _ == _ })
-</pre><p> The <code>getWith</code> method provides related functionality.</p></div><dl class="paramcmts block"><dt class="param">equiv</dt><dd class="cmt"><p>an equivalence function that returns true if a transaction
-     that observed the first argument will still complete correctly,
-     where the second argument is the actual value that should have been
-     observed.</p></dd><dt>returns</dt><dd class="cmt"><p>a value of the <code>Ref</code>, not necessary consistent with the rest of
-     the reads performed by <code>txn</code>.
-</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>
-        </div>
             
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef">ofRef</a> → Builder
+        </div></div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#set">
-      <a id="set(A)(InTxnEnd):Unit"></a>
+    </li><li visbl="prt" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#setCapacity">
+      <a id="setCapacity(Int):Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">set</span>
+        <span class="name">setCapacity</span>
         
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
+        <span class="params">(<span name="newCap">newCap: <span class="extype" name="scala.Int">Int</span></span>)</span>
         <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Performs a transactional write.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Performs a transactional write.  The new value will not be visible by
- any other threads until (and unless) <code>txn</code> successfully commits.
- Equivalent to <code>update(v)</code>.</p></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
-        </div>
             
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          attributes: protected 
+        </div></div>
           
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike#swap">
-      <a id="swap(A)(InTxnEnd):A"></a>
+    </li><li visbl="prt" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#size">
+      <a id="size:Int"></a>
       <h4 class="signature">
-      <span class="kind">def</span>
+      <span class="kind">var</span>
       <span class="symbol">
-        <span class="name">swap</span>
+        <span class="name">size</span>
         
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: A</span>
+        
+        <span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Works like <code>set(v)</code>, but returns the old value.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Works like <code>set(v)</code>, but returns the old value.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the previous value of this <code>Ref</code>, as observed by <code>txn</code>.</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
             
+            <div class="fullcomment"><div class="block">
+          attributes: protected 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef#sizeHint">
+      <a id="sizeHint(Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sizeHint</span>
+        
+        <span class="params">(<span name="sizeHint">sizeHint: <span class="extype" name="scala.Int">Int</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
             
+            <div class="fullcomment"><div class="block">
+          definition classes: <a href="" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder.ofRef">ofRef</a> → Builder
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.Builder#sizeHint">
+      <a id="sizeHint(scala.collection.TraversableLike[_, _],Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sizeHint</span>
+        
+        <span class="params">(<span name="coll">coll: scala.collection.TraversableLike[_, _]</span>, <span name="delta">delta: <span class="extype" name="scala.Int">Int</span></span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
             
-          </div>
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.collection.mutable.Builder#sizeHintBounded">
+      <a id="sizeHintBounded(Int,scala.collection.TraversableLike[_, _]):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sizeHintBounded</span>
+        
+        <span class="params">(<span name="size">size: <span class="extype" name="scala.Int">Int</span></span>, <span name="boundingColl">boundingColl: scala.collection.TraversableLike[_, _]</span>)</span>
+        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
           
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>
@@ -835,119 +771,6 @@ possible to check whether the contents of the list are of the requested typed.
             <div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the object.</p><p>The default representation is platform dependent.
 </p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a string representation of the object.</p></dd></dl><div class="block">
           definition classes: AnyRef → Any
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike#transform">
-      <a id="transform((A) ⇒ A)(InTxnEnd):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">transform</span>
-        
-        <span class="params">(<span name="f">f: (A) ⇒ A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Transforms the value referenced by this <code>Ref</code> by applying the function
- <code>f</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value referenced by this <code>Ref</code> by applying the function
- <code>f</code>.  Acts like <code>ref.set(f(ref.get))</code>, but the execution of <code>f</code> may be
- deferred or repeated by the STM to reduce transaction conflicts.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>a function that is safe to call multiple times, and safe to
-     call later during the transaction.</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.RefLike#transformIfDefined">
-      <a id="transformIfDefined(PartialFunction[A, A])(InTxnEnd):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">transformIfDefined</span>
-        
-        <span class="params">(<span name="pf">pf: <span class="extype" name="scala.PartialFunction">PartialFunction</span>[A, A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Transforms the value <i>v</i> referenced by this <code>Ref</code> by to
- <code>pf.apply</code>(<i>v</i>), but only if <code>pf.isDefinedAt</code>(<i>v</i>).</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Transforms the value <i>v</i> referenced by this <code>Ref</code> by to
- <code>pf.apply</code>(<i>v</i>), but only if <code>pf.isDefinedAt</code>(<i>v</i>).  Returns true if
- a transformation was performed, false otherwise.  <code>pf.apply</code> and
- <code>pf.isDefinedAt</code> may be deferred or repeated by the STM to reduce
- transaction conflicts.</p></div><dl class="paramcmts block"><dt class="param">pf</dt><dd class="cmt"><p>a partial function that is safe to call multiple times, and
-     safe to call later in the transaction.</p></dd><dt>returns</dt><dd class="cmt"><p><code>pf.isDefinedAt(v)</code>, where <code>v</code> was the value of this <code>Ref</code>     before transformation (if any).</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.SinkLike#trySet">
-      <a id="trySet(A)(InTxnEnd):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">trySet</span>
-        
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Performs a transactional write and returns true, or returns false.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Performs a transactional write and returns true, or returns false.  The
- STM implementation may choose to return false to reduce (not necessarily
- avoid) blocking.  If no other threads are performing any transactional or
- atomic accesses then this method will succeed.
-</p></div><div class="block">
-          attributes: abstract 
-        </div><div class="block">
-          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
-        </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.SinkLike#update">
-      <a id="update(A)(InTxnEnd):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">update</span>
-        
-        <span class="params">(<span name="v">v: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Performs a transactional write.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Performs a transactional write.  The new value will not be visible by
- any other threads until (and unless) <code>txn</code> successfully commits.
- Equivalent to <code>set(v)</code>.</p><p> Example: </p><pre>
-   val x = Ref(0)
-   atomic { implicit t =&gt;
-     ...
-     x() = 10 // perform a write inside a transaction
-     ...
-   }
-</pre></div><dl class="paramcmts block"><dt class="param">v</dt><dd class="cmt"><p>a value to store in the <code>Ref</code>.</p></dd></dl><div class="block">
-          definition classes: <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>
         </div>
             
             
@@ -1014,12 +837,12 @@ possible to check whether the contents of the list are of the requested typed.
     </li></ol>
             </div>
 
-        <div class="parent" name="scala.concurrent.stm.RefLike">
-              <h3>Inherited from <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>]</h3>
-            </div><div class="parent" name="scala.concurrent.stm.SinkLike">
-              <h3>Inherited from <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>]</h3>
-            </div><div class="parent" name="scala.concurrent.stm.SourceLike">
-              <h3>Inherited from <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[A, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>]</h3>
+        <div class="parent" name="scala.concurrent.stm.skel.AtomicArrayBuilder">
+              <h3>Inherited from <a href="AtomicArrayBuilder.html" class="extype" name="scala.concurrent.stm.skel.AtomicArrayBuilder">AtomicArrayBuilder</a>[T]</h3>
+            </div><div class="parent" name="scala.collection.mutable.Builder">
+              <h3>Inherited from <span class="extype" name="scala.collection.mutable.Builder">Builder</span>[T, <a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]]</h3>
+            </div><div class="parent" name="scala.collection.generic.Growable">
+              <h3>Inherited from <span class="extype" name="scala.collection.generic.Growable">Growable</span>[T]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from AnyRef</h3>
             </div><div class="parent" name="scala.Any">

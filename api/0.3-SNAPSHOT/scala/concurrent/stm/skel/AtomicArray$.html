@@ -2,45 +2,39 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.Txn</title>
+          <title>scala.concurrent.stm.skel.AtomicArray</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link href="../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
-      <script type="text/javascript" src="../../../lib/jquery.js"></script>
-      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
-      <script type="text/javascript" src="../../../lib/template.js"></script>
-      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      <link href="../../../../lib/template.css" rel="stylesheet" type="text/css" media="screen" />
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
     
         </head>
         <body class="value" onload="windowTitle();">
 
-      <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a></p>
+      <p id="owner"><a href="../../../package.html" class="extype" name="scala">scala</a>.<a href="../../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="../package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="package.html" class="extype" name="scala.concurrent.stm.skel">skel</a></p>
 
       <div id="definition">
-        <img src="../../../lib/object_big.png" />
-        <h1>Txn</h1>
+        <img src="../../../../lib/object_big.png" />
+        <h1>AtomicArray</h1>
       </div>
 
       <h4 class="signature" id="signature">
       <span class="kind">object</span>
       <span class="symbol">
-        <span class="name">Txn</span>
+        <span class="name">AtomicArray</span>
         
         
         <span class="result"> extends AnyRef</span>
       </span>
       </h4>
-      <div class="fullcomment" id="comment"><div class="comment cmt"><p>The <code>Txn</code> object provides methods that operate on the current transaction
- context.  These methods are only valid within an atomic block or a
- transaction life-cycle handler, which is checked at compile time by
- requiring that an implicit <code>InTxn</code> or <code>InTxnEnd</code> be available.
-</p></div><div class="block">
+      <div class="fullcomment" id="comment"><div class="block">
+            go to: <a href="AtomicArray.html">companion</a>
+          </div><div class="block">
             linear super types: AnyRef, <span class="extype" name="scala.Any">Any</span>
-          </div>
-            
-            
-            
-          </div>
+          </div></div>
 
       <div id="template">
 
@@ -53,7 +47,7 @@
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li class="in" name="scala.concurrent.stm.Txn">Txn</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
+                <ol id="linearization"><li class="in" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</li><li class="in" name="scala.AnyRef">AnyRef</li><li class="in" name="scala.Any">Any</li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -69,123 +63,176 @@
 
         <div class="types members" id="types">
               <h3>Type Members</h3>
-              <ol><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.ExplicitRetryCause">
-      <a id="ExplicitRetryCause:ExplicitRetryCause"></a>
-      <h4 class="signature"><a href="Txn$$ExplicitRetryCause.html">
-      <span class="kind">case class</span>
-      <span class="symbol">
-        <span class="name">ExplicitRetryCause</span>
-        
-        <span class="params">(<span name="timeoutNanos">timeoutNanos: Option[Long]</span>)</span>
-        <span class="result"> extends TransientRollbackCause with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>RollbackCause</code> for an atomic block execution attempt that ended with
- a call to <code>retry</code> or <code>retryFor</code>.</p>
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.ExternalDecider">
-      <a id="ExternalDecider:ExternalDecider"></a>
-      <h4 class="signature"><a href="Txn$$ExternalDecider.html">
-      <span class="kind">trait</span>
-      <span class="symbol">
-        <span class="name">ExternalDecider</span>
-        
-        
-        <span class="result"> extends AnyRef</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">An <code>ExternalDecider</code> is given the final control over the decision of
- whether or not to commit a transaction, which allows two-phase commit to
- be integrated with a single non-transactional resource.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.OptimisticFailureCause">
-      <a id="OptimisticFailureCause:OptimisticFailureCause"></a>
-      <h4 class="signature"><a href="Txn$$OptimisticFailureCause.html">
-      <span class="kind">case class</span>
-      <span class="symbol">
-        <span class="name">OptimisticFailureCause</span>
-        
-        <span class="params">(<span name="category">category: Symbol</span>, <span name="trigger">trigger: Option[Any]</span>)</span>
-        <span class="result"> extends TransientRollbackCause with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>RollbackCause</code> for a <code>NestingLevel</code> whose optimistic execution was
- invalid, and that should be retried.</p>
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.PermanentRollbackCause">
-      <a id="PermanentRollbackCause:PermanentRollbackCause"></a>
-      <h4 class="signature"><a href="Txn$$PermanentRollbackCause.html">
+              <ol><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofBoolean">
+      <a id="ofBoolean:ofBoolean"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofBoolean.html">
       <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">PermanentRollbackCause</span>
+        <span class="name">ofBoolean</span>
         
         
-        <span class="result"> extends RollbackCause</span>
+        <span class="result"> extends AtomicArray[Boolean]</span>
       </span>
       </a></h4>
-      <p class="comment cmt"><code>RollbackCause</code>s for which the failure is permanent and no attempt should
- be made to retry the underlying atomic block.</p>
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.RollbackCause">
-      <a id="RollbackCause:RollbackCause"></a>
-      <h4 class="signature"><a href="Txn$$RollbackCause.html">
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofByte">
+      <a id="ofByte:ofByte"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofByte.html">
       <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">RollbackCause</span>
+        <span class="name">ofByte</span>
         
         
-        <span class="result"> extends AnyRef</span>
+        <span class="result"> extends AtomicArray[Byte]</span>
       </span>
       </a></h4>
-      <p class="comment cmt">A record of the reason that a atomic block execution attempt was rolled
- back.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.RolledBack">
-      <a id="RolledBack:RolledBack"></a>
-      <h4 class="signature"><a href="Txn$$RolledBack.html">
-      <span class="kind">case class</span>
-      <span class="symbol">
-        <span class="name">RolledBack</span>
-        
-        <span class="params">(<span name="cause">cause: RollbackCause</span>)</span>
-        <span class="result"> extends Status with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>Status</code> for an atomic block execution attempt that is being or that
- has been cancelled.</p>
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.Status">
-      <a id="Status:Status"></a>
-      <h4 class="signature"><a href="Txn$$Status.html">
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofChar">
+      <a id="ofChar:ofChar"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofChar.html">
       <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">Status</span>
+        <span class="name">ofChar</span>
         
         
-        <span class="result"> extends AnyRef</span>
+        <span class="result"> extends AtomicArray[Char]</span>
       </span>
       </a></h4>
-      <p class="comment cmt">The current state of an attempt to execute an atomic block.</p>
-    </li><li visbl="pub" data-isabs="true" name="scala.concurrent.stm.Txn.TransientRollbackCause">
-      <a id="TransientRollbackCause:TransientRollbackCause"></a>
-      <h4 class="signature"><a href="Txn$$TransientRollbackCause.html">
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofDouble">
+      <a id="ofDouble:ofDouble"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofDouble.html">
       <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">TransientRollbackCause</span>
+        <span class="name">ofDouble</span>
         
         
-        <span class="result"> extends RollbackCause</span>
+        <span class="result"> extends AtomicArray[Double]</span>
       </span>
       </a></h4>
-      <p class="comment cmt"><code>RollbackCause</code>s for which the failure is transient and another attempt
- should be made to execute the underlying atomic block.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.UncaughtExceptionCause">
-      <a id="UncaughtExceptionCause:UncaughtExceptionCause"></a>
-      <h4 class="signature"><a href="Txn$$UncaughtExceptionCause.html">
-      <span class="kind">case class</span>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofFloat">
+      <a id="ofFloat:ofFloat"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofFloat.html">
+      <span class="kind">class</span>
       <span class="symbol">
-        <span class="name">UncaughtExceptionCause</span>
+        <span class="name">ofFloat</span>
         
-        <span class="params">(<span name="x">x: Throwable</span>)</span>
-        <span class="result"> extends PermanentRollbackCause with Product</span>
+        
+        <span class="result"> extends AtomicArray[Float]</span>
       </span>
       </a></h4>
-      <p class="comment cmt">The <code>RollbackCause</code> for an atomic block that should not be restarted
- because it threw an exception.</p>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofInt">
+      <a id="ofInt:ofInt"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofInt.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">ofInt</span>
+        
+        
+        <span class="result"> extends AtomicArray[Int]</span>
+      </span>
+      </a></h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofLong">
+      <a id="ofLong:ofLong"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofLong.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">ofLong</span>
+        
+        
+        <span class="result"> extends AtomicArray[Long]</span>
+      </span>
+      </a></h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofRef">
+      <a id="ofRef:ofRef[T]"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofRef.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">ofRef</span>
+        <span class="tparams">[<span name="T">T &lt;: AnyRef</span>]</span>
+        
+        <span class="result"> extends AtomicArray[T]</span>
+      </span>
+      </a></h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofShort">
+      <a id="ofShort:ofShort"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofShort.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">ofShort</span>
+        
+        
+        <span class="result"> extends AtomicArray[Short]</span>
+      </span>
+      </a></h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray.ofUnit">
+      <a id="ofUnit:ofUnit"></a>
+      <h4 class="signature"><a href="AtomicArray$$ofUnit.html">
+      <span class="kind">class</span>
+      <span class="symbol">
+        <span class="name">ofUnit</span>
+        
+        
+        <span class="result"> extends AtomicArray[Unit]</span>
+      </span>
+      </a></h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div></div>
+          
     </li></ol>
             </div>
 
@@ -339,152 +386,150 @@
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.Active">
-      <a id="Active:Active"></a>
-      <h4 class="signature"><a href="Txn$$Active$.html">
-      <span class="kind">object</span>
-      <span class="symbol">
-        <span class="name">Active</span>
-        
-        
-        <span class="result"> extends Status with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>Status</code> for a transaction nesting level that may perform <code>Ref</code> reads
- and writes, that is waiting for a child nesting level to complete, or
- that has been merged into an <code>Active</code> parent nesting level.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.Committed">
-      <a id="Committed:Committed"></a>
-      <h4 class="signature"><a href="Txn$$Committed$.html">
-      <span class="kind">object</span>
-      <span class="symbol">
-        <span class="name">Committed</span>
-        
-        
-        <span class="result"> extends Status with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>Status</code> for the nesting levels of a transaction that has been
- committed.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.Committing">
-      <a id="Committing:Committing"></a>
-      <h4 class="signature"><a href="Txn$$Committing$.html">
-      <span class="kind">object</span>
-      <span class="symbol">
-        <span class="name">Committing</span>
-        
-        
-        <span class="result"> extends Status with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>Status</code> for the nesting levels of a transaction that has decided to
- commit, but whose <code>Ref</code> writes are not yet visible to other threads.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.Prepared">
-      <a id="Prepared:Prepared"></a>
-      <h4 class="signature"><a href="Txn$$Prepared$.html">
-      <span class="kind">object</span>
-      <span class="symbol">
-        <span class="name">Prepared</span>
-        
-        
-        <span class="result"> extends Status with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>Status</code> for the nesting levels of a transaction that has
- successfully acquired all write permissions necessary to succeed, and
- that has delegated the final commit decision to an external decider.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn.Preparing">
-      <a id="Preparing:Preparing"></a>
-      <h4 class="signature"><a href="Txn$$Preparing$.html">
-      <span class="kind">object</span>
-      <span class="symbol">
-        <span class="name">Preparing</span>
-        
-        
-        <span class="result"> extends Status with Product</span>
-      </span>
-      </a></h4>
-      <p class="comment cmt">The <code>Status</code> for the nesting levels of a transaction that are attempting
- to commit, but for which the outcome is uncertain.</p>
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#afterCommit">
-      <a id="afterCommit((Status) ⇒ Unit)(InTxnEnd):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply[T](TraversableOnce[T])(ClassManifest[T]):AtomicArray[T]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">afterCommit</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">apply</span>
+        <span class="tparams">[<span name="T">T</span>]</span>
+        <span class="params">(<span name="elems">elems: TraversableOnce[T]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="m">m: ClassManifest[T]</span>)</span>
+        <span class="result">: <a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Arranges for <code>handler</code> to be executed as soon as possible after the
- current transaction is committed, if this nesting level is part of the
- overall transaction commit.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Arranges for <code>handler</code> to be executed as soon as possible after the
- current transaction is committed, if this nesting level is part of the
- overall transaction commit.  Details:</p><ul><li>no transaction will be active while the handler is run, but it may
-   access <code>Ref</code>s using a new top-level atomic block or <code>.single</code>;</li><li>the handler runs after all internal locks have been released, so any
-   values read or written in the transaction might already have been
-   changed by another thread before the handler is executed;</li><li>handlers will be executed in their registration order; and</li><li>handlers may be registered so long as the current transaction status is
-   not <code>RolledBack</code> or <code>Committed</code>.
-</li></ul></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#afterCompletion">
-      <a id="afterCompletion((Status) ⇒ Unit)(InTxnEnd):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply[T&lt;:AnyRef](Array[T]):ofRef[T]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">afterCompletion</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">apply</span>
+        <span class="tparams">[<span name="T">T &lt;: AnyRef</span>]</span>
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[T]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofRef.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofRef">ofRef</a>[T]</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Arranges for <code>handler</code> to be called as both an after-commit and
- after-rollback handler.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Arranges for <code>handler</code> to be called as both an after-commit and
- after-rollback handler.</p><p> Equivalent to: </p><pre>
-    afterRollback(handler)
-    afterCommit(handler)
-</pre></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#afterRollback">
-      <a id="afterRollback((Status) ⇒ Unit)(InTxnEnd):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Unit]):ofUnit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol">
-        <span class="name">afterRollback</span>
+        <span class="name">apply</span>
         
-        <span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Unit">Unit</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofUnit.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofUnit">ofUnit</a></span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Arranges for <code>handler</code> to be executed as soon as possible after the
- current nesting level is rolled back, or runs the handler immediately if
- the current nesting level's status is already <code>RolledBack</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Arranges for <code>handler</code> to be executed as soon as possible after the
- current nesting level is rolled back, or runs the handler immediately if
- the current nesting level's status is already <code>RolledBack</code>.  Details:</p><ul><li>the handler will be executed during any partial rollback that includes
-   the current nesting level;</li><li>the handler will be run before any additional attempts to execute the
-   atomic block;</li><li>handlers will be run in the reverse of their registration order; and</li><li>handlers may be registered so long as the current transaction status is
-   not <code>Committed</code>.
-</li></ul></div>
-            
-            
-            
-          </div>
-          
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Double]):ofDouble"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Double">Double</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofDouble.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofDouble">ofDouble</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Long]):ofLong"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Long">Long</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofLong.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofLong">ofLong</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Float]):ofFloat"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Float">Float</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofFloat.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofFloat">ofFloat</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Int]):ofInt"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Int">Int</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofInt.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofInt">ofInt</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Char]):ofChar"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Char">Char</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofChar.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofChar">ofChar</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Short]):ofShort"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Short">Short</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofShort.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofShort">ofShort</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Byte]):ofByte"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Byte">Byte</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofByte.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofByte">ofByte</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply(Array[Boolean]):ofBoolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="elems">elems: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Boolean">Boolean</span>]</span>)</span>
+        <span class="result">: <a href="AtomicArray$$ofBoolean.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray.ofBoolean">ofBoolean</a></span>
+      </span>
+      </h4>
+      
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#apply">
+      <a id="apply[T](Int)(ClassManifest[T]):AtomicArray[T]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        <span class="tparams">[<span name="T">T</span>]</span>
+        <span class="params">(<span name="size">size: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="m">m: ClassManifest[T]</span>)</span>
+        <span class="result">: <a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]</span>
+      </span>
+      </h4>
+      
     </li><li visbl="pub" data-isabs="false" name="scala.Any#asInstanceOf">
       <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
@@ -510,33 +555,22 @@ part of compilation it is not possible to check whether the contents of the list
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#beforeCommit">
-      <a id="beforeCommit((InTxn) ⇒ Unit)(InTxn):Unit"></a>
+    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.skel.AtomicArray#canBuildFrom">
+      <a id="canBuildFrom[T](ClassManifest[T]):CanBuildFrom[scala.concurrent.stm.skel.AtomicArray[_], T, AtomicArray[T]]"></a>
       <h4 class="signature">
-      <span class="kind">def</span>
+      <span class="kind">implicit def</span>
       <span class="symbol">
-        <span class="name">beforeCommit</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+        <span class="name">canBuildFrom</span>
+        <span class="tparams">[<span name="T">T</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="m">m: ClassManifest[T]</span>)</span>
+        <span class="result">: <span class="extype" name="scala.collection.generic.CanBuildFrom">CanBuildFrom</span>[scala.concurrent.stm.skel.AtomicArray[_], T, <a href="AtomicArray.html" class="extype" name="scala.concurrent.stm.skel.AtomicArray">AtomicArray</a>[T]]</span>
       </span>
       </h4>
       
-            <p class="shortcomment cmt">Arranges for <code>handler</code> to be executed as late as possible while the root
- nesting level of the current transaction is still <code>Active</code>, unless the
- current nesting level is rolled back.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Arranges for <code>handler</code> to be executed as late as possible while the root
- nesting level of the current transaction is still <code>Active</code>, unless the
- current nesting level is rolled back.  Reads, writes and additional
- nested transactions may be performed inside the handler.  Details:</p><ul><li>it is possible that after <code>handler</code> is run the transaction might still
-   be rolled back;</li><li>it is okay to call <code>beforeCommit</code> from inside <code>handler</code>, the
-   reentrantly added handler will be included in this before-commit phase;
-   and</li><li>before-commit handlers will be executed in their registration order.
-</li></ul></div>
             
-            
-            
-          </div>
+            <div class="fullcomment"><div class="block">
+          attributes: implicit 
+        </div></div>
           
     </li><li visbl="prt" data-isabs="false" name="scala.AnyRef#clone">
       <a id="clone():AnyRef"></a>
@@ -651,29 +685,6 @@ there are no more references to the object.</p><p>The details of when and if the
         </div><div class="block">
           definition classes: AnyRef
         </div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#findCurrent">
-      <a id="findCurrent(MaybeTxn):Option[InTxn]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">findCurrent</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns <code>Some(t)</code> if called from inside the static or dynamic scope of
- the transaction context <code>t</code>, <code>None</code> otherwise.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns <code>Some(t)</code> if called from inside the static or dynamic scope of
- the transaction context <code>t</code>, <code>None</code> otherwise.  If an implicit <code>InTxn</code> is
- available it may be used.
-</p></div>
             
             
             
@@ -825,127 +836,6 @@ possible to check whether the contents of the list are of the requested typed.
             
           </div>
           
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#retry">
-      <a id="retry(InTxn):Nothing"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">retry</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Nothing">Nothing</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Rolls back the current nesting level for modular blocking.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Rolls back the current nesting level for modular blocking.  It will be
- retried, but only after some memory location observed by this transaction
- has been changed.  If any alternatives to this atomic block were provided
- via <code>orAtomic</code> or <code>atomic.oneOf</code>, then the alternative will be tried
- before blocking.</p></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#retryFor">
-      <a id="retryFor(Long,TimeUnit)(InTxn):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">retryFor</span>
-        
-        <span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="scala.actors.threadpool.TimeUnit">TimeUnit</span> =<span class="defval" name="TimeUnit.MILLISECONDS"> ...</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Causes the transaction to roll back and retry using modular blocking with
- a timeout, or returns immediately if the timeout has already expired.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Causes the transaction to roll back and retry using modular blocking with
- a timeout, or returns immediately if the timeout has already expired.
- The STM keeps track of the total amount of blocking that has occurred
- during modular blocking; this time is apportioned among the calls to
- <code>View.tryAwait</code> and <code>retryFor</code> that are part of the current attempt.
- <code>retryFor(0)</code> is a no-op.</p><p> Returns only if the timeout has expired.</p></div><dl class="paramcmts block"><dt class="param">timeout</dt><dd class="cmt"><p>the maximum amount of time that this <code>retryFor</code> should
-     block, in units of <code>unit</code>.</p></dd><dt class="param">unit</dt><dd class="cmt"><p>the units in which to measure <code>timeout</code>, by default
-     milliseconds.
-</p></dd></dl>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#rollback">
-      <a id="rollback(RollbackCause)(InTxnEnd):Nothing"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">rollback</span>
-        
-        <span class="params">(<span name="cause">cause: <a href="Txn$$RollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.RollbackCause">RollbackCause</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Nothing">Nothing</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Causes the current nesting level to be rolled back due to the specified
- <code>cause</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Causes the current nesting level to be rolled back due to the specified
- <code>cause</code>.  This method may only be called by the thread executing the
- transaction; obtain a <code>NestingLevel</code> instance <code>n</code> and call
- <code>n.requestRollback(cause)</code> if you wish to doom a transaction from another
- thread.</p></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#setExternalDecider">
-      <a id="setExternalDecider(ExternalDecider)(InTxnEnd):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">setExternalDecider</span>
-        
-        <span class="params">(<span name="decider">decider: <a href="Txn$$ExternalDecider.html" class="extype" name="scala.concurrent.stm.Txn.ExternalDecider">ExternalDecider</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">(rare) Delegates final decision of the outcome of the transaction to
- <code>decider</code> if the current nesting level participates in the top-level
- commit.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>(rare) Delegates final decision of the outcome of the transaction to
- <code>decider</code> if the current nesting level participates in the top-level
- commit.  This method can succeed with at most one value per top-level
- transaction.</p></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#status">
-      <a id="status(InTxnEnd):Status"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">status</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns the status of the current nesting level of the current
- transaction, equivalent to <code>NestingLevel.current.status</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns the status of the current nesting level of the current
- transaction, equivalent to <code>NestingLevel.current.status</code>.
-</p></div>
-            
-            
-            
-          </div>
-          
     </li><li visbl="pub" data-isabs="false" name="scala.AnyRef#synchronized">
       <a id="synchronized[T0](T0):T0"></a>
       <h4 class="signature">
@@ -1043,61 +933,6 @@ possible to check whether the contents of the list are of the requested typed.
         </div><div class="block">
           definition classes: AnyRef
         </div></div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#whileCommitting">
-      <a id="whileCommitting((InTxnEnd) ⇒ Unit)(InTxnEnd):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">whileCommitting</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">(rare) Arranges for <code>handler</code> to be called after (if) it has been decided
- that the current transaction will commit, but before the writes made by
- the transaction have become available to other threads.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>(rare) Arranges for <code>handler</code> to be called after (if) it has been decided
- that the current transaction will commit, but before the writes made by
- the transaction have become available to other threads.  While-committing
- handlers can lead to scalability problems, because while this transaction
- is in the <code>Committing</code> state it might obstruct other transactions.
- Details:</p><ul><li>the handler must not access any <code>Ref</code>s, even using <code>Ref.single</code>;</li><li>handlers will be executed in their registration order; and</li><li>handlers may be registered so long as the current transaction status is
-   not <code>RolledBack</code> or <code>Committed</code>.
-</li></ul></div>
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" data-isabs="false" name="scala.concurrent.stm.Txn#whilePreparing">
-      <a id="whilePreparing((InTxnEnd) ⇒ Unit)(InTxnEnd):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">whilePreparing</span>
-        
-        <span class="params">(<span name="handler">handler: (<a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span>
-        <span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">(rare) Arranges for <code>handler</code> to be called after the <code>Ref</code> reads and
- writes have been checked for serializability, but before the decision has
- been made to commit or roll back.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>(rare) Arranges for <code>handler</code> to be called after the <code>Ref</code> reads and
- writes have been checked for serializability, but before the decision has
- been made to commit or roll back.  While-preparing handlers can lead to
- scalability problems, because while this transaction is in the
- <code>Preparing</code> state it might obstruct other transactions.  Details:</p><ul><li>the handler must not access any <code>Ref</code>s, even using <code>Ref.single</code>;</li><li>handlers will be executed in their registration order; and</li><li>handlers may be registered while the transaction is active, or from a
-   while-preparing callback during the <code>Preparing</code> phase.
-</li></ul></div>
-            
-            
-            
-          </div>
           
     </li></ol>
             </div>
