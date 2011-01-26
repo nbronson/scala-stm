@@ -26,7 +26,7 @@ import annotation.tailrec
  *
  *  @author Nathan Bronson
  */
-private[stm] abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[T, AtomicArray[T]] {
+abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[T, AtomicArray[T]] {
 
   // We choose to store Boolean-s (and other small primitives) each in their
   // own Int.  This wastes space.  Another option would be to pack values into
@@ -76,7 +76,7 @@ private[stm] abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[
   override def newBuilder: AtomicArrayBuilder[T] = throw new AbstractMethodError
 }
 
-private[stm] object AtomicArray {
+object AtomicArray {
 
   def apply[T](size: Int)(implicit m: ClassManifest[T]): AtomicArray[T] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
