@@ -33,6 +33,9 @@ private[stm] object FastSimpleRandom {
   
   private val states = Array.tabulate(mask + 1)({ _ * 0x123456789abcdefL })
 
+  /** Returns a random value chosen from a uniform distribution of all valid
+   *  `Int`s.
+   */
   def nextInt(): Int = {
     val id = (Thread.currentThread.getId.asInstanceOf[Int] * 13) & mask
 
@@ -42,8 +45,13 @@ private[stm] object FastSimpleRandom {
     extract(next)
   }
   
+  /** Returns a random value chosen from a uniform distribution of the
+   *  non-negative integers less than `n`, or throws `IllegalArgumentException`
+   *  if `n` is negative or zero.
+   */
   def nextInt(n: Int): Int = {
-    require(n > 0)
+    if (n <= 0)
+      throw new IllegalArgumentException
 
     var x = -1
     while (x == -1) x = tryClamp(nextInt(), n)
@@ -88,13 +96,21 @@ private[stm] final class FastSimpleRandom private (private var _state: Long, dum
 
   override def clone = new FastSimpleRandom(_state, false)
 
+  /** Returns a random value chosen from a uniform distribution of all valid
+   *  `Int`s.
+   */
   def nextInt(): Int = {
     _state = step(_state)
     extract(_state)
   }
 
+  /** Returns a random value chosen from a uniform distribution of the
+   *  non-negative integers less than `n`, or throws `IllegalArgumentException`
+   *  if `n` is negative or zero.
+   */
   def nextInt(n: Int): Int = {
-    require(n > 0)
+    if (n <= 0)
+      throw new IllegalArgumentException
 
     var x = -1
     while (x == -1) x = tryClamp(nextInt(), n)
