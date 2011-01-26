@@ -10,7 +10,7 @@ import annotation.tailrec
 
 /** `AtomicArray` implements a fixed-length indexed sequence where reads and
  *  writes have volatile semantics.  In addition, it adds an atomic swap
- *  operation (`getAndSet`) and an atomic compare-and-swap (`compareAndSet`).
+ *  operation (`swap`) and an atomic compare-and-swap (`compareAndSet`).
  *  The collection is backed by one of the Java atomic array classes, with the
  *  best match chosen at construction time using a manifest.
  *
@@ -51,7 +51,7 @@ private[stm] abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[
   def update(index: Int, elem: T): Unit
 
   /** Atomic swap of the element at index */
-  def getAndSet(index: Int, elem: T): T
+  def swap(index: Int, elem: T): T
 
   /** Returns true iff previous value was expected, elem installed */
   def compareAndSet(index: Int, expected: T, elem: T): Boolean
@@ -148,7 +148,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = decode(elems.get(index))
     def update(index: Int, elem: Boolean): Unit = elems.set(index, encode(elem))
-    def getAndSet(index: Int, elem: Boolean) = decode(elems.getAndSet(index, encode(elem)))
+    def swap(index: Int, elem: Boolean) = decode(elems.getAndSet(index, encode(elem)))
     def compareAndSet(index: Int, expected: Boolean, elem: Boolean) =
       elems.compareAndSet(index, encode(expected), encode(elem))
     override def newBuilder = new AtomicArrayBuilder.ofBoolean
@@ -161,7 +161,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = elems.get(index).toByte
     def update(index: Int, elem: Byte): Unit = elems.set(index, elem)
-    def getAndSet(index: Int, elem: Byte) = elems.getAndSet(index, elem).toByte
+    def swap(index: Int, elem: Byte) = elems.getAndSet(index, elem).toByte
     def compareAndSet(index: Int, expected: Byte, elem: Byte) =
       elems.compareAndSet(index, expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofByte
@@ -174,7 +174,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = elems.get(index).toShort
     def update(index: Int, elem: Short): Unit = elems.set(index, elem)
-    def getAndSet(index: Int, elem: Short) = elems.getAndSet(index, elem).toShort
+    def swap(index: Int, elem: Short) = elems.getAndSet(index, elem).toShort
     def compareAndSet(index: Int, expected: Short, elem: Short) =
       elems.compareAndSet(index, expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofShort
@@ -187,7 +187,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = elems.get(index).toChar
     def update(index: Int, elem: Char): Unit = elems.set(index, elem)
-    def getAndSet(index: Int, elem: Char) = elems.getAndSet(index, elem).toChar
+    def swap(index: Int, elem: Char) = elems.getAndSet(index, elem).toChar
     def compareAndSet(index: Int, expected: Char, elem: Char) =
       elems.compareAndSet(index, expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofChar
@@ -200,7 +200,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = elems.get(index).toInt
     def update(index: Int, elem: Int): Unit = elems.set(index, elem)
-    def getAndSet(index: Int, elem: Int) = elems.getAndSet(index, elem)
+    def swap(index: Int, elem: Int) = elems.getAndSet(index, elem)
     def compareAndSet(index: Int, expected: Int, elem: Int) =
       elems.compareAndSet(index, expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofInt
@@ -216,7 +216,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = decode(elems.get(index))
     def update(index: Int, elem: Float): Unit = elems.set(index, encode(elem))
-    def getAndSet(index: Int, elem: Float) = decode(elems.getAndSet(index, encode(elem)))
+    def swap(index: Int, elem: Float) = decode(elems.getAndSet(index, encode(elem)))
     def compareAndSet(index: Int, expected: Float, elem: Float) =
       elems.compareAndSet(index, encode(expected), encode(elem))
     override def newBuilder = new AtomicArrayBuilder.ofFloat
@@ -229,7 +229,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = elems.get(index).toInt
     def update(index: Int, elem: Long): Unit = elems.set(index, elem)
-    def getAndSet(index: Int, elem: Long) = elems.getAndSet(index, elem)
+    def swap(index: Int, elem: Long) = elems.getAndSet(index, elem)
     def compareAndSet(index: Int, expected: Long, elem: Long) =
       elems.compareAndSet(index, expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofLong
@@ -245,7 +245,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = decode(elems.get(index))
     def update(index: Int, elem: Double): Unit = elems.set(index, encode(elem))
-    def getAndSet(index: Int, elem: Double) = decode(elems.getAndSet(index, encode(elem)))
+    def swap(index: Int, elem: Double) = decode(elems.getAndSet(index, encode(elem)))
     def compareAndSet(index: Int, expected: Double, elem: Double) =
       elems.compareAndSet(index, encode(expected), encode(elem))
     override def newBuilder = new AtomicArrayBuilder.ofDouble
@@ -254,11 +254,17 @@ private[stm] object AtomicArray {
   @serializable
   final class ofUnit(val length: Int) extends AtomicArray[Unit] {
     private val dummy = new AtomicReference[Unit](())
+
+    private def ref(index: Int): AtomicReference[Unit] = {
+      if (index < 0 || index >= length)
+        throw new IndexOutOfBoundsException
+      dummy
+    }
     
-    def apply(index: Int) = dummy.get
-    def update(index: Int, elem: Unit): Unit = dummy.set(elem)
-    def getAndSet(index: Int, elem: Unit) = dummy.getAndSet(elem)
-    def compareAndSet(index: Int, expected: Unit, elem: Unit) = dummy.compareAndSet(expected, elem)
+    def apply(index: Int) = ref(index).get
+    def update(index: Int, elem: Unit): Unit = ref(index).set(elem)
+    def swap(index: Int, elem: Unit) = ref(index).getAndSet(elem)
+    def compareAndSet(index: Int, expected: Unit, elem: Unit) = ref(index).compareAndSet(expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofUnit
   }
 
@@ -269,7 +275,7 @@ private[stm] object AtomicArray {
     def length = elems.length
     def apply(index: Int) = elems.get(index)
     def update(index: Int, elem: T): Unit = elems.set(index, elem)
-    def getAndSet(index: Int, elem: T) = elems.getAndSet(index, elem)
+    def swap(index: Int, elem: T) = elems.getAndSet(index, elem)
     def compareAndSet(index: Int, expected: T, elem: T) = elems.compareAndSet(index, expected, elem)
     override def newBuilder = new AtomicArrayBuilder.ofRef[T]
   }
