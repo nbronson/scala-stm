@@ -497,35 +497,49 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   //////// single-key operations for Ref.View
 
-  protected def singleContains(key: A): Boolean = singleContains(root, 0, keyHash(key), key)
+  protected def singleContains(key: A): Boolean = singleContains(root(), root, 0, keyHash(key), key)
 
-  @tailrec private def singleContains(n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Boolean = {
-    n() match {
-      case leaf: Leaf[A, B] => leaf.contains(hash, key)
-      case branch: Branch[A, B] => singleContains(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
-    }
-  }
-
-  protected def singleGetOrThrow(key: A): B = singleGetOrThrow(root, 0, keyHash(key), key)
-
-  @tailrec private def singleGetOrThrow(n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): B = {
-    n() match {
+  @tailrec private def singleContains(rootNode: Node[A, B], n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Boolean = {
+    (if (shift == 0) rootNode else n()) match {
       case leaf: Leaf[A, B] => {
-        val i = leaf.find(hash, key)
-        if (i < 0)
-          throw new NoSuchElementException("key not found: " + key)
-        leaf.getValue(i)
+        if (shift != 0 && (root() ne rootNode))
+          singleContains(root(), root, 0, hash, key)
+        else
+          leaf.contains(hash, key)
       }
-      case branch: Branch[A, B] => singleGetOrThrow(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
+      case branch: Branch[A, B] => singleContains(rootNode, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
 
-  protected def singleGet(key: A): Option[B] = singleGet(root, 0, keyHash(key), key)
+  protected def singleGetOrThrow(key: A): B = singleGetOrThrow(root(), root, 0, keyHash(key), key)
 
-  @tailrec private def singleGet(n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Option[B] = {
-    n() match {
-      case leaf: Leaf[A, B] => leaf.get(hash, key)
-      case branch: Branch[A, B] => singleGet(branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
+  @tailrec private def singleGetOrThrow(rootNode: Node[A, B], n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): B = {
+    (if (shift == 0) rootNode else n()) match {
+      case leaf: Leaf[A, B] => {
+        if (shift != 0 && (root() ne rootNode))
+          singleGetOrThrow(root(), root, 0, hash, key)
+        else {
+          val i = leaf.find(hash, key)
+          if (i < 0)
+            throw new NoSuchElementException("key not found: " + key)
+          leaf.getValue(i)
+        }
+      }
+      case branch: Branch[A, B] => singleGetOrThrow(rootNode, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
+    }
+  }
+
+  protected def singleGet(key: A): Option[B] = singleGet(root(), root, 0, keyHash(key), key)
+
+  @tailrec private def singleGet(rootNode: Node[A, B], n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Option[B] = {
+    (if (shift == 0) rootNode else n()) match {
+      case leaf: Leaf[A, B] => {
+        if (shift != 0 && (root() ne rootNode))
+          singleGet(root(), root, 0, hash, key)
+        else
+          leaf.get(hash, key)
+      }
+      case branch: Branch[A, B] => singleGet(rootNode, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
     }
   }
 
@@ -609,7 +623,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
         }
         case branch: Branch[A, B] => {
           val i = indexFor(0, hash)
-          if (branch.frozen && !singleContains(branch.children(i), LogBF, hash, key))
+          if (branch.frozen && !singleContains(branch, branch.children(i), LogBF, hash, key))
             None
           else {
             val b = if (!branch.frozen) branch else singleUnshare(branch.gen + 1, root, branch)
@@ -651,7 +665,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
         }
         case branch: Branch[A, B] => {
           val i = indexFor(shift, hash)
-          if (!checked && branch.gen != rootNode.gen && !singleContains(branch.children(i), shift + LogBF, hash, key))
+          if (!checked && branch.gen != rootNode.gen && !singleContains(rootNode, branch.children(i), shift + LogBF, hash, key))
             None // child is absent
           else {
             val b = if (branch.gen == rootNode.gen) branch else singleUnshare(rootNode.gen, current, branch)
