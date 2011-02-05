@@ -495,6 +495,38 @@ class TMapSuite extends FunSuite {
     }
   }
 
+  test("atomicity violation") {
+    // This test makes sure that the copy-on-write snapshot mechanism can't
+    // expose the intermediate state of a txn to a non-txn get.
+    val m = TMap(kvRange(0, 1000): _*).single
+    m(0) = "okay"
+    val failed = Ref(-1).single
+    val threads = Array.tabulate(2) { _ =>
+      new Thread {
+        override def run {
+          val r = new FastSimpleRandom
+          for (i <- 0 until 100000) {
+            if (r.nextInt(2) == 0) {
+              if (m(0) != "okay") {
+                failed() = i
+                return
+              }
+            } else {
+              atomic { implicit txn =>
+                m(0) = "should be isolated"
+                m.snapshot
+                m(0) = "okay"
+              }
+            }
+          }
+        }
+      }
+    }
+    for (t <- threads) t.start
+    for (t <- threads) t.join
+    assert(failed() === -1)
+  }
+
   //////// perf stuff
 
   private def now = System.currentTimeMillis
