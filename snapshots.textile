@@ -9,8 +9,10 @@ Changes between 0.2 and 0.3-SNAPSHOT:
 ["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11] -- fix for two-@Ref@ form of @compareAndSet@;
 ["#12":https://github.com/nbronson/scala-stm/issues/closed#issue/12] -- rare @StackOverflowException@ under heavy contention and true nesting;
 ["#13":https://github.com/nbronson/scala-stm/issues/closed#issue/13] -- contention management improvements;
-["#14":https://github.com/nbronson/scala-stm/issues/closed#issue/14] -- fix for external decision support; and
-["#15":https://github.com/nbronson/scala-stm/issues/closed#issue/15] -- NPE if a post-decision handler threw an exception.
+["#14":https://github.com/nbronson/scala-stm/issues/closed#issue/14] -- fix for external decision support;
+["#15":https://github.com/nbronson/scala-stm/issues/closed#issue/15] -- NPE if a post-decision handler threw an exception;
+["#18":https://github.com/nbronson/scala-stm/issues/closed#issue/18] -- atomicity can be broken by @TMap@ copy-on-write mechanism; and
+["#19":https://github.com/nbronson/scala-stm/issues/closed#issue/19] -- potential deadlock between pessimistic readers.
 
 * Timeouts for modular blocking using @retry@.  Read more at ["Waiting : Timeouts":modular_blocking.html#timeouts].
 

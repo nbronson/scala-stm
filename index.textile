@@ -15,6 +15,8 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
+* _2011 Feb 4_ -- ["0.3-SNAPHOT":snapshots.html]: Bug fixes.
+
 * _2011 Jan 15_ -- ["0.3-SNAPHOT":snapshots.html]: Timeouts for @retry@.  See ["Waiting : Timeouts":modular_blocking.html#timeouts]
 
 * _2011 Jan 2_ -- ["0.3-SNAPHOT":snapshots.html]: Bug fixes.
