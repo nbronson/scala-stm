@@ -156,15 +156,17 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   }
 
   private def shouldWaitAsWWLoser(owningRoot: TxnLevelImpl, ownerIsCommitting: Boolean): Boolean = {
-    // If we haven't performed any writes, there is no point in not waiting.
-    if (writeCount == 0 && !writeResourcesPresent)
+    // If we haven't performed any writes or taken any pessimistic locks, there
+    // is no point in not waiting.
+    if (writeCount == 0 && bargeCount == 0 && !writeResourcesPresent)
       return true
 
     // If the current owner is in the process of committing then we should
     // wait, because we can't succeed until their commit is done.  This means
     // that regardless of priority all of this txn's retries are just useless
     // spins.  This is especially important in the case of external resources
-    // that perform I/O during commit.
+    // that perform I/O during commit.  No deadlock is possible because a
+    // committing txn already has all of the ownership it needs.
     if (ownerIsCommitting)
       return true
 
