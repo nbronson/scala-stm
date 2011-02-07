@@ -19,14 +19,22 @@ object Ref {
 
 class LockFreeHashTrie[A, B](rootRef: Ref[Node[A, B]]) {
 
-  def get(key: A): Option[B] = get(rootRef, 0, key, key.##)
+  def get(key: A): Option[B] = get(rootRef.get, rootRef, 0, key, key.##)
 
-  @tailrec private def get(nodeRef: Ref[Node[A, B]], shift: Int,
-                           key: A, hash: Int): Option[B] = {
-    nodeRef.get match {
-      case leaf: Leaf[A, B] => leaf.get(key, hash)
+  @tailrec private def get(root: Node[A, B],
+                           nodeRef: Ref[Node[A, B]],
+                           shift: Int,
+                           key: A,
+                           hash: Int): Option[B] = {
+    (if (shift == 0) root else nodeRef.get) match {
+      case leaf: Leaf[A, B] => {
+        if (shift != 0 && (rootRef.get != root))
+          get(rootRef.get, rootRef, 0, key, hash) // retry from root
+        else
+          leaf.get(key, hash)
+      }
       case branch: Branch[A, B] => get(
-          branch.childRefs(chIndex(shift, hash)), shift + LogBF, key, hash)
+          root, branch.childRefs(chIndex(shift, hash)), shift + LogBF, key, hash)
     }
   }
 
@@ -34,9 +42,12 @@ class LockFreeHashTrie[A, B](rootRef: Ref[Node[A, B]]) {
       put(rootRef.get, rootRef, 0, key, key.##, value)
 
   @tailrec private def put(root: Node[A, B],
-                           nodeRef: Ref[Node[A, B]], shift: Int = 0,
-                           key: A, hash: Int, value: B): Option[B] = {
-    (if (nodeRef == rootRef) root else nodeRef.get) match {
+                           nodeRef: Ref[Node[A, B]],
+                           shift: Int = 0,
+                           key: A,
+                           hash: Int,
+                           value: B): Option[B] = {
+    (if (shift == 0) root else nodeRef.get) match {
       case leaf: Leaf[A, B] => {
         val after = leaf.withPut(root.gen, key, hash, value)
         if (leaf == after || Ref.rdcss(rootRef, root, nodeRef, leaf, after))
