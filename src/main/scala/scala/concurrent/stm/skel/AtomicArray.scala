@@ -138,7 +138,6 @@ object AtomicArray {
   }
 
 
-  @serializable
   final class ofBoolean(elems: AtomicIntegerArray) extends AtomicArray[Boolean] {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
@@ -154,7 +153,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofBoolean
   }
 
-  @serializable
   final class ofByte(elems: AtomicIntegerArray) extends AtomicArray[Byte] {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
@@ -167,7 +165,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofByte
   }
 
-  @serializable
   final class ofShort(elems: AtomicIntegerArray) extends AtomicArray[Short] {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
@@ -180,7 +177,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofShort
   }
 
-  @serializable
   final class ofChar(elems: AtomicIntegerArray) extends AtomicArray[Char] {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
@@ -193,7 +189,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofChar
   }
 
-  @serializable
   final class ofInt(elems: AtomicIntegerArray) extends AtomicArray[Int] {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
@@ -206,7 +201,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofInt
   }
 
-  @serializable
   final class ofFloat(elems: AtomicIntegerArray) extends AtomicArray[Float] {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
@@ -222,7 +216,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofFloat
   }
 
-  @serializable
   final class ofLong(elems: AtomicLongArray) extends AtomicArray[Long] {
     def this(size: Int) = this(new AtomicLongArray(size))
 
@@ -235,7 +228,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofLong
   }
 
-  @serializable
   final class ofDouble(elems: AtomicLongArray) extends AtomicArray[Double] {
     def this(size: Int) = this(new AtomicLongArray(size))
 
@@ -251,7 +243,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofDouble
   }
   
-  @serializable
   final class ofUnit(val length: Int) extends AtomicArray[Unit] {
     private val dummy = new AtomicReference[Unit](())
 
@@ -268,7 +259,6 @@ object AtomicArray {
     override def newBuilder = new AtomicArrayBuilder.ofUnit
   }
 
-  @serializable
   final class ofRef[T <: AnyRef](elems: AtomicReferenceArray[T]) extends AtomicArray[T] {
     def this(size: Int) = this(new AtomicReferenceArray[T](size))
 
