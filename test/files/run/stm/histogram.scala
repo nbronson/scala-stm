@@ -7,7 +7,7 @@ object Test {
 
   def test(name: String, slow: Boolean)(block: => Unit) {
     if (!slow) {
-      println("running AtomicArraySuite " + name)
+      println("running histogram " + name)
       block
     }
   }

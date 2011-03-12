@@ -5,7 +5,7 @@ import scala.concurrent.stm.skel._
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running AtomicArraySuite " + name)
+    println("running atomic_array " + name)
     block
   }
 

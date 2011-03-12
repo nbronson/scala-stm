@@ -5,7 +5,7 @@ import scala.concurrent.stm._
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running AtomicArraySuite " + name)
+    println("running callback " + name)
     block
   }
 

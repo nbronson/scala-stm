@@ -6,7 +6,7 @@ import scala.concurrent.stm.skel.SimpleRandom
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running AtomicArraySuite " + name)
+    println("running contention " + name)
     block
   }
 

@@ -7,7 +7,7 @@ import java.util.concurrent.CyclicBarrier
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running AtomicArraySuite " + name)
+    println("running flipper " + name)
     block
   }
 
