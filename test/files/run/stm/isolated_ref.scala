@@ -504,7 +504,7 @@ object Test {
 
     test("TArray Ref inequality between indices") {
       val a = TArray.ofDim[Int](1000)
-      println(a.refs(0))
+      a.refs(0).toString
       for (i <- 1 until 1000) {
         assert(a.refs(i) != a.refs(0))
         assert(a.single.refViews(i) != a.refs(0))

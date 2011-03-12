@@ -424,7 +424,7 @@ object Test {
 
       // We can't assert, because different STMs might do different things.
       // For CCSTM it should be 1, 2
-      println("xtries = " + xtries + ", ytries = " + ytries)
+      //println("xtries = " + xtries + ", ytries = " + ytries)
     }
 
     test("await") {
@@ -552,7 +552,7 @@ object Test {
       for (t <- threads) t.start
       for (t <- threads) t.join
       val elapsed = System.currentTimeMillis - begin
-      println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
+      //println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
     }
   }
 }

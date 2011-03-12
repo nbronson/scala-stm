@@ -97,7 +97,7 @@ object Test {
       for (t <- threads) t.join
       if (failure != null)
         throw failure
-      println(txnInterrupts.get + " txn rollbacks, " + nonTxnInterrupts.get + " non-txn interrupts")
+      //println(txnInterrupts.get + " txn rollbacks, " + nonTxnInterrupts.get + " non-txn interrupts")
     }
   }
 

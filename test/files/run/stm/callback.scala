@@ -82,7 +82,7 @@ object Test {
       intercept[NoSuchElementException] {
         atomic { implicit t =>
           x() = None
-          Txn.beforeCommit { _ => println(x().get) }
+          Txn.beforeCommit { _ => x().get }
         }
       }
     }

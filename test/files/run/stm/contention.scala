@@ -64,7 +64,7 @@ object Test {
       for (t <- threads) t.start
       for (t <- threads) t.join
       assert(total.single() > 0)
-      println(total.single() + " rejected trySet-s")
+      //println(total.single() + " rejected trySet-s")
     }
   }
 
@@ -116,7 +116,7 @@ object Test {
     val elapsed = System.currentTimeMillis - begin
 
     val nanosPerOp = elapsed * 1000000L / ((numReads + numWrites) * 1L * numThreads)
-    printf("ContentionSuite: %s, %d nanos/op aggregate throughput\n", name, nanosPerOp)
+    //printf("ContentionSuite: %s, %d nanos/op aggregate throughput\n", name, nanosPerOp)
   }
 
   def runElderTest(writerCount: Int, numElders: Int) {
@@ -173,7 +173,7 @@ object Test {
       val n = refs.length
       assert(sum == n * (n - 1) / 2)
       eldersLeft.single -= 1
-      println("elder ran " + tries + " times")
+      //println("elder ran " + tries + " times")
     }
 
     for (w <- writers) w.join()

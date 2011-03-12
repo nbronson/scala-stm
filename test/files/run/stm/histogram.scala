@@ -59,12 +59,12 @@ object Test {
           start = now
         } else {
           val elapsed = now - start
-          println("hist(" + bucketCount + "," + workerCount + "," + samplesPerWorker + "," +
-            useTArray + "," + singlePct +
-            "," + samplesPerTxn + ")  total_elapsed=" + elapsed + " nanos,  throughput=" +
-            (samplesPerWorker * workerCount * 1000000000L) / elapsed + " ops/sec,  per_thread_latency=" +
-            elapsed / samplesPerWorker + " nanos/op,  avg_arrival=" +
-            elapsed / (samplesPerWorker * workerCount) + " nanos/op")
+//          println("hist(" + bucketCount + "," + workerCount + "," + samplesPerWorker + "," +
+//            useTArray + "," + singlePct +
+//            "," + samplesPerTxn + ")  total_elapsed=" + elapsed + " nanos,  throughput=" +
+//            (samplesPerWorker * workerCount * 1000000000L) / elapsed + " ops/sec,  per_thread_latency=" +
+//            elapsed / samplesPerWorker + " nanos/op,  avg_arrival=" +
+//            elapsed / (samplesPerWorker * workerCount) + " nanos/op")
         }
       }
     })

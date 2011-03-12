@@ -65,6 +65,6 @@ object Test {
     if (null != failure)
       throw failure
     val elapsed = System.currentTimeMillis - begin
-    println("writeSkew(" + (2 * incrCount) + "): " + elapsed + " millis total")
+    //println("writeSkew(" + (2 * incrCount) + "): " + elapsed + " millis total")
   }
 }

@@ -504,7 +504,7 @@ object Test {
         for (t <- threads) t.join()
         val elapsed = System.currentTimeMillis - begin
 
-        println("TMap: contended: " + numThreads + " threads, total throughput was " + (elapsed / numThreads) + " nanos/op")
+        //println("TMap: contended: " + numThreads + " threads, total throughput was " + (elapsed / numThreads) + " nanos/op")
       }
     }
 

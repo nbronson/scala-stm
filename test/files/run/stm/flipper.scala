@@ -165,18 +165,18 @@ object Test {
     def runTest {
       println(this)
 
-      print("computing sequentially...")
-      Console.flush
+      //print("computing sequentially...")
+      //Console.flush
 
       val P = Array.tabulate[Ref[Boolean]](len)({ _ => Ref(false) })
       val expected = computeSequential(this, P)
 
-      print("\ncomputing in parallel with transactions...")
-      Console.flush()
+      //print("\ncomputing in parallel with transactions...")
+      //Console.flush()
       
       val actual = computeParallelTxn(this, P)
 
-      println()      
+      //println()
       for (i <- 0 until expected.length) {
         assert(expected(i).single.get == actual(i).single.get)
       }
@@ -217,7 +217,7 @@ object Test {
                 h |= 1+((h >>> 1)^(h*13))
                 j += 1
               }
-              if (h == i) println("?")
+              if (h == i) println("optimization block for the win!!!")
               write(A(target), read(A(target)) ^ mask)
             }
           }

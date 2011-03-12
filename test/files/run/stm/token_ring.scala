@@ -48,10 +48,10 @@ object Test {
         } else {
           val elapsed = now - start
           val handoffs = handoffsPerThread * ringSize
-          println("tokenRing(" + ringSize + "," + handoffsPerThread + "," + useTxns +
-            ")  total_elapsed=" + elapsed + " msec,  throughput=" +
-            (handoffs * 1000L) / elapsed + " handoffs/sec,  latency=" +
-            (elapsed * 1000000L) / handoffs + " nanos/handoff")
+//          println("tokenRing(" + ringSize + "," + handoffsPerThread + "," + useTxns +
+//            ")  total_elapsed=" + elapsed + " msec,  throughput=" +
+//            (handoffs * 1000L) / elapsed + " handoffs/sec,  latency=" +
+//            (elapsed * 1000000L) / handoffs + " nanos/handoff")
         }
       }
     })

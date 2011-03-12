@@ -56,7 +56,7 @@ object Test {
       assert(!x.single.tryAwait(250)( _ == 0 ))
       val elapsed = System.currentTimeMillis - t0
       assert(elapsed >= 250)
-      println("tryAwait(.., 250) took " + elapsed + " millis")
+      //println("tryAwait(.., 250) took " + elapsed + " millis")
     }
 
     test("tryAwait in atomic is conservative") {
@@ -66,7 +66,7 @@ object Test {
       assert(!f)
       val elapsed = System.currentTimeMillis - t0
       assert(elapsed >= 250)
-      println("tryAwait(.., 250) inside atomic took " + elapsed + " millis")
+      //println("tryAwait(.., 250) inside atomic took " + elapsed + " millis")
     }
 
     test("retryFor is conservative") {
@@ -79,7 +79,7 @@ object Test {
       assert(s == "timeout")
       val elapsed = System.currentTimeMillis - t0
       assert(elapsed >= 250)
-      println("retryFor(250) took " + elapsed + " millis")
+      //println("retryFor(250) took " + elapsed + " millis")
     }
 
     test("retryFor earliest is first") {
@@ -192,7 +192,7 @@ object Test {
         buf += 'c'
       }
       val elapsed = System.currentTimeMillis - begin
-      println("late start retryFor(200) inside atomic took " + elapsed + " millis")
+      //println("late start retryFor(200) inside atomic took " + elapsed + " millis")
       assert(elapsed >= 200 && elapsed < 300)
       assert(buf.toString == "aababc")
     }
@@ -210,7 +210,7 @@ object Test {
         buf += 'c'
       }
       val elapsed = System.currentTimeMillis - begin
-      println("expired(200) start retryFor(100) inside atomic took " + elapsed + " millis")
+      //println("expired(200) start retryFor(100) inside atomic took " + elapsed + " millis")
       assert(elapsed >= 200 && elapsed < 300)
       assert(buf.toString == "aabc")
     }
@@ -219,7 +219,7 @@ object Test {
       val begin = System.currentTimeMillis
       atomic { implicit txn => retryFor(100) }
       val elapsed = System.currentTimeMillis - begin
-      println("retryFor(100) as sleep took " + elapsed + " millis")
+      //println("retryFor(100) as sleep took " + elapsed + " millis")
       assert(elapsed >= 100 && elapsed < 200)
     }
 
@@ -425,7 +425,7 @@ object Test {
           }
         }
         val elapsed = System.currentTimeMillis - t0
-        println(elapsed)
+        //println(elapsed)
         assert(elapsed >= 100 && elapsed < 150)
       } finally {
         TxnExecutor.transformDefault( _ => orig )
