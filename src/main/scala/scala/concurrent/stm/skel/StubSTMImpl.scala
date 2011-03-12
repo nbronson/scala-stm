@@ -6,7 +6,7 @@ package skel
 import java.lang.Throwable
 import scala.collection.mutable.Builder
 
-private[stm] class StubSTMImpl extends impl.STMImpl {
+class StubSTMImpl extends impl.STMImpl {
 
   //////// RefFactory
 
