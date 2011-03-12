@@ -16,6 +16,9 @@
       <sourceFolder url="file://$MODULE_DIR$/scala" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../test/scala" isTestSource="true" />
     </content>
+    <content url="file://$MODULE_DIR$/../../test/files/run/stm">
+      <sourceFolder url="file://$MODULE_DIR$/../../test/files/run/stm" isTestSource="true" />
+    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="ScalaTest" level="project" />
