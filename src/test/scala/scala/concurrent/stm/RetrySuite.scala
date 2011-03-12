@@ -163,7 +163,7 @@ class RetrySuite extends FunSuite {
     } orAtomic { implicit txn =>
       if (x() == 0) retry
     }
-    assert(buf.result === "aababcdabcdeabcdef")
+    assert(buf.toString === "aababcdabcdeabcdef")
   }
 
   test("late start retryFor") {
@@ -181,7 +181,7 @@ class RetrySuite extends FunSuite {
     val elapsed = System.currentTimeMillis - begin
     println("late start retryFor(200) inside atomic took " + elapsed + " millis")
     assert(elapsed >= 200 && elapsed < 300)
-    assert(buf.result === "aababc")
+    assert(buf.toString === "aababc")
   }
 
   test("expired start retryFor") {
@@ -199,7 +199,7 @@ class RetrySuite extends FunSuite {
     val elapsed = System.currentTimeMillis - begin
     println("expired(200) start retryFor(100) inside atomic took " + elapsed + " millis")
     assert(elapsed >= 200 && elapsed < 300)
-    assert(buf.result === "aabc")
+    assert(buf.toString === "aabc")
   }
 
   test("retryFor as sleep") {
