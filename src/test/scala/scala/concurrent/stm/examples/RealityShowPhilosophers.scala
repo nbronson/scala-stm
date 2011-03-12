@@ -39,7 +39,7 @@ object RealityShowPhilosophers {
     def done = mealsEaten.single() == meals
 
     override def toString = {
-      format("%s is %5.2f%% done", name, mealsEaten.single() * 100.0 / meals)
+      "%s is %5.2f%% done".format(name, mealsEaten.single() * 100.0 / meals)
     }
   }
 
@@ -59,7 +59,7 @@ object RealityShowPhilosophers {
     def image: (String, Boolean) = atomic { implicit txn =>
       val buf = new StringBuilder
       for (i <- 0 until forks.length)
-        buf ++= format("fork %d is owned by %s\n", i, forks(i).owner.single())
+        buf ++= "fork %d is owned by %s\n".format(i, forks(i).owner.single())
       var done = true
       for (p <- philosophers) {
         buf ++= p.toString += '\n'
