@@ -1,0 +1,21 @@
+running txn_local default initial value
+running txn_local initialize with init
+running txn_local initialize with initialValue
+running txn_local initialValue overrides init
+running txn_local use in afterCompletion handler
+running txn_local partial rollback restores previous value
+running txn_local partial rollback triggers new initialization
+running txn_local all RefLike operations
+running txn_local first init in whilePreparing handler
+running txn_local first initialValue in beforeCommit handler
+running txn_local first initialValue in whilePreparing handler
+running txn_local first initialValue in whileCommitting handler
+running txn_local auto-register beforeCommit
+running txn_local auto-register whilePreparing
+running txn_local auto-register whileCommitting
+running txn_local auto-register afterCommit
+running txn_local auto-register afterRollback
+running txn_local auto-register afterCompletion - commit
+running txn_local auto-register afterCompletion - rollback
+running txn_local auto-register everything
+running txn_local isolation

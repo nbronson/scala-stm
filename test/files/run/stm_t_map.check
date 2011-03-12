@@ -1,0 +1,19 @@
+running t_map number equality trickiness
+running t_map character equality trickiness
+running t_map correct despite poor hash function
+running t_map clone captures correct atomic writes
+running t_map clone doesn't include discarded writes
+running t_map clone is transactional
+running t_map random sequential
+running t_map more random sequential
+running t_map tmap clear
+running t_map view clear
+running t_map null key
+running t_map null value
+running t_map view builder magic
+running t_map iterator crossing a txn boundary
+running t_map iterator after many removes
+running t_map view snapshot foreach
+running t_map txn snapshot foreach
+running t_map contention
+running t_map atomicity violation

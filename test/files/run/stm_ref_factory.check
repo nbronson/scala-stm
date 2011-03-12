@@ -1,0 +1,5 @@
+running ref_factory signature specialization
+running ref_factory missing manifest TestRef.apply
+running ref_factory dynamic specialization
+running ref_factory default value specialization
+running ref_factory missing manifest TestRef.make

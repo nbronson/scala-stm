@@ -1,0 +1,6 @@
+running simple_random nextInt
+running simple_random nextInt(n) in range
+running simple_random clone
+running simple_random seeded
+running simple_random global SimpleRandom distribution
+running simple_random local SimpleRandom distribution

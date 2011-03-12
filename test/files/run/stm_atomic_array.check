@@ -1,0 +1,11 @@
+running atomic_array Unit
+running atomic_array Boolean
+running atomic_array Byte
+running atomic_array Short
+running atomic_array Char
+running atomic_array Int
+running atomic_array Float
+running atomic_array Long
+running atomic_array Double
+running atomic_array AnyRef
+running atomic_array Any

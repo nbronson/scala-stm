@@ -1,0 +1,6 @@
+running contention small 1000 refs, 80 % read, 4 threads, 8 ops/txn, nested=false
+running contention small 1000 refs, 80 % read, 4 threads, 8 ops/txn, nested=true
+running contention small 1000 refs, 80 % read, 4 threads, 64 ops/txn, nested=false
+running contention small 1000 refs, 80 % read, 4 threads, 64 ops/txn, nested=true
+running contention starving elder small
+running contention colliding trySet

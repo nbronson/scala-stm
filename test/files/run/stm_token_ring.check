@@ -1,0 +1,3 @@
+running token_ring small non-txn threesome
+running token_ring small txn threesome
+running token_ring small txn threesome reading via write

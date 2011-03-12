@@ -1,0 +1,16 @@
+running t_set number equality trickiness
+running t_set character equality trickiness
+running t_set correct despite poor hash function
+running t_set clone captures correct atomic writes
+running t_set clone doesn't include discarded writes
+running t_set clone is transactional
+running t_set random sequential
+running t_set more random sequential
+running t_set tset clear
+running t_set view clear
+running t_set null entry
+running t_set view builder magic
+running t_set iterator crossing a txn boundary
+running t_set iterator after many removes
+running t_set view snapshot foreach
+running t_set txn snapshot foreach

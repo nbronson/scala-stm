@@ -1,0 +1,31 @@
+running txn empty transaction
+running txn atomic function
+running txn large transaction
+running txn duplicate view with old access
+running txn failure atomicity
+running txn non-local return
+running txn strings
+running txn basic retry
+running txn nested retry
+running txn simple orAtomic
+running txn single atomic.oneOf
+running txn atomic.oneOf
+running txn nested atomic.oneOf
+running txn alternative atomic.oneOf
+running txn orAtomic w/ exception
+running txn Atomic.orAtomic
+running txn simple nesting
+running txn partial rollback
+running txn partial rollback of transform
+running txn partial rollback due to invalid read
+running txn View in txn
+running txn currentLevel during nesting
+running txn persistent rollback
+running txn persistent rollback via exception
+running txn many multi-level reads
+running txn partial rollback of invalid read
+running txn await
+running txn remote cancel
+running txn remote cancel of root
+running txn remote cancel of child
+running txn toString

@@ -1,0 +1,9 @@
+running relaxed_validation self-write vs getWith
+running relaxed_validation self-write vs getWith with interference
+running relaxed_validation getWith multiple revalidations
+running relaxed_validation self-write vs failing transformIfDefined
+running relaxed_validation self-write vs failing transformIfDefined with interference
+running relaxed_validation self-write vs relaxedGet
+running relaxed_validation self-write vs relaxedGet with interference
+running relaxed_validation relaxedGet multiple accepting revalidations
+running relaxed_validation relaxedGet multiple ending with equality check

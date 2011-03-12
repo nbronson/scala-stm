@@ -1,0 +1,82 @@
+running isolated_ref primitive factory and ClassManifest generic produce same type
+running isolated_ref get and set
+running isolated_ref get and trySet
+running isolated_ref compareAndSet
+running isolated_ref swap
+running isolated_ref set + swap
+running isolated_ref transform
+running isolated_ref getAndTransform
+running isolated_ref transformAndGet
+running isolated_ref transformIfDefined
+running isolated_ref += 1
+running isolated_ref -= -1
+running isolated_ref *= 2
+running isolated_ref getWith
+running isolated_ref write ; getWith
+running isolated_ref getWith ; write
+running isolated_ref relaxedGet
+running isolated_ref write ; relaxedGet
+running isolated_ref relaxedGet ; write
+running isolated_ref initially true await
+running isolated_ref initially true tryAwait
+running isolated_ref false tryAwait with a zero timeout
+running isolated_ref excepting transform
+running isolated_ref excepting transformIfDefined
+running isolated_ref .equals not involved in get and set
+running isolated_ref excepting compareAndSet
+running isolated_ref compareAndSetIdentity
+running isolated_ref -= -1 long
+running isolated_ref /=
+running isolated_ref /= double
+running isolated_ref /= float
+running isolated_ref BigInt ops
+running isolated_ref BigDecimal ops
+running isolated_ref Boolean simple get+set
+running isolated_ref Boolean Ref equality
+running isolated_ref Boolean TArray Ref equality
+running isolated_ref Boolean TArray Ref inequality between arrays
+running isolated_ref Byte simple get+set
+running isolated_ref Byte Ref equality
+running isolated_ref Byte TArray Ref equality
+running isolated_ref Byte TArray Ref inequality between arrays
+running isolated_ref Short simple get+set
+running isolated_ref Short Ref equality
+running isolated_ref Short TArray Ref equality
+running isolated_ref Short TArray Ref inequality between arrays
+running isolated_ref Character simple get+set
+running isolated_ref Character Ref equality
+running isolated_ref Character TArray Ref equality
+running isolated_ref Character TArray Ref inequality between arrays
+running isolated_ref Integer simple get+set
+running isolated_ref Integer Ref equality
+running isolated_ref Integer TArray Ref equality
+running isolated_ref Integer TArray Ref inequality between arrays
+running isolated_ref Float simple get+set
+running isolated_ref Float Ref equality
+running isolated_ref Float TArray Ref equality
+running isolated_ref Float TArray Ref inequality between arrays
+running isolated_ref Long simple get+set
+running isolated_ref Long Ref equality
+running isolated_ref Long TArray Ref equality
+running isolated_ref Long TArray Ref inequality between arrays
+running isolated_ref Double simple get+set
+running isolated_ref Double Ref equality
+running isolated_ref Double TArray Ref equality
+running isolated_ref Double TArray Ref inequality between arrays
+running isolated_ref BoxedUnit simple get+set
+running isolated_ref BoxedUnit Ref equality
+running isolated_ref BoxedUnit TArray Ref equality
+running isolated_ref BoxedUnit TArray Ref inequality between arrays
+running isolated_ref String simple get+set
+running isolated_ref String Ref equality
+running isolated_ref String TArray Ref equality
+running isolated_ref String TArray Ref inequality between arrays
+running isolated_ref TArray Ref inequality between indices
+running isolated_ref TArray index checking
+running isolated_ref TArray length
+running isolated_ref proxy Ref equality
+running isolated_ref TxnExecutor.compareAndSet
+running isolated_ref TxnExecutor.compareAndSet non-txn exhaustive
+running isolated_ref TxnExecutor.compareAndSet txn exhaustive
+running isolated_ref TxnExecutor.compareAndSetIdentity non-txn exhaustive
+running isolated_ref TxnExecutor.compareAndSetIdentity txn exhaustive

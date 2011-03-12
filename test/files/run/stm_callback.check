@@ -1,0 +1,31 @@
+running callback many callbacks
+running callback beforeCommit upgrade on read-only commit
+running callback retry in beforeCommit
+running callback exception in beforeCommit
+running callback surviving beforeCommit
+running callback afterRollback on commit
+running callback afterRollback on rollback
+running callback afterCommit runs a txn
+running callback afterCommit doesn't access txn
+running callback beforeCommit during beforeCommit
+running callback beforeCommit termination
+running callback manual optimistic retry
+running callback manual optimistic retry during beforeCommit
+running callback whilePreparing
+running callback whilePreparing throws exception
+running callback whileCommitting
+running callback whileCommitting without any accesses
+running callback accepting external decider
+running callback valid duplicate external decider
+running callback invalid duplicate external decider
+running callback transient reject external decider
+running callback nested external deciders
+running callback external decider throws exception
+running callback rethrown exception from whileCommitting handler
+running callback swallowed exception from whileCommitting handler
+running callback rethrown exception from afterCommit handler
+running callback swallowed exception from afterCommit handler
+running callback rethrown exception from afterRollback handler
+running callback swallowed exception from afterRollback handler
+running callback rethrow afterRollback exception cancels retry
+running callback UserException as control flow

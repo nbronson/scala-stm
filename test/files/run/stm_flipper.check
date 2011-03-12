@@ -1,0 +1,10 @@
+running flipper small flipper test
+Config(3,50,50,4,2048,0.5,0,<function1>,<function2>)
+running flipper small flipper test using getWith
+Config(3,50,50,4,2048,0.5,0,<function1>,<function2>)
+running flipper small flipper test using relaxedGet
+Config(3,50,50,4,2048,0.5,0,<function1>,<function2>)
+running flipper small flipper test reading using transformIfDefined
+Config(3,50,50,4,2048,0.5,0,<function1>,<function2>)
+running flipper small flipper test w/TArray
+Config(3,50,50,4,2048,0.5,0,<function1>,<function2>)
