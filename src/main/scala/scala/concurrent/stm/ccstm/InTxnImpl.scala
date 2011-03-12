@@ -520,7 +520,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   @throws(classOf[InterruptedException])
   private def topLevelBegin(child: TxnLevelImpl) {
     if (_slot < 0) {
-      _priority = skel.FastSimpleRandom.nextInt()
+      _priority = skel.SimpleRandom.nextInt()
       _slot = slotManager.assign(child, ~_slot)
       _readVersion = freshReadVersion
     }

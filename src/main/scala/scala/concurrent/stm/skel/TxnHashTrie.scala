@@ -436,7 +436,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   private var contentionEstimate = 0
 
   private def recordNoContention() {
-    if (FastSimpleRandom.nextInt(32) == 0) {
+    if (SimpleRandom.nextInt(32) == 0) {
       val e = contentionEstimate
       contentionEstimate = e - (e >> 4) // this is 15/16, applied every 32nd time, so about 99.8%
     }

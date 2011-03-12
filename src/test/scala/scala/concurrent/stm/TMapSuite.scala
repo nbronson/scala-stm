@@ -5,7 +5,7 @@ package scala.concurrent.stm
 import org.scalatest.FunSuite
 import scala.util.Random
 import scala.collection.mutable
-import skel.FastSimpleRandom
+import skel.SimpleRandom
 
 class TMapSuite extends FunSuite {
 
@@ -447,7 +447,7 @@ class TMapSuite extends FunSuite {
       val m = TMap.empty[Int, String]
       val threads = for (t <- 0 until numThreads) yield new Thread {
         override def run {
-          var rand = new FastSimpleRandom(t)
+          var rand = new SimpleRandom(t)
           var i = 0
           while (i < 1000000) {
             if (rand.nextInt(2) == 0) {
@@ -504,7 +504,7 @@ class TMapSuite extends FunSuite {
     val threads = Array.tabulate(2) { _ =>
       new Thread {
         override def run {
-          val r = new FastSimpleRandom
+          val r = new SimpleRandom
           for (i <- 0 until 100000) {
             if (r.nextInt(2) == 0) {
               if (m(0) != "okay") {
@@ -585,7 +585,7 @@ class TMapSuite extends FunSuite {
 
   test("sequential non-txn put/remove mix performance", Slow) {
     val values = (0 until 37) map { "x" + _ }
-    val rand = new skel.FastSimpleRandom
+    val rand = new skel.SimpleRandom
     for (pass <- 0 until 4) {
       for (size <- List(10, 100, 1000, 100000)) {
         val m = TMap(kvRange(0, size): _*).single
@@ -631,7 +631,7 @@ class TMapSuite extends FunSuite {
 
   test("sequential txn put/remove mix performance", Slow) {
     val values = (0 until 37) map { "x" + _ }
-    val rand = new skel.FastSimpleRandom
+    val rand = new skel.SimpleRandom
     for (txnSize <- List(2, 10, 1000)) {
       for (pass <- 0 until 2) {
         for (size <- List(10, 100, 1000, 100000)) {

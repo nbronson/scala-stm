@@ -21,7 +21,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
   assert(range >= reservedSlots + 16)
 
   private def nextSlot(tries: Int) = {
-    ((skel.FastSimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
+    ((skel.SimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
   }
 
   /** CAS on the entries manages the actual acquisition.  Entries are either

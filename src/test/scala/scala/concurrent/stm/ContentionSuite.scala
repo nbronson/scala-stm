@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
-import skel.FastSimpleRandom
+import skel.SimpleRandom
 
 class ContentionSuite extends FunSuite {
   // probability that two txns of size M touch the same element out of N
@@ -43,10 +43,10 @@ class ContentionSuite extends FunSuite {
 
     val threads = for (t <- 0 until numThreads) yield new Thread {
       override def run {
-        var rand = new FastSimpleRandom(hashCode)
+        var rand = new SimpleRandom(hashCode)
         var i = 0
         while (i < numReads + numWrites) {
-          val body: (InTxn => FastSimpleRandom) = { implicit txn =>
+          val body: (InTxn => SimpleRandom) = { implicit txn =>
             val r = rand.clone
             var j = 0
             while (j < txnSize) {
@@ -98,7 +98,7 @@ class ContentionSuite extends FunSuite {
       override def run {
         writersStarted.single += 1
 
-        val rand = new skel.FastSimpleRandom
+        val rand = new skel.SimpleRandom
         while (true) {
           val a = refs(rand.nextInt(refs.length))
           val b = refs(rand.nextInt(refs.length))

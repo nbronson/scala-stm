@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.{Tag, FunSuite}
-import skel.FastSimpleRandom
+import skel.SimpleRandom
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Verifies that blocking STM operations can be interrupted. */
@@ -69,7 +69,7 @@ class InterruptSuite extends FunSuite {
                 case x: InterruptedException => nonTxnInterrupts.incrementAndGet
               }
             }
-            threads(FastSimpleRandom.nextInt(threads.length)).interrupt
+            threads(SimpleRandom.nextInt(threads.length)).interrupt
           }
         } catch {
           case x => failure = x

@@ -5,16 +5,16 @@ package scala.concurrent.stm.skel
 
 /** A random number generator that focuses on speed and lack of inter-thread
  *  interference, rather than on the quality of the numbers returned.  The
- *  `object FastSimpleRandom` is striped internally to reduce
+ *  `object SimpleRandom` is striped internally to reduce
  *  contention when accessed from multiple threads.  The `class
- *  FastSimpleRandom` should only be used by a single thread.
+ *  SimpleRandom` should only be used by a single thread.
  *  <p>
  *  The constants in this 64-bit linear congruential random number generator
  *  are from http://nuclear.llnl.gov/CNP/rng/rngman/node4.html.
  *
  *  @author Nathan Bronson
  */
-private[stm] object FastSimpleRandom {
+object SimpleRandom {
   // 64 byte cache lines are typical, so there are 8 slots per cache line.
   // This means that the probability that any two threads have false sharing is
   // p = 8 / #slots.  If there are n processors, each of which is running 1
@@ -83,18 +83,19 @@ private[stm] object FastSimpleRandom {
   }
 }
 
-/** A single-threaded random number generator that uses the same algorithm as
- *  the concurrent `object FastSimpleRandom`.
+/** An clonable unsynchronized random number generator that uses the same
+ *  algorithm as the concurrent `object SimpleRandom`.  The caller must ensure
+ *  that each `SimpleRandom` instance is used from only one thread at a time.
  *
  *  @author Nathan Bronson
  */
-private[stm] final class FastSimpleRandom private (private var _state: Long, dummy: Boolean) {
-  import FastSimpleRandom._
+class SimpleRandom private (private var _state: Long, dummy: Boolean) {
+  import SimpleRandom._
 
-  def this(seed: Int) = this(FastSimpleRandom.step(FastSimpleRandom.step(seed)), false)
+  def this(seed: Int) = this(SimpleRandom.step(SimpleRandom.step(seed)), false)
   def this() = this(System.identityHashCode(Thread.currentThread))
 
-  override def clone = new FastSimpleRandom(_state, false)
+  override def clone = new SimpleRandom(_state, false)
 
   /** Returns a random value chosen from a uniform distribution of all valid
    *  `Int`s.
