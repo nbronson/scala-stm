@@ -1,4 +1,13 @@
-ScalaSTM - 0.3 RELEASE NOTES
+ScalaSTM - 1.0-SNAPSHOT RELEASE NOTES
+
+Changes between 0.3 and 1.0-SNAPSHOT:
+
+* None yet
+
+Snapshot releases deployed to the scala-tools.org repository are tested
+and functional, but may have changing APIs.
+
+----
 
 Changes between 0.2 and 0.3:
 
