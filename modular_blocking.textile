@@ -60,7 +60,7 @@ For example, to wait until @x@ is greater than 10, just write @if (x() <= 10) re
 
 This sounds like busy-waiting, so what about efficiency?  It would be very wasteful to roll back and reexecute continuously.  Fortunately, there is no point in trying again until one of the accessed @Ref@-s has changed, and the STM knows which @Ref@-s were accessed.  Internally @retry@ is implemented using blocking constructs, so there is no busy-waiting.
 
-Note that @retry@'s return type is @Nothing@, which indicates that it does not return normally.
+Note that @retry@ has a return type of @Nothing@, which indicates that it does not return normally.
 
 h2(#alternatives).  Alternatives
 
@@ -89,7 +89,7 @@ val msg = atomic { implicit txn =>
 
 h2(#timeouts). Timeouts
 
-*Timeouts are included only in 0.3-SNAPSHOT, and we're still working out the API.  The following is subject to change.*  As always, we'd like your feedback.
+*Composable timeouts are an innovative feature of ScalaSTM, so we're especially interested in your constructive criticism.*
 
 There are several reasons why you might want @retry@ to time out.  Perhaps error logging or handling code should be invoked; perhaps the waiting thread should shut down if it doesn't receive any work for a while; or perhaps you are using the STM to implement a higher-level interface that includes timeouts in its specification.
 
@@ -134,8 +134,8 @@ val instance = atomic { implicit txn =>
 
 h2(#await). Waiting for Views
 
-*@await@ and @tryAwait@ are part of 0.3-SNAPSHOT.  In version 0.2 the functionality of @await@ is called @retryUntil@, and there is no equivalent to @tryAwait@.*
-
 If the condition you're waiting only involves a single @Ref@ you can also block using @Ref.View.await(pred)@.  This method blocks until the predicate becomes true, then returns.  @Ref.View.tryAwait(duration)(pred)@ returns true if the predicate became true within the specified duration, otherwise it returns false. 
+
+@Ref@ @await@ and @tryAwait@ are part of 0.3.  In version 0.2 the functionality of @await@ was called @retryUntil@, and there was no equivalent to @tryAwait@.
 
 fn1. ScalaSTM's @orAtomic@ is referred to as @orElse@ in the other STMs that support it.  We changed the name to avoid confusion with @Option.orElse@.
