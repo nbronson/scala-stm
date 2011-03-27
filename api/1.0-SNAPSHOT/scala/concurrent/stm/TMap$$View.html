@@ -1,0 +1,4124 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>scala.concurrent.stm.TMap.View</title>
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link type="text/css" media="screen" rel="stylesheet" href="../../../lib/template.css" />
+      <script type="text/javascript" src="../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+    
+        </head>
+        <body onload="windowTitle();" class="type">
+
+      <p id="owner"><a name="scala" class="extype" href="../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="package.html">stm</a>.<a name="scala.concurrent.stm.TMap" class="extype" href="TMap$.html">TMap</a></p>
+
+      <div id="definition">
+        <img src="../../../lib/trait_big.png" />
+        <h1>View</h1>
+      </div>
+
+      <h4 class="signature" id="signature">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">View</span>
+        <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
+        
+        <span class="result"> extends <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B] with <span name="scala.collection.mutable.MapLike" class="extype">MapLike</span>[A, B, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+          <div class="shortcomment cmt"><p>A <code>Map</code> that provides atomic execution of all of its methods.</p></div>
+          <div class="fullcomment" id="comment"><div class="comment cmt"><p>A <code>Map</code> that provides atomic execution of all of its methods.</p></div><div class="block">
+            go to: <a href="TMap$$View$.html">companion</a>
+          </div><div class="block">
+            linear super types: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B], <span name="scala.collection.mutable.MapLike" class="extype">MapLike</span>[A, B, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.collection.mutable.Cloneable" class="extype">Cloneable</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.collection.generic.Shrinkable" class="extype">Shrinkable</span>[A], <span name="scala.collection.mutable.Builder" class="extype">Builder</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.collection.generic.Growable" class="extype">Growable</span>[(A, B)], <span name="scala.collection.Map" class="extype">Map</span>[A, B], <span name="scala.collection.MapLike" class="extype">MapLike</span>[A, B, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.collection.generic.Subtractable" class="extype">Subtractable</span>[A, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.PartialFunction" class="extype">PartialFunction</span>[A, B], (A) ⇒ B, <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[(A, B)], <span name="scala.collection.Iterable" class="extype">Iterable</span>[(A, B)], <span name="scala.collection.IterableLike" class="extype">IterableLike</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.Equals" class="extype">Equals</span>, <span name="scala.collection.mutable.Traversable" class="extype">Traversable</span>[(A, B)], <span name="scala.Mutable" class="extype">Mutable</span>, <span name="scala.collection.Traversable" class="extype">Traversable</span>[(A, B)], <span name="scala.collection.generic.GenericTraversableTemplate" class="extype">GenericTraversableTemplate</span>[(A, B), <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>], <span name="scala.collection.TraversableLike" class="extype">TraversableLike</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.collection.Parallelizable" class="extype">Parallelizable</span>[(A, B), <span name="scala.collection.parallel.mutable.ParMap" class="extype">ParMap</span>[A, B]], <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[(A, B)], <span name="scala.collection.generic.FilterMonadic" class="extype">FilterMonadic</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], <span name="scala.collection.generic.HasNewBuilder" class="extype">HasNewBuilder</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]], AnyRef, <span name="scala.Any" class="extype">Any</span>
+          </div>
+            
+            
+            
+            
+          </div>
+        
+
+      <div id="template">
+
+        <div id="mbrsel">
+          <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+          <div id="order">
+                <span class="filtertype">Ordering</span>
+                <ol><li class="alpha in">Alphabetic</li><li class="inherit out">By inheritance</li></ol>
+              </div>
+          <div id="ancestors">
+                <span class="filtertype">Inherited</span>
+                <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
+                <ol id="linearization"><li name="scala.concurrent.stm.TMap.View" class="in">View</li><li name="scala.collection.mutable.Map" class="in">Map</li><li name="scala.collection.mutable.MapLike" class="in">MapLike</li><li name="scala.collection.mutable.Cloneable" class="in">Cloneable</li><li name="scala.collection.generic.Shrinkable" class="in">Shrinkable</li><li name="scala.collection.mutable.Builder" class="in">Builder</li><li name="scala.collection.generic.Growable" class="in">Growable</li><li name="scala.collection.Map" class="in">Map</li><li name="scala.collection.MapLike" class="in">MapLike</li><li name="scala.collection.generic.Subtractable" class="in">Subtractable</li><li name="scala.PartialFunction" class="in">PartialFunction</li><li name="scala.Function1" class="in">Function1</li><li name="scala.collection.mutable.Iterable" class="in">Iterable</li><li name="scala.collection.Iterable" class="in">Iterable</li><li name="scala.collection.IterableLike" class="in">IterableLike</li><li name="scala.Equals" class="in">Equals</li><li name="scala.collection.mutable.Traversable" class="in">Traversable</li><li name="scala.Mutable" class="in">Mutable</li><li name="scala.collection.Traversable" class="in">Traversable</li><li name="scala.collection.generic.GenericTraversableTemplate" class="in">GenericTraversableTemplate</li><li name="scala.collection.TraversableLike" class="in">TraversableLike</li><li name="scala.collection.Parallelizable" class="in">Parallelizable</li><li name="scala.collection.TraversableOnce" class="in">TraversableOnce</li><li name="scala.collection.generic.FilterMonadic" class="in">FilterMonadic</li><li name="scala.collection.generic.HasNewBuilder" class="in">HasNewBuilder</li><li name="scala.AnyRef" class="in">AnyRef</li><li name="scala.Any" class="in">Any</li></ol>
+              </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in">Public</li><li class="all out">All</li></ol>
+            </div>
+          <div id="impl">
+              <span class="filtertype">Impl.</span>
+              <ol><li class="concrete in">Concrete</li><li class="abstract in">Abstract</li></ol>
+            </div>
+        </div>
+
+        
+
+        <div class="types members" id="types">
+              <h3>Type Members</h3>
+              <ol><li visbl="prt" name="scala.collection.TraversableLike#Self" data-isabs="false">
+      <a id="Self:Self"></a>
+      <h4 class="signature">
+      <span class="kind">type</span>
+      <span class="symbol">
+        <span class="name">Self</span>
+        
+        
+        <span class="result"> = <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected 
+        </div><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li></ol>
+            </div>
+
+        <div class="values members" id="values">
+              <h3>Value Members</h3>
+              <ol><li visbl="pub" name="scala.AnyRef#!=" data-isabs="false">
+      <a id="!=(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">!=</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : AnyRef
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.Any#!=" data-isabs="false">
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">!=</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : <span name="scala.Any" class="extype">Any</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt"><code>o != arg0</code> is the same as <code>!(o == (arg0))</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p><code>o != arg0</code> is the same as <code>!(o == (arg0))</code>.
+</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for dis-equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>false</code> if the receiver object is equivalent to the argument; <code>true</code> otherwise.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.AnyRef###" data-isabs="false">
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">##</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef → Any
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#$asInstanceOf" data-isabs="false">
+      <a id="$asInstanceOf[T0]():T0"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">$asInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">()</span>
+        <span class="result">: T0</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#$isInstanceOf" data-isabs="false">
+      <a id="$isInstanceOf[T0]():Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">$isInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#+" data-isabs="false">
+      <a id="+[B1&gt;:B]((A, B1),(A, B1),(A, B1)*):Map[A, B1]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+</span>
+        <span class="tparams">[<span name="B1">B1 &gt;: B</span>]</span>
+        <span class="params">(<span name="elem1">
+                  elem1
+                  : (A, B1)
+                  
+                </span>, <span name="elem2">
+                  elem2
+                  : (A, B1)
+                  
+                </span>, <span name="elems">
+                  elems
+                  : (A, B1)*
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B1]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#+" data-isabs="false">
+      <a id="+[B1&gt;:B]((A, B1)):Map[A, B1]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+</span>
+        <span class="tparams">[<span name="B1">B1 &gt;: B</span>]</span>
+        <span class="params">(<span name="kv">
+                  kv
+                  : (A, B1)
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B1]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#++" data-isabs="false">
+      <a id="++[B1&gt;:B](TraversableOnce[(A, B1)]):Map[A, B1]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">++</span>
+        <span class="tparams">[<span name="B1">B1 &gt;: B</span>]</span>
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[(A, B1)]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B1]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#++" data-isabs="false">
+      <a id="++[B&gt;:(A, B), That](TraversableOnce[B])(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">++</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[B]
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#++:" data-isabs="false">
+      <a id="++:[B&gt;:(A, B), That](Traversable[B])(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">++:</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.collection.Traversable" class="extype">Traversable</span>[B]
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#++:" data-isabs="false">
+      <a id="++:[B&gt;:(A, B), That](TraversableOnce[B])(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">++:</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[B]
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.Growable#++=" data-isabs="false">
+      <a id="++=(TraversableOnce[(A, B)]):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">++=</span>
+        
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[(A, B)]
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Growable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.Growable#+=" data-isabs="false">
+      <a id="+=((A, B),(A, B),(A, B)*):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+=</span>
+        
+        <span class="params">(<span name="elem1">
+                  elem1
+                  : (A, B)
+                  
+                </span>, <span name="elem2">
+                  elem2
+                  : (A, B)
+                  
+                </span>, <span name="elems">
+                  elems
+                  : (A, B)*
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Growable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#+=" data-isabs="true">
+      <a id="+=((A, B)):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">+=</span>
+        
+        <span class="params">(<span name="kv">
+                  kv
+                  : (A, B)
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: MapLike → Builder → Growable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#-" data-isabs="false">
+      <a id="-(A,A,A*):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-</span>
+        
+        <span class="params">(<span name="elem1">
+                  elem1
+                  : A
+                  
+                </span>, <span name="elem2">
+                  elem2
+                  : A
+                  
+                </span>, <span name="elems">
+                  elems
+                  : A*
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → Subtractable
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#-" data-isabs="false">
+      <a id="-(A):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → MapLike → Subtractable
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#--" data-isabs="false">
+      <a id="--(TraversableOnce[A]):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">--</span>
+        
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[A]
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → Subtractable
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.Shrinkable#--=" data-isabs="false">
+      <a id="--=(TraversableOnce[A]):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">--=</span>
+        
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[A]
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Shrinkable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.Shrinkable#-=" data-isabs="false">
+      <a id="-=(A,A,A*):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-=</span>
+        
+        <span class="params">(<span name="elem1">
+                  elem1
+                  : A
+                  
+                </span>, <span name="elem2">
+                  elem2
+                  : A
+                  
+                </span>, <span name="elems">
+                  elems
+                  : A*
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Shrinkable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#-=" data-isabs="true">
+      <a id="-=(A):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">-=</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: MapLike → Shrinkable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#/:" data-isabs="false">
+      <a id="/:[B](B)((B, (A, B)) ⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">/:</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="z">
+                  z
+                  : B
+                  
+                </span>)</span><span class="params">(<span name="op">
+                  op
+                  : (B, (A, B)) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#:\" data-isabs="false">
+      <a id=":\[B](B)(((A, B), B) ⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">:\</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="z">
+                  z
+                  : B
+                  
+                </span>)</span><span class="params">(<span name="op">
+                  op
+                  : ((A, B), B) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#==" data-isabs="false">
+      <a id="==(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">==</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : AnyRef
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt"><code>o == arg0</code> is the same as <code>if (o eq null) arg0 eq null else o.equals(arg0)</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p><code>o == arg0</code> is the same as <code>if (o eq null) arg0 eq null else o.equals(arg0)</code>.
+</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.Any#==" data-isabs="false">
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">==</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : <span name="scala.Any" class="extype">Any</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt"><code>o == arg0</code> is the same as <code>o.equals(arg0)</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p><code>o == arg0</code> is the same as <code>o.equals(arg0)</code>.
+</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#addString" data-isabs="false">
+      <a id="addString(StringBuilder,String,String,String):StringBuilder"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">addString</span>
+        
+        <span class="params">(<span name="b">
+                  b
+                  : StringBuilder
+                  
+                </span>, <span name="start">
+                  start
+                  : String
+                  
+                </span>, <span name="sep">
+                  sep
+                  : String
+                  
+                </span>, <span name="end">
+                  end
+                  : String
+                  
+                </span>)</span>
+        <span class="result">: StringBuilder</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#addString" data-isabs="false">
+      <a id="addString(StringBuilder):StringBuilder"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">addString</span>
+        
+        <span class="params">(<span name="b">
+                  b
+                  : StringBuilder
+                  
+                </span>)</span>
+        <span class="result">: StringBuilder</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#addString" data-isabs="false">
+      <a id="addString(StringBuilder,String):StringBuilder"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">addString</span>
+        
+        <span class="params">(<span name="b">
+                  b
+                  : StringBuilder
+                  
+                </span>, <span name="sep">
+                  sep
+                  : String
+                  
+                </span>)</span>
+        <span class="result">: StringBuilder</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.PartialFunction#andThen" data-isabs="false">
+      <a id="andThen[C]((B) ⇒ C):PartialFunction[A, C]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">andThen</span>
+        <span class="tparams">[<span name="C">C</span>]</span>
+        <span class="params">(<span name="k">
+                  k
+                  : (B) ⇒ C
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.PartialFunction" class="extype">PartialFunction</span>[A, C]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: PartialFunction → Function1
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#apply" data-isabs="false">
+      <a id="apply(A):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">apply</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → Function1
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.Any#asInstanceOf" data-isabs="false">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        
+        <span class="result">: T0</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This method is used to cast the receiver object to be of type <code>T0</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This method is used to cast the receiver object to be of type <code>T0</code>.</p><p>Note that the success of a cast at runtime is modulo Scala's erasure semantics.  Therefore the expression
+<code>1.asInstanceOf[String]</code> will throw a <code>ClassCastException</code> at runtime, while the expression
+<code>List(1).asInstanceOf[List[String]]</code> will not.  In the latter example, because the type argument is erased as
+part of compilation it is not possible to check whether the contents of the list are of the requested typed.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the receiver object.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#canEqual" data-isabs="false">
+      <a id="canEqual(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">canEqual</span>
+        
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.Any" class="extype">Any</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → Equals
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#clear" data-isabs="false">
+      <a id="clear():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">clear</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → Builder → Growable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#clone" data-isabs="false">
+      <a id="clone():View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">clone</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This method creates and returns a copy of the receiver object.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This method creates and returns a copy of the receiver object.</p><p>The default implementation of the <code>clone</code> method is platform dependent.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a copy of the receiver object.</p></dd></dl><div class="block">
+          definition classes: MapLike → Cloneable → AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#collect" data-isabs="false">
+      <a id="collect[B, That](PartialFunction[(A, B), B])(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">collect</span>
+        <span class="tparams">[<span name="B">B</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="pf">
+                  pf
+                  : <span name="scala.PartialFunction" class="extype">PartialFunction</span>[(A, B), B]
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#collectFirst" data-isabs="false">
+      <a id="collectFirst[B](PartialFunction[(A, B), B]):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">collectFirst</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="pf">
+                  pf
+                  : <span name="scala.PartialFunction" class="extype">PartialFunction</span>[(A, B), B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Iterable#companion" data-isabs="false">
+      <a id="companion:GenericCompanion[Iterable]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">companion</span>
+        
+        
+        <span class="result">: <span name="scala.collection.generic.GenericCompanion" class="extype">GenericCompanion</span>[<span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Iterable → Iterable → Traversable → Traversable → GenericTraversableTemplate
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.Function1#compose" data-isabs="false">
+      <a id="compose[A]((A) ⇒ A):(A) ⇒ B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">compose</span>
+        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="params">(<span name="g">
+                  g
+                  : (A) ⇒ A
+                  
+                </span>)</span>
+        <span class="result">: (A) ⇒ B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Function1
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#contains" data-isabs="false">
+      <a id="contains(A):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">contains</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#copyToArray" data-isabs="false">
+      <a id="copyToArray[B&gt;:(A, B)](Array[B],Int,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">copyToArray</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.Array" class="extype">Array</span>[B]
+                  
+                </span>, <span name="start">
+                  start
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>, <span name="len">
+                  len
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#copyToArray" data-isabs="false">
+      <a id="copyToArray[B&gt;:(A, B)](Array[B]):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">copyToArray</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.Array" class="extype">Array</span>[B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#copyToArray" data-isabs="false">
+      <a id="copyToArray[B&gt;:(A, B)](Array[B],Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">copyToArray</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="xs">
+                  xs
+                  : <span name="scala.Array" class="extype">Array</span>[B]
+                  
+                </span>, <span name="start">
+                  start
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#copyToBuffer" data-isabs="false">
+      <a id="copyToBuffer[B&gt;:(A, B)](Buffer[B]):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">copyToBuffer</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="dest">
+                  dest
+                  : <span name="scala.collection.mutable.Buffer" class="extype">Buffer</span>[B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#count" data-isabs="false">
+      <a id="count(((A, B)) ⇒ Boolean):Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">count</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#default" data-isabs="false">
+      <a id="default(A):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">default</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#drop" data-isabs="false">
+      <a id="drop(Int):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">drop</span>
+        
+        <span class="params">(<span name="n">
+                  n
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#dropRight" data-isabs="false">
+      <a id="dropRight(Int):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">dropRight</span>
+        
+        <span class="params">(<span name="n">
+                  n
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#dropWhile" data-isabs="false">
+      <a id="dropWhile(((A, B)) ⇒ Boolean):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">dropWhile</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#elements" data-isabs="false">
+      <a id="elements:Iterator[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">elements</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@deprecated</span><span class="args">()</span>
+              
+        </div><div class="block"><ol>deprecated:
+          <li class="cmt"><p>use <code>iterator' instead</code></p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.concurrent.stm.TMap.View#empty" data-isabs="false">
+      <a id="empty:View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">empty</span>
+        
+        
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a> → Map → Map → MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#eq" data-isabs="false">
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">eq</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : AnyRef
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This method is used to test whether the argument (<code>arg0</code>) is a reference to the
+receiver object (<code>this</code>).</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This method is used to test whether the argument (<code>arg0</code>) is a reference to the
+receiver object (<code>this</code>).</p><p>The <code>eq</code> method implements an [http://en.wikipedia.org/wiki/Equivalence_relation equivalence relation] on
+non-null instances of <code>AnyRef</code>:
+ * It is reflexive: for any non-null instance <code>x</code> of type <code>AnyRef</code>, <code>x.eq(x)</code> returns <code>true</code>.
+ * It is symmetric: for any non-null instances <code>x</code> and <code>y</code> of type <code>AnyRef</code>, <code>x.eq(y)</code> returns <code>true</code> if and
+   only if <code>y.eq(x)</code> returns <code>true</code>.
+ * It is transitive: for any non-null instances <code>x</code>, <code>y</code>, and <code>z</code> of type <code>AnyRef</code> if <code>x.eq(y)</code> returns <code>true</code>
+   and <code>y.eq(z)</code> returns <code>true</code>, then <code>x.eq(z)</code> returns <code>true</code>.</p><p>Additionally, the <code>eq</code> method has three other properties.
+ * It is consistent: for any non-null instances <code>x</code> and <code>y</code> of type <code>AnyRef</code>, multiple invocations of
+   <code>x.eq(y)</code> consistently returns <code>true</code> or consistently returns <code>false</code>.
+ * For any non-null instance <code>x</code> of type <code>AnyRef</code>, <code>x.eq(null)</code> and <code>null.eq(x)</code> returns <code>false</code>.
+ * <code>null.eq(null)</code> returns <code>true</code>.</p><p>When overriding the <code>equals</code> or <code>hashCode</code> methods, it is important to ensure that their behavior is
+consistent with reference equality.  Therefore, if two objects are references to each other (<code>o1 eq o2</code>), they
+should be equal to each other (<code>o1 == o2</code>) and they should hash to the same value (<code>o1.hashCode == o2.hashCode</code>).
+</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for reference equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the argument is a reference to the receiver object; <code>false</code> otherwise.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#equals" data-isabs="false">
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">equals</span>
+        
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.Any" class="extype">Any</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This method is used to compare the receiver object (<code>this</code>) with the argument object (<code>arg0</code>) for equivalence.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This method is used to compare the receiver object (<code>this</code>) with the argument object (<code>arg0</code>) for equivalence.</p><p>The default implementations of this method is an [http://en.wikipedia.org/wiki/Equivalence_relation equivalence
+relation]:
+ * It is reflexive: for any instance <code>x</code> of type <code>Any</code>, <code>x.equals(x)</code> should return <code>true</code>.
+ * It is symmetric: for any instances <code>x</code> and <code>y</code> of type <code>Any</code>, <code>x.equals(y)</code> should return <code>true</code> if and
+   only if <code>y.equals(x)</code> returns <code>true</code>.
+ * It is transitive: for any instances <code>x</code>, <code>y</code>, and <code>z</code> of type <code>AnyRef</code> if <code>x.equals(y)</code> returns <code>true</code> and
+   <code>y.equals(z)</code> returns <code>true</code>, then <code>x.equals(z)</code> should return <code>true</code>.</p><p>If you override this method, you should verify that your implementation remains an equivalence relation.
+Additionally, when overriding this method it is often necessary to override <code>hashCode</code> to ensure that objects
+that are &quot;equal&quot; (<code>o1.equals(o2)</code> returns <code>true</code>) hash to the same scala.Int
+(<code>o1.hashCode.equals(o2.hashCode)</code>).
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
+          definition classes: MapLike → Equals → AnyRef → Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#exists" data-isabs="false">
+      <a id="exists(((A, B)) ⇒ Boolean):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">exists</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#filter" data-isabs="false">
+      <a id="filter(((A, B)) ⇒ Boolean):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">filter</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#filterKeys" data-isabs="false">
+      <a id="filterKeys((A) ⇒ Boolean):Map[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">filterKeys</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : (A) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Map" class="extype">Map</span>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#filterNot" data-isabs="false">
+      <a id="filterNot(((A, B)) ⇒ Boolean):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">filterNot</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="prt" name="scala.AnyRef#finalize" data-isabs="false">
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">finalize</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This method is called by the garbage collector on the receiver object when garbage collection determines that
+there are no more references to the object.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This method is called by the garbage collector on the receiver object when garbage collection determines that
+there are no more references to the object.</p><p>The details of when and if the <code>finalize</code> method are invoked, as well as the interaction between <code>finalize</code>
+and non-local returns and exceptions, are all platform dependent.</p></div><div class="block">
+          attributes: protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div><div class="block">
+          annotations: 
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#find" data-isabs="false">
+      <a id="find(((A, B)) ⇒ Boolean):Option[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">find</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#first" data-isabs="false">
+      <a id="first:(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">first</span>
+        
+        
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@deprecated</span><span class="args">()</span>
+              
+        </div><div class="block"><ol>deprecated:
+          <li class="cmt"><p>use <code>head' instead</code></p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#firstOption" data-isabs="false">
+      <a id="firstOption:Option[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">firstOption</span>
+        
+        
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@deprecated</span><span class="args">()</span>
+              
+        </div><div class="block"><ol>deprecated:
+          <li class="cmt"><p>use <code>headOption' instead</code></p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#flatMap" data-isabs="false">
+      <a id="flatMap[B, That](((A, B)) ⇒ TraversableOnce[B])(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">flatMap</span>
+        <span class="tparams">[<span name="B">B</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : ((A, B)) ⇒ <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[B]
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike → FilterMonadic
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.GenericTraversableTemplate#flatten" data-isabs="false">
+      <a id="flatten[B](((A, B)) ⇒ TraversableOnce[B]):Iterable[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">flatten</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="asTraversable">
+                  asTraversable
+                  : ((A, B)) ⇒ <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: GenericTraversableTemplate
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#foldLeft" data-isabs="false">
+      <a id="foldLeft[B](B)((B, (A, B)) ⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">foldLeft</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="z">
+                  z
+                  : B
+                  
+                </span>)</span><span class="params">(<span name="op">
+                  op
+                  : (B, (A, B)) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#foldRight" data-isabs="false">
+      <a id="foldRight[B](B)(((A, B), B) ⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">foldRight</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="z">
+                  z
+                  : B
+                  
+                </span>)</span><span class="params">(<span name="op">
+                  op
+                  : ((A, B), B) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#forall" data-isabs="false">
+      <a id="forall(((A, B)) ⇒ Boolean):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">forall</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#foreach" data-isabs="false">
+      <a id="foreach[U](((A, B)) ⇒ U):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">foreach</span>
+        <span class="tparams">[<span name="U">U</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : ((A, B)) ⇒ U
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike → TraversableOnce → FilterMonadic
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.GenericTraversableTemplate#genericBuilder" data-isabs="false">
+      <a id="genericBuilder[B]:Builder[B, Iterable[B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">genericBuilder</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        
+        <span class="result">: <span name="scala.collection.mutable.Builder" class="extype">Builder</span>[B, <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: GenericTraversableTemplate
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#get" data-isabs="true">
+      <a id="get(A):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">get</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#getClass" data-isabs="false">
+      <a id="getClass():java.lang.Class[_]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">getClass</span>
+        
+        <span class="params">()</span>
+        <span class="result">: java.lang.Class[_]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a representation that corresponds to the dynamic class of the receiver object.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a representation that corresponds to the dynamic class of the receiver object.</p><p>The nature of the representation is platform dependent.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a representation that corresponds to the dynamic class of the receiver object.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#getOrElse" data-isabs="false">
+      <a id="getOrElse[B1&gt;:B](A,⇒ B1):B1"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">getOrElse</span>
+        <span class="tparams">[<span name="B1">B1 &gt;: B</span>]</span>
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>, <span name="default">
+                  default
+                  : ⇒ B1
+                  
+                </span>)</span>
+        <span class="result">: B1</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#getOrElseUpdate" data-isabs="false">
+      <a id="getOrElseUpdate(A,⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">getOrElseUpdate</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>, <span name="op">
+                  op
+                  : ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#groupBy" data-isabs="false">
+      <a id="groupBy[K](((A, B)) ⇒ K):Map[K, View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">groupBy</span>
+        <span class="tparams">[<span name="K">K</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : ((A, B)) ⇒ K
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.immutable.Map" class="extype">Map</span>[K, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#grouped" data-isabs="false">
+      <a id="grouped(Int):Iterator[View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">grouped</span>
+        
+        <span class="params">(<span name="size">
+                  size
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#hasDefiniteSize" data-isabs="false">
+      <a id="hasDefiniteSize:Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">hasDefiniteSize</span>
+        
+        
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#hashCode" data-isabs="false">
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">hashCode</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a hash code value for the object.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a hash code value for the object.</p><p>The default hashing algorithm is platform dependent.</p><p>Note that it is allowed for two objects to have identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>) yet
+not be equal (<code>o1.equals(o2)</code> returns <code>false</code>).  A degenerate implementation could always return <code>0</code>.
+However, it is required that if two objects are equal (<code>o1.equals(o2)</code> returns <code>true</code>) that they have
+identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>).  Therefore, when overriding this method, be sure
+to verify that the behavior is consistent with the <code>equals</code> method.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the hash code value for the object.</p></dd></dl><div class="block">
+          definition classes: MapLike → AnyRef → Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#head" data-isabs="false">
+      <a id="head:(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">head</span>
+        
+        
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#headOption" data-isabs="false">
+      <a id="headOption:Option[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">headOption</span>
+        
+        
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#init" data-isabs="false">
+      <a id="init:View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">init</span>
+        
+        
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#inits" data-isabs="false">
+      <a id="inits:Iterator[View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">inits</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#isDefinedAt" data-isabs="false">
+      <a id="isDefinedAt(A):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">isDefinedAt</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → PartialFunction
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#isEmpty" data-isabs="false">
+      <a id="isEmpty:Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">isEmpty</span>
+        
+        
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → IterableLike → TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.Any#isInstanceOf" data-isabs="false">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">This method is used to test whether the dynamic type of the receiver object is <code>T0</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>This method is used to test whether the dynamic type of the receiver object is <code>T0</code>.</p><p>Note that the test result of the test is modulo Scala's erasure semantics.  Therefore the expression
+<code>1.isInstanceOf[String]</code> will return <code>false</code>, while the expression <code>List(1).isInstanceOf[List[String]]</code> will
+return <code>true</code>.  In the latter example, because the type argument is erased as part of compilation it is not
+possible to check whether the contents of the list are of the requested typed.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is an instance of erasure of type <code>T0</code>; <code>false</code> otherwise.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#isTraversableAgain" data-isabs="false">
+      <a id="isTraversableAgain:Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">isTraversableAgain</span>
+        
+        
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#iterator" data-isabs="true">
+      <a id="iterator:Iterator[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">iterator</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: abstract 
+        </div><div class="block">
+          definition classes: MapLike → IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#keySet" data-isabs="false">
+      <a id="keySet:Set[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">keySet</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Set" class="extype">Set</span>[A]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#keys" data-isabs="false">
+      <a id="keys:Iterable[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">keys</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterable" class="extype">Iterable</span>[A]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#keysIterator" data-isabs="false">
+      <a id="keysIterator:Iterator[A]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">keysIterator</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[A]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#last" data-isabs="false">
+      <a id="last:(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">last</span>
+        
+        
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#lastOption" data-isabs="false">
+      <a id="lastOption:Option[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">lastOption</span>
+        
+        
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.PartialFunction#lift" data-isabs="false">
+      <a id="lift:(A) ⇒ Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">lift</span>
+        
+        
+        <span class="result">: (A) ⇒ <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: PartialFunction
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#map" data-isabs="false">
+      <a id="map[B, That](((A, B)) ⇒ B)(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">map</span>
+        <span class="tparams">[<span name="B">B</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : ((A, B)) ⇒ B
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike → FilterMonadic
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#mapElements" data-isabs="false">
+      <a id="mapElements[C]((B) ⇒ C):Map[A, C]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">mapElements</span>
+        <span class="tparams">[<span name="C">C</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : (B) ⇒ C
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Map" class="extype">Map</span>[A, C]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@deprecated</span><span class="args">()</span>
+              
+        </div><div class="block"><ol>deprecated:
+          <li class="cmt"><p>use <code>mapValues' instead</code></p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Builder#mapResult" data-isabs="false">
+      <a id="mapResult[NewTo]((View[A, B]) ⇒ NewTo):Builder[(A, B), NewTo]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">mapResult</span>
+        <span class="tparams">[<span name="NewTo">NewTo</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : (<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]) ⇒ NewTo
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Builder" class="extype">Builder</span>[(A, B), NewTo]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#mapValues" data-isabs="false">
+      <a id="mapValues[C]((B) ⇒ C):Map[A, C]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">mapValues</span>
+        <span class="tparams">[<span name="C">C</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : (B) ⇒ C
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Map" class="extype">Map</span>[A, C]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#max" data-isabs="false">
+      <a id="max[B&gt;:(A, B)](Ordering[B]):(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">max</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="cmp">
+                  cmp
+                  : Ordering[B]
+                  
+                </span>)</span>
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#maxBy" data-isabs="false">
+      <a id="maxBy[B](((A, B)) ⇒ B)(Ordering[B]):(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">maxBy</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : ((A, B)) ⇒ B
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="cmp">
+                  cmp
+                  : Ordering[B]
+                  
+                </span>)</span>
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#min" data-isabs="false">
+      <a id="min[B&gt;:(A, B)](Ordering[B]):(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">min</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="cmp">
+                  cmp
+                  : Ordering[B]
+                  
+                </span>)</span>
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#minBy" data-isabs="false">
+      <a id="minBy[B](((A, B)) ⇒ B)(Ordering[B]):(A, B)"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">minBy</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span name="f">
+                  f
+                  : ((A, B)) ⇒ B
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="cmp">
+                  cmp
+                  : Ordering[B]
+                  
+                </span>)</span>
+        <span class="result">: (A, B)</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#mkString" data-isabs="false">
+      <a id="mkString:String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">mkString</span>
+        
+        
+        <span class="result">: String</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#mkString" data-isabs="false">
+      <a id="mkString(String):String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">mkString</span>
+        
+        <span class="params">(<span name="sep">
+                  sep
+                  : String
+                  
+                </span>)</span>
+        <span class="result">: String</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#mkString" data-isabs="false">
+      <a id="mkString(String,String,String):String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">mkString</span>
+        
+        <span class="params">(<span name="start">
+                  start
+                  : String
+                  
+                </span>, <span name="sep">
+                  sep
+                  : String
+                  
+                </span>, <span name="end">
+                  end
+                  : String
+                  
+                </span>)</span>
+        <span class="result">: String</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#ne" data-isabs="false">
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">ne</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : AnyRef
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt"><code>o.ne(arg0)</code> is the same as <code>!(o.eq(arg0))</code>.</p>
+            <div class="fullcomment"><div class="comment cmt"><p><code>o.ne(arg0)</code> is the same as <code>!(o.eq(arg0))</code>.
+</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for reference dis-equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>false</code> if the argument is not a reference to the receiver object; <code>true</code> otherwise.</p></dd></dl><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="prt" name="scala.concurrent.stm.TMap.View#newBuilder" data-isabs="false">
+      <a id="newBuilder:Builder[(A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">newBuilder</span>
+        
+        
+        <span class="result">: <span name="scala.collection.mutable.Builder" class="extype">Builder</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected[this] 
+        </div><div class="block">
+          definition classes: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a> → MapLike → MapLike → GenericTraversableTemplate → TraversableLike → HasNewBuilder
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#nonEmpty" data-isabs="false">
+      <a id="nonEmpty:Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">nonEmpty</span>
+        
+        
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#notify" data-isabs="false">
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">notify</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Wakes up a single thread that is waiting on the receiver object's monitor.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Wakes up a single thread that is waiting on the receiver object's monitor.</p></div><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#notifyAll" data-isabs="false">
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">notifyAll</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Wakes up all threads that are waiting on the receiver object's monitor.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Wakes up all threads that are waiting on the receiver object's monitor.</p></div><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.PartialFunction#orElse" data-isabs="false">
+      <a id="orElse[A1&lt;:A, B1&gt;:B](PartialFunction[A1, B1]):PartialFunction[A1, B1]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">orElse</span>
+        <span class="tparams">[<span name="A1">A1 &lt;: A</span>, <span name="B1">B1 &gt;: B</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.PartialFunction" class="extype">PartialFunction</span>[A1, B1]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.PartialFunction" class="extype">PartialFunction</span>[A1, B1]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: PartialFunction
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.Parallelizable#par" data-isabs="false">
+      <a id="par:ParMap[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">par</span>
+        
+        
+        <span class="result">: <span name="scala.collection.parallel.mutable.ParMap" class="extype">ParMap</span>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Parallelizable → Parallelizable
+        </div></div>
+          
+    </li><li visbl="prt" name="scala.collection.mutable.MapLike#parCombiner" data-isabs="false">
+      <a id="parCombiner:Combiner[(A, B), ParMap[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">parCombiner</span>
+        
+        
+        <span class="result">: <span name="scala.collection.parallel.Combiner" class="extype">Combiner</span>[(A, B), <span name="scala.collection.parallel.mutable.ParMap" class="extype">ParMap</span>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected[this] 
+        </div><div class="block">
+          definition classes: MapLike → MapLike → TraversableLike → Parallelizable
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#partition" data-isabs="false">
+      <a id="partition(((A, B)) ⇒ Boolean):(View[A, B], View[A, B])"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">partition</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: (<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B])</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#product" data-isabs="false">
+      <a id="product[B&gt;:(A, B)](Numeric[B]):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">product</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="num">
+                  num
+                  : Numeric[B]
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#projection" data-isabs="false">
+      <a id="projection:IterableView[(A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">projection</span>
+        
+        
+        <span class="result">: <span name="scala.collection.IterableView" class="extype">IterableView</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@deprecated</span><span class="args">()</span>
+              
+        </div><div class="block"><ol>deprecated:
+          <li class="cmt"><p>use <code>view' instead</code></p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#put" data-isabs="false">
+      <a id="put(A,B):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">put</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>, <span name="value">
+                  value
+                  : B
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#reduceLeft" data-isabs="false">
+      <a id="reduceLeft[B&gt;:(A, B)]((B, (A, B)) ⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">reduceLeft</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="op">
+                  op
+                  : (B, (A, B)) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#reduceLeftOption" data-isabs="false">
+      <a id="reduceLeftOption[B&gt;:(A, B)]((B, (A, B)) ⇒ B):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">reduceLeftOption</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="op">
+                  op
+                  : (B, (A, B)) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#reduceRight" data-isabs="false">
+      <a id="reduceRight[B&gt;:(A, B)](((A, B), B) ⇒ B):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">reduceRight</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="op">
+                  op
+                  : ((A, B), B) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#reduceRightOption" data-isabs="false">
+      <a id="reduceRightOption[B&gt;:(A, B)](((A, B), B) ⇒ B):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">reduceRightOption</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="op">
+                  op
+                  : ((A, B), B) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#remove" data-isabs="false">
+      <a id="remove(A):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">remove</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#removeKey" data-isabs="false">
+      <a id="removeKey(A):Option[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name deprecated">removeKey</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Option" class="extype">Option</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@deprecated</span><span class="args">()</span>
+              
+        </div><div class="block"><ol>deprecated:
+          <li class="cmt"><p>Use <code>remove' instead</code></p></li>
+        </ol></div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#repr" data-isabs="false">
+      <a id="repr:View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">repr</span>
+        
+        
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#result" data-isabs="false">
+      <a id="result():View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">result</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → Builder
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#retain" data-isabs="false">
+      <a id="retain((A, B) ⇒ Boolean):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">retain</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : (A, B) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="prt" name="scala.collection.TraversableOnce#reversed" data-isabs="false">
+      <a id="reversed:List[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">reversed</span>
+        
+        
+        <span class="result">: List[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected[this] 
+        </div><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#sameElements" data-isabs="false">
+      <a id="sameElements[B&gt;:(A, B)](Iterable[B]):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sameElements</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.collection.Iterable" class="extype">Iterable</span>[B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#scanLeft" data-isabs="false">
+      <a id="scanLeft[B, That](B)((B, (A, B)) ⇒ B)(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">scanLeft</span>
+        <span class="tparams">[<span name="B">B</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="z">
+                  z
+                  : B
+                  
+                </span>)</span><span class="params">(<span name="op">
+                  op
+                  : (B, (A, B)) ⇒ B
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#scanRight" data-isabs="false">
+      <a id="scanRight[B, That](B)(((A, B), B) ⇒ B)(CanBuildFrom[View[A, B], B, That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">scanRight</span>
+        <span class="tparams">[<span name="B">B</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="z">
+                  z
+                  : B
+                  
+                </span>)</span><span class="params">(<span name="op">
+                  op
+                  : ((A, B), B) ⇒ B
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], B, That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Map#seq" data-isabs="false">
+      <a id="seq:Map[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">seq</span>
+        
+        
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Map → Map → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#size" data-isabs="false">
+      <a id="size:Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">size</span>
+        
+        
+        <span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Builder#sizeHint" data-isabs="false">
+      <a id="sizeHint(scala.collection.TraversableLike[_, _],Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sizeHint</span>
+        
+        <span class="params">(<span name="coll">
+                  coll
+                  : scala.collection.TraversableLike[_, _]
+                  
+                </span>, <span name="delta">
+                  delta
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Builder#sizeHint" data-isabs="false">
+      <a id="sizeHint(Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sizeHint</span>
+        
+        <span class="params">(<span name="size">
+                  size
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Builder#sizeHintBounded" data-isabs="false">
+      <a id="sizeHintBounded(Int,scala.collection.TraversableLike[_, _]):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sizeHintBounded</span>
+        
+        <span class="params">(<span name="size">
+                  size
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>, <span name="boundingColl">
+                  boundingColl
+                  : scala.collection.TraversableLike[_, _]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Builder
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#slice" data-isabs="false">
+      <a id="slice(Int,Int):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">slice</span>
+        
+        <span class="params">(<span name="from">
+                  from
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>, <span name="until">
+                  until
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#sliding" data-isabs="false">
+      <a id="sliding[B&gt;:(A, B)](Int,Int):Iterator[View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sliding</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="size">
+                  size
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>, <span name="step">
+                  step
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#sliding" data-isabs="false">
+      <a id="sliding[B&gt;:(A, B)](Int):Iterator[View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sliding</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span name="size">
+                  size
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.concurrent.stm.TMap.View#snapshot" data-isabs="true">
+      <a id="snapshot:Map[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">snapshot</span>
+        
+        
+        <span class="result">: <span name="scala.collection.immutable.Map" class="extype">Map</span>[A, B]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Takes an atomic snapshot of this transactional map.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Takes an atomic snapshot of this transactional map.</p></div><div class="block">
+          attributes: abstract 
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#span" data-isabs="false">
+      <a id="span(((A, B)) ⇒ Boolean):(View[A, B], View[A, B])"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">span</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: (<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B])</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#splitAt" data-isabs="false">
+      <a id="splitAt(Int):(View[A, B], View[A, B])"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">splitAt</span>
+        
+        <span class="params">(<span name="n">
+                  n
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: (<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B])</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#stringPrefix" data-isabs="false">
+      <a id="stringPrefix:String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">stringPrefix</span>
+        
+        
+        <span class="result">: String</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#sum" data-isabs="false">
+      <a id="sum[B&gt;:(A, B)](Numeric[B]):B"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">sum</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="num">
+                  num
+                  : Numeric[B]
+                  
+                </span>)</span>
+        <span class="result">: B</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#synchronized" data-isabs="false">
+      <a id="synchronized[T0](⇒ T0):T0"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">synchronized</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : ⇒ T0
+                  
+                </span>)</span>
+        <span class="result">: T0</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#tail" data-isabs="false">
+      <a id="tail:View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">tail</span>
+        
+        
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#tails" data-isabs="false">
+      <a id="tails:Iterator[View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">tails</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#take" data-isabs="false">
+      <a id="take(Int):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">take</span>
+        
+        <span class="params">(<span name="n">
+                  n
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#takeRight" data-isabs="false">
+      <a id="takeRight(Int):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">takeRight</span>
+        
+        <span class="params">(<span name="n">
+                  n
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#takeWhile" data-isabs="false">
+      <a id="takeWhile(((A, B)) ⇒ Boolean):View[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">takeWhile</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="prt" name="scala.collection.IterableLike#thisCollection" data-isabs="false">
+      <a id="thisCollection:Iterable[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">thisCollection</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterable" class="extype">Iterable</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected[this] 
+        </div><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.concurrent.stm.TMap.View#tmap" data-isabs="true">
+      <a id="tmap:TMap[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">tmap</span>
+        
+        
+        <span class="result">: <a name="scala.concurrent.stm.TMap" class="extype" href="TMap.html">TMap</a>[A, B]</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns the <code>TMap</code> perspective on this transactional map, which
+ provides map functionality only inside atomic blocks.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns the <code>TMap</code> perspective on this transactional map, which
+ provides map functionality only inside atomic blocks.
+</p></div><div class="block">
+          attributes: abstract 
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#toArray" data-isabs="false">
+      <a id="toArray[B&gt;:(A, B)](ClassManifest[B]):Array[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toArray</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="arg0">
+                  arg0
+                  : ClassManifest[B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Array" class="extype">Array</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#toBuffer" data-isabs="false">
+      <a id="toBuffer[C&gt;:(A, B)]:Buffer[C]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toBuffer</span>
+        <span class="tparams">[<span name="C">C &gt;: (A, B)</span>]</span>
+        
+        <span class="result">: <span name="scala.collection.mutable.Buffer" class="extype">Buffer</span>[C]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="prt" name="scala.collection.IterableLike#toCollection" data-isabs="false">
+      <a id="toCollection(View[A, B]):Iterable[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toCollection</span>
+        
+        <span class="params">(<span name="repr">
+                  repr
+                  : <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.Iterable" class="extype">Iterable</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: protected[this] 
+        </div><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#toIndexedSeq" data-isabs="false">
+      <a id="toIndexedSeq[B&gt;:(A, B)]:IndexedSeq[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toIndexedSeq</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        
+        <span class="result">: <span name="scala.collection.immutable.IndexedSeq" class="extype">IndexedSeq</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#toIterable" data-isabs="false">
+      <a id="toIterable:Iterable[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toIterable</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterable" class="extype">Iterable</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#toIterator" data-isabs="false">
+      <a id="toIterator:Iterator[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toIterator</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#toList" data-isabs="false">
+      <a id="toList:List[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toList</span>
+        
+        
+        <span class="result">: List[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#toMap" data-isabs="false">
+      <a id="toMap[T, U](&lt;:&lt;[(A, B), (T, U)]):Map[T, U]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toMap</span>
+        <span class="tparams">[<span name="T">T</span>, <span name="U">U</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="ev">
+                  ev
+                  : <span name="scala.Predef.&lt;:&lt;" class="extype">&lt;:&lt;</span>[(A, B), (T, U)]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.immutable.Map" class="extype">Map</span>[T, U]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#toSeq" data-isabs="false">
+      <a id="toSeq:Seq[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toSeq</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Seq" class="extype">Seq</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableOnce#toSet" data-isabs="false">
+      <a id="toSet[B&gt;:(A, B)]:Set[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toSet</span>
+        <span class="tparams">[<span name="B">B &gt;: (A, B)</span>]</span>
+        
+        <span class="result">: <span name="scala.collection.immutable.Set" class="extype">Set</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#toStream" data-isabs="false">
+      <a id="toStream:Stream[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toStream</span>
+        
+        
+        <span class="result">: <span name="scala.collection.immutable.Stream" class="extype">Stream</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#toString" data-isabs="false">
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toString</span>
+        
+        <span class="params">()</span>
+        <span class="result">: String</span>
+      </span>
+      </h4>
+      
+            <p class="shortcomment cmt">Returns a string representation of the object.</p>
+            <div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the object.</p><p>The default representation is platform dependent.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a string representation of the object.</p></dd></dl><div class="block">
+          definition classes: MapLike → TraversableLike → Function1 → AnyRef → Any
+        </div>
+            
+            
+            
+            
+          </div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#toTraversable" data-isabs="false">
+      <a id="toTraversable:Traversable[(A, B)]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">toTraversable</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Traversable" class="extype">Traversable</span>[(A, B)]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike → TraversableOnce
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#transform" data-isabs="false">
+      <a id="transform((A, B) ⇒ B):View.this.type"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">transform</span>
+        
+        <span class="params">(<span name="f">
+                  f
+                  : (A, B) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: View.this.type</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.GenericTraversableTemplate#transpose" data-isabs="false">
+      <a id="transpose[B](((A, B)) ⇒ TraversableOnce[B]):Iterable[Iterable[B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">transpose</span>
+        <span class="tparams">[<span name="B">B</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="asTraversable">
+                  asTraversable
+                  : ((A, B)) ⇒ <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[B]
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[<span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: GenericTraversableTemplate
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.GenericTraversableTemplate#unzip" data-isabs="false">
+      <a id="unzip[A1, A2](((A, B)) ⇒ (A1, A2)):(Iterable[A1], Iterable[A2])"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">unzip</span>
+        <span class="tparams">[<span name="A1">A1</span>, <span name="A2">A2</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="asPair">
+                  asPair
+                  : ((A, B)) ⇒ (A1, A2)
+                  
+                </span>)</span>
+        <span class="result">: (<span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[A1], <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[A2])</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: GenericTraversableTemplate
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.generic.GenericTraversableTemplate#unzip3" data-isabs="false">
+      <a id="unzip3[A1, A2, A3](((A, B)) ⇒ (A1, A2, A3)):(Iterable[A1], Iterable[A2], Iterable[A3])"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">unzip3</span>
+        <span class="tparams">[<span name="A1">A1</span>, <span name="A2">A2</span>, <span name="A3">A3</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="asTriple">
+                  asTriple
+                  : ((A, B)) ⇒ (A1, A2, A3)
+                  
+                </span>)</span>
+        <span class="result">: (<span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[A1], <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[A2], <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[A3])</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: GenericTraversableTemplate
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#update" data-isabs="false">
+      <a id="update(A,B):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">update</span>
+        
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>, <span name="value">
+                  value
+                  : B
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.MapLike#updated" data-isabs="false">
+      <a id="updated[B1&gt;:B](A,B1):Map[A, B1]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">updated</span>
+        <span class="tparams">[<span name="B1">B1 &gt;: B</span>]</span>
+        <span class="params">(<span name="key">
+                  key
+                  : A
+                  
+                </span>, <span name="value">
+                  value
+                  : B1
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B1]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike → MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#values" data-isabs="false">
+      <a id="values:Iterable[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">values</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterable" class="extype">Iterable</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div><div class="block">
+          annotations: 
+                <span class="name">@migration</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.MapLike#valuesIterator" data-isabs="false">
+      <a id="valuesIterator:Iterator[B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">valuesIterator</span>
+        
+        
+        <span class="result">: <span name="scala.collection.Iterator" class="extype">Iterator</span>[B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: MapLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#view" data-isabs="false">
+      <a id="view(Int,Int):IterableView[(A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">view</span>
+        
+        <span class="params">(<span name="from">
+                  from
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>, <span name="until">
+                  until
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.IterableView" class="extype">IterableView</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#view" data-isabs="false">
+      <a id="view:IterableView[(A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">view</span>
+        
+        
+        <span class="result">: <span name="scala.collection.IterableView" class="extype">IterableView</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike → TraversableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">wait</span>
+        
+        <span class="params">()</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div><div class="block">
+          annotations: 
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">wait</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : <span name="scala.Long" class="extype">Long</span>
+                  
+                </span>, <span name="arg1">
+                  arg1
+                  : <span name="scala.Int" class="extype">Int</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div><div class="block">
+          annotations: 
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">wait</span>
+        
+        <span class="params">(<span name="arg0">
+                  arg0
+                  : <span name="scala.Long" class="extype">Long</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          attributes: final 
+        </div><div class="block">
+          definition classes: AnyRef
+        </div><div class="block">
+          annotations: 
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Map#withDefault" data-isabs="false">
+      <a id="withDefault((A) ⇒ B):Map[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withDefault</span>
+        
+        <span class="params">(<span name="d">
+                  d
+                  : (A) ⇒ B
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Map
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.mutable.Map#withDefaultValue" data-isabs="false">
+      <a id="withDefaultValue(B):Map[A, B]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withDefaultValue</span>
+        
+        <span class="params">(<span name="d">
+                  d
+                  : B
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: Map
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.TraversableLike#withFilter" data-isabs="false">
+      <a id="withFilter(((A, B)) ⇒ Boolean):FilterMonadic[(A, B), View[A, B]]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">withFilter</span>
+        
+        <span class="params">(<span name="p">
+                  p
+                  : ((A, B)) ⇒ <span name="scala.Boolean" class="extype">Boolean</span>
+                  
+                </span>)</span>
+        <span class="result">: <span name="scala.collection.generic.FilterMonadic" class="extype">FilterMonadic</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: TraversableLike → FilterMonadic
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#zip" data-isabs="false">
+      <a id="zip[A1&gt;:(A, B), B, That](Iterable[B])(CanBuildFrom[View[A, B], (A1, B), That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">zip</span>
+        <span class="tparams">[<span name="A1">A1 &gt;: (A, B)</span>, <span name="B">B</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.collection.Iterable" class="extype">Iterable</span>[B]
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], (A1, B), That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#zipAll" data-isabs="false">
+      <a id="zipAll[B, A1&gt;:(A, B), That](Iterable[B],A1,B)(CanBuildFrom[View[A, B], (A1, B), That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">zipAll</span>
+        <span class="tparams">[<span name="B">B</span>, <span name="A1">A1 &gt;: (A, B)</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span name="that">
+                  that
+                  : <span name="scala.collection.Iterable" class="extype">Iterable</span>[B]
+                  
+                </span>, <span name="thisElem">
+                  thisElem
+                  : A1
+                  
+                </span>, <span name="thatElem">
+                  thatElem
+                  : B
+                  
+                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], (A1, B), That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li><li visbl="pub" name="scala.collection.IterableLike#zipWithIndex" data-isabs="false">
+      <a id="zipWithIndex[A1&gt;:(A, B), That](CanBuildFrom[View[A, B], (A1, Int), That]):That"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol">
+        <span class="name">zipWithIndex</span>
+        <span class="tparams">[<span name="A1">A1 &gt;: (A, B)</span>, <span name="That">That</span>]</span>
+        <span class="params">(<span class="implicit">implicit </span><span name="bf">
+                  bf
+                  : <span name="scala.collection.generic.CanBuildFrom" class="extype">CanBuildFrom</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B], (A1, <span name="scala.Int" class="extype">Int</span>), That]
+                  
+                </span>)</span>
+        <span class="result">: That</span>
+      </span>
+      </h4>
+      
+            
+            <div class="fullcomment"><div class="block">
+          definition classes: IterableLike
+        </div></div>
+          
+    </li></ol>
+            </div>
+
+        <div name="scala.collection.mutable.Map" class="parent">
+              <h3>Inherited from <span name="scala.collection.mutable.Map" class="extype">Map</span>[A, B]</h3>
+            </div><div name="scala.collection.mutable.MapLike" class="parent">
+              <h3>Inherited from <span name="scala.collection.mutable.MapLike" class="extype">MapLike</span>[A, B, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.collection.mutable.Cloneable" class="parent">
+              <h3>Inherited from <span name="scala.collection.mutable.Cloneable" class="extype">Cloneable</span>[<a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.collection.generic.Shrinkable" class="parent">
+              <h3>Inherited from <span name="scala.collection.generic.Shrinkable" class="extype">Shrinkable</span>[A]</h3>
+            </div><div name="scala.collection.mutable.Builder" class="parent">
+              <h3>Inherited from <span name="scala.collection.mutable.Builder" class="extype">Builder</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.collection.generic.Growable" class="parent">
+              <h3>Inherited from <span name="scala.collection.generic.Growable" class="extype">Growable</span>[(A, B)]</h3>
+            </div><div name="scala.collection.Map" class="parent">
+              <h3>Inherited from <span name="scala.collection.Map" class="extype">Map</span>[A, B]</h3>
+            </div><div name="scala.collection.MapLike" class="parent">
+              <h3>Inherited from <span name="scala.collection.MapLike" class="extype">MapLike</span>[A, B, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.collection.generic.Subtractable" class="parent">
+              <h3>Inherited from <span name="scala.collection.generic.Subtractable" class="extype">Subtractable</span>[A, <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.PartialFunction" class="parent">
+              <h3>Inherited from <span name="scala.PartialFunction" class="extype">PartialFunction</span>[A, B]</h3>
+            </div><div name="scala.Function1" class="parent">
+              <h3>Inherited from (A) ⇒ B</h3>
+            </div><div name="scala.collection.mutable.Iterable" class="parent">
+              <h3>Inherited from <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>[(A, B)]</h3>
+            </div><div name="scala.collection.Iterable" class="parent">
+              <h3>Inherited from <span name="scala.collection.Iterable" class="extype">Iterable</span>[(A, B)]</h3>
+            </div><div name="scala.collection.IterableLike" class="parent">
+              <h3>Inherited from <span name="scala.collection.IterableLike" class="extype">IterableLike</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.Equals" class="parent">
+              <h3>Inherited from <span name="scala.Equals" class="extype">Equals</span></h3>
+            </div><div name="scala.collection.mutable.Traversable" class="parent">
+              <h3>Inherited from <span name="scala.collection.mutable.Traversable" class="extype">Traversable</span>[(A, B)]</h3>
+            </div><div name="scala.Mutable" class="parent">
+              <h3>Inherited from <span name="scala.Mutable" class="extype">Mutable</span></h3>
+            </div><div name="scala.collection.Traversable" class="parent">
+              <h3>Inherited from <span name="scala.collection.Traversable" class="extype">Traversable</span>[(A, B)]</h3>
+            </div><div name="scala.collection.generic.GenericTraversableTemplate" class="parent">
+              <h3>Inherited from <span name="scala.collection.generic.GenericTraversableTemplate" class="extype">GenericTraversableTemplate</span>[(A, B), <span name="scala.collection.mutable.Iterable" class="extype">Iterable</span>]</h3>
+            </div><div name="scala.collection.TraversableLike" class="parent">
+              <h3>Inherited from <span name="scala.collection.TraversableLike" class="extype">TraversableLike</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.collection.Parallelizable" class="parent">
+              <h3>Inherited from <span name="scala.collection.Parallelizable" class="extype">Parallelizable</span>[(A, B), <span name="scala.collection.parallel.mutable.ParMap" class="extype">ParMap</span>[A, B]]</h3>
+            </div><div name="scala.collection.TraversableOnce" class="parent">
+              <h3>Inherited from <span name="scala.collection.TraversableOnce" class="extype">TraversableOnce</span>[(A, B)]</h3>
+            </div><div name="scala.collection.generic.FilterMonadic" class="parent">
+              <h3>Inherited from <span name="scala.collection.generic.FilterMonadic" class="extype">FilterMonadic</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.collection.generic.HasNewBuilder" class="parent">
+              <h3>Inherited from <span name="scala.collection.generic.HasNewBuilder" class="extype">HasNewBuilder</span>[(A, B), <a name="scala.concurrent.stm.TMap.View" class="extype" href="">View</a>[A, B]]</h3>
+            </div><div name="scala.AnyRef" class="parent">
+              <h3>Inherited from AnyRef</h3>
+            </div><div name="scala.Any" class="parent">
+              <h3>Inherited from <span name="scala.Any" class="extype">Any</span></h3>
+            </div>
+
+      </div>
+      
+      <div id="tooltip"></div>
+      
+    </body>
+      </html>

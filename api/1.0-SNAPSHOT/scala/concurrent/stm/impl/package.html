@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>scala.concurrent.stm.impl</title>
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link type="text/css" media="screen" rel="stylesheet" href="../../../../lib/template.css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+    
+        </head>
+        <body onload="windowTitle();" class="value">
+
+      <p id="owner"><a name="scala" class="extype" href="../../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="../package.html">stm</a></p>
+
+      <div id="definition">
+        <img src="../../../../lib/package_big.png" />
+        <h1>impl</h1>
+      </div>
+
+      <h4 class="signature" id="signature">
+      <span class="kind">package</span>
+      <span class="symbol">
+        <span class="name">impl</span>
+        
+        
+        
+      </span>
+      </h4>
+      
+          
+          <div class="fullcomment" id="comment"></div>
+        
+
+      <div id="template">
+
+        <div id="mbrsel">
+          <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+          
+          
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in">Public</li><li class="all out">All</li></ol>
+            </div>
+          <div id="impl">
+              <span class="filtertype">Impl.</span>
+              <ol><li class="concrete in">Concrete</li><li class="abstract in">Abstract</li></ol>
+            </div>
+        </div>
+
+        
+
+        <div class="types members" id="types">
+              <h3>Type Members</h3>
+              <ol><li visbl="pub" name="scala.concurrent.stm.impl.RefFactory" data-isabs="true">
+      <a id="RefFactory:RefFactory"></a>
+      <h4 class="signature"><a href="RefFactory.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">RefFactory</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt"><code>RefFactory</code> is responsible for creating concrete <code>Ref</code> instances.</p>
+    </li><li visbl="pub" name="scala.concurrent.stm.impl.STMImpl" data-isabs="true">
+      <a id="STMImpl:STMImpl"></a>
+      <h4 class="signature"><a href="STMImpl.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">STMImpl</span>
+        
+        
+        <span class="result"> extends RefFactory with TxnContext with TxnExecutor</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt"><code>STMImpl</code> gathers all of the functionality required to plug an STM
+ implementation into <code>scala.concurrent.stm</code>.</p>
+    </li><li visbl="pub" name="scala.concurrent.stm.impl.TxnContext" data-isabs="true">
+      <a id="TxnContext:TxnContext"></a>
+      <h4 class="signature"><a href="TxnContext.html">
+      <span class="kind">trait</span>
+      <span class="symbol">
+        <span class="name">TxnContext</span>
+        
+        
+        <span class="result"> extends AnyRef</span>
+      </span>
+      </a></h4>
+      <p class="comment cmt"><code>TxnContext</code> captures the implementation-specific functionality of locating
+ the <code>InTxn</code> dynamically bound to the current <code>Thread</code>.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+
+      </div>
+      
+      <div id="tooltip"></div>
+      
+    </body>
+      </html>
