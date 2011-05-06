@@ -10,7 +10,9 @@ class ScalaSTMProject(info: ProjectInfo) extends DefaultProject(info) {
 
   val scala_tools_snapshots = "Scala-Tools Maven2 Repository - snapshots" at "http://scala-tools.org/repo-snapshots"
 
-  val scalatest = if (buildScalaVersion.startsWith("2.9.")) {
+  val scalatest = if (buildScalaVersion.startsWith("2.9.0.RC3")) {
+    "org.scalatest" % "scalatest_2.9.0.RC3" % "1.4.RC3"
+  } else if (buildScalaVersion.startsWith("2.9.0.RC1")) {
     "org.scalatest" % "scalatest" % "1.4-SNAPSHOT"
   } else {
     "org.scalatest" % "scalatest" % "1.3"
