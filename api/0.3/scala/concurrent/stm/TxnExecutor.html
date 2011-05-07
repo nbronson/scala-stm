@@ -17,45 +17,32 @@
       <p id="owner"><a name="scala" class="extype" href="../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="package.html">stm</a></p>
 
       <div id="definition">
-        <img src="../../../lib/trait_big.png" />
-        <h1>TxnExecutor</h1>
-      </div>
+          <img src="../../../lib/trait_big.png" />
+          <h1><a title="go to companion" href="TxnExecutor$.html">TxnExecutor</a></h1>
+        </div>
 
       <h4 class="signature" id="signature">
       <span class="kind">trait</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">TxnExecutor</span>
-        
         
         <span class="result"> extends AnyRef</span>
       </span>
       </h4>
       
-          <div class="shortcomment cmt"><p>A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
+          <div class="fullcommenttop" id="comment"><div class="comment cmt"><p>A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
  using a set of configuration parameters.  Configuration changes are made by
  constructing a new <code>TxnExecutor</code> using <code>withConfig</code> or <code>withHint</code>.  The
  new executor may be used immediately, saved and used multiple times, or
  registered as the new system-wide default using
  <code>TxnExecutor.transformDefault</code>.
-</p></div>
-          <div class="fullcomment" id="comment"><div class="comment cmt"><p>A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
- using a set of configuration parameters.  Configuration changes are made by
- constructing a new <code>TxnExecutor</code> using <code>withConfig</code> or <code>withHint</code>.  The
- new executor may be used immediately, saved and used multiple times, or
- registered as the new system-wide default using
- <code>TxnExecutor.transformDefault</code>.
-</p></div><div class="block">
-            go to: <a href="TxnExecutor$.html">companion</a>
-          </div><div class="block">
-            linear super types: AnyRef, <span name="scala.Any" class="extype">Any</span>
-          </div><div class="block">
-            known subclasses: <a name="scala.concurrent.stm.impl.STMImpl" class="extype" href="impl/STMImpl.html">STMImpl</a>, <a name="scala.concurrent.stm.skel.StubSTMImpl" class="extype" href="skel/StubSTMImpl.html">StubSTMImpl</a>, <a name="scala.concurrent.stm.ccstm.CCSTM" class="extype" href="ccstm/CCSTM.html">CCSTM</a>
-          </div>
-            
-            
-            
-            
-          </div>
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent">AnyRef, <span name="scala.Any" class="extype">Any</span></div>
+        </div><div class="toggleContainer block">
+          <span class="toggle">Known Subclasses</span>
+          <div class="subClasses hiddenContent"><a name="scala.concurrent.stm.ccstm.CCSTM" class="extype" href="ccstm/CCSTM.html">CCSTM</a>, <a name="scala.concurrent.stm.impl.STMImpl" class="extype" href="impl/STMImpl.html">STMImpl</a>, <a name="scala.concurrent.stm.skel.StubSTMImpl" class="extype" href="skel/StubSTMImpl.html">StubSTMImpl</a></div>
+        </div></div>
         
 
       <div id="template">
@@ -64,379 +51,71 @@
           <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
           <div id="order">
                 <span class="filtertype">Ordering</span>
-                <ol><li class="alpha in">Alphabetic</li><li class="inherit out">By inheritance</li></ol>
+                <ol><li class="alpha in"><span>Alphabetic</span></li><li class="inherit out"><span>By inheritance</span></li></ol>
               </div>
           <div id="ancestors">
                 <span class="filtertype">Inherited</span>
-                <ol><li class="hideall">Hide All</li><li class="showall">Show all</li></ol>
-                <ol id="linearization"><li name="scala.concurrent.stm.TxnExecutor" class="in">TxnExecutor</li><li name="scala.AnyRef" class="in">AnyRef</li><li name="scala.Any" class="in">Any</li></ol>
+                <ol><li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show all</span></li></ol>
+                <ol id="linearization"><li name="scala.concurrent.stm.TxnExecutor" class="in"><span>TxnExecutor</span></li><li name="scala.AnyRef" class="in"><span>AnyRef</span></li><li name="scala.Any" class="in"><span>Any</span></li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
-              <ol><li class="public in">Public</li><li class="all out">All</li></ol>
-            </div>
-          <div id="impl">
-              <span class="filtertype">Impl.</span>
-              <ol><li class="concrete in">Concrete</li><li class="abstract in">Abstract</li></ol>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
             </div>
         </div>
 
         
 
         
-
+        
         <div class="values members" id="values">
-              <h3>Value Members</h3>
-              <ol><li visbl="pub" name="scala.AnyRef#!=" data-isabs="false">
-      <a id="!=(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">!=</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : AnyRef
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.Any#!=" data-isabs="false">
-      <a id="!=(Any):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">!=</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : <span name="scala.Any" class="extype">Any</span>
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt"><code>o != arg0</code> is the same as <code>!(o == (arg0))</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p><code>o != arg0</code> is the same as <code>!(o == (arg0))</code>.
-</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for dis-equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>false</code> if the receiver object is equivalent to the argument; <code>true</code> otherwise.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef###" data-isabs="false">
-      <a id="##():Int"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">##</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Int" class="extype">Int</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef → Any
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#$asInstanceOf" data-isabs="false">
-      <a id="$asInstanceOf[T0]():T0"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">$asInstanceOf</span>
-        <span class="tparams">[<span name="T0">T0</span>]</span>
-        <span class="params">()</span>
-        <span class="result">: T0</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#$isInstanceOf" data-isabs="false">
-      <a id="$isInstanceOf[T0]():Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">$isInstanceOf</span>
-        <span class="tparams">[<span name="T0">T0</span>]</span>
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#==" data-isabs="false">
-      <a id="==(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">==</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : AnyRef
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt"><code>o == arg0</code> is the same as <code>if (o eq null) arg0 eq null else o.equals(arg0)</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p><code>o == arg0</code> is the same as <code>if (o eq null) arg0 eq null else o.equals(arg0)</code>.
-</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.Any#==" data-isabs="false">
-      <a id="==(Any):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">==</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : <span name="scala.Any" class="extype">Any</span>
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt"><code>o == arg0</code> is the same as <code>o.equals(arg0)</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p><code>o == arg0</code> is the same as <code>o.equals(arg0)</code>.
-</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#apply" data-isabs="true">
+              <h3>Abstract Value Members</h3>
+              <ol><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#apply" data-isabs="true">
       <a id="apply[Z]((InTxn) ⇒ Z)(MaybeTxn):Z"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">apply</span>
         <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="block">
-                  block
-                  : (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z
-                  
-                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">
-                  mt
-                  : <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a>
-                  
-                </span>)</span>
-        <span class="result">: Z</span>
+        <span class="params">(<span name="block">block: (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a></span>)</span><span class="result">: Z</span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Executes <code>block</code> one or more times until an atomic execution is achieved,
- buffering and/or locking writes so they are not visible until success.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Executes <code>block</code> one or more times until an atomic execution is achieved,
+      <p class="shortcomment cmt">Executes <code>block</code> one or more times until an atomic execution is achieved,
+ buffering and/or locking writes so they are not visible until success.</p><div class="fullcomment"><div class="comment cmt"><p>Executes <code>block</code> one or more times until an atomic execution is achieved,
  buffering and/or locking writes so they are not visible until success.
 </p></div><dl class="paramcmts block"><dt class="tparam">Z</dt><dd class="cmt"><p>the return type of the atomic block</p></dd><dt class="param">block</dt><dd class="cmt"><p>code to execute atomically</p></dd><dt>returns</dt><dd class="cmt"><p>the value returned from <code>block</code> after a successful optimistic
            concurrency attempt
-</p></dd></dl><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.Any#asInstanceOf" data-isabs="false">
-      <a id="asInstanceOf[T0]:T0"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">asInstanceOf</span>
-        <span class="tparams">[<span name="T0">T0</span>]</span>
-        
-        <span class="result">: T0</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This method is used to cast the receiver object to be of type <code>T0</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This method is used to cast the receiver object to be of type <code>T0</code>.</p><p>Note that the success of a cast at runtime is modulo Scala's erasure semantics.  Therefore the expression
-<code>1.asInstanceOf[String]</code> will throw a <code>ClassCastException</code> at runtime, while the expression
-<code>List(1).asInstanceOf[List[String]]</code> will not.  In the latter example, because the type argument is erased as
-part of compilation it is not possible to check whether the contents of the list are of the requested typed.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the receiver object.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="prt" name="scala.AnyRef#clone" data-isabs="false">
-      <a id="clone():AnyRef"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">clone</span>
-        
-        <span class="params">()</span>
-        <span class="result">: AnyRef</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This method creates and returns a copy of the receiver object.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This method creates and returns a copy of the receiver object.</p><p>The default implementation of the <code>clone</code> method is platform dependent.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a copy of the receiver object.</p></dd></dl><div class="block">
-          attributes: protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div><div class="block">
-          annotations: 
-                <span class="name">@throws</span><span class="args">()</span>
-              
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#compareAndSet" data-isabs="true">
       <a id="compareAndSet[A, B](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">compareAndSet</span>
         <span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span>
-        <span class="params">(<span name="a">
-                  a
-                  : <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[A]
-                  
-                </span>, <span name="a0">
-                  a0
-                  : A
-                  
-                </span>, <span name="a1">
-                  a1
-                  : A
-                  
-                </span>, <span name="b">
-                  b
-                  : <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[B]
-                  
-                </span>, <span name="b0">
-                  b0
-                  : B
-                  
-                </span>, <span name="b1">
-                  b1
-                  : B
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="params">(<span name="a">a: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[A]</span>, <span name="a0">a0: A</span>, <span name="a1">a1: A</span>, <span name="b">b: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[B]</span>, <span name="b0">b0: B</span>, <span name="b1">b1: B</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
- the corresponding transaction.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
+      <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
+ the corresponding transaction.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
  the corresponding transaction.  Equivalent to </p><pre>
     atomic { implicit t =&gt;
       a() == a0 &amp;&amp; b() == b0 &amp;&amp; { a() = a1 ; b() = b1 ; true }
     }
-</pre></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</pre></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#compareAndSetIdentity" data-isabs="true">
       <a id="compareAndSetIdentity[A&lt;:AnyRef, B&lt;:AnyRef](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">compareAndSetIdentity</span>
         <span class="tparams">[<span name="A">A &lt;: AnyRef</span>, <span name="B">B &lt;: AnyRef</span>]</span>
-        <span class="params">(<span name="a">
-                  a
-                  : <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[A]
-                  
-                </span>, <span name="a0">
-                  a0
-                  : A
-                  
-                </span>, <span name="a1">
-                  a1
-                  : A
-                  
-                </span>, <span name="b">
-                  b
-                  : <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[B]
-                  
-                </span>, <span name="b0">
-                  b0
-                  : B
-                  
-                </span>, <span name="b1">
-                  b1
-                  : B
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="params">(<span name="a">a: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[A]</span>, <span name="a0">a0: A</span>, <span name="a1">a1: A</span>, <span name="b">b: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[B]</span>, <span name="b0">b0: B</span>, <span name="b1">b1: B</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s using identity comparison,
- probably more efficiently then the corresponding transaction.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s using identity comparison,
+      <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s using identity comparison,
+ probably more efficiently then the corresponding transaction.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s using identity comparison,
  probably more efficiently then the corresponding transaction.  Equivalent
  to </p><pre>
    atomic { implicit t =&gt;
@@ -447,337 +126,36 @@ part of compilation it is not possible to check whether the contents of the list
        b() = b1
      f
    }
-</pre></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#eq" data-isabs="false">
-      <a id="eq(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">eq</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : AnyRef
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This method is used to test whether the argument (<code>arg0</code>) is a reference to the
-receiver object (<code>this</code>).</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This method is used to test whether the argument (<code>arg0</code>) is a reference to the
-receiver object (<code>this</code>).</p><p>The <code>eq</code> method implements an [http://en.wikipedia.org/wiki/Equivalence_relation equivalence relation] on
-non-null instances of <code>AnyRef</code>:
- * It is reflexive: for any non-null instance <code>x</code> of type <code>AnyRef</code>, <code>x.eq(x)</code> returns <code>true</code>.
- * It is symmetric: for any non-null instances <code>x</code> and <code>y</code> of type <code>AnyRef</code>, <code>x.eq(y)</code> returns <code>true</code> if and
-   only if <code>y.eq(x)</code> returns <code>true</code>.
- * It is transitive: for any non-null instances <code>x</code>, <code>y</code>, and <code>z</code> of type <code>AnyRef</code> if <code>x.eq(y)</code> returns <code>true</code>
-   and <code>y.eq(z)</code> returns <code>true</code>, then <code>x.eq(z)</code> returns <code>true</code>.</p><p>Additionally, the <code>eq</code> method has three other properties.
- * It is consistent: for any non-null instances <code>x</code> and <code>y</code> of type <code>AnyRef</code>, multiple invocations of
-   <code>x.eq(y)</code> consistently returns <code>true</code> or consistently returns <code>false</code>.
- * For any non-null instance <code>x</code> of type <code>AnyRef</code>, <code>x.eq(null)</code> and <code>null.eq(x)</code> returns <code>false</code>.
- * <code>null.eq(null)</code> returns <code>true</code>.</p><p>When overriding the <code>equals</code> or <code>hashCode</code> methods, it is important to ensure that their behavior is
-consistent with reference equality.  Therefore, if two objects are references to each other (<code>o1 eq o2</code>), they
-should be equal to each other (<code>o1 == o2</code>) and they should hash to the same value (<code>o1.hashCode == o2.hashCode</code>).
-</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for reference equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the argument is a reference to the receiver object; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#equals" data-isabs="false">
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">equals</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : <span name="scala.Any" class="extype">Any</span>
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This method is used to compare the receiver object (<code>this</code>) with the argument object (<code>arg0</code>) for equivalence.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This method is used to compare the receiver object (<code>this</code>) with the argument object (<code>arg0</code>) for equivalence.</p><p>The default implementations of this method is an [http://en.wikipedia.org/wiki/Equivalence_relation equivalence
-relation]:
- * It is reflexive: for any instance <code>x</code> of type <code>Any</code>, <code>x.equals(x)</code> should return <code>true</code>.
- * It is symmetric: for any instances <code>x</code> and <code>y</code> of type <code>Any</code>, <code>x.equals(y)</code> should return <code>true</code> if and
-   only if <code>y.equals(x)</code> returns <code>true</code>.
- * It is transitive: for any instances <code>x</code>, <code>y</code>, and <code>z</code> of type <code>AnyRef</code> if <code>x.equals(y)</code> returns <code>true</code> and
-   <code>y.equals(z)</code> returns <code>true</code>, then <code>x.equals(z)</code> should return <code>true</code>.</p><p>If you override this method, you should verify that your implementation remains an equivalence relation.
-Additionally, when overriding this method it is often necessary to override <code>hashCode</code> to ensure that objects
-that are &quot;equal&quot; (<code>o1.equals(o2)</code> returns <code>true</code>) hash to the same scala.Int
-(<code>o1.hashCode.equals(o2.hashCode)</code>).
-</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is equivalent to the argument; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="prt" name="scala.AnyRef#finalize" data-isabs="false">
-      <a id="finalize():Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">finalize</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This method is called by the garbage collector on the receiver object when garbage collection determines that
-there are no more references to the object.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This method is called by the garbage collector on the receiver object when garbage collection determines that
-there are no more references to the object.</p><p>The details of when and if the <code>finalize</code> method are invoked, as well as the interaction between <code>finalize</code>
-and non-local returns and exceptions, are all platform dependent.</p></div><div class="block">
-          attributes: protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div><div class="block">
-          annotations: 
-                <span class="name">@throws</span><span class="args">()</span>
-              
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#getClass" data-isabs="false">
-      <a id="getClass():java.lang.Class[_]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">getClass</span>
-        
-        <span class="params">()</span>
-        <span class="result">: java.lang.Class[_]</span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns a representation that corresponds to the dynamic class of the receiver object.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a representation that corresponds to the dynamic class of the receiver object.</p><p>The nature of the representation is platform dependent.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a representation that corresponds to the dynamic class of the receiver object.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#hashCode" data-isabs="false">
-      <a id="hashCode():Int"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">hashCode</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Int" class="extype">Int</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns a hash code value for the object.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a hash code value for the object.</p><p>The default hashing algorithm is platform dependent.</p><p>Note that it is allowed for two objects to have identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>) yet
-not be equal (<code>o1.equals(o2)</code> returns <code>false</code>).  A degenerate implementation could always return <code>0</code>.
-However, it is required that if two objects are equal (<code>o1.equals(o2)</code> returns <code>true</code>) that they have
-identical hash codes (<code>o1.hashCode.equals(o2.hashCode)</code>).  Therefore, when overriding this method, be sure
-to verify that the behavior is consistent with the <code>equals</code> method.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>the hash code value for the object.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</pre></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#isControlFlow" data-isabs="true">
       <a id="isControlFlow(Throwable):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">isControlFlow</span>
         
-        <span class="params">(<span name="x">
-                  x
-                  : Throwable
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="params">(<span name="x">x: Throwable</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Returns true if <code>x</code> should be treated as a transfer of control, rather
- than an error.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns true if <code>x</code> should be treated as a transfer of control, rather
+      <p class="shortcomment cmt">Returns true if <code>x</code> should be treated as a transfer of control, rather
+ than an error.</p><div class="fullcomment"><div class="comment cmt"><p>Returns true if <code>x</code> should be treated as a transfer of control, rather
  than an error.  Atomic blocks that end with an uncaught control flow
  exception are committed, while atomic blocks that end with an uncaught
  error exception are rolled back.</p><p> All implementations of this method must return true for instances that
  implement <code>scala.util.control.ControlThrowable</code>.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.Any#isInstanceOf" data-isabs="false">
-      <a id="isInstanceOf[T0]:Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">isInstanceOf</span>
-        <span class="tparams">[<span name="T0">T0</span>]</span>
-        
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">This method is used to test whether the dynamic type of the receiver object is <code>T0</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>This method is used to test whether the dynamic type of the receiver object is <code>T0</code>.</p><p>Note that the test result of the test is modulo Scala's erasure semantics.  Therefore the expression
-<code>1.isInstanceOf[String]</code> will return <code>false</code>, while the expression <code>List(1).isInstanceOf[List[String]]</code> will
-return <code>true</code>.  In the latter example, because the type argument is erased as part of compilation it is not
-possible to check whether the contents of the list are of the requested typed.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p><code>true</code> if the receiver object is an instance of erasure of type <code>T0</code>; <code>false</code> otherwise.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#ne" data-isabs="false">
-      <a id="ne(AnyRef):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">ne</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : AnyRef
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt"><code>o.ne(arg0)</code> is the same as <code>!(o.eq(arg0))</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p><code>o.ne(arg0)</code> is the same as <code>!(o.eq(arg0))</code>.
-</p></div><dl class="paramcmts block"><dt class="param">arg0</dt><dd class="cmt"><p>the object to compare against this object for reference dis-equality.</p></dd><dt>returns</dt><dd class="cmt"><p><code>false</code> if the argument is not a reference to the receiver object; <code>true</code> otherwise.</p></dd></dl><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#notify" data-isabs="false">
-      <a id="notify():Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">notify</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Wakes up a single thread that is waiting on the receiver object's monitor.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Wakes up a single thread that is waiting on the receiver object's monitor.</p></div><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#notifyAll" data-isabs="false">
-      <a id="notifyAll():Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">notifyAll</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Wakes up all threads that are waiting on the receiver object's monitor.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Wakes up all threads that are waiting on the receiver object's monitor.</p></div><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#oneOf" data-isabs="true">
       <a id="oneOf[Z]((InTxn) ⇒ Z*)(MaybeTxn):Z"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">oneOf</span>
         <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="blocks">
-                  blocks
-                  : (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z*
-                  
-                </span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">
-                  mt
-                  : <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a>
-                  
-                </span>)</span>
-        <span class="result">: Z</span>
+        <span class="params">(<span name="blocks">blocks: (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a></span>)</span><span class="result">: Z</span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Atomically executes a transaction that is composed from <code>blocks</code> by
- joining with a left-biased <code>orAtomic</code> operator.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Atomically executes a transaction that is composed from <code>blocks</code> by
+      <p class="shortcomment cmt">Atomically executes a transaction that is composed from <code>blocks</code> by
+ joining with a left-biased <code>orAtomic</code> operator.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically executes a transaction that is composed from <code>blocks</code> by
  joining with a left-biased <code>orAtomic</code> operator.  The following two
  examples are equivalent.  Using <code>orAtomic</code>:</p><pre>
    atomic { implicit t =&gt;
@@ -799,64 +177,34 @@ possible to check whether the contents of the list are of the requested typed.
  block, but only after another context has changed some value read by one
  of the attempts.</p><p> The left-biasing of the <code>orAtomic</code> composition guarantees that if the
  first block does not call <code>retry</code>, no other blocks will be executed.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#postDecisionFailureHandler" data-isabs="true">
       <a id="postDecisionFailureHandler:(Status, Throwable) ⇒ Unit"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">postDecisionFailureHandler</span>
-        
         
         <span class="result">: (<a name="scala.concurrent.stm.Txn.Status" class="extype" href="Txn$$Status.html">Status</a>, Throwable) ⇒ <span name="scala.Unit" class="extype">Unit</span></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Returns a function that records, reports or discards exceptions that were
+      <p class="shortcomment cmt">Returns a function that records, reports or discards exceptions that were
  thrown from a while-committing, after-commit or after-rollback life-cycle
- callback.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a function that records, reports or discards exceptions that were
+ callback.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a function that records, reports or discards exceptions that were
  thrown from a while-committing, after-commit or after-rollback life-cycle
  callback.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#pushAlternative" data-isabs="true">
       <a id="pushAlternative[Z](MaybeTxn,(InTxn) ⇒ Z):Boolean"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">pushAlternative</span>
         <span class="tparams">[<span name="Z">Z</span>]</span>
-        <span class="params">(<span name="mt">
-                  mt
-                  : <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a>
-                  
-                </span>, <span name="block">
-                  block
-                  : (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="params">(<span name="mt">mt: <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a></span>, <span name="block">block: (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">(rare) Associates an alternative atomic block with the current thread.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>(rare) Associates an alternative atomic block with the current thread.
+      <p class="shortcomment cmt">(rare) Associates an alternative atomic block with the current thread.</p><div class="fullcomment"><div class="comment cmt"><p>(rare) Associates an alternative atomic block with the current thread.
  The next call to <code>apply</code> will consider <code>block</code> to be an alternative.
  Multiple alternatives may be associated before calling <code>apply</code>.  Returns
  true if this is the first pushed alternative, false otherwise.  This
@@ -864,30 +212,19 @@ possible to check whether the contents of the list are of the requested typed.
  only attempted if the previous alternatives call <code>retry</code>.</p><p> Note that it is not required that <code>pushAlternative</code> be called on the same
  instance of <code>TxnExecutor</code> as <code>apply</code>, just that they have been derived
  from the same original executor.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#retryTimeoutNanos" data-isabs="true">
       <a id="retryTimeoutNanos:Option[Long]"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">retryTimeoutNanos</span>
-        
         
         <span class="result">: <span name="scala.Option" class="extype">Option</span>[<span name="scala.Long" class="extype">Long</span>]</span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
- this <code>TxnExecutor</code>, or <code>None</code> otherwise.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
+      <p class="shortcomment cmt">Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
+ this <code>TxnExecutor</code>, or <code>None</code> otherwise.</p><div class="fullcomment"><div class="comment cmt"><p>Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
  this <code>TxnExecutor</code>, or <code>None</code> otherwise.  If the retry timeout is
  <code>Some(t)</code> and an atomic block executed by the returned executor blocks
  with <code>retry</code> or <code>retryFor</code> for more than <code>t</code> nanoseconds the retry will
@@ -900,161 +237,19 @@ possible to check whether the contents of the list are of the requested typed.
    } catch {
      case _: InterruptedException =&gt;
    }
-</pre></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#synchronized" data-isabs="false">
-      <a id="synchronized[T0](⇒ T0):T0"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">synchronized</span>
-        <span class="tparams">[<span name="T0">T0</span>]</span>
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : ⇒ T0
-                  
-                </span>)</span>
-        <span class="result">: T0</span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#toString" data-isabs="false">
-      <a id="toString():String"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">toString</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="java.lang.String" class="extype">String</span></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns a string representation of the object.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the object.</p><p>The default representation is platform dependent.
-</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a string representation of the object.</p></dd></dl><div class="block">
-          definition classes: AnyRef → Any
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
-      <a id="wait():Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">wait</span>
-        
-        <span class="params">()</span>
-        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div><div class="block">
-          annotations: 
-                <span class="name">@throws</span><span class="args">()</span>
-              
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
-      <a id="wait(Long,Int):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">wait</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : <span name="scala.Long" class="extype">Long</span>
-                  
-                </span>, <span name="arg1">
-                  arg1
-                  : <span name="scala.Int" class="extype">Int</span>
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div><div class="block">
-          annotations: 
-                <span class="name">@throws</span><span class="args">()</span>
-              
-        </div></div>
-          
-    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
-      <a id="wait(Long):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">wait</span>
-        
-        <span class="params">(<span name="arg0">
-                  arg0
-                  : <span name="scala.Long" class="extype">Long</span>
-                  
-                </span>)</span>
-        <span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
-            
-            <div class="fullcomment"><div class="block">
-          attributes: final 
-        </div><div class="block">
-          definition classes: AnyRef
-        </div><div class="block">
-          annotations: 
-                <span class="name">@throws</span><span class="args">()</span>
-              
-        </div></div>
-          
+</pre></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withControlFlowRecognizer" data-isabs="true">
       <a id="withControlFlowRecognizer(PartialFunction[Throwable, Boolean]):TxnExecutor"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">withControlFlowRecognizer</span>
         
-        <span class="params">(<span name="pf">
-                  pf
-                  : <span name="scala.PartialFunction" class="extype">PartialFunction</span>[Throwable, <span name="scala.Boolean" class="extype">Boolean</span>]
-                  
-                </span>)</span>
-        <span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="params">(<span name="pf">pf: <span name="scala.PartialFunction" class="extype">PartialFunction</span>[Throwable, <span name="scala.Boolean" class="extype">Boolean</span>]</span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Returns a <code>TxnExecutor e</code> that is identical to this one, except that
- <code>e.isControlFlow(x)</code> will return <code>pf(x)</code> if <code>pf.isDefined(x)</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor e</code> that is identical to this one, except that
+      <p class="shortcomment cmt">Returns a <code>TxnExecutor e</code> that is identical to this one, except that
+ <code>e.isControlFlow(x)</code> will return <code>pf(x)</code> if <code>pf.isDefined(x)</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor e</code> that is identical to this one, except that
  <code>e.isControlFlow(x)</code> will return <code>pf(x)</code> if <code>pf.isDefined(x)</code>.  For
  exceptions for which <code>pf</code> is not defined the decision will be deferred to
  the previous implementation.</p><p> This function may be combined with <code>TxnExecutor.transformDefault</code> to add
@@ -1067,106 +262,302 @@ possible to check whether the contents of the list are of the requested typed.
        case _: DSLNonLocalControlTransferException =&gt; true
      }
    }
-</pre></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</pre></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withPostDecisionFailureHandler" data-isabs="true">
       <a id="withPostDecisionFailureHandler((Status, Throwable) ⇒ Unit):TxnExecutor"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">withPostDecisionFailureHandler</span>
         
-        <span class="params">(<span name="handler">
-                  handler
-                  : (<a name="scala.concurrent.stm.Txn.Status" class="extype" href="Txn$$Status.html">Status</a>, Throwable) ⇒ <span name="scala.Unit" class="extype">Unit</span>
-                  
-                </span>)</span>
-        <span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="params">(<span name="handler">handler: (<a name="scala.concurrent.stm.Txn.Status" class="extype" href="Txn$$Status.html">Status</a>, Throwable) ⇒ <span name="scala.Unit" class="extype">Unit</span></span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Returns a <code>TxnExecutor e</code> that is identical to this one, except that
- <code>e.postDecisionFailureHandler</code> will return <code>handler</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor e</code> that is identical to this one, except that
+      <p class="shortcomment cmt">Returns a <code>TxnExecutor e</code> that is identical to this one, except that
+ <code>e.postDecisionFailureHandler</code> will return <code>handler</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor e</code> that is identical to this one, except that
  <code>e.postDecisionFailureHandler</code> will return <code>handler</code>.  This function may
  be called from inside a function passed to <code>TxnExecutor.transformDefault</code>
  to change the system-wide post-decision failure handler.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withRetryTimeout" data-isabs="false">
-      <a id="withRetryTimeout(Long,TimeUnit):TxnExecutor"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol">
-        <span class="name">withRetryTimeout</span>
-        
-        <span class="params">(<span name="timeout">
-                  timeout
-                  : <span name="scala.Long" class="extype">Long</span>
-                  
-                </span>, <span name="unit">
-                  unit
-                  : <span name="scala.actors.threadpool.TimeUnit" class="extype">TimeUnit</span>
-                   = <span class="symbol"><span class="name"><a href="../../package.html">TimeUnit.MILLISECONDS</a></span></span>
-                </span>)</span>
-        <span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
-      </span>
-      </h4>
-      
-            <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
- the specified retry timeout.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one except that it has
- the specified retry timeout.  The default time unit is milliseconds.
-</p></div>
-            
-            
-            
-            
-          </div>
-          
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withRetryTimeoutNanos" data-isabs="true">
       <a id="withRetryTimeoutNanos(Option[Long]):TxnExecutor"></a>
       <h4 class="signature">
       <span class="kind">def</span>
-      <span class="symbol">
+      <span class="symbol"> 
         <span class="name">withRetryTimeoutNanos</span>
         
-        <span class="params">(<span name="timeoutNanos">
-                  timeoutNanos
-                  : <span name="scala.Option" class="extype">Option</span>[<span name="scala.Long" class="extype">Long</span>]
-                  
-                </span>)</span>
-        <span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="params">(<span name="timeoutNanos">timeoutNanos: <span name="scala.Option" class="extype">Option</span>[<span name="scala.Long" class="extype">Long</span>]</span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
       </span>
       </h4>
-      
-            <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
- a <code>retryTimeout</code> of <code>timeoutNanos</code>.</p>
-            <div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
+      <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
+ a <code>retryTimeout</code> of <code>timeoutNanos</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
  a <code>retryTimeout</code> of <code>timeoutNanos</code>.
-</p></div><div class="block">
-          attributes: abstract 
-        </div>
-            
-            
-            
-            
-          </div>
-          
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
+    </li></ol>
+            </div>
+
+        <div class="values members" id="values">
+              <h3>Concrete Value Members</h3>
+              <ol><li visbl="pub" name="scala.AnyRef#!=" data-isabs="false">
+      <a id="!=(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">!=</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.Any#!=" data-isabs="false">
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">!=</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span name="scala.Any" class="extype">Any</span></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef###" data-isabs="false">
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">##</span>
+        
+        <span class="params">()</span><span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#==" data-isabs="false">
+      <a id="==(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">==</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.Any#==" data-isabs="false">
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">==</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span name="scala.Any" class="extype">Any</span></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li visbl="pub" name="scala.Any#asInstanceOf" data-isabs="false">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">asInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="result">: T0</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li visbl="prt" name="scala.AnyRef#clone" data-isabs="false">
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">clone</span>
+        
+        <span class="params">()</span><span class="result">: AnyRef</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#eq" data-isabs="false">
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">eq</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#equals" data-isabs="false">
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">equals</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span name="scala.Any" class="extype">Any</span></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li visbl="prt" name="scala.AnyRef#finalize" data-isabs="false">
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">finalize</span>
+        
+        <span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#getClass" data-isabs="false">
+      <a id="getClass():java.lang.Class[_]"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">getClass</span>
+        
+        <span class="params">()</span><span class="result">: java.lang.Class[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#hashCode" data-isabs="false">
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">hashCode</span>
+        
+        <span class="params">()</span><span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li visbl="pub" name="scala.Any#isInstanceOf" data-isabs="false">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">isInstanceOf</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#ne" data-isabs="false">
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">ne</span>
+        
+        <span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#notify" data-isabs="false">
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">notify</span>
+        
+        <span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#notifyAll" data-isabs="false">
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">notifyAll</span>
+        
+        <span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#synchronized" data-isabs="false">
+      <a id="synchronized[T0](⇒ T0):T0"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">synchronized</span>
+        <span class="tparams">[<span name="T0">T0</span>]</span>
+        <span class="params">(<span name="arg0">arg0: ⇒ T0</span>)</span><span class="result">: T0</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#toString" data-isabs="false">
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">toString</span>
+        
+        <span class="params">()</span><span class="result">: <span name="java.lang.String" class="extype">String</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">wait</span>
+        
+        <span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">wait</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span name="scala.Long" class="extype">Long</span></span>, <span name="arg1">arg1: <span name="scala.Int" class="extype">Int</span></span>)</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">wait</span>
+        
+        <span class="params">(<span name="arg0">arg0: <span name="scala.Long" class="extype">Long</span></span>)</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withRetryTimeout" data-isabs="false">
+      <a id="withRetryTimeout(Long,TimeUnit):TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">withRetryTimeout</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span name="scala.Long" class="extype">Long</span></span>, <span name="unit">unit: <span name="scala.actors.threadpool.TimeUnit" class="extype">TimeUnit</span> = <span class="symbol"><span class="name"><a href="../../package.html">TimeUnit.MILLISECONDS</a></span></span></span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
+ the specified retry timeout.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one except that it has
+ the specified retry timeout.  The default time unit is milliseconds.
+</p></div></div>
     </li></ol>
             </div>
 
