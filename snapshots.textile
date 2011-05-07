@@ -9,7 +9,7 @@ Snapshot releases deployed to the @scala-tools.org@ repository are fully tested 
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.9.0.RC1-1.0-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.0.RC1/1.0-SNAPSHOT/scala-stm_2.9.0.RC1-1.0-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.0.RC3-1.0-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.0.RC3/1.0-SNAPSHOT/scala-stm_2.9.0.RC3-1.0-SNAPSHOT.jar]
 * ScalaDoc: ["1.0-SNAPSHOT":api/1.0-SNAPSHOT/index.html]
 
 h2(#sbt). SBT
