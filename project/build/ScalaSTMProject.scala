@@ -15,8 +15,10 @@ class ScalaSTMProject(info: ProjectInfo) extends DefaultProject(info) {
   } else if (buildScalaVersion.startsWith("2.9.0.RC")) {
     val suffix = buildScalaVersion.substring(buildScalaVersion.indexOf("RC"))
     "org.scalatest" % ("scalatest_" + buildScalaVersion) % ("1.4." + suffix)
-  } else {
+  } else if (buildScalaVersion.startsWith("2.8")) {
     "org.scalatest" % "scalatest" % "1.3"
+  } else {
+    "org.scalatest" % ("scalatest_" + buildScalaVersion) % "1.4.1"
   }
 
   //// Testing
