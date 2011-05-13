@@ -6,12 +6,12 @@ title: Releases
 The latest release of ScalaSTM is version 0.3.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
 * download a prebuilt JAR for 2.8.1: ["scala-stm_2.8.1-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.3/scala-stm_2.8.1-0.3.jar]
-* download a prebuilt JAR for 2.9.0.RC4: ["scala-stm_2.9.0.RC4-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.0.RC4/0.3/scala-stm_2.9.0.RC4-0.3.jar]
+* download a prebuilt JAR for 2.9.0: ["scala-stm_2.9.0-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.0/0.3/scala-stm_2.9.0-0.3.jar]
 
 h2(#notes). Release notes
 
 Changes between 0.2 and 0.3
-* Support for Scala 2.9.0.RC1. As additional 2.9.0 release candidates are available we will release builds for them as well.
+* Support for Scala 2.9.0.
 * Timeouts for @retry@.  See ["Waiting : Timeouts":modular_blocking.html#timeouts].
 * Bug fixes and contention management improvements
 ** ["#11":https://github.com/nbronson/scala-stm/issues/closed#issue/11] -- fix for two-@Ref@ form of @compareAndSet@;
@@ -41,13 +41,13 @@ val scala_stm = "org.scala-tools" %% "scala-stm" % "0.3"
 
 h2(#maven). Maven2
 
-Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.9.0.RC4) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). The ScalaSTM dependency for your @pom.xml@ is
+Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.9.0) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). The ScalaSTM dependency for your @pom.xml@ is
 
 {% highlight xml %}
 <dependencies>
   <dependency>
     <groupId>org.scala-tools</groupId>
-    <artifactId>scala-stm_2.9.0.RC4</artifactId>
+    <artifactId>scala-stm_2.9.0</artifactId>
     <version>0.3</version>
   </dependency>
 </dependencies>
