@@ -17,6 +17,8 @@ class ScalaSTMProject(info: ProjectInfo) extends DefaultProject(info) {
     "org.scalatest" % ("scalatest_" + buildScalaVersion) % ("1.4." + suffix)
   } else if (buildScalaVersion.startsWith("2.8")) {
     "org.scalatest" % "scalatest" % "1.3"
+  } else if (buildScalaVersion == "2.9.0-1") {
+    "org.scalatest" % "scalatest_2.9.0" % "1.4.1"
   } else {
     "org.scalatest" % ("scalatest_" + buildScalaVersion) % "1.4.1"
   }
