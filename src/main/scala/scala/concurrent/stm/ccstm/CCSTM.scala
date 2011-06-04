@@ -201,7 +201,9 @@ private[ccstm] object CCSTM extends GV6 {
 
   @throws(classOf[InterruptedException])
   private def weakAwaitTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
-    if (null == currentTxn) {
+    val bypassedTxn = if (currentTxn == null) InTxnImpl.get else null
+
+    if (currentTxn == null && bypassedTxn == null) {
       // Spin a bit, but only from a non-txn context.  If this is a txn context
       // We need to roll ourself back ASAP if that is the proper resolution.
       var spins = 0
@@ -223,17 +225,36 @@ private[ccstm] object CCSTM extends GV6 {
     val owningSlot = owner(m0)
     val owningRoot = slotManager.beginLookup(owningSlot)
     try {
-      if (null != owningRoot && owningSlot == owner(handle.meta)) {
+      if (owningRoot != null && owningSlot == owner(handle.meta)) {
         if (!owningRoot.status.completed) {
-          if (null != currentTxn)
+          if (currentTxn != null)
             currentTxn.txn.resolveWriteWriteConflict(owningRoot, handle)
-//          else if (owningRoot.txn == InTxnImpl.get) {
-//            // We are in an escaped context and are waiting for a txn that is
-//            // attached to this thread.  Big trouble!
-//            assert(false) // CCSTM on top of scala-stm doesn't have escaped contexts, this shouldn't happen
-//            owningRoot.requestRollback(
-//                Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
-//          }
+          else if (owningRoot.txn == bypassedTxn) {
+            // We are using a bypass view and are waiting for the txn that is
+            // attached to this thread.  Big trouble!  We can't wait, so all we
+            // can do is fail the txn or throw an exception.  Failing the txn
+            // doesn't guarantee that it won't happen again, so to avoid the
+            // chance of livelock we just don't allow this case.  If necessary
+            // we could roll back the txn and then detect livelock via
+            // consecutive failures.
+            Stats.top.brokenSelfConflicts += 1
+            throw new IllegalStateException(
+                "access via BypassView rejected, because it conflicts with the current thread's transaction")
+//            if (!owningRoot.txn.selfConflictIsLiveLocking) {
+//              val s = owningRoot.requestRollback(
+//                  Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
+//              if (!s.completed) {
+//                // This is a bypass read or write from a while-committing
+//                // handler. The write from the txn has not yet been applied, so
+//                // we're stuck without some serious corner-case code.
+//                throw new IllegalStateException(
+//                    "access via BypassView rejected, because it conflicts with the transaction committing on the current thread")
+//              }
+//            } else {
+//              throw new IllegalStateException(
+//                  "access via BypassView rejected, because it is causing a live-lock")
+//            }
+          }
           owningRoot.awaitCompleted()
         }
 
@@ -290,6 +311,8 @@ private[ccstm] object CCSTM extends GV6 {
  *    exception in `UncaughtExceptionCause`
  *  - `blockingAcquires` -- internal locks that could not be acquired
  *    immediately
+ *  - `brokenSelfConflicts` -- `BypassView` accesses that failed because they
+ *    conflicted with the current thread's transaction
  *  - `commitReadSet` -- optimistic `Ref` reads, one sample per committed
  *    top-level transaction
  *  - `commitBargeSet` -- locations read pessimistically, one sample per

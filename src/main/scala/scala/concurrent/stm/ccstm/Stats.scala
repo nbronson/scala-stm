@@ -83,6 +83,7 @@ private[ccstm] object Stats {
     val optimisticRetries = new LazyCounterMap[Symbol]
     val failures = new LazyCounterMap[Class[_]] { override def toStr(k: Class[_]) = k.getSimpleName }
     val blockingAcquires = new Counter
+    val brokenSelfConflicts = if (isTop) new Counter else null
     val commitReadSet = if (isTop) new ExponentialHisto else null
     val commitBargeSet = if (isTop) new ExponentialHisto else null
     val commitWriteSet = if (isTop) new ExponentialHisto else null

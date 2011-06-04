@@ -177,11 +177,13 @@ private[ccstm] object NonTxn {
 
   @throws(classOf[InterruptedException])
   def get[T](handle: Handle[T]): T = {
+    // this retry loop is needed so that transactions are atomic, otherwise
+    // atomic { x=1 ; y=1 } || { a=x; y=b } could observe a=1, y=0
     var tries = 0
     var m0 = 0L
     while (tries < 100) {
       m0 = handle.meta
-      if (changing(m0)) {
+      if (changing(m0) && !selfOwned(m0)) {
         weakAwaitUnowned(handle, m0)
       } else {
         val v = handle.data
@@ -193,6 +195,11 @@ private[ccstm] object NonTxn {
       tries += 1
     }
     return lockedGet(handle)
+  }
+
+  private def selfOwned(m: Meta): Boolean = {
+    val bypassedTxn = InTxnImpl.get
+    bypassedTxn != null && owner(m) == bypassedTxn.slot
   }
 
   @throws(classOf[InterruptedException])

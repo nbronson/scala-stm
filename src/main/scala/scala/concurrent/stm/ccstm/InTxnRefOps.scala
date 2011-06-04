@@ -16,6 +16,8 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
   protected def _bargeVersion: Version
   protected def _slot: Slot
 
+  def slot: Slot = _slot
+
   //////// abstract methods
 
   protected def isNewerThanReadVersion(version: Version): Boolean
