@@ -19,6 +19,8 @@ object Source {
      */
     def ref: Source[A]
 
+    def bypass: BypassView[A]
+
     /** Performs an atomic read of the value in `ref`.  If an atomic block is
      *  active (see `Txn.findCurrent`) then the read will be performed as part
      *  of the transaction, otherwise it will act as if it was performed inside
@@ -84,6 +86,37 @@ object Source {
      */
     def tryAwait(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(f: A => Boolean): Boolean
   }
+
+  /** (rare) `Source.BypassView[+A]` consists of the covariant read-only
+   *  operations of `Ref.BypassView[A]`.  Prefer `Ref.View[A]`.
+   */
+  trait BypassView[+A] {
+
+    def ref: Source[A]
+    def single: View[A]
+
+    /** @return the most recently committed value of the associated `Ref` */
+    def apply()(implicit ctx: BypassCtx): A = get
+
+    /** @return the most recently committed value of the associated `Ref` */
+    def get(implicit ctx: BypassCtx): A
+
+    /** Returns some recent value of the `Ref` from which this bypass view was
+     *  constructed.  This method respects the isolation of transactions (it is
+     *  not possible to see a value written by an uncommitted transaction), but
+     *  not necessarily their atomicity (if a transaction writes `x` and `y`,
+     *  it is possible that `x.weakGet` will return the post-commit value and
+     *  then `y.weakGet` will return the pre-commit value).  Ignores writes
+     *  performed by a transaction on the current thread.  Despite its weak
+     *  guarantees, for some STM algorithms this method may block.
+     *
+     *  *Important:* Although this method ignores writes made within the
+     *  current thread's transactions, it is not guaranteed to always return
+     *  the pre-transaction value.
+     *  @return a recent committed value of the associated `Ref`
+     */
+    def weakGet(implicit ctx: BypassCtx): A
+  }
 }
 
 /** `Source[+A]` consists of the covariant read-only operations of `Ref[A]`. */
@@ -91,4 +124,6 @@ trait Source[+A] extends SourceLike[A, InTxn] {
 
   /** See `Ref.single`. */
   def single: Source.View[A]
+
+  def bypass: Source.BypassView[A]
 }

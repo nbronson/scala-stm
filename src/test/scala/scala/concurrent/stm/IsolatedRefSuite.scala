@@ -41,6 +41,8 @@ class IsolatedRefSuite extends FunSuite {
   class DynamicView[A](val ref: Ref[A]) extends Ref.View[A] {
     implicit def txn = Txn.findCurrent.get
 
+    def bypass = throw new UnsupportedOperationException
+
     def get: A = ref.get
     def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
@@ -79,6 +81,8 @@ class IsolatedRefSuite extends FunSuite {
     }
 
     protected def view: Ref.View[A]
+
+    def bypass = throw new UnsupportedOperationException
 
     def get: A = wrap { view.get }
     def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
@@ -509,6 +513,7 @@ class IsolatedRefSuite extends FunSuite {
 
   class ProxyRef[A](underlying: Ref[A]) extends Ref[A] {
     override def single = throw new AbstractMethodError
+    override def bypass = throw new AbstractMethodError
     def get(implicit txn: InTxn) = throw new AbstractMethodError
     def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
     def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError

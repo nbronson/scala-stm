@@ -33,6 +33,8 @@ object Ref extends RefCompanion {
      */
     override def ref: Ref[A]
 
+    override def bypass: BypassView[A]
+
     /** Works like `set(v)`, but returns the old value.  This is an
      *  atomic swap, equivalent to atomically performing a `get`
      *  followed by `set(v)`.
@@ -160,6 +162,47 @@ object Ref extends RefCompanion {
     // override def hashCode: Int = underlying.hashCode
     // override def equals(rhs: Any): Boolean = underlying == rhs
   }
+
+  /** (rare) `Ref.BypassView` provides access to the contents of a `Ref` while
+   *  bypassing any active transaction context, which may be useful in
+   *  performance-critical code.  `Ref.View[A]` is much easier to use in a
+   *  composable (and correct) manner; it should be preferred.
+   */
+  trait BypassView[A] extends Source.BypassView[A] with Sink.BypassView[A] {
+
+    override def ref: Ref[A]
+    override def single: View[A]
+
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def swap(v: A)(implicit ctx: BypassCtx): A
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def compareAndSet(before: A, after: A)(implicit ctx: BypassCtx): Boolean
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A)(implicit ctx: BypassCtx): Boolean
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def transform(f: A => A)(implicit ctx: BypassCtx)
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def getAndTransform(f: A => A)(implicit ctx: BypassCtx): A
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def transformAndGet(f: A => A)(implicit ctx: BypassCtx): A
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def transformIfDefined(pf: PartialFunction[A,A])(implicit ctx: BypassCtx): Boolean
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def += (rhs: A)(implicit num: Numeric[A], ctx: BypassCtx) { transform { v => num.plus(v, rhs) } }
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def -= (rhs: A)(implicit num: Numeric[A], ctx: BypassCtx) { transform { v => num.minus(v, rhs) } }
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def *= (rhs: A)(implicit num: Numeric[A], ctx: BypassCtx) { transform { v => num.times(v, rhs) } }
+    /** @throw IllegalStateException if conflict with this thread's `atomic` */
+    def /= (rhs: A)(implicit num: Numeric[A], ctx: BypassCtx) {
+      num match {
+        //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
+        case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }
+        //case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
+        case numI: Integral[_] => transform { v => numI.asInstanceOf[Integral[A]].quot(v, rhs) }
+      }
+    }
+  }
 }
 
 // All of object Ref's functionality is actually in RefCompanion.  The split
@@ -284,6 +327,8 @@ trait Ref[A] extends RefLike[A, InTxn] with Source[A] with Sink[A] {
    *  `atomic { implicit t => ref.foo(args) }`.
    */
   override def single: Ref.View[A]
+
+  override def bypass: Ref.BypassView[A]
 
   // If you implement a Ref proxy, you should define a hashCode and
   // equals that delegate to the underlying Ref or Ref.View.  Ref and

@@ -71,6 +71,7 @@ private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A]) extends T
       def handle: Handle[A] = this
       def single: Ref.View[A] = this
       def ref: Ref[A] = this
+      def bypass: Ref.BypassView[A] = throw new UnsupportedOperationException
 
       def meta = metaValues.get(metaOffset)
       def meta_=(v: Long) { metaValues.set(metaOffset, v) }

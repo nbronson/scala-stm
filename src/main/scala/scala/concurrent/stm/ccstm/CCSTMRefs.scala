@@ -43,6 +43,7 @@ private[ccstm] object CCSTMRefs {
     def handle: Handle[A] = this
     def single: Ref.View[A] = this
     def ref: Ref[A] = this
+    def bypass: Ref.BypassView[A] = throw new UnsupportedOperationException
     def base: AnyRef = this
     def metaOffset: Int = 0
     def offset: Int = 0
