@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -67,11 +67,11 @@ private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A]) extends T
     if (index < 0 || index >= length)
       throw new ArrayIndexOutOfBoundsException(index)
 
-    new Handle[A] with RefOps[A] with ViewOps[A] {
+    new Handle[A] with RefOps[A] with ViewOps[A] with BypassViewOps[A] {
       def handle: Handle[A] = this
       def single: Ref.View[A] = this
       def ref: Ref[A] = this
-      def bypass: Ref.BypassView[A] = throw new UnsupportedOperationException
+      def bypass: Ref.BypassView[A] = this
 
       def meta = metaValues.get(metaOffset)
       def meta_=(v: Long) { metaValues.set(metaOffset, v) }

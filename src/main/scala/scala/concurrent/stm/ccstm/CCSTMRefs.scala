@@ -39,11 +39,11 @@ private[ccstm] object CCSTMRefs {
     def newTSetBuilder[A] = skel.HashTrieTSet.newBuilder[A]
   }
 
-  private abstract class BaseRef[A] extends Handle[A] with RefOps[A] with ViewOps[A] {
+  private abstract class BaseRef[A] extends Handle[A] with RefOps[A] with ViewOps[A] with BypassViewOps[A] {
     def handle: Handle[A] = this
     def single: Ref.View[A] = this
     def ref: Ref[A] = this
-    def bypass: Ref.BypassView[A] = throw new UnsupportedOperationException
+    def bypass: Ref.BypassView[A] = this
     def base: AnyRef = this
     def metaOffset: Int = 0
     def offset: Int = 0
@@ -93,15 +93,22 @@ private[ccstm] object CCSTMRefs {
     def metaCAS(m0: Long, m1: Long) = intUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[IntRef], "meta")
 
-    override def += (rhs: Int)(implicit num: Numeric[Int]) { incr(rhs) }
-    override def -= (rhs: Int)(implicit num: Numeric[Int]) { incr(-rhs) }
-    private def incr(delta: Int) {
+    override def += (rhs: Int)(implicit num: Numeric[Int]) { singleIncr(rhs) }
+    override def -= (rhs: Int)(implicit num: Numeric[Int]) { singleIncr(-rhs) }
+    private def singleIncr(delta: Int) {
       if (delta != 0) {
         InTxnImpl.dynCurrentOrNull match {
           case null => NonTxn.getAndAdd(handle, delta)
           case txn => txn.getAndAdd(handle, delta)
         }
       }
+    }
+
+    override def += (rhs: Int)(implicit num: Numeric[Int], ctx: BypassCtx) { bypassIncr(rhs) }
+    override def -= (rhs: Int)(implicit num: Numeric[Int], ctx: BypassCtx) { bypassIncr(-rhs) }
+    private def bypassIncr(delta: Int) {
+      if (delta != 0)
+        NonTxn.getAndAdd(handle, delta)
     }
   }
 

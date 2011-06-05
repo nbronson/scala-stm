@@ -237,7 +237,9 @@ private[ccstm] object CCSTM extends GV6 {
             // chance of livelock we just don't allow this case.  If necessary
             // we could roll back the txn and then detect livelock via
             // consecutive failures.
-            Stats.top.brokenSelfConflicts += 1
+            val t = Stats.top
+            if (t != null)
+              t.brokenSelfConflicts += 1
             throw new IllegalStateException(
                 "access via BypassView rejected, because it conflicts with the current thread's transaction")
 //            if (!owningRoot.txn.selfConflictIsLiveLocking) {
