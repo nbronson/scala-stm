@@ -2,6 +2,7 @@
 
 package scala.concurrent.stm
 
+import scala.annotation.tailrec
 import org.scalatest.FunSuite
 import actors.threadpool.TimeUnit
 
@@ -32,6 +33,7 @@ class IsolatedRefSuite extends FunSuite {
       ref.single() = v0
       ref
     }
+
     override def toString = "ArrayElement"
   }
 
@@ -69,6 +71,48 @@ class IsolatedRefSuite extends FunSuite {
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
+  }
+
+  // This implements Ref.View, but forwards to Ref.BypassView
+  class FwdToBypassView[A](val bypass: Ref.BypassView[A]) extends Ref.View[A] {
+    def ref = throw new UnsupportedOperationException
+    def single = throw new UnsupportedOperationException
+
+    def get: A = bypass.get
+    def getWith[Z](f: A => Z): Z = f(bypass.get)
+    def relaxedGet(equiv: (A, A) => Boolean): A = bypass.get
+    def await(f: A => Boolean) { tryAwait(Long.MaxValue, TimeUnit.NANOSECONDS)(f) }
+
+    @tailrec
+    final def tryAwait(timeout: Long, unit: TimeUnit)(f: A => Boolean): Boolean = {
+      // this polling loop is good enough for testing, but not production
+      if (f(bypass.get))
+        true
+      else if (timeout < 0)
+        false
+      else {
+        Thread.sleep(10)
+        tryAwait(unit.toMillis(timeout) - 10)(f)
+      }
+    }
+
+    def set(v: A) { bypass.set(v) }
+    def trySet(v: A) = bypass.trySet(v)
+    def swap(v: A): A = bypass.swap(v)
+    def compareAndSet(before: A, after: A): Boolean = bypass.compareAndSet(before, after)
+    def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = bypass.compareAndSetIdentity(before, after)
+    def transform(f: A => A) { bypass.transform(f) }
+    def getAndTransform(f: A => A): A = bypass.getAndTransform(f)
+    def transformAndGet(f: A => A): A = bypass.transformAndGet(f)
+    def transformIfDefined(pf: PartialFunction[A, A]): Boolean = bypass.transformIfDefined(pf)
+
+    override def +=(rhs: A)(implicit num: Numeric[A]) = bypass += rhs
+    override def -=(rhs: A)(implicit num: Numeric[A]) = bypass -= rhs
+    override def *=(rhs: A)(implicit num: Numeric[A]) = bypass *= rhs
+    override def /=(rhs: A)(implicit num: Numeric[A]) = bypass /= rhs
+
+    override def hashCode: Int = bypass.hashCode
+    override def equals(rhs: Any): Boolean = bypass == rhs
   }
 
   abstract class TestingView[A](innerDepth: Int, val ref: Ref[A]) extends Ref.View[A] {
@@ -119,6 +163,13 @@ class IsolatedRefSuite extends FunSuite {
     override def toString = "Single"
   }
 
+  object BypassAccess extends ViewFactory {
+    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
+      protected def view = new FwdToBypassView[A](ref.bypass)
+    }
+    override def toString = "Single"
+  }
+
   object RefAccess extends ViewFactory {
     def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
       protected val view = new DynamicView[A](ref)
@@ -144,7 +195,7 @@ class IsolatedRefSuite extends FunSuite {
       for (outerLevels <- 0 until 2;
            innerLevels <- 0 until 2;
            refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
-           viewFactory <- List(SingleAccess, RefAccess);
+           viewFactory <- List(SingleAccess, BypassAccess, RefAccess);
            if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
         val current = "outer=" + outerLevels + ", inner=" + innerLevels + ", " + refFactory + ", " + viewFactory
         try {
