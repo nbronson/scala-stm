@@ -9,6 +9,11 @@ import stmbench7.backend.Index
 
 object IndexImpl {
   class BoxedImmutable[A <: Comparable[A], B] extends Index[A,B] {
+    // needed for 2.8, harmless in 2.9
+    implicit val order = new Ordering[A] {
+      def compare(lhs: A, rhs: A) = lhs compareTo rhs
+    }
+
     val underlying = Ref(TreeMap.empty[A,B]).single
 
     def get(key: A) = underlying().getOrElse(key, null.asInstanceOf[B])
