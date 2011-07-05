@@ -11,5 +11,5 @@ class ImmutableSetImpl[A](contents: TSet.View[A], shared: Boolean = true) extend
   override def clone: ImmutableSetImpl[A] = if (!shared) this else new ImmutableSetImpl(contents.clone(), false)
   def contains(element: A) = contents.contains(element)
   def size = contents.size
-  def iterator = JavaConversions.asJavaIterator(contents.iterator)
+  def iterator = JavaConversions.asIterator(contents.iterator)
 }

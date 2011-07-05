@@ -28,10 +28,10 @@ object IndexImpl {
       case m if m.contains(key) => m - key
     }
 
-    def iterator = JavaConversions.asJavaIterator(underlying().valuesIterator)
+    def iterator = JavaConversions.asIterator(underlying().valuesIterator)
 
-    def getKeys = JavaConversions.asJavaSet(underlying().keySet)
+    def getKeys = JavaConversions.asSet(underlying().keySet)
 
-    def getRange(minKey: A, maxKey: A) = JavaConversions.asJavaIterable(underlying().range(minKey, maxKey).values)
+    def getRange(minKey: A, maxKey: A) = JavaConversions.asIterable(underlying().range(minKey, maxKey).values)
   }
 }

@@ -15,5 +15,5 @@ class LargeSetImpl[A <: Comparable[A]] extends LargeSet[A] {
   def remove(e: A) = !underlying.remove(e).isEmpty
   def contains(e: A) = underlying.contains(e)
   def size = underlying.size
-  def iterator = JavaConversions.asJavaIterator(underlying.keysIterator)
+  def iterator = JavaConversions.asIterator(underlying.keysIterator)
 }
