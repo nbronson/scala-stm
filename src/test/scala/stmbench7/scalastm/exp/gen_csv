@@ -1,0 +1,47 @@
+#!/bin/bash
+
+WORKLOADS="r w rw"
+IMPLS="stm coarse medium"
+PASSES="0 1 2 3 4"
+THREADS="1 2 3 4 6 8 10 12 14 16 24 32 48 64"
+
+echo "workload,impl,threads,value,pass0,pass1,pass2,pass3,pass4"
+for r in $WORKLOADS; do
+  for g in $IMPLS; do
+    # ops/sec
+    for t in $THREADS; do
+      echo -n "$r,$g,$t,ops_per_sec"
+      for p in $PASSES; do
+        awk '/Total throughput/ {printf(",%s", $3)}' pass$p/thread$t/$r/$g.out
+      done
+      echo ""
+    done
+
+    # ops/sec including failed ops
+    for t in $THREADS; do
+      echo -n "$r,$g,$t,all_ops_per_sec"
+      for p in $PASSES; do
+        awk '/Total throughput/ {printf(",%s", $5)}' pass$p/thread$t/$r/$g.out | sed 's/(//'
+      done
+      echo ""
+    done
+
+    # total Kbytes collected by GC
+    for t in $THREADS; do
+      echo -n "$r,$g,$t,collected_k"
+      for p in $PASSES; do
+        ./gclog_summary pass$p/thread$t/$r/$g.gc | awk '/^DATA/ {printf(",%s", $4)}'
+      done
+      echo ""
+    done
+
+    # total sec used by GC
+    for t in $THREADS; do
+      echo -n "$r,$g,$t,gc_elapsed_sec"
+      for p in $PASSES; do
+        ./gclog_summary pass$p/thread$t/$r/$g.gc | awk '/^DATA/ {printf(",%s", $6)}'
+      done
+      echo ""
+    done
+  done
+done
