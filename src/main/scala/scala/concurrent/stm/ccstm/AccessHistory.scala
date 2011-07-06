@@ -41,6 +41,8 @@ private[ccstm] object AccessHistory {
     protected def writeAppend[T](handle: Handle[T], freshOwner: Boolean, v: T)
     protected def writeUpdate[T](i: Int, v: T)
     protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T
+    protected def compareAndSetIdentity[T, R <: T with AnyRef](
+        handle: Handle[T], freshOwner: Boolean, before: R, after: T): Boolean
     protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
     protected def transformAndGet[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
     protected def getAndAdd(handle: Handle[Int], freshOwner: Boolean, delta: Int): Int
@@ -514,6 +516,18 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val before = getWriteSpecValue[T](i)
     setSpecValue(i, value)
     return before
+  }
+
+  protected def compareAndSetIdentity[T, R <: T with AnyRef](
+      handle: Handle[T], freshOwner: Boolean, before: R, after: T): Boolean = {
+    val i = findOrAllocate(handle, freshOwner)
+    val v0 = getWriteSpecValue[T](i)
+    if (before eq v0.asInstanceOf[AnyRef]) {
+      setSpecValue(i, after)
+      return true
+    } else {
+      return false
+    }
   }
 
   protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T = {

@@ -306,6 +306,26 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
 
   @throws(classOf[InterruptedException])
   def compareAndSetIdentity[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
+    // make a heuristic guess based on a racy read of the value
+    if (before eq handle.data.asInstanceOf[AnyRef])
+      acquiringCASI(handle, before, after)
+    else
+      unrecordedCASI(handle, before, after)
+  }
+
+  @throws(classOf[InterruptedException])
+  private def acquiringCASI[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
+    requireActive()
+    val mPrev = acquireOwnership(handle)
+    val f = freshOwner(mPrev)
+    val z = compareAndSetIdentity(handle, f, before, after)
+    if (f)
+      revalidateIfRequired(version(mPrev))
+    z
+  }
+
+  @throws(classOf[InterruptedException])
+  private def unrecordedCASI[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
     transformIfDefined(handle, new PartialFunction[T,T] {
       def isDefinedAt(v: T): Boolean = (before eq v.asInstanceOf[AnyRef])
       def apply(v: T): T = after
