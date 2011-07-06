@@ -48,9 +48,10 @@ private[skel] object TxnHashTrie {
   sealed abstract class Node[A, B] {
     def cappedSize(cap: Int): Int
     def txnIsEmpty(implicit txn: InTxn): Boolean
-    def setForeach[U](f: A => U)
+    def keyForeach[U](f: A => U)
     def mapForeach[U](f: ((A, B)) => U)
-    def setIterator: Iterator[A]
+    def keyIterator: Iterator[A]
+    def valueIterator: Iterator[B]
     def mapIterator: Iterator[(A, B)]
   }
 
@@ -256,7 +257,7 @@ private[skel] object TxnHashTrie {
         new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
     }
 
-    def setForeach[U](f: A => U) {
+    def keyForeach[U](f: A => U) {
       var i = 0
       while (i < hashes.length) {
         f(getKey(i))
@@ -272,10 +273,16 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def setIterator: Iterator[A] = new Iterator[A] {
+    def keyIterator: Iterator[A] = new Iterator[A] {
       var pos = 0
       def hasNext = pos < hashes.length
       def next: A = { val z = getKey(pos) ; pos += 1 ; z }
+    }
+
+    def valueIterator: Iterator[B] = new Iterator[B] {
+      var pos = 0
+      def hasNext = pos < hashes.length
+      def next: B = { val z = getValue(pos) ; pos += 1 ; z }
     }
 
     def mapIterator: Iterator[(A, B)] = new Iterator[(A,B)] {
@@ -341,10 +348,10 @@ private[skel] object TxnHashTrie {
       new Branch[A, B](newGen, false, cc)
     }
 
-    def setForeach[U](f: A => U) {
+    def keyForeach[U](f: A => U) {
       var i = 0
       while (i < BF) {
-        children(i)().setForeach(f)
+        children(i)().keyForeach(f)
         i += 1
       }
     }
@@ -391,8 +398,12 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def setIterator: Iterator[A] = new Iter[A] {
-      def childIter(c: Node[A, B]) = c.setIterator
+    def keyIterator: Iterator[A] = new Iter[A] {
+      def childIter(c: Node[A, B]) = c.keyIterator
+    }
+
+    def valueIterator: Iterator[B] = new Iter[B] {
+      def childIter(c: Node[A, B]) = c.valueIterator
     }
 
     def mapIterator: Iterator[(A, B)] = new Iter[(A,B)] {
@@ -467,9 +478,11 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   protected def cloneRoot: Ref.View[Node[A, B]] = Ref(frozenRoot).single
 
-  protected def setIterator: Iterator[A] = frozenRoot.setIterator
+  protected def setIterator: Iterator[A] = frozenRoot.keyIterator
 
   protected def mapIterator: Iterator[(A, B)] = frozenRoot.mapIterator
+  protected def mapKeyIterator: Iterator[A] = frozenRoot.keyIterator
+  protected def mapValueIterator: Iterator[B] = frozenRoot.valueIterator
 
   //////////////// whole-trie operations on Ref.View
 
@@ -483,7 +496,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   protected def singleSetForeach[U](f: A => U) {
     // don't freeze the root if we use .single in a txn
     impl.STMImpl.instance.dynCurrentOrNull match {
-      case null => frozenRoot.setForeach(f)
+      case null => frozenRoot.keyForeach(f)
       case txn => txnSetForeach(f)(txn)
     }
   }
@@ -688,7 +701,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   protected def txnIsEmpty(implicit txn: InTxn): Boolean = root().txnIsEmpty
 
-  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) { root().setForeach(f) }
+  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) { root().keyForeach(f) }
 
   protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
 
