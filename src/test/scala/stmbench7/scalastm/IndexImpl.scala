@@ -2,7 +2,9 @@
 
 package stmbench7.scalastm
 
-import scala.collection.immutable.TreeMap
+import scala.annotation._
+import scala.collection.immutable.{RedBlack, TreeMap}
+import scala.collection.mutable.ArrayStack
 import scala.collection.JavaConversions
 import scala.concurrent.stm._
 import stmbench7.backend.Index
@@ -28,10 +30,49 @@ object IndexImpl {
       case m if m.contains(key) => m - key
     }
 
-    def iterator = JavaConversions.asIterator(underlying().valuesIterator)
+    def iterator = makeValuesIterator(underlying())
 
     def getKeys = JavaConversions.asSet(underlying().keySet)
 
-    def getRange(minKey: A, maxKey: A) = JavaConversions.asIterable(underlying().range(minKey, maxKey).values)
+    def getRange(minKey: A, maxKey: A) = new java.lang.Iterable[B] {
+      val range = underlying().range(minKey, maxKey)
+      def iterator = makeValuesIterator(range)
+    }
+
+    // <hack>We implement our own iterator because the Scala one generates
+    // a large quantity of garbage.</hack>
+    private def makeValuesIterator(m: TreeMap[A, B]) = {
+      val root = treeMapTreeField.get(m).asInstanceOf[RedBlack[A]#Tree[B]]
+      new java.util.Iterator[B] {
+        val avail = ArrayStack.empty[RedBlack[A]#NonEmpty[B]] // ready to return
+        pushAll(root)
+
+        @tailrec final def pushAll(n: RedBlack[A]#Tree[B]) {
+          n match {
+            case ne: RedBlack[A]#NonEmpty[B] => {
+              avail.push(ne)
+              pushAll(ne.left)
+            }
+            case _ =>
+          }
+        }
+
+        def hasNext = !avail.isEmpty
+
+        def next(): B = {
+          val n = avail.pop()
+          pushAll(n.right)
+          n.value
+        }
+
+        def remove() = throw new UnsupportedOperationException
+      }
+    }
+  }
+
+  private val treeMapTreeField = {
+    val f = classOf[TreeMap[String, String]].getDeclaredField("tree")
+    f.setAccessible(true)
+    f
   }
 }
