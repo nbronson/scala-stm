@@ -66,3 +66,7 @@ p(faqa). *A.* No, although pluggable implementations may allow it to be selectiv
 p(faqq). *Q.* Will ScalaSTM work with Scala on .NET?
 
 p(faqa). *A.* The ScalaSTM reference implementation uses classes from @java.util.concurrent.atomic@ in a few key places internally, but it should be straightforward to replace these with the CLR functionality exposed by @System::Threading::Interlocked@.  Because ScalaSTM does not do bytecode rewriting there will be no need for MSIL rewriting.
+
+p(faqq). *Q.* Is there a version of the STAMP benchmark available for ScalaSTM?
+
+p(faqa). *A.* No. We have implemented an adapter for the STMBench7 benchmark, though. See the ["results":benchmark.html].

@@ -3,14 +3,16 @@ layout: default
 title: Snapshot releases
 ---
 
-Currently there are no changes between 0.3 and 1.0-SNAPSHOT.
+Changes between 0.3 and 0.4-SNAPSHOT:
+* Small performance improvements.
+* STMBench7 support.
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.9.0-1.0-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.0/1.0-SNAPSHOT/scala-stm_2.9.0-1.0-SNAPSHOT.jar]
-* ScalaDoc: ["1.0-SNAPSHOT":api/1.0-SNAPSHOT/index.html]
+* Manual download: ["scala-stm_2.9.0-0.4-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.0/0.4-SNAPSHOT/scala-stm_2.9.0-0.4-SNAPSHOT.jar]
+* ScalaDoc: ["0.4-SNAPSHOT":api/0.4-SNAPSHOT/index.html]
 
 h2(#sbt). SBT
 
@@ -19,7 +21,7 @@ Tell @sbt@ about the @scala-tools.org@ snapshot repository and the ScalaSTM arti
 {% highlight scala %}
 val scala_tools_snapshots = ("Scala-Tools Maven2 Repository - snapshots" at
     "http://scala-tools.org/repo-snapshots")
-val scala_stm = "org.scala-tools" %% "scala-stm" % "1.0-SNAPSHOT"
+val scala_stm = "org.scala-tools" %% "scala-stm" % "0.4-SNAPSHOT"
 {% endhighlight %}
 
 @sbt update@ will download the latest @scala-stm@ snapshot JAR and make it available for building.
@@ -33,7 +35,7 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.9.0</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
   </dependency>
 </dependencies>
 {% endhighlight %}
