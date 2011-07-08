@@ -41,54 +41,54 @@ Base Assembly 1 of 729Base Assembly 2 of 729Base Assembly 3 of 729Base Assemb
 Setup completed.
 
 Benchmark started.
-Thread #6 finished.
-Thread #43 finished.
-Thread #13 finished.
-Thread #35 finished.
-Thread #24 finished.
-Thread #37 finished.
-Thread #39 finished.
-Thread #46 finished.
-Thread #20 finished.
-Thread #27 finished.
-Thread #9 finished.
-Thread #26 finished.
-Thread #3 finished.
-Thread #23 finished.
-Thread #21 finished.
-Thread #18 finished.
-Thread #38 finished.
-Thread #12 finished.
-Thread #0 finished.
-Thread #40 finished.
-Thread #47 finished.
-Thread #44 finished.
-Thread #36 finished.
-Thread #42 finished.
-Thread #32 finished.
-Thread #29 finished.
-Thread #2 finished.
-Thread #10 finished.
-Thread #34 finished.
-Thread #41 finished.
-Thread #17 finished.
-Thread #25 finished.
-Thread #7 finished.
-Thread #11 finished.
 Thread #15 finished.
-Thread #19 finished.
-Thread #31 finished.
-Thread #33 finished.
+Thread #45 finished.
+Thread #40 finished.
+Thread #1 finished.
+Thread #12 finished.
+Thread #37 finished.
+Thread #10 finished.
+Thread #24 finished.
+Thread #7 finished.
+Thread #17 finished.
+Thread #21 finished.
+Thread #11 finished.
+Thread #32 finished.
+Thread #39 finished.
 Thread #5 finished.
 Thread #28 finished.
-Thread #22 finished.
-Thread #8 finished.
-Thread #16 finished.
-Thread #4 finished.
-Thread #1 finished.
-Thread #45 finished.
+Thread #36 finished.
+Thread #44 finished.
+Thread #19 finished.
 Thread #30 finished.
 Thread #14 finished.
+Thread #41 finished.
+Thread #18 finished.
+Thread #43 finished.
+Thread #29 finished.
+Thread #42 finished.
+Thread #6 finished.
+Thread #38 finished.
+Thread #31 finished.
+Thread #8 finished.
+Thread #25 finished.
+Thread #22 finished.
+Thread #34 finished.
+Thread #27 finished.
+Thread #47 finished.
+Thread #26 finished.
+Thread #0 finished.
+Thread #20 finished.
+Thread #9 finished.
+Thread #13 finished.
+Thread #33 finished.
+Thread #2 finished.
+Thread #35 finished.
+Thread #23 finished.
+Thread #16 finished.
+Thread #46 finished.
+Thread #3 finished.
+Thread #4 finished.
 Benchmark completed.
 
 -------------------------------------------------------------------------------
@@ -106,62 +106,62 @@ Operation   T5:   successful = 0	maxttc = 0	failed = 0
 Operation   T6:   successful = 0	maxttc = 0	failed = 0
 Operation   Q6:   successful = 0	maxttc = 0	failed = 0
 Operation   Q7:   successful = 0	maxttc = 0	failed = 0
-Operation  ST1:   successful = 343	maxttc = 1	failed = 1422
-Operation  ST2:   successful = 355	maxttc = 1	failed = 1391
-Operation  ST3:   successful = 1686	maxttc = 10	failed = 36
-Operation  ST4:   successful = 1635	maxttc = 6	failed = 0
-Operation  ST5:   successful = 1635	maxttc = 74	failed = 0
-Operation  ST6:   successful = 4700	maxttc = 43	failed = 20148
-Operation  ST7:   successful = 4816	maxttc = 44	failed = 19309
-Operation  ST8:   successful = 24024	maxttc = 14	failed = 525
-Operation  ST9:   successful = 283	maxttc = 4	failed = 1433
-Operation ST10:   successful = 4836	maxttc = 54	failed = 20207
-Operation  OP1:   successful = 1646	maxttc = 2	failed = 0
-Operation  OP2:   successful = 1474	maxttc = 55	failed = 0
-Operation  OP3:   successful = 1668	maxttc = 484	failed = 0
-Operation  OP4:   successful = 1693	maxttc = 44	failed = 0
-Operation  OP5:   successful = 1614	maxttc = 1	failed = 0
-Operation  OP6:   successful = 654	maxttc = 1	failed = 835
-Operation  OP7:   successful = 564	maxttc = 1	failed = 800
-Operation  OP8:   successful = 667	maxttc = 1	failed = 823
-Operation  OP9:   successful = 16225	maxttc = 50	failed = 0
-Operation OP10:   successful = 16252	maxttc = 771	failed = 0
-Operation OP11:   successful = 15957	maxttc = 2427	failed = 0
-Operation OP12:   successful = 6681	maxttc = 5	failed = 9425
-Operation OP13:   successful = 7534	maxttc = 10	failed = 8238
-Operation OP14:   successful = 7314	maxttc = 1	failed = 8520
-Operation OP15:   successful = 15511	maxttc = 319	failed = 0
-Operation  SM1:   successful = 2704	maxttc = 401	failed = 182
-Operation  SM2:   successful = 2708	maxttc = 239	failed = 253
-Operation  SM3:   successful = 1365	maxttc = 5	failed = 1566
-Operation  SM4:   successful = 184	maxttc = 1	failed = 3209
-Operation  SM5:   successful = 1509	maxttc = 52	failed = 1629
-Operation  SM6:   successful = 1402	maxttc = 2	failed = 1894
-Operation  SM7:   successful = 1300	maxttc = 3	failed = 1760
-Operation  SM8:   successful = 829	maxttc = 12	failed = 1958
+Operation  ST1:   successful = 547	maxttc = 1	failed = 1441
+Operation  ST2:   successful = 474	maxttc = 1	failed = 1391
+Operation  ST3:   successful = 1820	maxttc = 2	failed = 35
+Operation  ST4:   successful = 1661	maxttc = 4	failed = 0
+Operation  ST5:   successful = 1835	maxttc = 82	failed = 0
+Operation  ST6:   successful = 6518	maxttc = 60	failed = 18721
+Operation  ST7:   successful = 6361	maxttc = 15	failed = 18656
+Operation  ST8:   successful = 24772	maxttc = 4	failed = 423
+Operation  ST9:   successful = 422	maxttc = 41	failed = 1300
+Operation ST10:   successful = 6261	maxttc = 101	failed = 19381
+Operation  OP1:   successful = 1515	maxttc = 3	failed = 0
+Operation  OP2:   successful = 1497	maxttc = 45	failed = 0
+Operation  OP3:   successful = 1726	maxttc = 270	failed = 0
+Operation  OP4:   successful = 1858	maxttc = 42	failed = 0
+Operation  OP5:   successful = 1695	maxttc = 1	failed = 0
+Operation  OP6:   successful = 349	maxttc = 1	failed = 1159
+Operation  OP7:   successful = 340	maxttc = 1	failed = 1172
+Operation  OP8:   successful = 329	maxttc = 1	failed = 1179
+Operation  OP9:   successful = 16723	maxttc = 58	failed = 0
+Operation OP10:   successful = 16941	maxttc = 471	failed = 0
+Operation OP11:   successful = 16238	maxttc = 2427	failed = 0
+Operation OP12:   successful = 3534	maxttc = 1	failed = 12711
+Operation OP13:   successful = 3758	maxttc = 9	failed = 12942
+Operation OP14:   successful = 3648	maxttc = 2	failed = 12685
+Operation OP15:   successful = 15930	maxttc = 302	failed = 0
+Operation  SM1:   successful = 2863	maxttc = 545	failed = 319
+Operation  SM2:   successful = 2853	maxttc = 341	failed = 289
+Operation  SM3:   successful = 710	maxttc = 62	failed = 2419
+Operation  SM4:   successful = 152	maxttc = 1	failed = 3306
+Operation  SM5:   successful = 803	maxttc = 1	failed = 2437
+Operation  SM6:   successful = 601	maxttc = 1	failed = 2695
+Operation  SM7:   successful = 591	maxttc = 3	failed = 2550
+Operation  SM8:   successful = 437	maxttc = 13	failed = 2614
 
 -------------------------------------------------------------------------------
 Sample errors (operation ratios [%])
 -------------------------------------------------------------------------------
               TRAVERSAL:  expected = 0.00	successful = 0.00	error = 0.00	(total = 0.00	error = 0.00)
            TRAVERSAL_RO:  expected = 0.00	successful = 0.00	error = 0.00	(total = 0.00	error = 0.00)
-        SHORT_TRAVERSAL:  expected = 38.30	successful = 25.29	error = 13.01	(total = 38.30	error = 0.00)
-     SHORT_TRAVERSAL_RO:  expected = 4.26	successful = 3.91	error = 0.34	(total = 3.97	error = 0.28)
-              OPERATION:  expected = 43.09	successful = 56.32	error = 13.23	(total = 43.39	error = 0.31)
-           OPERATION_RO:  expected = 4.79	successful = 6.58	error = 1.79	(total = 4.83	error = 0.05)
-STRUCTURAL_MODIFICATION:  expected = 9.57	successful = 7.91	error = 1.67	(total = 9.50	error = 0.07)
+        SHORT_TRAVERSAL:  expected = 38.30	successful = 30.13	error = 8.17	(total = 38.06	error = 0.23)
+     SHORT_TRAVERSAL_RO:  expected = 4.26	successful = 4.64	error = 0.38	(total = 4.11	error = 0.14)
+              OPERATION:  expected = 43.09	successful = 52.67	error = 9.58	(total = 43.34	error = 0.26)
+           OPERATION_RO:  expected = 4.79	successful = 6.39	error = 1.60	(total = 4.83	error = 0.04)
+STRUCTURAL_MODIFICATION:  expected = 9.57	successful = 6.18	error = 3.39	(total = 9.65	error = 0.08)
 
 -------------------------------------------------------------------------------
 Summary results
 -------------------------------------------------------------------------------
               TRAVERSAL:  successful = 0	maxttc = 0	failed = 0	total = 0
            TRAVERSAL_RO:  successful = 0	maxttc = 0	failed = 0	total = 0
-        SHORT_TRAVERSAL:  successful = 38376	maxttc = 54	failed = 60189	total = 98565
-     SHORT_TRAVERSAL_RO:  successful = 5937	maxttc = 74	failed = 4282	total = 10219
-              OPERATION:  successful = 85474	maxttc = 2427	failed = 26183	total = 111657
-           OPERATION_RO:  successful = 9980	maxttc = 484	failed = 2458	total = 12438
-STRUCTURAL_MODIFICATION:  successful = 12001	maxttc = 401	failed = 12451	total = 24452
+        SHORT_TRAVERSAL:  successful = 43912	maxttc = 101	failed = 57181	total = 101093
+     SHORT_TRAVERSAL_RO:  successful = 6759	maxttc = 82	failed = 4167	total = 10926
+              OPERATION:  successful = 76772	maxttc = 2427	failed = 38338	total = 115110
+           OPERATION_RO:  successful = 9309	maxttc = 270	failed = 3510	total = 12819
+STRUCTURAL_MODIFICATION:  successful = 9010	maxttc = 545	failed = 16629	total = 25639
 
-Total sample error: 30.04% (0.71% including failed)
-Total throughput: 2520.23 op/s (4273.18 op/s including failed)
-Elapsed time: 60.22 s
+Total sample error: 23.13% (0.75% including failed)
+Total throughput: 2422.99 op/s (4414.82 op/s including failed)
+Elapsed time: 60.16 s
