@@ -4,7 +4,7 @@ package stmbench7.scalastm
 
 import scala.annotation._
 import scala.collection.immutable.{RedBlack, TreeMap}
-import scala.collection.mutable.ArrayStack
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions
 import scala.concurrent.stm._
 import stmbench7.backend.Index
@@ -44,13 +44,13 @@ object IndexImpl {
     private def makeValuesIterator(m: TreeMap[A, B]) = {
       val root = treeMapTreeField.get(m).asInstanceOf[RedBlack[A]#Tree[B]]
       new java.util.Iterator[B] {
-        val avail = ArrayStack.empty[RedBlack[A]#NonEmpty[B]] // ready to return
+        val avail = new ArrayBuffer[RedBlack[A]#NonEmpty[B]] // values ready to return
         pushAll(root)
 
         @tailrec final def pushAll(n: RedBlack[A]#Tree[B]) {
           n match {
             case ne: RedBlack[A]#NonEmpty[B] => {
-              avail.push(ne)
+              avail += ne
               pushAll(ne.left)
             }
             case _ =>
@@ -60,7 +60,7 @@ object IndexImpl {
         def hasNext = !avail.isEmpty
 
         def next(): B = {
-          val n = avail.pop()
+          val n = avail.remove(avail.size - 1)
           pushAll(n.right)
           n.value
         }
