@@ -71,6 +71,7 @@ This graph shows an estimate of the steady-state reclamation performed by the GC
 
 Here we see the percentage of wall time taken by the GC. The ScalaSTM implementation spends up to 9% of its execution time in the GC, compared to 3% for the locking implementations. The benchmark represents a worst-case scenario in which all threads spend all of their time in transactions, so although there is an opportunity for further tuning here it will only yield an incremental improvement.
 
+_More GC graphs: read dominated ["rate":images/stmbench7/r_gcrate.png], ["load":images/stmbench7/r_gcload.png]; write dominated ["rate":images/stmbench7/w_gcrate.png], ["load":images/stmbench7/w_gcload.png]._
 
 h2(#stmbench7). Details
 
