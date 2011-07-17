@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -27,6 +27,9 @@ object NestingLevel {
  */
 trait NestingLevel {
   import Txn._
+
+  /** Returns the `TxnExecutor` in which this attempt is executing. */
+  def executor: TxnExecutor
 
   /** Returns the nearest enclosing nesting level, if any. */
   def parent: Option[NestingLevel]

@@ -9,7 +9,11 @@ package impl
 import skel.TMapViaClone
 
 
-class UnlockedNonTxnMap[A,B](underlying: java.util.Map[A, AnyRef]) extends TMapViaClone[A,B] {
+class UnlockedNonTxnMap[A,B](underlying: java.util.Map[A, AnyRef]) extends AbstractTMap[A,B] {
+
+  def nonTxnGet(key: A) = throw new IllegalStateException
+  def nonTxnPut(key: A, value: B) = throw new IllegalStateException
+  def nonTxnRemove(key: A) = throw new IllegalStateException
 
   //// TMap.View
 
@@ -18,7 +22,7 @@ class UnlockedNonTxnMap[A,B](underlying: java.util.Map[A, AnyRef]) extends TMapV
     if (null eq v) default(key) else NullValue.decode[B](v)
   }
 
-  def get(key: A): Option[B] = {
+  override def get(key: A): Option[B] = {
     NullValue.decodeOption[B](underlying.get(key))
   }
 
@@ -26,7 +30,7 @@ class UnlockedNonTxnMap[A,B](underlying: java.util.Map[A, AnyRef]) extends TMapV
     NullValue.decodeOption[B](underlying.put(key, NullValue.encode(value)))
   }
 
-  def +=(kv: (A, B)) = {
+  override def +=(kv: (A, B)) = {
     single.put(kv._1, kv._2)
     this
   }
@@ -39,12 +43,12 @@ class UnlockedNonTxnMap[A,B](underlying: java.util.Map[A, AnyRef]) extends TMapV
     NullValue.decodeOption[B](underlying.remove(key))
   }
 
-  def -= (key: A) = {
+  override def -= (key: A) = {
     underlying.remove(key)
     this
   }
 
-  def iterator: Iterator[(A,B)] = {
+  override def iterator: Iterator[(A,B)] = {
     NullValue.decodeEntrySetSnapshot(underlying)
   }
 

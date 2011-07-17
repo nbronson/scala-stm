@@ -10,7 +10,7 @@ import java.util.IdentityHashMap
 import java.util.concurrent.locks._
 import java.util.concurrent.{ConcurrentMap, TimeUnit, ConcurrentHashMap}
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater
-import skel.{TMapViaClone, FastSimpleRandom}
+import skel.{TMapViaClone, SimpleRandom}
 
 /** An transactionally boosted `ConcurrentHashMap`, implemented
  *  directly from M. Herlify and E. Koskinen, <em>Transactional Boosting: A
@@ -434,7 +434,7 @@ object BoostedHashMap {
               // laptop), so we use it instead.  The starting point is an
               // expected backoff of 500 nanoseconds.
               val maxNanos = 1000 << math.min(r, 14)
-              val delay = FastSimpleRandom.nextInt(maxNanos)
+              val delay = SimpleRandom.nextInt(maxNanos)
               val t0 = System.nanoTime
               while (System.nanoTime < t0 + delay) Thread.`yield`
             }

@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.mutable.Builder
 
-object HashTrieTSet {
+private[stm] object HashTrieTSet {
 
   def empty[A]: TSet[A] = new HashTrieTSet(Ref(TxnHashTrie.emptySetNode[A]).single)
 
@@ -34,7 +34,7 @@ private[skel] class HashTrieTSet[A] private (root0: Ref.View[TxnHashTrie.SetNode
 
   //// TSet.View aggregates
 
-  override def isEmpty: Boolean = !singleSizeGE(1)
+  override def isEmpty: Boolean = singleIsEmpty
   override def size: Int = singleSize
   override def iterator: Iterator[A] = setIterator
   override def foreach[U](f: A => U) { singleSetForeach(f) }
@@ -45,20 +45,20 @@ private[skel] class HashTrieTSet[A] private (root0: Ref.View[TxnHashTrie.SetNode
   def contains(elem: A): Boolean = singleContains(elem)
 
   override def add(elem: A): Boolean = singlePut(elem, null).isEmpty
-  override def += (elem: A): this.type = { singlePut(elem, null) ; this }
+  def += (elem: A): this.type = { singlePut(elem, null) ; this }
 
   override def remove(elem: A): Boolean = !singleRemove(elem).isEmpty
-  override def -= (elem: A): this.type = { singleRemove(elem) ; this }
+  def -= (elem: A): this.type = { singleRemove(elem) ; this }
 
   //// optimized TSet versions
 
-  override def foreach[U](f: A => U)(implicit txn: InTxn) { txnSetForeach(f) }
+  def isEmpty(implicit txn: InTxn): Boolean = txnIsEmpty
+  def size(implicit txn: InTxn): Int = singleSize
+  def foreach[U](f: A => U)(implicit txn: InTxn) { txnSetForeach(f) }
 
-  override def contains(elem: A)(implicit txn: InTxn): Boolean = txnContains(elem)
+  def contains(elem: A)(implicit txn: InTxn): Boolean = txnContains(elem)
+  def add(elem: A)(implicit txn: InTxn): Boolean = txnPut(elem, null ).isEmpty
+  def remove(elem: A)(implicit txn: InTxn): Boolean = !txnRemove(elem).isEmpty
 
-  override def add(elem: A)(implicit txn: InTxn): Boolean = txnPut(elem, null ).isEmpty
-  override def += (elem: A)(implicit txn: InTxn): this.type = { txnPut(elem, null) ; this }
-  
-  override def remove(elem: A)(implicit txn: InTxn): Boolean = !txnRemove(elem).isEmpty
-  override def -= (elem: A)(implicit txn: InTxn): this.type = { txnRemove(elem) ; this }
+  def retain(p: (A) => Boolean)(implicit txn: InTxn): this.type = { single retain p ; this }
 }

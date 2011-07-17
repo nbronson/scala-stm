@@ -10,7 +10,7 @@ import reflect.ClassManifest
 import skel.TMapViaClone
 
 
-class StripedHashMap[K,V](implicit km: ClassManifest[K], vm: ClassManifest[V]) extends TMapViaClone[K,V] {
+class StripedHashMap[K,V](implicit km: ClassManifest[K], vm: ClassManifest[V]) extends AbstractTMap[K,V] {
 
   def NumStripes = 16
 
@@ -18,18 +18,20 @@ class StripedHashMap[K,V](implicit km: ClassManifest[K], vm: ClassManifest[V]) e
 
   private def mapFor(k: K) = underlying(k.## & (NumStripes - 1))
 
+  def nonTxnGet(key: K) = throw new IllegalStateException
+  def nonTxnPut(key: K, value: V) = throw new IllegalStateException
+  def nonTxnRemove(key: K) = throw new IllegalStateException
+
   // TMap.View stuff
 
   override def get(key: K): Option[V] = mapFor(key).single.get(key)
 
   override def put(key: K, value: V): Option[V] = mapFor(key).single.put(key, value)
-  def += (kv: (K, V)) = { single.put(kv._1, kv._2) ; this }
+  override def += (kv: (K, V)) = { single.put(kv._1, kv._2) ; this }
   override def update(k: K, v: V) = { single.put(k, v) ; this }
 
   override def remove(key: K): Option[V] = mapFor(key).single.remove(key)
-  def -= (key: K) = { single.remove(key) ; this }
-
-  def iterator = throw new UnsupportedOperationException
+  override def -= (key: K) = { single.remove(key) ; this }
 
   // TMap stuff
 

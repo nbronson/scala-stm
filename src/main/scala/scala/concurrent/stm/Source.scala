@@ -1,6 +1,8 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
+
+import actors.threadpool.TimeUnit
 
 object Source {
 
@@ -52,7 +54,7 @@ object Source {
      *  context.  Requires that the predicate be safe to reevaluate, and that
      *  `f(x) == f(y)` if `x == y`.
      *
-     *  `v.retryUntil(f)` is equivalent to {{{
+     *  `v.await(f)` is equivalent to {{{
      *    atomic { implicit t =>
      *      if (!f(v.get)) retry
      *    }
@@ -62,7 +64,25 @@ object Source {
      *  then use `retry` directly.
      *  @param f a predicate that is safe to evaluate multiple times.
      */
-    def retryUntil(f: A => Boolean)
+    def await(f: A => Boolean)
+
+    /** Blocks until `f(get)` is true and returns true, or returns false if
+     *  the condition does not become true within within the specified timeout.
+     *
+     *  `v.tryAwait(timeout)(f)` is equivalent to {{{
+     *    atomic { implicit t =>
+     *      f(v.get) || { retryFor(timeout) ; false }
+     *    }
+     *  }}}
+     *
+     *  @param f a predicate that is safe to evaluate multiple times.
+     *  @param timeout the maximum amount of time to wait, in units of `unit`.
+     *  @param unit the units in which the timeout is measured, defaulting to
+     *      milliseconds.
+     *  @return true if the predicate was satisfied, false if the wait timed
+     *      out.
+     */
+    def tryAwait(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(f: A => Boolean): Boolean
   }
 }
 

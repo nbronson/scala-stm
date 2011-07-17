@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -70,4 +70,10 @@ object TxnLocal {
  *
  *  @author Nathan Bronson
  */
-trait TxnLocal[A] extends RefLike[A, InTxnEnd]
+trait TxnLocal[A] extends RefLike[A, InTxnEnd] {
+
+  /** Returns true if a value is already associated with this `TxnLocal` in the
+   *  current transactional context, false otherwise.
+   */
+  def isInitialized(implicit txn: InTxn): Boolean
+}

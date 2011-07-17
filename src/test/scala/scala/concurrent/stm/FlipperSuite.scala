@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -18,6 +18,18 @@ class FlipperSuite extends FunSuite {
   val DEFAULT_WORD_COUNT = 4096
   val DEFAULT_FLIP_PROB = 0.5f
   val DEFAULT_REF_ARRAY_FACTORY = { (n: Int) => (Array.tabulate[Ref[Int]](n) { _ => Ref(0) }) : IndexedSeq[Ref[Int]] }
+  val DEFAULT_MASKED_READER = { (r: Ref[Int], m: Int) => r.single() & m }
+
+  val TARRAY_REF_ARRAY_FACTORY = { (n: Int) => TArray.ofDim[Int](n).refs }
+
+  val GET_WITH_MASKED_READER = { (r: Ref[Int], m: Int) => r.single.getWith( _ & m ) }
+  val RELAXED_GET_MASKED_READER = { (r: Ref[Int], m: Int) =>
+    r.single.relaxedGet({ (seen, correct) => (seen & m) == (correct & m) }) & m
+  }
+  val TRANSFORM_IF_DEFINED_MASKED_READER = { (r: Ref[Int], m: Int) =>
+    val f = r.single.transformIfDefined { case v if (v & m) != 0 => v }
+    if (f) m else 0
+  }
 
   test("small flipper test") {
     Config(
@@ -28,7 +40,47 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT / 2,
       DEFAULT_FLIP_PROB,
       0,
-      DEFAULT_REF_ARRAY_FACTORY).runTest
+      DEFAULT_REF_ARRAY_FACTORY,
+      DEFAULT_MASKED_READER).runTest
+  }
+
+  test("small flipper test using getWith") {
+    Config(
+      DEFAULT_SYNC_COUNT,
+      DEFAULT_TRANS_COUNT / 2,
+      DEFAULT_INSTR_COUNT / 2,
+      DEFAULT_THREAD_COUNT,
+      DEFAULT_WORD_COUNT / 2,
+      DEFAULT_FLIP_PROB,
+      0,
+      DEFAULT_REF_ARRAY_FACTORY,
+      GET_WITH_MASKED_READER).runTest
+  }
+
+  test("small flipper test using relaxedGet") {
+    Config(
+      DEFAULT_SYNC_COUNT,
+      DEFAULT_TRANS_COUNT / 2,
+      DEFAULT_INSTR_COUNT / 2,
+      DEFAULT_THREAD_COUNT,
+      DEFAULT_WORD_COUNT / 2,
+      DEFAULT_FLIP_PROB,
+      0,
+      DEFAULT_REF_ARRAY_FACTORY,
+      RELAXED_GET_MASKED_READER).runTest
+  }
+
+  test("small flipper test reading using transformIfDefined") {
+    Config(
+      DEFAULT_SYNC_COUNT,
+      DEFAULT_TRANS_COUNT / 2,
+      DEFAULT_INSTR_COUNT / 2,
+      DEFAULT_THREAD_COUNT,
+      DEFAULT_WORD_COUNT / 2,
+      DEFAULT_FLIP_PROB,
+      0,
+      DEFAULT_REF_ARRAY_FACTORY,
+      TRANSFORM_IF_DEFINED_MASKED_READER).runTest
   }
 
   test("default flipper test", Slow) {
@@ -40,7 +92,8 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT,
       DEFAULT_FLIP_PROB,
       0,
-      DEFAULT_REF_ARRAY_FACTORY).runTest
+      DEFAULT_REF_ARRAY_FACTORY,
+      DEFAULT_MASKED_READER).runTest
   }
 
   test("small flipper test w/TArray") {
@@ -52,7 +105,8 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT / 2,
       DEFAULT_FLIP_PROB,
       0,
-      { (n: Int) => TArray.ofDim[Int](n).refs }).runTest
+      TARRAY_REF_ARRAY_FACTORY,
+      DEFAULT_MASKED_READER).runTest
   }
 
   test("default flipper test w/TArray", Slow) {
@@ -64,7 +118,8 @@ class FlipperSuite extends FunSuite {
       DEFAULT_WORD_COUNT,
       DEFAULT_FLIP_PROB,
       0,
-      { (n: Int) => TArray.ofDim[Int](n).refs }).runTest
+      TARRAY_REF_ARRAY_FACTORY,
+      DEFAULT_MASKED_READER).runTest
   }
 
   test("random flipper test", Slow) {
@@ -77,7 +132,8 @@ class FlipperSuite extends FunSuite {
         DEFAULT_WORD_COUNT,
         DEFAULT_FLIP_PROB,
         System.currentTimeMillis + System.nanoTime,
-        DEFAULT_REF_ARRAY_FACTORY).runTest
+        DEFAULT_REF_ARRAY_FACTORY,
+      DEFAULT_MASKED_READER).runTest
     }
   }
 
@@ -88,7 +144,8 @@ class FlipperSuite extends FunSuite {
                     wordCount: Int,
                     flipProb: Float,
                     randSeed: Long,
-                    refArrayFactory: Int => IndexedSeq[Ref[Int]]) {
+                    refArrayFactory: Int => IndexedSeq[Ref[Int]],
+                    maskedReader: (Ref[Int], Int) => Int) {
 
     private val len = syncCount*transCount*instrCount*threadCount
     private val rand = new java.util.Random(randSeed)
@@ -128,6 +185,7 @@ class FlipperSuite extends FunSuite {
                              val sync: Int) extends (() => Unit) {
     def doWork(task: => Unit)
 
+    def maskedRead(ref: Ref[Int], mask: Int): Int = config.maskedReader(ref, mask)
     def read[T](ref: Ref[T]): T
     def write[T](ref: Ref[T], v: T)
 
@@ -138,8 +196,7 @@ class FlipperSuite extends FunSuite {
           for (instr <- 0 until config.instrCount) {
             val i = config.index(id, sync, trans, instr)
             val target = config.R(i)
-            val a = read(A(target))
-            val p = (a & mask) != 0
+            val p = maskedRead(A(target), mask) != 0
             if (computeP) {
               write(P(i), p)
             }
@@ -148,14 +205,14 @@ class FlipperSuite extends FunSuite {
             }
             if (config.F(i)) {
               // do some work before storing to A, to increase probability of a conflict
-              var h = a
+              var h = i
               var j = 0
               while (j < 10000) {
                 h |= 1+((h >>> 1)^(h*13))
                 j += 1
               }
-              if (h == a) println("?")
-              write(A(target), a ^ mask)
+              if (h == i) println("?")
+              write(A(target), read(A(target)) ^ mask)
             }
           }
         }

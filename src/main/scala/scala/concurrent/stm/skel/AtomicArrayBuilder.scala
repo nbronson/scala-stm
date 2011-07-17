@@ -1,13 +1,13 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm.skel
 
 import scala.collection.mutable.Builder
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray, AtomicIntegerArray}
 
-private[stm] trait AtomicArrayBuilder[A] extends Builder[A, AtomicArray[A]]
+trait AtomicArrayBuilder[A] extends Builder[A, AtomicArray[A]]
 
-private[stm] object AtomicArrayBuilder {
+object AtomicArrayBuilder {
   def of[T](m: ClassManifest[T]): Builder[T, AtomicArray[T]] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
       case x: Array[Boolean] => new ofBoolean

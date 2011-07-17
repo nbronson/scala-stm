@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -24,9 +24,17 @@ private[ccstm] object CCSTM extends GV6 {
   val YieldCount = System.getProperty("ccstm.yield", "2").toInt
 
   /** The number of optimistic failures to tolerate before switching to
-   *  pessimistic reads.  Set to zero to always use pessimistic reads.
+   *  pessimistic reads for recently modified memory locations.  Set to zero to
+   *  always use pessimistic reads for memory locations modified since the
+   *  beginning of the first transaction attempt.
    */
-  val BargeThreshold = System.getProperty("ccstm.barge.threshold", "3").toInt
+  val BargeRecentThreshold = System.getProperty("ccstm.barge.recent.threshold", "3").toInt
+
+  /** The number of optimistic failures to tolerate before switching to
+   *  pessimistic reads for all reads.  Set to zero to always use pessimistic
+   *  reads.
+   */
+  val BargeAllThreshold = System.getProperty("ccstm.barge.all.threshold", "30").toInt
 
   /** `slotManager` maps slot number to root `TxnLevelImpl`. */
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
@@ -159,6 +167,7 @@ private[ccstm] object CCSTM extends GV6 {
    *  blocking and `currentTxn.resolveWriteWriteConflict` will be
    *  called before waiting for a transaction.
    */
+  @throws(classOf[InterruptedException])
   def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     if (owner(m0) == nonTxnSlot)
       weakAwaitNonTxnUnowned(handle, m0, currentTxn)
@@ -166,6 +175,7 @@ private[ccstm] object CCSTM extends GV6 {
       weakAwaitTxnUnowned(handle, m0, currentTxn)
   }
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitNonTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     // Non-transaction owners only set the changing bit for a short time (no
     // user code and no loops), so we just wait them out.  Previously we used
@@ -175,8 +185,11 @@ private[ccstm] object CCSTM extends GV6 {
     var spins = 0
     while (true) {
       spins += 1
-      if (spins > SpinCount)
+      if (spins > SpinCount) {
+        if (Thread.interrupted)
+          throw new InterruptedException
         Thread.`yield`
+      }
 
       val m = handle.meta
       if (ownerAndVersion(m) != ownerAndVersion(m0)) 
@@ -187,6 +200,7 @@ private[ccstm] object CCSTM extends GV6 {
     }
   }
 
+  @throws(classOf[InterruptedException])
   private def weakAwaitTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
     if (null == currentTxn) {
       // Spin a bit, but only from a non-txn context.  If this is a txn context
@@ -244,6 +258,55 @@ private[ccstm] object CCSTM extends GV6 {
  *  library-only STM based on the SwissTM algorithm, extended to reduce the
  *  overhead of non-transactional accesses, allow partial rollback, and include
  *  modular blocking and composition operators `retry` and `orAtomic`.
+ *
+ *  During construction the system property "ccstm.stats" is checked.  If it is
+ *  "true" or "1" (actually if it starts with any of the characters 't', 'T',
+ *  'y', 'Y', or '1') then statistics are recorded while the program runs and
+ *  printed to `Console` during JVM shutdown.
+ *
+ *  Statistics are tracked separately for top-level transactions and true
+ *  nested transactions.  Many nested atomic blocks can be merged into the
+ *  top-level transaction by CCSTM for efficiency; these are not reported as
+ *  nested.
+ *
+ *  Reported statistics are either counts or exponential histograms.  For
+ *  histograms `sum` is the sum of the samples, `count` is the number of
+ *  transactions for which the statistic was non-zero, `avg` is `sum/count`
+ *  and the histogram reports in brackets the number of samples that had a
+ *  value of 1, 2..3, 4..7, 8..15, and so on.
+ *
+ *  Counters:
+ *  - `commits` -- committed transactions
+ *  - `alternatives` -- alternatives provided to `atomic`, one sample per call
+ *    to `atomic`
+ *  - `retrySet` -- memory locations watched while performing modular
+ *    blocking, one sample per top-level blocking event
+ *  - `retryWaitElapsed` -- milliseconds elapsed during modular blocking, one
+ *    sample per top-level blocking event
+ *  - `explicitRetries` -- explicit retries using `retry`, `retryFor`,
+ *    `Ref.View.await` or `Ref.View.tryAwait`
+ *  - `optimisticRetries` -- rollbacks that were automatically retried, one
+ *    line per `OptimisticFailureCause.category`
+ *  - `failures` -- rollbacks that were not retried, one line for each type of
+ *    exception in `UncaughtExceptionCause`
+ *  - `blockingAcquires` -- internal locks that could not be acquired
+ *    immediately
+ *  - `commitReadSet` -- optimistic `Ref` reads, one sample per committed
+ *    top-level transaction
+ *  - `commitBargeSet` -- locations read pessimistically, one sample per
+ *    committed top-level transaction
+ *  - `commitWriteSet` -- locations written, one sample per committed
+ *    top-level transaction
+ *  - `rollbackReadSet` -- optimistic `Ref` reads, one sample per transaction
+ *    that was rolled back
+ *  - `rollbackBargeSet` -- locations read pessimistically, one sample per
+ *    transaction that was rolled back
+ *  - `rollbackWriteSet` -- locations written pessimistically, one sample per
+ *    transaction that was rolled back
+ *
+ *  Read and write set counts for a nested transaction are merged into its
+ *  parent if it commits, they are not counted separately during the nested
+ *  commit.
  *
  *  @author Nathan Bronson
  */

@@ -1,6 +1,8 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
+
+import actors.threadpool.TimeUnit
 
 /** The `Txn` object provides methods that operate on the current transaction
  *  context.  These methods are only valid within an atomic block or a
@@ -131,10 +133,10 @@ object Txn {
   case class OptimisticFailureCause(category: Symbol, trigger: Option[Any]) extends TransientRollbackCause
 
   /** The `RollbackCause` for an atomic block execution attempt that ended with
-   *  a call to `retry`.  The atomic block will be retried after some memory
-   *  location read in the previous attempt has changed.
+   *  a call to `retry` or `retryFor`.  The atomic block will be retried after
+   *  some memory location read in the previous attempt has changed.
    */
-  case object ExplicitRetryCause extends TransientRollbackCause
+  case class ExplicitRetryCause(timeoutNanos: Option[Long]) extends TransientRollbackCause
 
   /** The `RollbackCause` for an atomic block that should not be restarted
    *  because it threw an exception.  The exception might have been thrown from
@@ -154,7 +156,6 @@ object Txn {
    */
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
-
   /** Returns the status of the current nesting level of the current
    *  transaction, equivalent to `NestingLevel.current.status`.
    */
@@ -168,13 +169,31 @@ object Txn {
   // them from any thread.  Methods to add life-cycle callbacks are also object
   // methods for the same reason.
 
-  /** Causes the current nesting level to roll back.  It will not be retried
-   *  until a write has been performed to some memory location read by this
-   *  transaction.  If an alternative to this atomic block was provided via
-   *  `orAtomic` or `atomic.oneOf`, then the alternative will be tried.
+  /** Rolls back the current nesting level for modular blocking.  It will be
+   *  retried, but only after some memory location observed by this transaction
+   *  has been changed.  If any alternatives to this atomic block were provided
+   *  via `orAtomic` or `atomic.oneOf`, then the alternative will be tried
+   *  before blocking.
    *  @throws IllegalStateException if the transaction is not active.
    */
-  def retry(implicit txn: InTxn): Nothing = rollback(ExplicitRetryCause)
+  def retry(implicit txn: InTxn): Nothing = txn.retry()
+
+  /** Causes the transaction to roll back and retry using modular blocking with
+   *  a timeout, or returns immediately if the timeout has already expired.
+   *  The STM keeps track of the total amount of blocking that has occurred
+   *  during modular blocking; this time is apportioned among the calls to
+   *  `View.tryAwait` and `retryFor` that are part of the current attempt.
+   *  `retryFor(0)` is a no-op.
+   *
+   *  Returns only if the timeout has expired.
+   *  @param timeout the maximum amount of time that this `retryFor` should
+   *      block, in units of `unit`.
+   *  @param unit the units in which to measure `timeout`, by default
+   *      milliseconds.
+   */
+  def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: InTxn) {
+    txn.retryFor(unit.toNanos(timeout))
+  }
 
   /** Causes the current nesting level to be rolled back due to the specified
    *  `cause`.  This method may only be called by the thread executing the
@@ -290,9 +309,11 @@ object Txn {
    *  commit.  This method can succeed with at most one value per top-level
    *  transaction.
    *  @throws IllegalStateException if the current transaction's status is not
-   *      `Active` or `Preparing`; or if `setExternalDecider(d)` was previously
-   *      called in this transaction, `d != decider`, and the nesting level
-   *      from which `setExternalDecider(d)` was called has not rolled back.
+   *      `Active` or `Preparing`
+   *  @throws IllegalArgumentException if `setExternalDecider(d)` was
+   *      previously called in this transaction, `d != decider`, and the
+   *      nesting level from which `setExternalDecider(d)` was called has not
+   *      rolled back.
    */
   def setExternalDecider(decider: ExternalDecider)(implicit txn: InTxnEnd) { txn.setExternalDecider(decider) }
 }

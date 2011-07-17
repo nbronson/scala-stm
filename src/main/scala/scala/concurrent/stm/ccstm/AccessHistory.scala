@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -41,8 +41,11 @@ private[ccstm] object AccessHistory {
     protected def writeAppend[T](handle: Handle[T], freshOwner: Boolean, v: T)
     protected def writeUpdate[T](i: Int, v: T)
     protected def swap[T](handle: Handle[T], freshOwner: Boolean, value: T): T
+    protected def compareAndSetIdentity[T, R <: T with AnyRef](
+        handle: Handle[T], freshOwner: Boolean, before: R, after: T): Boolean
     protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
     protected def transformAndGet[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
+    protected def getAndAdd(handle: Handle[Int], freshOwner: Boolean, delta: Int): Int
   }
 
   /** Holds the write buffer undo log for a particular nesting level.  This is
@@ -52,10 +55,25 @@ private[ccstm] object AccessHistory {
   abstract class UndoLog {
     def parUndo: UndoLog
 
-    var retainReadsAndBarges = false
+    var minRetryTimeoutNanos = Long.MaxValue
+    var consumedRetryDelta = 0L
     var prevReadCount = 0
     var prevBargeCount = 0
     var prevWriteThreshold = 0
+
+    def addRetryTimeoutNanos(timeoutNanos: Long) {
+      minRetryTimeoutNanos = math.min(minRetryTimeoutNanos, timeoutNanos)
+    }
+
+    /** Returns the sum of the timeouts of the retries that have timed out.
+     *  Included levels are this one, parents of this one, levels that have
+     *  been merged into an included level, and levels that were ended with a
+     *  permanent rollback and whose parent was included.
+     */
+    @tailrec final def consumedRetryTotal(accum: Long = 0L): Long = {
+      val z = accum + consumedRetryDelta
+      if (parUndo == null) z else parUndo.consumedRetryTotal(z)
+    }
 
     @tailrec final def readLocate(index: Int): UndoLog = {
       if (index >= prevReadCount) this else parUndo.readLocate(index)
@@ -135,6 +153,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     if (Stats.nested != null)
       recordMerge()
 
+    mergeRetryTimeout()
     mergeWriteBuffer()
   }
 
@@ -143,23 +162,26 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   /** Releases locks for discarded handles */
-  protected def rollbackAccessHistory(slot: CCSTM.Slot, status: Txn.Status) {
+  protected def rollbackAccessHistory(slot: CCSTM.Slot, cause: Txn.RollbackCause) {
     // nested or top-level rollback
     if (Stats.top != null)
-      recordRollback(status)
+      recordRollback(cause)
 
-    rollbackReadSet()
-    rollbackBargeSet(slot)
+    if (!cause.isInstanceOf[Txn.ExplicitRetryCause]) {
+      rollbackReadSet()
+      rollbackBargeSet(slot)
+    }
+    rollbackRetryTimeout(cause)
     rollbackWriteBuffer(slot)
   }
 
-  private def recordRollback(status: Txn.Status) {
+  private def recordRollback(cause: Txn.RollbackCause) {
     val stat = if (undoLog.parUndo == null) Stats.top else Stats.nested
     stat.rollbackReadSet += (readCount - undoLog.prevReadCount)
     stat.rollbackBargeSet += (bargeCount - undoLog.prevBargeCount)
     stat.rollbackWriteSet += (writeCount - undoLog.prevWriteThreshold)
-    status.asInstanceOf[Txn.RolledBack].cause match {
-      case Txn.ExplicitRetryCause => stat.explicitRetries += 1
+    cause match {
+      case Txn.ExplicitRetryCause(_) => stat.explicitRetries += 1
       case Txn.OptimisticFailureCause(tag, _) => stat.optimisticRetries += tag
       case Txn.UncaughtExceptionCause(x) => stat.failures += x.getClass
     }
@@ -184,10 +206,10 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     top.commits += 1
   }
 
-  /** Clears the read set and barge set, returning a `ReadSet` that holds the
+  /** Clears the read set and barge set, returning a `RetrySet` that holds the
    *  values that were removed.  Releases any ownership held by the barge set.
    */
-  protected def takeRetrySet(slot: CCSTM.Slot): ReadSet = {
+  protected def takeRetrySet(slot: CCSTM.Slot): RetrySet = {
     // barge entries were copied to the read set by addLatestWritesAsReads
     var i = 0
     while (i < _bCount) {
@@ -196,19 +218,41 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     }
     resetBargeSet()
 
-    val accum = new ReadSetBuilder
+    val accum = new RetrySetBuilder
     i = 0
     while (i < _rCount) {
       accum += (_rHandles(i), _rVersions(i))
       i += 1
     }
     resetReadSet()
-    val result = accum.result()
+    accum.result()
+  }
 
-    if (Stats.top != null)
-      Stats.top.retrySet += result.size
 
-    result
+  //////////// retry timeout
+
+  private def mergeRetryTimeout() {
+    // nested commit
+    val u = undoLog
+    val p = u.parUndo
+    p.addRetryTimeoutNanos(u.minRetryTimeoutNanos)
+    p.consumedRetryDelta += u.consumedRetryDelta
+  }
+
+  private def rollbackRetryTimeout(cause: Txn.RollbackCause) {
+    cause match {
+      case Txn.ExplicitRetryCause(timeoutNanos) => {
+        if (!timeoutNanos.isEmpty)
+          undoLog.addRetryTimeoutNanos(timeoutNanos.get)
+        if (undoLog.parUndo != null)
+          undoLog.parUndo.addRetryTimeoutNanos(undoLog.minRetryTimeoutNanos)
+      }
+      case _: Txn.PermanentRollbackCause => {
+        if (undoLog.parUndo != null)
+          undoLog.parUndo.consumedRetryDelta += undoLog.consumedRetryDelta
+      }
+      case _ =>
+    }
   }
 
   //////////// read set
@@ -239,7 +283,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     _rVersions = copyTo(_rVersions, new Array[CCSTM.Version](_rVersions.length * 2))
   }
 
-  @inline private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
+  private def copyTo[A](src: Array[A], dst: Array[A]): Array[A] = {
     System.arraycopy(src, 0, dst, 0, src.length)
     dst
   }
@@ -249,15 +293,13 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def rollbackReadSet() {
-    if (!undoLog.retainReadsAndBarges) {
-      val n = undoLog.prevReadCount
-      var i = n
-      while (i < _rCount) {
-        _rHandles(i) = null
-        i += 1
-      }
-      _rCount = n
+    val n = undoLog.prevReadCount
+    var i = n
+    while (i < _rCount) {
+      _rHandles(i) = null
+      i += 1
     }
+    _rCount = n
   }
 
   private def resetReadSet() {
@@ -312,16 +354,14 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
   }
 
   private def rollbackBargeSet(slot: CCSTM.Slot) {
-    if (!undoLog.retainReadsAndBarges) {
-      val n = undoLog.prevBargeCount
-      var i = n
-      while (i < _bCount) {
-        rollbackHandle(_bHandles(i), slot)
-        _bHandles(i) = null
-        i += 1
-      }
-      _bCount = n
+    val n = undoLog.prevBargeCount
+    var i = n
+    while (i < _bCount) {
+      rollbackHandle(_bHandles(i), slot)
+      _bHandles(i) = null
+      i += 1
     }
+    _bCount = n
   }
 
   private def resetBargeSet() {
@@ -385,11 +425,11 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     java.util.Arrays.fill(_wDispatch, 0, InitialWriteCapacity, -1)
   }
 
-  @inline private def refI(i: Int) = 3 * i
-  @inline private def specValueI(i: Int) = 3 * i + 1
-  @inline private def handleI(i: Int) = 3 * i + 2
-  @inline private def offsetI(i: Int) = 2 * i
-  @inline private def nextI(i: Int) = 2 * i + 1 // bits 31..1 are the next, bit 0 is set iff freshOwner
+  private def refI(i: Int) = 3 * i
+  private def specValueI(i: Int) = 3 * i + 1
+  private def handleI(i: Int) = 3 * i + 2
+  private def offsetI(i: Int) = 2 * i
+  private def nextI(i: Int) = 2 * i + 1 // bits 31..1 are the next, bit 0 is set iff freshOwner
 
   private def bucketAnysLen(c: Int) = 3 * (maxSizeForCap(c) + 1)
   private def bucketIntsLen(c: Int) = 2 * (maxSizeForCap(c) + 1)
@@ -402,20 +442,20 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   //////// accessors
 
-  @inline private def getRef(i: Int) = _wAnys(refI(i))
-  @inline final protected def getWriteHandle(i: Int) = _wAnys(handleI(i)).asInstanceOf[Handle[_]]
-  @inline final protected def getWriteSpecValue[T](i: Int) = _wAnys(specValueI(i)).asInstanceOf[T]
-  @inline private def getOffset(i: Int) = _wInts(offsetI(i))
-  @inline private def getNext(i: Int): Int = _wInts(nextI(i)) >> 1
-  @inline final protected def wasWriteFreshOwner(i: Int): Boolean = (_wInts(nextI(i)) & 1) != 0
+  private def getRef(i: Int) = _wAnys(refI(i))
+  final protected def getWriteHandle(i: Int) = _wAnys(handleI(i)).asInstanceOf[Handle[_]]
+  final protected def getWriteSpecValue[T](i: Int) = _wAnys(specValueI(i)).asInstanceOf[T]
+  private def getOffset(i: Int) = _wInts(offsetI(i))
+  private def getNext(i: Int): Int = _wInts(nextI(i)) >> 1
+  final protected def wasWriteFreshOwner(i: Int): Boolean = (_wInts(nextI(i)) & 1) != 0
 
-  @inline private def setRef(i: Int, r: AnyRef) { _wAnys(refI(i)) = r }
-  @inline private def setHandle(i: Int, h: Handle[_]) { _wAnys(handleI(i)) = h }
-  @inline final private[AccessHistory] def setSpecValue[T](i: Int, v: T) { _wAnys(specValueI(i)) = v.asInstanceOf[AnyRef] }
-  @inline private def setOffset(i: Int, o: Int) { _wInts(offsetI(i)) = o }
-  @inline private def setNextAndFreshOwner(i: Int, n: Int, freshOwner: Boolean) { _wInts(nextI(i)) = (n << 1) | (if (freshOwner) 1 else 0) }
-  @inline private def setNext(i: Int, n: Int) { _wInts(nextI(i)) = (n << 1) | (_wInts(nextI(i)) & 1) }
-  @inline private def setFreshOwner(i: Int, freshOwner: Boolean) { setNextAndFreshOwner(i, getNext(i), freshOwner) }
+  private def setRef(i: Int, r: AnyRef) { _wAnys(refI(i)) = r }
+  private def setHandle(i: Int, h: Handle[_]) { _wAnys(handleI(i)) = h }
+  final private[AccessHistory] def setSpecValue[T](i: Int, v: T) { _wAnys(specValueI(i)) = v.asInstanceOf[AnyRef] }
+  private def setOffset(i: Int, o: Int) { _wInts(offsetI(i)) = o }
+  private def setNextAndFreshOwner(i: Int, n: Int, freshOwner: Boolean) { _wInts(nextI(i)) = (n << 1) | (if (freshOwner) 1 else 0) }
+  private def setNext(i: Int, n: Int) { _wInts(nextI(i)) = (n << 1) | (_wInts(nextI(i)) & 1) }
+  private def setFreshOwner(i: Int, freshOwner: Boolean) { setNextAndFreshOwner(i, getNext(i), freshOwner) }
 
   //////// bulk access
 
@@ -478,6 +518,18 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     return before
   }
 
+  protected def compareAndSetIdentity[T, R <: T with AnyRef](
+      handle: Handle[T], freshOwner: Boolean, before: R, after: T): Boolean = {
+    val i = findOrAllocate(handle, freshOwner)
+    val v0 = getWriteSpecValue[T](i)
+    if (before eq v0.asInstanceOf[AnyRef]) {
+      setSpecValue(i, after)
+      return true
+    } else {
+      return false
+    }
+  }
+
   protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T = {
     val i = findOrAllocate(handle, freshOwner)
     val before = getWriteSpecValue[T](i)
@@ -490,6 +542,13 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val after = func(getWriteSpecValue[T](i))
     setSpecValue(i, after)
     return after
+  }
+
+  protected def getAndAdd(handle: Handle[Int], freshOwner: Boolean, delta: Int): Int = {
+    val i = findOrAllocate(handle, freshOwner)
+    val before = getWriteSpecValue[Int](i)
+    setSpecValue(i, before + delta)
+    return before
   }
 
   protected def writeAppend[T](handle: Handle[T], freshOwner: Boolean, value: T) {

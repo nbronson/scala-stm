@@ -3,7 +3,7 @@ DEPLOYING THE SCALA-STM ARTIFACT
 With a proper credentials file publishing a snapshot or release artifact is
 accomplished with
 
-  sbt +test
+  sbt +test (or bin/all_tests)
   sbt +publish
 
 TESTING DEPLOYMENT AND ARTIFACT USAGE

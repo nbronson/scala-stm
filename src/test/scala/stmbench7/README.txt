@@ -1,0 +1,1 @@
+JAVA_OPTS='-Xmx2400m -XX:+UseCompressedOops' scala -cp lib/stmbench7-VELOX-1.2.jar:target/scala_2.9.0-1/classes:target/scala_2.9.0-1/test-classes stmbench7.Benchmark -l 10 -t 4 -w rw -g stm -s stmbench7.scalastm.ScalaSTMInitializer

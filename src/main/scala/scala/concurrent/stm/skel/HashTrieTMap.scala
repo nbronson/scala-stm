@@ -5,7 +5,7 @@ package skel
 
 import scala.collection.mutable.Builder
 
-object HashTrieTMap {
+private[stm] object HashTrieTMap {
   
   def empty[A, B]: TMap[A, B] = new HashTrieTMap(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
 
@@ -34,9 +34,11 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
 
   //// TMap.View aggregates
 
-  override def isEmpty: Boolean = !singleSizeGE(1)
+  override def isEmpty: Boolean = singleIsEmpty
   override def size: Int = singleSize
   override def iterator: Iterator[(A, B)] = mapIterator
+  override def keysIterator: Iterator[A] = mapKeyIterator
+  override def valuesIterator: Iterator[B] = mapValueIterator
   override def foreach[U](f: ((A, B)) => U) { singleMapForeach(f) }
 
   override def clear() { root() = TxnHashTrie.emptyMapNode[A, B] }
@@ -56,16 +58,16 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
 
   //// optimized TMap versions
 
-  override def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn) = txnMapForeach(f)
+  def isEmpty(implicit txn: InTxn): Boolean = txnIsEmpty
+  def size(implicit txn: InTxn): Int = singleSize
+  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn) = txnMapForeach(f)
 
-  override def contains(key: A)(implicit txn: InTxn): Boolean = txnContains(key)
-  override def apply(key: A)(implicit txn: InTxn): B = txnGetOrThrow(key)
-  override def get(key: A)(implicit txn: InTxn): Option[B] = txnGet(key)
+  def contains(key: A)(implicit txn: InTxn): Boolean = txnContains(key)
+  def apply(key: A)(implicit txn: InTxn): B = txnGetOrThrow(key)
+  def get(key: A)(implicit txn: InTxn): Option[B] = txnGet(key)
+  def put(key: A, value: B)(implicit txn: InTxn): Option[B] = txnPut(key, value)
+  def remove(key: A)(implicit txn: InTxn): Option[B] = txnRemove(key)
 
-  override def put(key: A, value: B)(implicit txn: InTxn): Option[B] = txnPut(key, value)
-  override def update(key: A, value: B)(implicit txn: InTxn) { txnPut(key, value) }
-  override def += (kv: (A, B))(implicit txn: InTxn): this.type = { txnPut(kv._1, kv._2) ; this }
-
-  override def remove(key: A)(implicit txn: InTxn): Option[B] = txnRemove(key)
-  override def -= (key: A)(implicit txn: InTxn): this.type = { txnRemove(key) ; this }
+  def transform(f: (A, B) => B)(implicit txn: InTxn): this.type = { single transform f ; this }
+  def retain(p: (A, B) => Boolean)(implicit txn: InTxn): this.type = { single retain p ; this }
 }

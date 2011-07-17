@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -19,6 +19,8 @@ trait InTxnEnd extends MaybeTxn {
   protected[stm] def rootLevel: NestingLevel
   protected[stm] def currentLevel: NestingLevel
   protected[stm] def rollback(cause: RollbackCause): Nothing
+  protected[stm] def retry(): Nothing
+  protected[stm] def retryFor(timeoutNanos: Long)
   protected[stm] def beforeCommit(handler: InTxn => Unit)
   protected[stm] def whilePreparing(handler: InTxnEnd => Unit)
   protected[stm] def whileCommitting(handler: InTxnEnd => Unit)

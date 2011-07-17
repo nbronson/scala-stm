@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -34,7 +34,7 @@ private[ccstm] trait GV6 {
     ((1 << 31) + ((1L << 32) / silentCommitRatio) - 1).asInstanceOf[Int]
   }
 
-  private val silentCommitRand = skel.FastSimpleRandom
+  private val silentCommitRand = skel.SimpleRandom
 
   /** The maximum value of `nonTxnWriteVersion - globalVersion` that
    *  will be allowed before a non-transactional store attempts to increase

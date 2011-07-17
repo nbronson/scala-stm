@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package skel
@@ -47,9 +47,11 @@ private[skel] object TxnHashTrie {
 
   sealed abstract class Node[A, B] {
     def cappedSize(cap: Int): Int
-    def setForeach[U](f: A => U)
+    def txnIsEmpty(implicit txn: InTxn): Boolean
+    def keyForeach[U](f: A => U)
     def mapForeach[U](f: ((A, B)) => U)
-    def setIterator: Iterator[A]
+    def keyIterator: Iterator[A]
+    def valueIterator: Iterator[B]
     def mapIterator: Iterator[(A, B)]
   }
 
@@ -67,6 +69,7 @@ private[skel] object TxnHashTrie {
     def endBuild = this
 
     def cappedSize(cap: Int): Int = hashes.length
+    def txnIsEmpty(implicit txn: InTxn) = hashes.length == 0
 
     def getKey(i: Int): A = kvs(2 * i).asInstanceOf[A]
     def setKey(i: Int, k: A) { kvs(2 * i) = k.asInstanceOf[AnyRef] }
@@ -254,7 +257,7 @@ private[skel] object TxnHashTrie {
         new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
     }
 
-    def setForeach[U](f: A => U) {
+    def keyForeach[U](f: A => U) {
       var i = 0
       while (i < hashes.length) {
         f(getKey(i))
@@ -270,10 +273,16 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def setIterator: Iterator[A] = new Iterator[A] {
+    def keyIterator: Iterator[A] = new Iterator[A] {
       var pos = 0
       def hasNext = pos < hashes.length
       def next: A = { val z = getKey(pos) ; pos += 1 ; z }
+    }
+
+    def valueIterator: Iterator[B] = new Iterator[B] {
+      var pos = 0
+      def hasNext = pos < hashes.length
+      def next: B = { val z = getValue(pos) ; pos += 1 ; z }
     }
 
     def mapIterator: Iterator[(A, B)] = new Iterator[(A,B)] {
@@ -316,6 +325,17 @@ private[skel] object TxnHashTrie {
       }
     }
 
+    def txnIsEmpty(implicit txn: InTxn): Boolean = {
+      var i = 0
+      while (i < BF) {
+        val c = children(i).ref.get
+        if (!c.txnIsEmpty)
+          return false
+        i += 1
+      }
+      return true
+    }
+
     def withFreeze: Branch[A, B] = new Branch(gen, true, children)
 
     def clone(newGen: Long): Branch[A, B] = {
@@ -328,10 +348,10 @@ private[skel] object TxnHashTrie {
       new Branch[A, B](newGen, false, cc)
     }
 
-    def setForeach[U](f: A => U) {
+    def keyForeach[U](f: A => U) {
       var i = 0
       while (i < BF) {
-        children(i)().setForeach(f)
+        children(i)().keyForeach(f)
         i += 1
       }
     }
@@ -378,8 +398,12 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def setIterator: Iterator[A] = new Iter[A] {
-      def childIter(c: Node[A, B]) = c.setIterator
+    def keyIterator: Iterator[A] = new Iter[A] {
+      def childIter(c: Node[A, B]) = c.keyIterator
+    }
+
+    def valueIterator: Iterator[B] = new Iter[B] {
+      def childIter(c: Node[A, B]) = c.valueIterator
     }
 
     def mapIterator: Iterator[(A, B)] = new Iter[(A,B)] {
@@ -419,12 +443,11 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   //////////////// txn contention tracking
 
   private final def pct = 10000
-
-  val contentionThreshold = (System.getProperty("trie.contention", "1.0").toDouble * pct).toInt
-  var contentionEstimate = 0
+  private final def contentionThreshold = 1 * pct
+  private var contentionEstimate = 0
 
   private def recordNoContention() {
-    if (FastSimpleRandom.nextInt(32) == 0) {
+    if (SimpleRandom.nextInt(32) == 0) {
       val e = contentionEstimate
       contentionEstimate = e - (e >> 4) // this is 15/16, applied every 32nd time, so about 99.8%
     }
@@ -437,7 +460,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   private def isContended = contentionEstimate > contentionThreshold
 
-  //////////////// hash trie operations on Ref.View
+  //////////////// whole-trie operations
 
   protected def frozenRoot: Node[A, B] = {
     root() match {
@@ -455,9 +478,37 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   protected def cloneRoot: Ref.View[Node[A, B]] = Ref(frozenRoot).single
 
-  protected def singleSizeGE(n: Int): Boolean = frozenRoot.cappedSize(n) >= n
-  
+  protected def setIterator: Iterator[A] = frozenRoot.keyIterator
+
+  protected def mapIterator: Iterator[(A, B)] = frozenRoot.mapIterator
+  protected def mapKeyIterator: Iterator[A] = frozenRoot.keyIterator
+  protected def mapValueIterator: Iterator[B] = frozenRoot.valueIterator
+
+  //////////////// whole-trie operations on Ref.View
+
+  protected def singleIsEmpty: Boolean = impl.STMImpl.instance.dynCurrentOrNull match {
+    case null => frozenRoot.cappedSize(1) == 0
+    case txn => txnIsEmpty(txn)
+  }
+
   protected def singleSize: Int = frozenRoot.cappedSize(Int.MaxValue)
+
+  protected def singleSetForeach[U](f: A => U) {
+    // don't freeze the root if we use .single in a txn
+    impl.STMImpl.instance.dynCurrentOrNull match {
+      case null => frozenRoot.keyForeach(f)
+      case txn => txnSetForeach(f)(txn)
+    }
+  }
+
+  protected def singleMapForeach[U](f: ((A, B)) => U) {
+    impl.STMImpl.instance.dynCurrentOrNull match {
+      case null => frozenRoot.mapForeach(f)
+      case txn => txnMapForeach(f)(txn)
+    }
+  }
+
+  //////// single-key operations for Ref.View
 
   protected def singleContains(key: A): Boolean = singleContains(root(), root, 0, keyHash(key), key)
 
@@ -642,16 +693,19 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
       failingRemove(hash, key)
   }
 
-  protected def singleSetForeach[U](f: A => U) { frozenRoot.setForeach(f) }
 
-  protected def singleMapForeach[U](f: ((A, B)) => U) { frozenRoot.mapForeach(f) }
+  //////////////// whole-trie operations when an InTxn is available
 
-  protected def setIterator: Iterator[A] = frozenRoot.setIterator
+  // visitation doesn't need to freeze the root, because we know that the
+  // entire visit is part of an atomic block
 
-  protected def mapIterator: Iterator[(A, B)] = frozenRoot.mapIterator
+  protected def txnIsEmpty(implicit txn: InTxn): Boolean = root().txnIsEmpty
 
+  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) { root().keyForeach(f) }
 
-  //////////////// hash trie operations on Ref, requiring an InTxn
+  protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
+
+  //////////////// per-key operations when an InTxn is available
 
   protected def txnContains(key: A)(implicit txn: InTxn): Boolean = txnContains(root.ref, 0, keyHash(key), key)(txn)
 
@@ -774,12 +828,4 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
       }
     }
   }
-
-  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) {
-    // no need to freeze the root, because we know that the entire visit is
-    // part of an atomic block
-    root().setForeach(f)
-  }
-
-  protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
 }

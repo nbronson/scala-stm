@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -9,17 +9,16 @@ import skel.{AbstractNestingLevel, RollbackError}
 
 private[ccstm] object TxnLevelImpl {
 
-  private val stateUpdater = new TxnLevelImpl(null, null, false).newStateUpdater
+  private val stateUpdater = new TxnLevelImpl(null, null, null, false).newStateUpdater
 }
 
 /** `TxnLevelImpl` bundles the data and behaviors from `AccessHistory.UndoLog`
  *  and `AbstractNestingLevel`, and adds handling of the nesting level status.
- *  Some of the internal states (see `state`) are not instances of
- *  `Txn.Status`, but rather record that this level is no longer current.
  *
  *  @author Nathan Bronson
  */
 private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
+                                  val executor: TxnExecutor,
                                   val parUndo: TxnLevelImpl,
                                   val phantom: Boolean)
         extends AccessHistory.UndoLog with AbstractNestingLevel {
@@ -30,21 +29,14 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
 
   val root: AbstractNestingLevel = if (parLevel == null) this else parLevel.root
 
-  /** If `state` is a `TxnLevelImpl`, then that indicates that this nesting
-   *  level is an ancestor of `txn.currentLevel`; this is reported as a status
-   *  of `Txn.Active`.
-   *
-   *  Child nesting levels can also have a `state` of:
-   *   - null : after they have been merged (committed) into `par`;
-   *   - `Txn.Active` : if they are active and `txn.currentLevel`; or
-   *   - a `Txn.RolledBack` instance : if they have been rolled back.
-   *  A state of null indicates that this nesting level's status is in
-   *  lock-step with its parent.
-   *
-   *  In addition to instances of `TxnLevelImpl`, the root nesting level can
-   *  have any `Txn.Status` instance as its `state`.
+  /** To make `requireActive` more efficient we store the raw state of
+   *  `Txn.Active` as null.  If the raw state is a `TxnLevelImpl`, then that
+   *  indicates that this nesting level is an ancestor of `txn.currentLevel`;
+   *  this is reported as a status of `Txn.Active`.  The raw state can also be
+   *  the interned string value "merged" to indicate that the status is now in
+   *  lock-step with the parent.
    */
-  @volatile private var _state: AnyRef = Txn.Active
+  @volatile private var _state: AnyRef = null
 
   private def newStateUpdater: AtomicReferenceFieldUpdater[TxnLevelImpl, AnyRef] = {
     AtomicReferenceFieldUpdater.newUpdater(classOf[TxnLevelImpl], classOf[AnyRef], "_state")
@@ -53,10 +45,21 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   /** True if anybody is waiting for `status.completed`. */
   @volatile private var _waiters = false
 
-  def status: Txn.Status = _state match {
-    case null => parUndo.status
-    case s: Txn.Status => s
-    case _ => Txn.Active
+  @tailrec final def minEnclosingRetryTimeout(accum: Long = Long.MaxValue): Long = {
+    val z = math.min(accum, executor.retryTimeoutNanos.getOrElse(Long.MaxValue))
+    if (parUndo == null) z else parUndo.minEnclosingRetryTimeout(z)
+  }
+
+  @tailrec final def status: Txn.Status = {
+    val raw = _state
+    if (raw == null)
+      Txn.Active // we encode active as null to make requireActive checks smaller
+    else if (raw eq "merged")
+      parUndo.status
+    else if (raw.isInstanceOf[TxnLevelImpl])
+      Txn.Active // child is active
+    else
+      raw.asInstanceOf[Txn.Status]
   }
 
   def setCommitting() {
@@ -68,22 +71,29 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     notifyCompleted()
   }
 
-  def setCommittedIfActive(): Boolean = {
-    val f = stateUpdater.compareAndSet(this, Txn.Active, Txn.Committed)
+  def tryActiveToCommitted(): Boolean = {
+    val f = stateUpdater.compareAndSet(this, null, Txn.Committed)
     if (f)
       notifyCompleted()
     f
   }
 
-  /** v1 may not be a completed status */
-  def statusCAS(v0: Txn.Status, v1: Txn.Status): Boolean = {
-    stateUpdater.compareAndSet(this, v0, v1)
-  }
+  def tryActiveToPreparing(): Boolean = stateUpdater.compareAndSet(this, null, Txn.Preparing)
+
+  def tryPreparingToPrepared(): Boolean = stateUpdater.compareAndSet(this, Txn.Preparing, Txn.Prepared)
+
+  def tryPreparingToCommitting(): Boolean = stateUpdater.compareAndSet(this, Txn.Preparing, Txn.Committing)
 
   /** Equivalent to `status` if this level is the current level, otherwise
    *  the result is undefined.
    */
-  def statusAsCurrent: Txn.Status = _state.asInstanceOf[Txn.Status]
+  def statusAsCurrent: Txn.Status = {
+    val raw = _state
+    if (raw == null)
+      Txn.Active
+    else
+      raw.asInstanceOf[Txn.Status]
+  }
 
   private def notifyCompleted() {
     if (_waiters)
@@ -91,6 +101,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   }
 
   /** Blocks until `status.completed`. */
+  @throws(classOf[InterruptedException])
   def awaitCompleted() {
     assert(parUndo == null)
 
@@ -99,23 +110,15 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     if (Stats.top != null)
       Stats.top.blockingAcquires += 1
 
-    var interrupted = false
     synchronized {
-      while (!status.completed) {
-        try {
-          wait
-        } catch {
-          case _: InterruptedException => interrupted = true
-        }
-      }
+      while (!status.completed)
+        wait
     }
-    if (interrupted)
-      Thread.currentThread.interrupt()
   }
 
 
   def requireActive() {
-    if (_state ne Txn.Active)
+    if (_state != null)
       slowRequireActive()
   }
 
@@ -127,18 +130,18 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   }
 
   def pushIfActive(child: TxnLevelImpl): Boolean = {
-    stateUpdater.compareAndSet(this, Txn.Active, child)
+    stateUpdater.compareAndSet(this, null, child)
   }
 
   def attemptMerge(): Boolean = {
     // First we need to set the current state to forwarding.  Regardless of
     // whether or not this fails we still need to unlink the parent.
-    val f = (_state eq Txn.Active) && stateUpdater.compareAndSet(this, Txn.Active, null)
+    val f = (_state == null) && stateUpdater.compareAndSet(this, null, "merged")
 
     // We must use CAS to unlink ourselves from our parent, because we race
     // with remote cancels.
     if (parUndo._state eq this)
-      stateUpdater.compareAndSet(parUndo, this, Txn.Active)
+      stateUpdater.compareAndSet(parUndo, this, null)
 
     f
   }
@@ -155,29 +158,39 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     rollbackImpl(Txn.RolledBack(cause))
   }
 
-  @tailrec private def rollbackImpl(rb: Txn.RolledBack): Txn.Status = _state match {
-    case null => {
-      // already merged with parent, roll back both
+  // this is tailrec for retries, but not when we forward to child
+  private def rollbackImpl(rb: Txn.RolledBack): Txn.Status = {
+    val raw = _state
+    if (raw == null || canAttemptLocalRollback(raw)) {
+      // normal case
+      if (stateUpdater.compareAndSet(this, raw, rb)) {
+        notifyCompleted()
+        rb
+      } else
+        rollbackImpl(rb) // retry
+    } else if (raw eq "merged") {
+      // we are now taking our status from our parent
       parUndo.rollbackImpl(rb)
-    }
-    case ch: TxnLevelImpl if !ch.status.isInstanceOf[Txn.RolledBack] => {
-      // roll back the child first, then try again
-      ch.rollbackImpl(rb)
+    } else if (raw.isInstanceOf[TxnLevelImpl]) {
+      // roll back the child first, then retry
+      raw.asInstanceOf[TxnLevelImpl].rollbackImpl(rb)
       rollbackImpl(rb)
-    }
-    case s: Txn.Status if s.decided || (s == Txn.Prepared && (InTxnImpl.get ne txn)) => {
-      // can't roll back or already rolled back
-      s
-    }
-    case before if stateUpdater.compareAndSet(this, before, rb) => {
-      // success!
-      notifyCompleted()
-      rb
-    }
-    case _ => {
-      // CAS failure, try again
-      rollbackImpl(rb)
+    } else {
+      // request denied
+      raw.asInstanceOf[Txn.Status]
     }
   }
 
+  private def canAttemptLocalRollback(raw: AnyRef): Boolean = raw match {
+    case Txn.Prepared => InTxnImpl.get eq txn // remote cancel is not allowed while preparing
+    case s: Txn.Status => !s.decided
+    case ch: TxnLevelImpl => ch.rolledBackOrMerged
+    case _ => false
+  }
+
+  private def rolledBackOrMerged = _state match {
+    case "merged" => true
+    case Txn.RolledBack(_) => true
+    case _ => false
+  }
 }

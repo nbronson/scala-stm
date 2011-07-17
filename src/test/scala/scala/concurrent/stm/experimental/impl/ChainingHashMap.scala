@@ -7,7 +7,6 @@ package experimental
 package impl
 
 import reflect.ClassManifest
-import skel.TMapViaClone
 
 object ChainingHashMap {
   private class Bucket[K,V](val hash: Int, val key: K, val value: V, val next: Bucket[K,V]) {
@@ -31,7 +30,7 @@ object ChainingHashMap {
   }
 }
 
-class ChainingHashMap[K, V](implicit km: ClassManifest[K], vm: ClassManifest[V]) extends TMapViaClone[K, V] {
+class ChainingHashMap[K, V](implicit km: ClassManifest[K], vm: ClassManifest[V]) extends AbstractTMap[K, V] {
   import ChainingHashMap._
 
   private val bucketsRef = Ref(TArray.ofDim[Bucket[K,V]](16))
@@ -44,6 +43,10 @@ class ChainingHashMap[K, V](implicit km: ClassManifest[K], vm: ClassManifest[V])
     h ^= (h >>> 7) ^ (h >>> 4)
     h
   }
+
+  def nonTxnGet(key: K) = throw new IllegalStateException
+  def nonTxnPut(key: K, value: V) = throw new IllegalStateException
+  def nonTxnRemove(key: K) = throw new IllegalStateException
 
   // TMap.View stuff
 
@@ -67,7 +70,7 @@ class ChainingHashMap[K, V](implicit km: ClassManifest[K], vm: ClassManifest[V])
 //    }
 
   // This hand-coded optimistic implementation should work on any Java STM.
-  def get(key: K): Option[V] = {
+  override def get(key: K): Option[V] = {
     // attempt an ad-hoc txn first
     val h = hash(key)
     val buckets = bucketsRef.single.get
@@ -83,13 +86,11 @@ class ChainingHashMap[K, V](implicit km: ClassManifest[K], vm: ClassManifest[V])
   }
 
   override def put(key: K, value: V): Option[V] = atomic { implicit txn => tmap.put(key, value) }
-  def += (kv: (K, V)) = { single.put(kv._1, kv._2) ; this }
+  override def += (kv: (K, V)) = { single.put(kv._1, kv._2) ; this }
   override def update (k: K, v: V) { single.put(k, v) }
 
   override def remove(key: K): Option[V] = atomic { implicit txn => tmap.remove(key) }
-  def -= (key: K) = { single.remove(key) ; this }
-
-  def iterator = throw new UnsupportedOperationException
+  override def -= (key: K) = { single.remove(key) ; this }
 
   //// TMap stuff
 

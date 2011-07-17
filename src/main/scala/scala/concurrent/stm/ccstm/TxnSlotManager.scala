@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -21,7 +21,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
   assert(range >= reservedSlots + 16)
 
   private def nextSlot(tries: Int) = {
-    ((skel.FastSimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
+    ((skel.SimpleRandom.nextInt << 4) | ((-tries >> 1) & 0xf)) & (range - 1)
   }
 
   /** CAS on the entries manages the actual acquisition.  Entries are either
@@ -29,6 +29,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
    */
   private val slots = new AtomicReferenceArray[AnyRef](range)
 
+  @throws(classOf[InterruptedException])
   def assign(txn: T, slotHint: Int): Int = {
     // We advance to the next slot number after the hint, wrapping around in a
     // 64 byte space.  This avoids rollback from late steals, but keeps us in
@@ -39,8 +40,11 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
     while (s < reservedSlots || slots.get(s) != null || !slots.compareAndSet(s, null, txn)) {
       s = nextSlot(tries)
       tries += 1
-      if (tries > 100)
+      if (tries > 100) {
+        if (Thread.interrupted)
+          throw new InterruptedException
         Thread.`yield`
+      }
     }
     s
   }

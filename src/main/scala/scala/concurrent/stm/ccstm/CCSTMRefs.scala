@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -91,6 +91,17 @@ private[ccstm] object CCSTMRefs {
     @volatile var meta = 0L
     def metaCAS(m0: Long, m1: Long) = intUpdater.compareAndSet(this, m0, m1)
     def newMetaUpdater = AtomicLongFieldUpdater.newUpdater(classOf[IntRef], "meta")
+
+    override def += (rhs: Int)(implicit num: Numeric[Int]) { incr(rhs) }
+    override def -= (rhs: Int)(implicit num: Numeric[Int]) { incr(-rhs) }
+    private def incr(delta: Int) {
+      if (delta != 0) {
+        InTxnImpl.dynCurrentOrNull match {
+          case null => NonTxn.getAndAdd(handle, delta)
+          case txn => txn.getAndAdd(handle, delta)
+        }
+      }
+    }
   }
 
   private class FloatRef(@volatile var data: Float) extends BaseRef[Float] {

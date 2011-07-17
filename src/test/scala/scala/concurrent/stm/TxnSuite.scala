@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -73,6 +73,13 @@ class TxnSuite extends FunSuite {
     return -1
   }
 
+  test("strings") {
+    atomic.toString
+    atomic.withRetryTimeout(100).toString
+    atomic { implicit txn => txn.toString }
+    atomic { implicit txn => NestingLevel.root.toString }
+  }
+
   test("basic retry") {
     val x = Ref(0)
     val y = Ref(false)
@@ -91,6 +98,29 @@ class TxnSuite extends FunSuite {
     assert(y.single())
   }
 
+  test("nested retry") {
+    val x = Ref(0)
+    val y = Ref(false)
+    new Thread {
+      override def run() {
+        Thread.sleep(200)
+        y.single() = true
+        x.single() = 1
+      }
+    } start
+
+    atomic { implicit txn =>
+      atomic { implicit txn =>
+        // this will cause the nesting to materialize
+        NestingLevel.current
+
+        if (x() == 0)
+          retry
+      }
+    }
+    assert(y.single())
+  }
+
   test("simple orAtomic") {
     val x = Ref(0)
     val f = atomic { implicit txn =>
@@ -103,59 +133,76 @@ class TxnSuite extends FunSuite {
     assert(f)    
   }
 
+  test("single atomic.oneOf") {
+    val x = Ref("zero")
+    atomic.oneOf({ implicit txn =>
+      x() = "one"
+    })
+    assert(x.single() === "one")
+  }
+
   test("atomic.oneOf") {
-    val x = Ref(false)
-    val y = Ref(false)
-    val z = Ref(false)
-    runOneOfTest(x, y, z)
+    val refs = Array(Ref(false), Ref(false), Ref(false))
+    for (w <- 0 until 3) {
+      new Thread("wakeup") {
+        override def run {
+          Thread.sleep(200)
+          refs(w).single() = true
+        }
+      }.start()
+      oneOfExpect(refs, w, Array(0))
+    }
   }
 
   test("nested atomic.oneOf") {
-    val x = Ref(false)
-    val y = Ref(false)
-    val z = Ref(false)
-    atomic { implicit txn =>
-      runOneOfTest(x, y, z)
+    val refs = Array(Ref(false), Ref(false), Ref(false))
+    for (w <- 0 until 3) {
+      new Thread("wakeup") {
+        override def run {
+          Thread.sleep(200)
+          refs(w).single() = true
+        }
+      }.start()
+      val retries = Array(0)
+      atomic { implicit txn => oneOfExpect(refs, w, retries) }
     }
   }
 
   test("alternative atomic.oneOf") {
     val a = Ref(0)
-    val x = Ref(false)
-    val y = Ref(false)
-    val z = Ref(false)
-    val f = atomic { implicit txn =>
-      if (a() == 0)
-        retry
-      false
-    } orAtomic { implicit txn =>
-      runOneOfTest(x, y, z)
-      true
-    }
-    assert(f)
-  }
-
-  private def runOneOfTest(x: Ref[Boolean], y: Ref[Boolean], z: Ref[Boolean]) {
-    for ((ref,name) <- List((x,"x"), (y,"y"), (z,"z"))) {
+    val refs = Array(Ref(false), Ref(false), Ref(false))
+    for (w <- 0 until 3) {
       new Thread("wakeup") {
         override def run {
           Thread.sleep(200)
-          ref.single() = true
+          refs(w).single() = true
         }
       }.start()
-
-      val result = Ref("")
-      var sleeps = 0
-      atomic.oneOf(
-          { t: InTxn => implicit val txn = t; result() = "x" ; if (!x()) retry },
-          { t: InTxn => implicit val txn = t; if (y()) result() = "y" else retry },
-          { t: InTxn => implicit val txn = t; if (z()) result() = "z" else retry },
-          { t: InTxn => implicit val txn = t; sleeps += 1 ; retry }
-        )
-      ref.single() = false
-      assert(result.single.get === name)
-      assert(sleeps <= 1)
+      val retries = Array(0)
+      val f = atomic { implicit txn =>
+        if (a() == 0)
+          retry
+        false
+      } orAtomic { implicit txn =>
+        oneOfExpect(refs, w, retries)
+        true
+      }
+      assert(f)
     }
+  }
+
+  private def oneOfExpect(refs: Array[Ref[Boolean]], which: Int, sleeps: Array[Int]) {
+    val result = Ref(-1)
+    atomic.oneOf(
+        { t: InTxn => implicit val txn = t; result() = 0 ; if (!refs(0)()) retry },
+        { t: InTxn => implicit val txn = t; if (refs(1)()) result() = 1 else retry },
+        { t: InTxn => implicit val txn = t; if (refs(2)()) result() = 2 else retry },
+        { t: InTxn => implicit val txn = t; sleeps(0) += 1 ; retry }
+      )
+    refs(which).single() = false
+    assert(result.single.get === which)
+    if (sleeps(0) != 0)
+      assert(sleeps(0) === 1)
   }
 
   test("orAtomic w/ exception") {
@@ -228,30 +275,23 @@ class TxnSuite extends FunSuite {
     assert(x.single() === "outer")
   }
 
-  test("retry set accumulation across alternatives") {
-    val x = Ref(false)
+  test("partial rollback due to invalid read") {
+    val x = Ref(0)
+    val y = Ref(0)
 
-    // this prevents the test from deadlocking
-    new Thread("trigger") {
-      override def run {
-        Thread.sleep(200)
-        x.single() = true
-      }
-    } start
+    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start
 
     atomic { implicit t =>
-      // The following txn and its alternative decode the value of x that was
-      // observed, without x being a part of the current read set.
-      val f = atomic { implicit t =>
-        atomic { implicit t =>
-          // this txn encodes the read of x in its retry state
-          if (!x()) retry
-        }
-        true
+      x()
+      atomic { implicit t =>
+        y()
+        Thread.sleep(200)
+        y()
       } orAtomic { implicit t =>
-        false
+        throw new Error("should not be run")
       }
-      if (!f) retry
+    } orAtomic { implicit t =>
+      throw new Error("should not be run")
     }
   }
 
@@ -274,248 +314,6 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  test("beforeCommit upgrade on read-only commit") {
-    val x = Ref(0)
-    var ran = false
-    atomic { implicit t =>
-      assert(x() === 0)
-      Txn.beforeCommit { _ =>
-        assert(!ran)
-        x() = 1
-        ran = true
-      }
-    }
-    assert(ran)
-    assert(x.single() === 1)
-  }
-
-  test("retry in beforeCommit") {
-    val x = Ref(0)
-    val t = new Thread("trigger") {
-      override def run() {
-        for (i <- 0 until 5) {
-          Thread.sleep(200)
-          x.single() += 1
-        }
-      }
-    }
-    var tries = 0
-    t.start()
-    val y = Ref(0)
-    atomic { implicit t =>
-      tries += 1
-      y() = 1
-      Txn.beforeCommit { implicit t =>
-        if (x() < 5)
-          retry
-      }
-    }
-    assert(tries >= 5)
-  }
-
-  test("exception in beforeCommit") {
-    val x = Ref[Option[String]](Some("abc"))
-    intercept[NoSuchElementException] {
-      atomic { implicit t =>
-        x() = None
-        Txn.beforeCommit { _ => println(x().get) }
-      }
-    }
-  }
-
-  test("surviving beforeCommit") {
-    val x = Ref(1)
-    val y = Ref(2)
-    val z = Ref(3)
-    var a = false
-    var aa = false
-    var ab = false
-    var b = false
-    var ba = false
-    var bb = false
-    var bc = false
-    atomic { implicit t =>
-      Txn.beforeCommit { _ => assert(!a) ; a = true }
-      atomic { implicit t =>
-        Txn.beforeCommit { _ => assert(!aa) ; aa = true }
-        x += 1
-        if (x() != 0)
-          retry
-      } orAtomic { implicit t =>
-        Txn.beforeCommit { _ => assert(!ab) ; ab = true }
-        y += 1
-        if (y() != 0)
-          retry
-      }
-      z += 8
-    } orAtomic { implicit t =>
-      Txn.beforeCommit { _ => assert(!b && !ba && !bb && !bc) ; b = true }
-      atomic { implicit t =>
-        Txn.beforeCommit { _ => assert(!ba) ; ba = true }
-        z += 1
-        if (x() != 0)
-          retry
-      } orAtomic { implicit t =>
-        Txn.beforeCommit { _ => assert(!bb) ; bb = true }
-        x += 1
-        if (x() != 0)
-          retry
-      } orAtomic { implicit t =>
-        Txn.beforeCommit { _ => assert(b) ; assert(!bc) ; bc = true }
-        if (x() + y() + z() == 0)
-          retry
-      }
-      z += 16
-    }
-    assert(!a)
-    assert(!aa)
-    assert(!ab)
-    assert(b)
-    assert(!ba)
-    assert(!bb)
-    assert(bc)
-    assert(x.single() == 1)
-    assert(y.single() == 2)
-    assert(z.single() == 19)
-  }
-
-  test("afterRollback on commit") {
-    atomic { implicit t =>
-      Txn.afterRollback { _ => assert(false) }
-    }
-  }
-
-  test("afterRollback on rollback") {
-    val x = Ref(10)
-    var ran = false
-    atomic { implicit t =>
-      Txn.afterRollback { _ =>
-        assert(!ran)
-        ran = true
-      }
-      if (x() == 10) {
-        val adversary = new Thread {
-          override def run() {
-            x.single.transform(_ + 1)
-          }
-        }
-        adversary.start()
-        adversary.join()
-        x()
-        assert(false)
-      }
-    }
-    assert(ran)
-  }
-
-  test("afterCommit runs a txn") {
-    var ran = false
-    val x = Ref(0)
-    atomic { implicit t =>
-      x() = 1
-      Txn.afterCommit { _ =>
-        atomic { implicit t =>
-          assert(!ran)
-          ran = true
-          assert(x() === 1)
-          x() = 2
-        }
-      }
-    }
-    assert(ran)
-    assert(x.single() === 2)
-  }
-
-  test("afterCommit doesn't access txn") {
-    var ran = false
-    val x = Ref(0)
-    atomic { implicit t =>
-      x() = 1
-      Txn.afterCommit { _ =>
-        intercept[IllegalStateException] {
-          assert(!ran)
-          ran = true
-          x() = 2
-        }
-      }
-    }
-    assert(ran)
-    assert(x.single() === 1)
-  }
-
-  test("beforeCommit during beforeCommit") {
-    val handler = new Function1[InTxn, Unit] {
-      var count = 0
-
-      def apply(txn: InTxn) {
-        if (txn eq null) {
-          // this is the after-atomic check
-          assert(count === 1000)
-        } else {
-          count += 1
-          if (count < 1000)
-            Txn.beforeCommit(this)(txn)
-        }
-      }
-    }
-    val x = Ref(0)
-    atomic { implicit t =>
-      x += 1
-      Txn.beforeCommit(handler)
-    }
-    handler(null)
-  }
-
-  test("beforeCommit termination") {
-    val x = Ref(0)
-    var a = false
-    intercept[UserException] {
-      atomic { implicit t =>
-        assert(x() === 0)
-        Txn.beforeCommit { _ =>
-          assert(!a)
-          a = true
-          throw new UserException
-        }
-        x += 2
-        Txn.beforeCommit { _ =>
-          assert(false)
-        }
-      }
-    }
-    assert(a)
-  }
-
-  test("manual optimistic retry") {
-    var tries = 0
-    val x = Ref(0)
-    atomic { implicit t =>
-      assert(x() === 0)
-      x += tries
-      tries += 1
-      if (tries < 100)
-        Txn.rollback(Txn.OptimisticFailureCause('manual_failure, None))
-    }
-    assert(x.single() === 99)
-    assert(tries === 100)
-  }
-
-  test("manual optimistic retry during beforeCommit") {
-    var tries = 0
-    val x = Ref(0)
-    atomic { implicit t =>
-      assert(x() === 0)
-      x += tries
-      tries += 1
-      Txn.beforeCommit { implicit t =>
-        if (tries < 100)
-          Txn.rollback(Txn.OptimisticFailureCause('manual_failure, None))
-      }
-    }
-    assert(x.single() === 99)
-    assert(tries === 100)
-  }
-
   test("currentLevel during nesting") {
     // this test is _tricky_, because an assertion failure inside the atomic
     // block might cause a restart that expands any subsumption
@@ -535,77 +333,186 @@ class TxnSuite extends FunSuite {
     assert(n0.parent.isEmpty)
   }
 
-  test("whilePreparing") {
-    var i = 0
-    var observed = -1
+  test("persistent rollback") {
     val x = Ref(0)
-    atomic { implicit txn =>
-      i += 1
-      x() = i
-      Txn.whilePreparing { _ =>
-        observed = i
-        if (i < 4) Txn.rollback(Txn.OptimisticFailureCause('test, None))
+    var okay = true
+    intercept[UserException] {
+      atomic { implicit txn =>
+        x() = 1
+        try {
+          Txn.rollback(Txn.UncaughtExceptionCause(new UserException()))
+        } catch {
+          case _ => // swallow
+        }
+        x()
+        okay = false
       }
     }
-    assert(x.single() == 4)
-    assert(observed == 4)
-    assert(i == 4)
+    assert(okay)
   }
 
-  test("whileCommitting") {
-    var count = 0
+  test("persistent rollback via exception") {
     val x = Ref(0)
-    atomic { implicit txn =>
-      x() = 1
-      Txn.whileCommitting { _ => count += 1 }
-    }
-    assert(x.single() == 1)
-    assert(count == 1)
-  }
-
-  test("whileCommitting ordering", Slow) {
-    val numThreads = 10
-    val numPutsPerThread = 100000
-    val startingGate = new java.util.concurrent.CountDownLatch(1)
-    val active = Ref(numThreads)
-    val failure = Ref(null : Throwable)
-
-    val x = Ref(0)
-    val notifier = new scala.concurrent.forkjoin.LinkedTransferQueue[Int]()
-    val EOF = -1
-
-    for (i <- 1 to numThreads) {
-      (new Thread {
-        override def run() {
-          try {
-            startingGate.await()
-            for (i <- 1 to numPutsPerThread) {
-              atomic { implicit txn =>
-                x() = x() + 1
-                val y = x()
-                Txn.whileCommitting { _ =>
-                  if ((i & 127) == 0) // try to perturb the timing
-                    Thread.`yield`
-                  notifier.put(y)
-                }
-              }
-            }
-          } catch {
-            case xx => failure.single() = xx
-          }
-          if (active.single.transformAndGet( _ - 1 ) == 0)
-            notifier.put(EOF)
+    intercept[UserException] {
+      atomic { implicit txn =>
+        x() = 1
+        try {
+          Txn.rollback(Txn.UncaughtExceptionCause(new UserException()))
+        } catch {
+          case _ => // swallow
         }
-      }).start
+        throw new InterruptedException // this should be swallowed
+      }
+    }
+  }
+
+  test("many multi-level reads") {
+    val refs = Array.tabulate(10000) { _ => Ref(0) }
+    atomic { implicit txn =>
+      for (r <- refs) r() = 1
+      val f = atomic { implicit txn =>
+        for (r <- refs) r() = 2
+        if (refs(0)() != 0)
+          retry
+        false
+      } orAtomic { implicit txn =>
+        true
+      }
+      assert(f)
+    }
+    for (r <- refs)
+      assert(r.single() === 1)
+  }
+
+  test("partial rollback of invalid read") {
+    val x = Ref(0)
+    var xtries = 0
+    val y = Ref(0)
+    var ytries = 0
+
+    (new Thread { override def run { Thread.sleep(100) ; y.single() = 1 } }).start
+
+    atomic { implicit txn =>
+      xtries += 1
+      x += 1
+      atomic { implicit txn =>
+        ytries += 1
+        y()
+        Thread.sleep(200)
+        y()
+      } orAtomic { implicit txn =>
+        throw new Error("should not be run")
+      }
     }
 
-    startingGate.countDown
-    for (expected <- 1 to numThreads * numPutsPerThread)
-      assert(expected === notifier.take())
-    assert(EOF === notifier.take())
+    // We can't assert, because different STMs might do different things.
+    // For CCSTM it should be 1, 2
+    println("xtries = " + xtries + ", ytries = " + ytries)
+  }
 
-    if (failure.single() != null)
-      throw failure.single()
+  test("await") {
+    val x = Ref(0)
+
+    (new Thread {
+      override def run {
+        Thread.sleep(50)
+        x.single() = 1
+        Thread.sleep(50)
+        x.single() = 2
+      }
+    }).start
+
+    x.single.await( _ == 2 )
+    assert(x.single() === 2)
+  }
+
+  test("remote cancel") {
+    val x = Ref(0)
+
+    val finished = atomic { implicit txn =>
+      x += 1
+      NestingLevel.current
+    }
+    assert(x.single() === 1)
+
+    for (i <- 0 until 100) {
+      intercept[UserException] {
+        atomic { implicit txn =>
+          val active = NestingLevel.current
+          (new Thread {
+            override def run {
+              val cause = Txn.UncaughtExceptionCause(new UserException)
+              assert(finished.requestRollback(cause) === Txn.Committed)
+              assert(active.requestRollback(cause) == Txn.RolledBack(cause))
+            }
+          }).start
+
+          while (true)
+            x() = x() + 1
+        }
+      }
+      assert(x.single() === 1)
+    }
+  }
+
+  test("remote cancel of root") {
+    val x = Ref(0)
+
+    val finished = atomic { implicit txn =>
+      x += 1
+      NestingLevel.current
+    }
+    assert(x.single() === 1)
+
+    for (i <- 0 until 100) {
+      intercept[UserException] {
+        atomic { implicit txn =>
+          // this is to force true nesting for CCSTM, but the test should pass for any STM
+          atomic { implicit txn => NestingLevel.current }
+
+          val active = NestingLevel.current
+          (new Thread {
+            override def run {
+              Thread.`yield`
+              Thread.`yield`
+              val cause = Txn.UncaughtExceptionCause(new UserException)
+              assert(finished.requestRollback(cause) === Txn.Committed)
+              assert(active.requestRollback(cause) == Txn.RolledBack(cause))
+            }
+          }).start
+
+          while (true)
+            atomic { implicit txn => x += 1 }
+        }
+      }
+      assert(x.single() === 1)
+    }
+  }
+
+  test("remote cancel of child") {
+    val x = Ref(0)
+
+    for (i <- 0 until 100) {
+      intercept[UserException] {
+        atomic { implicit txn =>
+          atomic { implicit txn =>
+            val active = NestingLevel.current
+            (new Thread {
+              override def run {
+                Thread.`yield`
+                Thread.`yield`
+                val cause = Txn.UncaughtExceptionCause(new UserException)
+                assert(active.requestRollback(cause) == Txn.RolledBack(cause))
+              }
+            }).start
+
+            while (true)
+              x() = x() + 1
+          }
+        }
+      }
+      assert(x.single() === 0)
+    }
   }
 
   test("toString") {
@@ -619,11 +526,17 @@ class TxnSuite extends FunSuite {
     }).toString
   }
 
-  // TODO: more whilePreparing and whileCommitting callback usage
-
-  // TODO: exception behavior from all types of callbacks
-
-  // TODO: tests for external decider
+  test("many simultaneous Txns", Slow) {
+    // CCSTM supports 2046 simultaneous transactions
+    val threads = Array.tabulate(2500) { _ => new Thread {
+      override def run { atomic { implicit txn => Thread.sleep(1000) } }
+    }}
+    val begin = System.currentTimeMillis
+    for (t <- threads) t.start
+    for (t <- threads) t.join
+    val elapsed = System.currentTimeMillis - begin
+    println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
+  }
 
   perfTest("uncontended R+W txn perf") { (x, y) =>
     var i = 0

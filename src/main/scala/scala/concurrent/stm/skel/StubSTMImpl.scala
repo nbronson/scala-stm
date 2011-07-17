@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package skel
@@ -6,7 +6,7 @@ package skel
 import java.lang.Throwable
 import scala.collection.mutable.Builder
 
-private[stm] class StubSTMImpl extends impl.STMImpl {
+class StubSTMImpl extends impl.STMImpl {
 
   //////// RefFactory
 
@@ -51,6 +51,8 @@ private[stm] class StubSTMImpl extends impl.STMImpl {
   def pushAlternative[Z](mt: MaybeTxn, block: InTxn => Z): Boolean = throw new AbstractMethodError
   def compareAndSet[A, B](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = throw new AbstractMethodError
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = throw new AbstractMethodError
+  def retryTimeoutNanos: Option[Long] = throw new AbstractMethodError
+  def withRetryTimeoutNanos(timeout: Option[Long]): TxnExecutor = throw new AbstractMethodError
   def isControlFlow(x: Throwable): Boolean = throw new AbstractMethodError
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = throw new AbstractMethodError
   def postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = throw new AbstractMethodError

@@ -1,19 +1,9 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package skel
 
-import concurrent.stm.Txn.{RollbackCause, Status, ExternalDecider}
-import collection.mutable.ArrayBuffer
 import annotation.tailrec
-
-private[stm] object AbstractInTxn {
-  abstract class SuccessCallback[A, B] {
-    protected def buffer(owner: A): ArrayBuffer[B => Unit]
-
-    def add(owner: A, handler: B => Unit) { }
-  }
-}
 
 private[stm] trait AbstractInTxn extends InTxn {
   import Txn._
@@ -92,7 +82,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     var failure: Throwable = null
     var i = 0
     while (i < _whileCommittingList.size) {
-      failure = firePostDecision(_whileCommittingList(i), this, exec, failure)
+      failure = firePostDecision(_whileCommittingList(i), this, exec, Txn.Committing, failure)
       i += 1
     }
     failure
@@ -111,21 +101,21 @@ private[stm] trait AbstractInTxn extends InTxn {
     var j = if (inOrder) 0 else handlers.length - 1
     var dj = if (inOrder) 1 else -1
     while (i < handlers.length) {
-      failure = firePostDecision(handlers(j), s, exec, failure)
+      failure = firePostDecision(handlers(j), s, exec, s, failure)
       i += 1
       j += dj
     }
     failure
   }
 
-  private def firePostDecision[A](handler: A => Unit, arg: A, exec: TxnExecutor, f: Throwable): Throwable = {
+  private def firePostDecision[A](handler: A => Unit, arg: A, exec: TxnExecutor, s: Status, f: Throwable): Throwable = {
     try {
       handler(arg)
       f
     } catch {
       case x => {
         try {
-          exec.postDecisionFailureHandler(status, x)
+          exec.postDecisionFailureHandler(s, x)
           f
         } catch {
           case xx => xx
@@ -188,7 +178,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     if (i >= 0) {
       if (i < level._whileValidatingSize)
         fireWhileValidating(i, level.parLevel)
-      else if (level.status ne Txn.Active)
+      else if (level.status.isInstanceOf[Txn.RolledBack])
         fireWhileValidating(level._whileValidatingSize - 1, level.parLevel) // skip the rest at this level
       else {
         try {
@@ -262,8 +252,8 @@ private[stm] trait AbstractInTxn extends InTxn {
         throw new IllegalArgumentException("can't set two different ExternalDecider-s in the same top-level atomic block")
     } else {
       _decider = decider
-      // if this nesting level rolls back then the decider should be unregistered
-      afterRollback { status =>
+      // the decider should be unregistered after either rollback or commit
+      afterCompletion { status =>
         assert(_decider eq decider)
         _decider = null
       }

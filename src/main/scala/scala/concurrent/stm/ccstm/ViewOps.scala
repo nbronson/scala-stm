@@ -1,7 +1,9 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
+
+import actors.threadpool.TimeUnit
 
 /** The default implementation of `Ref.View`'s operations in CCSTM. */
 private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
@@ -20,9 +22,13 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case null => NonTxn.get(handle)
     case txn => txn.relaxedGet(handle, equiv)
   }
-  def retryUntil(f: T => Boolean): Unit = InTxnImpl.dynCurrentOrNull match {
+  def await(f: T => Boolean): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.await(handle, f)
     case txn => if (!f(txn.get(handle))) Txn.retry(txn)
+  }
+  def tryAwait(timeout: Long, unit: TimeUnit)(f: T => Boolean): Boolean = InTxnImpl.dynCurrentOrNull match {
+    case null => NonTxn.tryAwait(handle, f, unit.toNanos(timeout))
+    case txn => f(txn.get(handle)) || { Txn.retryFor(timeout, unit)(txn) ; false }
   }
   def set(v: T): Unit = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.set(handle, v)

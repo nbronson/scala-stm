@@ -1,16 +1,18 @@
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+
 package scala.concurrent.stm
 package ccstm
 
 // TxnLocalImpl
 
-class TxnLocalImpl[A](init: => A,
-                      initialValue: InTxn => A,
-                      beforeCommit: InTxn => Unit,
-                      whilePreparing: InTxnEnd => Unit,
-                      whileCommitting: InTxnEnd => Unit,
-                      afterCommit: A => Unit,
-                      afterRollback: Txn.Status => Unit,
-                      afterCompletion: Txn.Status => Unit) extends Handle[A] with TxnLocal[A] {
+private[ccstm] class TxnLocalImpl[A](init: => A,
+                                     initialValue: InTxn => A,
+                                     beforeCommit: InTxn => Unit,
+                                     whilePreparing: InTxnEnd => Unit,
+                                     whileCommitting: InTxnEnd => Unit,
+                                     afterCommit: A => Unit,
+                                     afterRollback: Txn.Status => Unit,
+                                     afterCompletion: Txn.Status => Unit) extends Handle[A] with TxnLocal[A] {
 
   //////// stateless Handle
 
@@ -23,6 +25,12 @@ class TxnLocalImpl[A](init: => A,
   def data: A = throw new Error
   def data_=(v: A) {}
 
+
+  //////// TxnLocal
+
+  def isInitialized(implicit txn: InTxn): Boolean = {
+    txn.asInstanceOf[InTxnImpl].txnLocalFind(this) >= 0
+  }
 
   //////// SourceLike
 

@@ -5,7 +5,7 @@
 package scala.concurrent.stm
 package experimental.perf
 
-import skel.FastSimpleRandom
+import skel.SimpleRandom
 
 object RandomOp {
   val LeadingAdds = System.getProperty("leading-adds", "0").toInt
@@ -33,11 +33,11 @@ class RandomOp extends Perf.Worker {
 
   { RandomOp.AddPct }
 
-  var rng: FastSimpleRandom = null
+  var rng: SimpleRandom = null
 
   override def setup(id: Int, size: Int, numThreads: Int, targetType: String, master: Perf.Worker) {
     super.setup(id, size, numThreads, targetType, master)
-    rng = new FastSimpleRandom(id)
+    rng = new SimpleRandom(id)
   }
 
   def run(warmup: Boolean, pass: Int) {

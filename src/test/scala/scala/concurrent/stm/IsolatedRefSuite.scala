@@ -1,8 +1,9 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
+import actors.threadpool.TimeUnit
 
 
 /** Performs single-threaded tests of `Ref`. */
@@ -43,7 +44,8 @@ class IsolatedRefSuite extends FunSuite {
     def get: A = ref.get
     def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
-    def retryUntil(f: A => Boolean) { if (!f(get)) retry }
+    def await(f: A => Boolean) { if (!f(get)) retry }
+    def tryAwait(timeout: Long, unit: TimeUnit)(f: A => Boolean): Boolean = f(get) || { retryFor(timeout, unit) ; false }
     def set(v: A) { ref.set(v) }
     def trySet(v: A) = ref.trySet(v)
     def swap(v: A): A = ref.swap(v)
@@ -57,6 +59,11 @@ class IsolatedRefSuite extends FunSuite {
     def getAndTransform(f: A => A): A = { val z = get ; ref.transform(f) ; z }
     def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
+
+    override def +=(rhs: A)(implicit num: Numeric[A]) = ref += rhs
+    override def -=(rhs: A)(implicit num: Numeric[A]) = ref -= rhs
+    override def *=(rhs: A)(implicit num: Numeric[A]) = ref *= rhs
+    override def /=(rhs: A)(implicit num: Numeric[A]) = ref /= rhs
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -76,7 +83,8 @@ class IsolatedRefSuite extends FunSuite {
     def get: A = wrap { view.get }
     def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
-    def retryUntil(f: (A) => Boolean) { wrap { view.retryUntil(f) } }
+    def await(f: (A) => Boolean) { wrap { view.await(f) } }
+    def tryAwait(timeout: Long, unit: TimeUnit)(f: (A) => Boolean): Boolean = wrap { view.tryAwait(timeout, unit)(f) }
     def set(v: A) { wrap { view.set(v) } }
     def trySet(v: A) = wrap { view.trySet(v) }
     def swap(v: A): A = wrap { view.swap(v) }
@@ -86,6 +94,11 @@ class IsolatedRefSuite extends FunSuite {
     def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
     def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
+
+    override def +=(rhs: A)(implicit num: Numeric[A]) = wrap { view += rhs }
+    override def -=(rhs: A)(implicit num: Numeric[A]) = wrap { view -= rhs }
+    override def *=(rhs: A)(implicit num: Numeric[A]) = wrap { view *= rhs }
+    override def /=(rhs: A)(implicit num: Numeric[A]) = wrap { view /= rhs }
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -123,16 +136,23 @@ class IsolatedRefSuite extends FunSuite {
   // configuration.
 
   private def createTests[A : ClassManifest](name: String, v0: A)(block: (() => Ref.View[A]) => Unit) {
-    for (outerLevels <- 0 until 2;
-         innerLevels <- 0 until 2;
-         refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
-         viewFactory <- List(SingleAccess, RefAccess);
-         if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
-      test("outer=" + outerLevels + ", inner=" + innerLevels + ", " +
-              refFactory + ", " + viewFactory + ": " + name) {
-        val ref = refFactory(v0)
-        def getView = viewFactory(ref, innerLevels)
-        nest(outerLevels) { block(getView _) }
+    test(name) {
+      for (outerLevels <- 0 until 2;
+           innerLevels <- 0 until 2;
+           refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
+           viewFactory <- List(SingleAccess, RefAccess);
+           if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
+        val current = "outer=" + outerLevels + ", inner=" + innerLevels + ", " + refFactory + ", " + viewFactory
+        try {
+          val ref = refFactory(v0)
+          def getView = viewFactory(ref, innerLevels)
+          nest(outerLevels) { block(getView _) }
+        } catch {
+          case x => {
+            println(name + " failed for " + current)
+            fail(current + ": " + name + " failure", x)
+          }
+        }
       }
     }
   }
@@ -208,6 +228,14 @@ class IsolatedRefSuite extends FunSuite {
     assert(view()() === 10)
   }
 
+  createTests("transformAndGet", 1) { view =>
+    for (i <- 1 until 10) {
+      assert(view()() === i)
+      assert(view().transformAndGet(_ + 1) === i + 1)
+    }
+    assert(view()() === 10)
+  }
+
   createTests("transformIfDefined", 1) { view =>
     for (i <- 1 until 10) {
       assert(view()() === i)
@@ -275,6 +303,18 @@ class IsolatedRefSuite extends FunSuite {
     view()() = 20
   }
 
+  createTests("initially true await", 10) { view =>
+    view().await( _ == 10 )
+  }
+
+  createTests("initially true tryAwait", 10) { view =>
+    assert(view().tryAwait(10000)( _ == 10 ))
+  }
+
+  createTests("false tryAwait with a zero timeout", 10) { view =>
+    assert(!view().tryAwait(0)( _ == 20 ))
+  }
+
   class UserException extends Exception
 
   createTests("excepting transform", 1) { view =>
@@ -333,6 +373,14 @@ class IsolatedRefSuite extends FunSuite {
     assert(view().get === "eq")
   }
 
+  createTests("-= -1 long", 1L) { view =>
+    for (i <- 1 until 10) {
+      assert(view()() === i)
+      view() -= -1
+    }
+    assert(view()() === 10L)
+  }
+
   createTests("/=", 11) { view =>
     view() /= 2
     assert(view()() === 5)
@@ -386,6 +434,7 @@ class IsolatedRefSuite extends FunSuite {
       assert(view().ref == view().ref)
       assert(view().ref.single == view())
       assert(view() != Ref(v0))
+      assert(view() != "abc")
     }
 
     test(name + " TArray Ref equality") {
@@ -396,9 +445,10 @@ class IsolatedRefSuite extends FunSuite {
       assert(a.single.refViews(0) == a.single.refViews(0))
       assert(a.refs(0) == a.refs(0).single)
       assert(a.single.tarray.refs(0) == a.refs(0).single)
+      assert(a.refs(0) != "abc")
     }
 
-    test(name + " TArray Ref inequality") {
+    test(name + " TArray Ref inequality between arrays") {
       val a = TArray(Seq(v0))
       val b = TArray(Seq(v1))
       assert(b.refs(0) != a.refs(0))
@@ -420,4 +470,143 @@ class IsolatedRefSuite extends FunSuite {
   perTypeTests(1.0, 2.0)
   perTypeTests((), ())
   perTypeTests("1", "2")
+
+  test("TArray Ref inequality between indices") {
+    val a = TArray.ofDim[Int](1000)
+    println(a.refs(0))
+    for (i <- 1 until 1000) {
+      assert(a.refs(i) != a.refs(0))
+      assert(a.single.refViews(i) != a.refs(0))
+      assert(a.single.refViews(i).ref != a.refs(0))
+      assert(a.single.refViews(i) != a.single.refViews(0))
+      assert(a.refs(i) != a.refs(0).single)
+      assert(a.single.tarray.refs(i) != a.refs(0).single)
+    }
+  }
+
+  test("TArray index checking") {
+    val a = TArray.ofDim[String](10)
+    for (i <- List(-1, 10, Int.MinValue, Int.MaxValue)) {
+      intercept[ArrayIndexOutOfBoundsException] { a.single(i) }
+      intercept[ArrayIndexOutOfBoundsException] { a.single(i) = "abc" }
+      intercept[ArrayIndexOutOfBoundsException] { a.single.refViews(i) }
+      intercept[ArrayIndexOutOfBoundsException] { a.refs(i) }
+      intercept[ArrayIndexOutOfBoundsException] { atomic { implicit txn => a(i) } }
+      intercept[ArrayIndexOutOfBoundsException] { atomic { implicit txn => a(i) = "abc" } }
+    }
+  }
+
+  test("TArray length") {
+    val a = TArray.ofDim[String](10)
+    assert(a.length === 10)
+    assert(a.single.length === 10)
+    assert(a.refs.length === 10)
+    assert(a.single.refViews.length === 10)
+
+    val b = TArray.ofDim[String](0)
+    assert(b.single.isEmpty)
+  }
+
+  class ProxyRef[A](underlying: Ref[A]) extends Ref[A] {
+    override def single = throw new AbstractMethodError
+    def get(implicit txn: InTxn) = throw new AbstractMethodError
+    def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
+    def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError
+    def set(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def trySet(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def swap(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def transform(f: (A) => A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxn) = throw new AbstractMethodError
+
+    override def hashCode = underlying.hashCode
+    override def equals(rhs: Any) = underlying.equals(rhs)
+  }
+
+  test("proxy Ref equality") {
+    val lhs = Ref(10)
+    val rhs = new ProxyRef(lhs)
+    assert(lhs == rhs)
+    assert(rhs == lhs)
+    assert(rhs == rhs)
+    assert(rhs != Ref(5))
+    assert(Ref(5) != rhs)
+  }
+
+  test("TxnExecutor.compareAndSet") {
+    val x = Ref("abc")
+    val y = Ref("10")
+    assert(!atomic.compareAndSet(x, "abc", "def", y, "11", "20"))
+    assert(x.single() === "abc")
+    assert(y.single() === "10")
+    assert(!atomic.compareAndSet(x, "ABC", "def", y, "10", "20"))
+    assert(x.single() === "abc")
+    assert(y.single() === "10")
+    assert(atomic.compareAndSet(x, "abc", "def", y, 10.toString, "20"))
+    assert(x.single() === "def")
+    assert(y.single() === "20")
+  }
+
+  test("TxnExecutor.compareAndSet non-txn exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic.compareAndSet(x, x0, x1, y, y0, y1)
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
+
+  test("TxnExecutor.compareAndSet txn exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic { implicit txn => atomic.compareAndSet(x, x0, x1, y, y0, y1) }
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
+
+  test("TxnExecutor.compareAndSetIdentity non-txn exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic.compareAndSetIdentity(x, x0, x1, y, y0, y1)
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
+
+  test("TxnExecutor.compareAndSetIdentity txn exhaustive") {
+    for (x0 <- List("abc", "ABC") ; x1 <- List("abc", "ABC") ; y0 <- List("def", "DEF") ; y1 <- List("def", "DEF")) {
+      val x = Ref("abc")
+      val y = Ref("def")
+      val f = atomic { implicit txn => atomic.compareAndSetIdentity(x, x0, x1, y, y0, y1) }
+      if (f) {
+        assert(x0 === "abc")
+        assert(y0 === "def")
+        assert(x.single() === x1)
+        assert(y.single() === y1)
+      } else {
+        assert(x0 != "abc" || y0 != "def")
+      }
+    }
+  }
 }

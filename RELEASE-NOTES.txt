@@ -1,11 +1,31 @@
-ScalaSTM - 0.2-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.4-SNAPSHOT RELEASE NOTES
 
-Changes between 0.1 and 0.2-SNAPSHOT:
+Changes between 0.3 and 0.4-SNAPSHOT:
+
+* Small performance improvements.
+
+* STMBench7 support.
+
+Snapshot releases deployed to the scala-tools.org repository are tested
+and functional, but may have changing APIs.
+
+----
+
+Changes between 0.2 and 0.3:
+
+* Support for Scala 2.9.0.RC1.
+
+* Bug fixes (see https://github.com/nbronson/scala-stm/issues/closed ).
+
+* Timeouts for modular blocking.  Set timeouts at the atomic block using
+  atomic.withRetryTimeout, or at the retry site using retryFor.
+
+----
+
+Changes between 0.1 and 0.2:
 
 * Substantial performance improvements, especially for nested atomic
-  blocks.  Nested atomic blocks without orAtomic are optimistically
-  subsumed, then retried without subsumption if partial rollback is
-  needed.
+  blocks.
 
 * TSet.View and TMap.View are integrated into the Scala collection
   class hierarchy, with factory companion objects and Builder and
@@ -17,5 +37,7 @@ Changes between 0.1 and 0.2-SNAPSHOT:
   committing handlers.  Combining TxnLocal and life-cycle handlers is
   now more concise.
 
-Snapshot releases deployed to the scala-tools.org repository are tested
-and functional, but may have changing APIs.
+* Transaction statistics can be enabled for the default algorithm
+  with the VM argument -Dccstm.stats=1 (details in the ScalaDoc for
+  scala.concurrent.stm.ccstm.CCSTM).
+

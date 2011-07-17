@@ -1,6 +1,8 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
+
+import actors.threadpool.TimeUnit
 
 
 /** `object TxnExecutor` manages the system-wide default `TxnExecutor`. */
@@ -8,9 +10,9 @@ object TxnExecutor {
   @volatile private var _default: TxnExecutor = impl.STMImpl.instance
 
   /** Returns the default `TxnExecutor`. */
-  def default: TxnExecutor = _default
+  def defaultAtomic: TxnExecutor = _default
 
-  /** Atomically replaces the default `TxnExecutor` with `f(default)`. */
+  /** Atomically replaces the default `TxnExecutor` with `f(defaultAtomic)`. */
   def transformDefault(f: TxnExecutor => TxnExecutor) {
     synchronized { _default = f(_default) }
   }
@@ -30,6 +32,9 @@ object TxnExecutor {
  *  @author Nathan Bronson
  */
 trait TxnExecutor {
+
+  //////// functionality
+
   /** Executes `block` one or more times until an atomic execution is achieved,
    *  buffering and/or locking writes so they are not visible until success.
    *
@@ -97,17 +102,49 @@ trait TxnExecutor {
   /** Atomically compares and sets two `Ref`s using identity comparison,
    *  probably more efficiently then the corresponding transaction.  Equivalent
    *  to {{{
-   *     atomic { implicit t =>
-   *       val f = (a() eq a0) && (b() eq b0)
-   *       if (f && (a0 ne a1))
-   *         a() = a1
-   *       if (f && (b0 ne b1))
-   *         b() = b1
-   *       f
-   *     }
+   *    atomic { implicit t =>
+   *      val f = (a() eq a0) && (b() eq b0)
+   *      if (f && (a0 ne a1))
+   *        a() = a1
+   *      if (f && (b0 ne b1))
+   *        b() = b1
+   *      f
+   *    }
    *  }}}
    */
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean
+
+  //////// configuration
+
+  /** Returns `Some(t)` if `t` is the retry timeout in nanoseconds used by
+   *  this `TxnExecutor`, or `None` otherwise.  If the retry timeout is
+   *  `Some(t)` and an atomic block executed by the returned executor blocks
+   *  with `retry` or `retryFor` for more than `t` nanoseconds the retry will
+   *  be cancelled with an `InterruptedException`.
+   *
+   *  The retry timeout has essentially the same effect as replacing calls to
+   *  `retry` with
+   *  `{ retryFor(timeout, NANOS) ; throw new InterruptedException }`.
+   *  Alternately, `retryFor(timeout)` has roughly the same effect as {{{
+   *    try {
+   *      atomic.withRetryTimeout(timeout) { implicit txn => retry }
+   *    } catch {
+   *      case _: InterruptedException =>
+   *    }
+   *  }}}
+   */
+  def retryTimeoutNanos: Option[Long]
+
+  /** Returns a `TxnExecutor` that is identical to this one, except that it has
+   *  a `retryTimeout` of `timeoutNanos`.
+   */
+  def withRetryTimeoutNanos(timeoutNanos: Option[Long]): TxnExecutor
+
+  /** Returns a `TxnExecutor` that is identical to this one except that it has
+   *  the specified retry timeout.  The default time unit is milliseconds.
+   */
+  def withRetryTimeout(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): TxnExecutor =
+      withRetryTimeoutNanos(Some(unit.toNanos(timeout)))
 
   /** Returns true if `x` should be treated as a transfer of control, rather
    *  than an error.  Atomic blocks that end with an uncaught control flow

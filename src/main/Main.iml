@@ -20,6 +20,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="TEST" name="ScalaTest" level="project" />
     <orderEntry type="library" name="scala" level="application" />
+    <orderEntry type="library" scope="TEST" name="STMBench7" level="project" />
   </component>
 </module>
 
