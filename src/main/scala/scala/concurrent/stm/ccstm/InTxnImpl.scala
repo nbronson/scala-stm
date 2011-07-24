@@ -658,7 +658,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       return false
 
     // this is our linearization point
-    val cv = freshCommitVersion(_readVersion, globalVersion.get)
+    val cv = freshCommitVersion(_readVersion)
 
     // if the reads are still valid, then they were valid at the linearization
     // point
