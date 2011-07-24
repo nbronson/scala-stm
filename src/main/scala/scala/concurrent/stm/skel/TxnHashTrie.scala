@@ -16,8 +16,8 @@ import annotation.tailrec
  */
 private[skel] object TxnHashTrie {
 
-  def LogBF = 4
-  def BF = 16
+  final val LogBF = 4
+  final val BF = 16
 
   // It would seem that the leaf copying is inefficient when compared to a tree
   // that allows more sharing, but a back-of-the-envelope calculation indicates
@@ -26,7 +26,7 @@ private[skel] object TxnHashTrie {
   // bytes required by this Leaf implementation is only about 2/3 more than an
   // ideal balanced tree, and those bytes are accessed in a more cache friendly
   // fashion.
-  def MaxLeafCapacity = 14
+  final val MaxLeafCapacity = 14
 
   def keyHash[A](key: A): Int = if (key == null) 0 else mixBits(key.##)
 
@@ -442,8 +442,8 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   //////////////// txn contention tracking
 
-  private final def pct = 10000
-  private final def contentionThreshold = 1 * pct
+  private final val pct = 10000
+  private final val contentionThreshold = 1 * pct
   private var contentionEstimate = 0
 
   private def recordNoContention() {

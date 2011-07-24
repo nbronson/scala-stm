@@ -257,8 +257,8 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   //////////// read set
 
-  private def InitialReadCapacity = 1024
-  private def MaxRetainedReadCapacity = 8 * InitialReadCapacity
+  private final val InitialReadCapacity = 1024
+  private final val MaxRetainedReadCapacity = 8 * InitialReadCapacity
 
   private var _rCount = 0
   private var _rHandles: Array[Handle[_]] = null
@@ -327,8 +327,8 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   //////////// pessimistic read buffer
 
-  private def InitialBargeCapacity = 1024
-  private def MaxRetainedBargeCapacity = 8 * InitialBargeCapacity
+  private final val InitialBargeCapacity = 1024
+  private final val MaxRetainedBargeCapacity = 8 * InitialBargeCapacity
 
   private var _bCount = 0
   private var _bHandles: Array[Handle[_]] = null
@@ -391,9 +391,9 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
 
   //////////// write buffer
 
-  private def InitialWriteCapacity = 8
-  private def MinAllocatedWriteCapacity = 512
-  private def MaxRetainedWriteCapacity = 8 * MinAllocatedWriteCapacity
+  private final val InitialWriteCapacity = 8
+  private final val MinAllocatedWriteCapacity = 512
+  private final val MaxRetainedWriteCapacity = 8 * MinAllocatedWriteCapacity
 
   // This write buffer implementation uses chaining, but instead of storing the
   // buckets in objects, they are packed into the arrays bucketAnys and

@@ -39,7 +39,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   assert(numSources > 0 && (numSources & (numSources - 1)) == 0)
 
   // To reduce false sharing.  Assume 64 byte cache lines and 4 byte pointers.
-  private def ChannelSpacing = 16
+  private final val ChannelSpacing = 16
 
   private val pending = new AtomicLongArray(numSources)
   private val events = new AtomicReferenceArray[EventImpl](numChannels * ChannelSpacing)
