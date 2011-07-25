@@ -8,8 +8,8 @@ import annotation.tailrec
 
 private[stm] class CallbackList[A] {
 
-  private def InitialCapacity = 128
-  private def MaxEmptyCapacity = 8192
+  private final val InitialCapacity = 128
+  private final val MaxEmptyCapacity = 8192
 
   private var _size = 0
   private var _data = new Array[A => Unit](InitialCapacity)
