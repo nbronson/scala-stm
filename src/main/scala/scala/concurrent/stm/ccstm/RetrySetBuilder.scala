@@ -17,7 +17,7 @@ private[ccstm] final class RetrySetBuilder {
   private var _next = new Array[Int](maxSizeForCap(InitialCap) + 1)
   private var _dispatch = new Array[Int](InitialCap)
 
-  private def InitialCap = 16
+  private final val InitialCap = 16
   private def maxSizeForCap(cap: Int) = cap - (cap / 4)
 
   def size = _size

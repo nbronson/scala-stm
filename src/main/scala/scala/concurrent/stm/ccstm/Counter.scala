@@ -10,7 +10,7 @@ import scala.annotation.tailrec
  *  the only delta passed to += is 1) and is not optimized.
  */
 private[ccstm] class Counter extends {
-  private def MaxStripes = 64
+  private final val MaxStripes = 64
 
   // this doesn't need to be volatile because when we grow it we retain all of
   // the old AtomicLong-s
