@@ -5,8 +5,9 @@ title: Releases
 
 The latest release of ScalaSTM is version 0.3.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
-* download a prebuilt JAR for 2.8.1: ["scala-stm_2.8.1-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.3/scala-stm_2.8.1-0.3.jar]
+* download a prebuilt JAR for 2.9.0-1: ["scala-stm_2.9.0-1-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.0-1/0.3/scala-stm_2.9.0-1-0.3.jar]
 * download a prebuilt JAR for 2.9.0: ["scala-stm_2.9.0-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.0/0.3/scala-stm_2.9.0-0.3.jar]
+* download a prebuilt JAR for 2.8.1: ["scala-stm_2.8.1-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.1/0.3/scala-stm_2.8.1-0.3.jar]
 
 ScalaSTM builds for 2.9.0 and 2.9.0-1 have identical bytecode, but for the benefit of sbt users both are provided.
 

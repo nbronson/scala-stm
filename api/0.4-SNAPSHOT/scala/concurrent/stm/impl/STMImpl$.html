@@ -28,7 +28,26 @@
       </span>
       </h4>
       
-          <div class="fullcommenttop" id="comment"><div class="toggleContainer block">
+          <div class="fullcommenttop" id="comment"><div class="comment cmt"><p><code>STMImpl</code> gathers all of the functionality required to plug an STM
+ implementation into <code>scala.concurrent.stm</code>.  Only one implementation can
+ be selected, because <code>Ref</code>s and atomic blocks from different STM
+ implementations are not compatible.  <code>STMImpl.instance</code> returns the
+ <code>STMImpl</code> instance that has been selected for this program execution.</p><p> There are two ways to explicitly select the <code>STMImpl</code> instance:</p><ol class="decimal"><li>set the JVM system property &quot;scala.stm.impl&quot; to the name of a class
+    that implements <code>STMImpl</code>; or</li></ol><p> 2. arrange for <code>STMImpl.select</code> or <code>STMImpl.trySelect</code> to be called
+    before any <code>Ref</code>s are constructed and before any atomic blocks are
+    executed.</p><p> Setting the JVM system property &quot;scala.stm.impl&quot; is equivalent to making a
+ call to <code>STMImpl.select(System.getProperty(&quot;scala.stm.impl&quot;))</code> before any
+ other <code>STMImpl</code> selections.</p><p> If there is no explicitly selected <code>STMImpl</code> instance and the classpath
+ contains a class <code>scala.concurrent.stm.impl.DefaultFactory</code> that extends
+ <code>scala.concurrent.stm.impl.STMImpl.Factory</code>, then an instance of that
+ class will be instantiated and used to generate the <code>STMImpl</code> instance.
+ ScalaSTM implementations are encouraged to implement <code>DefaultFactory</code> so
+ that if a user includes the implementation's JAR file, it will be
+ automatically selected.</p><p> If no explicit selection has been made and there is no definition of
+ <code>scala.concurrent.stm.impl.DefaultFactory</code> present in the classpath, then
+ ScalaSTM will fall back to the reference implementation
+ &quot;scala.concurrent.stm.ccstm.CCSTM&quot;.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent">AnyRef, <span name="scala.Any" class="extype">Any</span></div>
         </div></div>
@@ -285,7 +304,9 @@
       </h4>
       <p class="shortcomment cmt">Installs <code>impl</code> as the system-wide STM implementation if no <code>STMImpl</code>
  has yet been chosen, or verifies that <code>impl</code> is equal to the previously
- selected instance.</p>
+ selected instance, throwing <code>IllegalStateException</code> if an STM
+ implementation has already been selected and <code>impl != instance</code>
+</p>
     </li><li visbl="pub" name="scala.concurrent.stm.impl.STMImpl#select" data-isabs="false">
       <a id="select(String):Unit"></a>
       <h4 class="signature">
@@ -298,7 +319,10 @@
       </h4>
       <p class="shortcomment cmt">Installs <code>Class.forName(implClassName)</code> as the system-wide STM
  implementation if no <code>STMImpl</code> has yet been chosen, or verifies that
- <code>implClassName</code> was previously selected.</p>
+ <code>implClassName</code> was previously selected, throwing
+ <code>IllegalStateException</code> if a different STM implementation has already
+ been selected
+</p>
     </li><li visbl="pub" name="scala.AnyRef#synchronized" data-isabs="false">
       <a id="synchronized[T0](⇒ T0):T0"></a>
       <h4 class="signature">
