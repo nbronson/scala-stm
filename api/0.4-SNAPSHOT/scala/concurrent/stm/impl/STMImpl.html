@@ -14,9 +14,9 @@
         </head>
         <body class="type">
       <div id="definition">
-        <img src="../../../../lib/trait_big.png" />
+        <a title="Go to companion" href="STMImpl$.html"><img src="../../../../lib/trait_to_object_big.png" /></a>
         <p id="owner"><a name="scala" class="extype" href="../../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="../package.html">stm</a>.<a name="scala.concurrent.stm.impl" class="extype" href="package.html">impl</a></p>
-        <h1>STMImpl</h1>
+        <h1><a title="Go to companion" href="STMImpl$.html">STMImpl</a></h1>
       </div>
 
       <h4 class="signature" id="signature">
@@ -29,9 +29,27 @@
       </h4>
       
           <div class="fullcommenttop" id="comment"><div class="comment cmt"><p><code>STMImpl</code> gathers all of the functionality required to plug an STM
- implementation into <code>scala.concurrent.stm</code>.  Set the JVM system
- property &quot;scala.stm.impl&quot; to the name of a class that implements
- <code>STMImpl</code> to use that implementation.
+ implementation into <code>scala.concurrent.stm</code>.  Only one implementation can
+ be selected, because <code>Ref</code>s and atomic blocks from different STM
+ implementations are not compatible.  <code>STMImpl.instance</code> returns the
+ <code>STMImpl</code> instance that has been selected for this program execution.</p><p> There are two ways to explicitly select the <code>STMImpl</code> instance:
+  1) set the JVM system property &quot;scala.stm.impl&quot; to the name of a class
+     that implements <code>STMImpl</code>; or
+  2) arrange for <code>STMImpl.select</code> or <code>STMImpl.trySelect</code> to be called
+     before any <code>Ref</code>s are constructed and before any atomic blocks are
+     executed.
+ Setting the JVM system property &quot;scala.stm.impl&quot; is equivalent to making a
+ call to <code>STMImpl.select(System.getProperty(&quot;scala.stm.impl&quot;))</code> before any
+ other <code>STMImpl</code> selections.</p><p> If there is no explicitly selected <code>STMImpl</code> instance and the classpath
+ contains a class <code>scala.concurrent.stm.impl.DefaultFactory</code> that extends
+ <code>scala.concurrent.stm.impl.STMImpl.Factory</code>, then an instance of that
+ class will be instantiated and used to generate the <code>STMImpl</code> instance.
+ ScalaSTM implementations are encouraged to implement <code>DefaultFactory</code> so
+ that if a user includes the implementation's JAR file, it will be
+ automatically selected.</p><p> If no explicit selection has been made and there is no definition of
+ <code>scala.concurrent.stm.impl.DefaultFactory</code> present in the classpath, then
+ ScalaSTM will fall back to the reference implementation
+ &quot;scala.concurrent.stm.ccstm.CCSTM&quot;.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a name="scala.concurrent.stm.TxnExecutor" class="extype" href="../TxnExecutor.html">TxnExecutor</a>, <a name="scala.concurrent.stm.impl.TxnContext" class="extype" href="TxnContext.html">TxnContext</a>, <a name="scala.concurrent.stm.impl.RefFactory" class="extype" href="RefFactory.html">RefFactory</a>, AnyRef, <span name="scala.Any" class="extype">Any</span></div>
@@ -639,7 +657,7 @@
         <span class="params">()</span><span class="result">: java.lang.Class[_]</span>
       </span>
       </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li visbl="pub" name="scala.AnyRef#hashCode" data-isabs="false">
       <a id="hashCode():Int"></a>
       <h4 class="signature">
@@ -775,6 +793,8 @@
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a name="scala.concurrent.stm.TxnExecutor" class="extype" href="../TxnExecutor.html">TxnExecutor</a></dd></dl></div>
     </li></ol>
             </div>
+
+        
 
         <div name="scala.concurrent.stm.TxnExecutor" class="parent">
               <h3>Inherited from <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="../TxnExecutor.html">TxnExecutor</a></h3>

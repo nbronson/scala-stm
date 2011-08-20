@@ -2,40 +2,33 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.TSet</title>
+          <title>scala.concurrent.stm.impl.STMImpl.Factory</title>
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link type="text/css" media="screen" rel="stylesheet" href="../../../lib/template.css" />
-      <script type="text/javascript" src="../../../lib/jquery.js"></script>
-      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
-      <script type="text/javascript" src="../../../lib/template.js"></script>
-      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      <link type="text/css" media="screen" rel="stylesheet" href="../../../../lib/template.css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
     
         </head>
         <body class="type">
       <div id="definition">
-        <a title="Go to companion" href="TSet$.html"><img src="../../../lib/trait_to_object_big.png" /></a>
-        <p id="owner"><a name="scala" class="extype" href="../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="package.html">stm</a></p>
-        <h1><a title="Go to companion" href="TSet$.html">TSet</a></h1>
+        <img src="../../../../lib/trait_big.png" />
+        <p id="owner"><a name="scala" class="extype" href="../../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="../package.html">stm</a>.<a name="scala.concurrent.stm.impl" class="extype" href="package.html">impl</a>.<a name="scala.concurrent.stm.impl.STMImpl" class="extype" href="STMImpl$.html">STMImpl</a></p>
+        <h1>Factory</h1>
       </div>
 
       <h4 class="signature" id="signature">
       <span class="kind">trait</span>
       <span class="symbol"> 
-        <span class="name">TSet</span>
-        <span class="tparams">[<span name="A">A</span>]</span>
+        <span class="name">Factory</span>
+        
         <span class="result"> extends AnyRef</span>
       </span>
       </h4>
       
-          <div class="fullcommenttop" id="comment"><div class="comment cmt"><p>A transactional set implementation that requires that all of its set-like
- operations be called from inside an atomic block.  Rather than extending
- <code>Set</code>, an implicit conversion is provided from <code>TSet</code> to <code>Set</code> if the
- current scope is part of an atomic block (see <code>TSet.asSet</code>).</p><p> The elements (with type <code>A</code>) must be immutable, or at least not modified
- while they are in the set.  The <code>TSet</code> implementation assumes that it can
- safely perform equality and hash checks outside a transaction without
- affecting atomicity.
-</p></div><div class="toggleContainer block">
+          <div class="fullcommenttop" id="comment"><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent">AnyRef, <span name="scala.Any" class="extype">Any</span></div>
         </div></div>
@@ -53,7 +46,7 @@
                 <span class="filtertype">Inherited</span>
                 <ol><li class="hideall out"><span>Hide All</span></li>
                 <li class="showall in"><span>Show all</span></li></ol>
-                <ol id="linearization"><li name="scala.concurrent.stm.TSet" class="in"><span>TSet</span></li><li name="scala.AnyRef" class="in"><span>AnyRef</span></li><li name="scala.Any" class="in"><span>Any</span></li></ol>
+                <ol id="linearization"><li name="scala.concurrent.stm.impl.STMImpl.Factory" class="in"><span>Factory</span></li><li name="scala.AnyRef" class="in"><span>AnyRef</span></li><li name="scala.Any" class="in"><span>Any</span></li></ol>
               </div>
           <div id="visbl">
               <span class="filtertype">Visibility</span>
@@ -67,96 +60,14 @@
         
         <div class="values members" id="values">
               <h3>Abstract Value Members</h3>
-              <ol><li visbl="pub" name="scala.concurrent.stm.TSet#add" data-isabs="true">
-      <a id="add(A)(InTxn):Boolean"></a>
+              <ol><li visbl="pub" name="scala.concurrent.stm.impl.STMImpl.Factory#createInstance" data-isabs="true">
+      <a id="createInstance():STMImpl"></a>
       <h4 class="signature">
       <span class="kind">def</span>
       <span class="symbol"> 
-        <span class="name">add</span>
+        <span class="name">createInstance</span>
         
-        <span class="params">(<span name="elem">elem: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#contains" data-isabs="true">
-      <a id="contains(A)(InTxn):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">contains</span>
-        
-        <span class="params">(<span name="elem">elem: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#foreach" data-isabs="true">
-      <a id="foreach[U]((A) ⇒ U)(InTxn):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">foreach</span>
-        <span class="tparams">[<span name="U">U</span>]</span>
-        <span class="params">(<span name="f">f: (A) ⇒ U</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#isEmpty" data-isabs="true">
-      <a id="isEmpty(InTxn):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">isEmpty</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#remove" data-isabs="true">
-      <a id="remove(A)(InTxn):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">remove</span>
-        
-        <span class="params">(<span name="elem">elem: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#retain" data-isabs="true">
-      <a id="retain((A) ⇒ Boolean)(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">retain</span>
-        
-        <span class="params">(<span name="p">p: (A) ⇒ <span name="scala.Boolean" class="extype">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#single" data-isabs="true">
-      <a id="single:View[A]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">single</span>
-        
-        <span class="result">: <a name="scala.concurrent.stm.TSet.View" class="extype" href="TSet$$View.html">View</a>[A]</span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Returns an instance that provides transactional set functionality without
- requiring that operations be performed inside the static scope of an
- atomic block.</p><div class="fullcomment"><div class="comment cmt"><p>Returns an instance that provides transactional set functionality without
- requiring that operations be performed inside the static scope of an
- atomic block.
-</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#size" data-isabs="true">
-      <a id="size(InTxn):Int"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">size</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+        <span class="params">()</span><span class="result">: <a name="scala.concurrent.stm.impl.STMImpl" class="extype" href="STMImpl.html">STMImpl</a></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
@@ -198,72 +109,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#++=" data-isabs="false">
-      <a id="++=(TraversableOnce[A])(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">++=</span>
-        
-        <span class="params">(<span name="xs">xs: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#+=" data-isabs="false">
-      <a id="+=(A,A,A*)(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">+=</span>
-        
-        <span class="params">(<span name="x1">x1: A</span>, <span name="x2">x2: A</span>, <span name="xs">xs: A*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#+=" data-isabs="false">
-      <a id="+=(A)(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">+=</span>
-        
-        <span class="params">(<span name="x">x: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#--=" data-isabs="false">
-      <a id="--=(TraversableOnce[A])(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">--=</span>
-        
-        <span class="params">(<span name="xs">xs: TraversableOnce[A]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#-=" data-isabs="false">
-      <a id="-=(A,A,A*)(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">-=</span>
-        
-        <span class="params">(<span name="x1">x1: A</span>, <span name="x2">x2: A</span>, <span name="xs">xs: A*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#-=" data-isabs="false">
-      <a id="-=(A)(InTxn):TSet.this.type"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">-=</span>
-        
-        <span class="params">(<span name="x">x: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: TSet.this.type</span>
-      </span>
-      </h4>
-      
     </li><li visbl="pub" name="scala.AnyRef#==" data-isabs="false">
       <a id="==(AnyRef):Boolean"></a>
       <h4 class="signature">
@@ -286,17 +131,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#apply" data-isabs="false">
-      <a id="apply(A)(InTxn):Boolean"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">apply</span>
-        
-        <span class="params">(<span name="elem">elem: A</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
-      </span>
-      </h4>
-      
     </li><li visbl="pub" name="scala.Any#asInstanceOf" data-isabs="false">
       <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
@@ -308,17 +142,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>final </dd><dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#clone" data-isabs="false">
-      <a id="clone(InTxn):TSet[A]"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">clone</span>
-        
-        <span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <a name="scala.concurrent.stm.TSet" class="extype" href="">TSet</a>[A]</span>
-      </span>
-      </h4>
-      
     </li><li visbl="prt" name="scala.AnyRef#clone" data-isabs="false">
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
@@ -329,7 +152,7 @@
         <span class="params">()</span><span class="result">: AnyRef</span>
       </span>
       </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
@@ -365,7 +188,7 @@
         <span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
       </span>
       </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
@@ -457,17 +280,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TSet#update" data-isabs="false">
-      <a id="update(A,Boolean)(InTxn):Unit"></a>
-      <h4 class="signature">
-      <span class="kind">def</span>
-      <span class="symbol"> 
-        <span class="name">update</span>
-        
-        <span class="params">(<span name="elem">elem: A</span>, <span name="included">included: <span name="scala.Boolean" class="extype">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a></span>)</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
-      </span>
-      </h4>
-      
     </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
       <a id="wait():Unit"></a>
       <h4 class="signature">
