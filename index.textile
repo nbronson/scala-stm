@@ -3,7 +3,7 @@ layout: default
 title: Welcome
 ---
 
-Welcome from the Scala STM ["Expert Group":expert_group.html].  We're working on a lightweight software transactional memory for Scala, inspired by the STMs in Haskell and Clojure.  Our target is inclusion in Scala's standard library for 2.9.1, but you can use our draft release today.  We'd like your ["feedback":http://groups.google.com/group/scala-stm-expert-group/].
+Welcome from the Scala STM ["Expert Group":expert_group.html].  We're working on a lightweight software transactional memory for Scala, inspired by the STMs in Haskell and Clojure.  Our target is inclusion in Scala's standard library, but you can use our release today.  We'd like your ["feedback":http://groups.google.com/group/scala-stm-expert-group/].
 
 ScalaSTM is a single JAR with no dependencies, and includes
 * An API that supports multiple STM implementations
