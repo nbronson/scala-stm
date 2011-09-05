@@ -11,7 +11,7 @@ Snapshot releases deployed to the @scala-tools.org@ repository are fully tested 
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.9.0-0.4-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.0/0.4-SNAPSHOT/scala-stm_2.9.0-0.4-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.1-0.4-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.1/0.4-SNAPSHOT/scala-stm_2.9.1-0.4-SNAPSHOT.jar]
 * ScalaDoc: ["0.4-SNAPSHOT":api/0.4-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
@@ -34,7 +34,7 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
 <dependencies>
   <dependency>
     <groupId>org.scala-tools</groupId>
-    <artifactId>scala-stm_2.9.0</artifactId>
+    <artifactId>scala-stm_2.9.1</artifactId>
     <version>0.4-SNAPSHOT</version>
   </dependency>
 </dependencies>
