@@ -3,6 +3,8 @@
 package scala.concurrent.stm
 package impl
 
+import actors.threadpool.TimeUnit
+
 private[impl] object STMImplHolder {
   var instance: STMImpl = STMImpl.createInstance()
 }
@@ -124,4 +126,10 @@ object STMImpl {
  *
  *  @author Nathan Bronson
  */
-trait STMImpl extends RefFactory with TxnContext with TxnExecutor
+trait STMImpl extends RefFactory with TxnContext with TxnExecutor {
+
+  /** Returns a new commit barrier suitable for coordinating commits by this
+   *  STM implementation.
+   */
+  def newCommitBarrier(timeout: Long, unit: TimeUnit): CommitBarrier
+}
