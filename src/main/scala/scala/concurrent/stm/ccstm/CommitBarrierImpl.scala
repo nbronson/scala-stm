@@ -33,6 +33,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
   class MemberImpl(var executor: TxnExecutor) extends Member with Txn.ExternalDecider {
 
     @volatile private var state: State = Active
+    @volatile private var target: NestingLevel = null
 
     def commitBarrier = CommitBarrierImpl.this
 
@@ -44,6 +45,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
           }
           Txn.setExternalDecider(this)
           txn.asInstanceOf[InTxnImpl].commitBarrier = commitBarrier
+          target = NestingLevel.current
           Right(body(txn))
         }
       } catch {
@@ -71,37 +73,52 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             }
           }
         }
+      } finally {
+        target = null
+      }
+    }
+
+    private def markCancelled(cause: CancelCause, isLocal: Boolean) {
+      val firstCause = groupState match {
+        case c: Cancelled => c
+        case _ => Cancelled(cause)
+      }
+
+      state match {
+        case Active => {
+          state = firstCause
+          activeCount -= 1
+          checkBarrierCommit_nl()
+        }
+        case MemberWaiting => {
+          state = firstCause
+          activeCount -= 1
+          waitingCount -= 1
+          if (!isLocal) {
+            // this member should exit its external decider
+            lock.notifyAll()
+          }
+        }
+        case Cancelled(_) => {}
+        case Committed => {
+          throw new IllegalStateException("can't cancel member after commit")
+        }
+      }
+    }
+
+    private[CommitBarrierImpl] def cancelImpl(cause: CancelCause) {
+      lock.synchronized {
+        markCancelled(cause, false)
+      }
+      val t = target
+      if (t != null) {
+        t.requestRollback(Txn.UncaughtExceptionCause(MemberCancelException))
+        t.asInstanceOf[TxnLevelImpl].awaitCompleted(null, "CommitBarrier cancel")
       }
     }
 
     def cancel(cause: UserCancel) {
       cancelImpl(cause)
-    }
-
-    private[CommitBarrierImpl] def cancelImpl(cause: CancelCause) {
-      lock.synchronized {
-        val firstCause = groupState match {
-          case c: Cancelled => c
-          case _ => Cancelled(cause)
-        }
-
-        state match {
-          case Active => {
-            state = firstCause
-            activeCount -= 1
-            checkBarrierCommit_nl()
-          }
-          case MemberWaiting => {
-            state = firstCause
-            activeCount -= 1
-            waitingCount -= 1
-          }
-          case Cancelled(_) => {}
-          case Committed => {
-            throw new IllegalStateException("can't cancel member after commit")
-          }
-        }
-      }
     }
 
     def shouldCommit(implicit txn: InTxnEnd): Boolean = {
@@ -123,7 +140,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
       (while (true) {
         // cancelImpl is a no-op if we're already cancelled
         groupState match {
-          case Cancelled(cause) => cancelImpl(cause)
+          case Cancelled(cause) => markCancelled(cause, true)
           case Committed if state == MemberWaiting => {
             state = Committed
             return null
@@ -148,7 +165,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             val remaining = (t0 + timeoutNanos) - now
             if (remaining <= 0) {
               cancelAll(Timeout)
-              cancelImpl(Timeout)
+              markCancelled(Timeout, true)
               return Txn.UncaughtExceptionCause(MemberCancelException)
             } else {
               val millis = TimeUnit.NANOSECONDS.toMillis(remaining)

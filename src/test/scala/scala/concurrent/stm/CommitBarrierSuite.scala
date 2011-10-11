@@ -252,4 +252,36 @@ class CommitBarrierSuite extends FunSuite {
     for (i <- 0 until 3)
       doCycle(1000)
   }
+
+  test("auto-cancel") {
+    for (reps <- 0 until 1000) {
+      val cb = CommitBarrier()
+      var i = 0
+      val commits = new java.util.concurrent.atomic.AtomicInteger(0)
+      val x = Ref(0)
+      val y = Ref(0)
+      val z = cb.addMember().atomic { implicit txn =>
+        x() = 1
+        val m = cb.addMember()
+        i += 1
+        val t = new Thread() {
+          override def run() {
+            m.atomic { implicit txn =>
+              y() = i
+              txn.afterCommit { _ => commits.incrementAndGet() }
+            }
+          }
+        }
+        t.start()
+        txn.afterCommit { _ => t.join() }
+        if (i < 10)
+          Txn.rollback(Txn.OptimisticFailureCause('test, None))
+        "hello"
+      }
+      assert(z === Right("hello"))
+      assert(commits.get() === 1)
+      assert(x.single() === 1)
+      assert(y.single() === 10)
+    }
+  }
 }
