@@ -236,7 +236,12 @@ private[ccstm] object CCSTM extends GV6 {
 //            owningRoot.requestRollback(
 //                Txn.OptimisticFailureCause('conflicting_reentrant_nontxn_write, Some(handle)))
 //          }
-          owningRoot.awaitCompleted()
+          currentTxn.txn.blockedBy(owningRoot.txn, handle)
+          try {
+            owningRoot.awaitCompleted()
+          } finally {
+            currentTxn.txn.unblocked()
+          }
         }
 
         // we've already got the beginLookup, so no need to do a standalone

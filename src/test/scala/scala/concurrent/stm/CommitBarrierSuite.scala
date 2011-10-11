@@ -167,7 +167,6 @@ class CommitBarrierSuite extends FunSuite {
           Thread.sleep(100)
           "result"
         }
-        println(z)
         assert(z.isRight)
         assert(z.right.get.isInstanceOf[CommitBarrier.MemberUncaughtExceptionCause])
         assert(z.right.get.asInstanceOf[CommitBarrier.MemberUncaughtExceptionCause].x.isInstanceOf[InterruptedException])
@@ -201,5 +200,20 @@ class CommitBarrierSuite extends FunSuite {
     }
 
     assert(ref.single() === 1)
+  }
+
+  test("cycle") {
+    val refs = Array.tabulate(3) { _ => Ref(0) }
+    val cb = CommitBarrier(100, TimeUnit.MILLISECONDS)
+    val members = Array.tabulate(3) { _ => cb.addMember() }
+    parRun(3) { i =>
+      val z = members(i).atomic { implicit txn =>
+        refs(i) += 1
+        refs((i + 1) % 3) += 1
+      }
+      println(z)
+      assert(z.isRight)
+      assert(z.right.get.isInstanceOf[CommitBarrier.MemberCycle])
+    }
   }
 }

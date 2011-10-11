@@ -43,6 +43,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             Txn.rollback(Txn.UncaughtExceptionCause(MemberCancelException))
           }
           Txn.setExternalDecider(this)
+          txn.asInstanceOf[InTxnImpl].setCommitBarrier(commitBarrier)
           Left(body(txn))
         }
       } catch {
@@ -179,7 +180,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
     }
   }
 
-  private def cancelAll(cause: CancelCause) {
+  private[ccstm] def cancelAll(cause: CancelCause) {
     lock.synchronized {
       groupState match {
         case Active => {

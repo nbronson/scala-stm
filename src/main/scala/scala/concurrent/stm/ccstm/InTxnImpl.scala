@@ -85,6 +85,11 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
    */
   private var _readVersion: Version = 0
 
+  /** The commit barrier in which this transaction is participating. */
+  private var _commitBarrier: CommitBarrierImpl = null
+
+  /** The transaction on which this transaction is blocked, if any. */
+  @volatile private var _blockedBy: InTxnImpl = null
 
   //////////// value-like operations
 
@@ -110,7 +115,9 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
             ", writeCount=" + writeCount +
             ", readVersion=0x" + _readVersion.toHexString +
             (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") +
-            ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos + ")")
+            ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos +
+            ", commitBarrier=" + _commitBarrier +
+            ")")
   }
 
 
@@ -184,6 +191,37 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     // just blind optimism.  This also guarantees that doomed transactions
     // never block anybody, because barging txns have visible readers.
     return _barging
+  }
+
+
+  //////////// CommitBarrier deadlock detection
+
+  private[ccstm] def setCommitBarrier(cb: CommitBarrierImpl) {
+    _commitBarrier = cb
+  }
+
+  @throws(classOf[InterruptedException])
+  private[ccstm] def blockedBy(txn: InTxnImpl, debugInfo: Any) {
+    if (_commitBarrier != null) {
+      var x = null : InTxnImpl
+      var y = txn
+      while (y != null) {
+        x = y
+        y = x._blockedBy
+      }
+
+      if ((x._commitBarrier eq _commitBarrier) && (x.status eq Txn.Prepared)) {
+        // x is waiting for us, and we are waiting for x
+        _commitBarrier.cancelAll(CommitBarrier.MemberCycle(debugInfo))
+        throw new InterruptedException
+      }
+    }
+
+    _blockedBy = txn
+  }
+
+  private[ccstm] def unblocked() {
+    _blockedBy = null
   }
 
 
@@ -290,6 +328,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   private def clearAttemptHistory() {
     _subsumptionAllowed = true
     _cumulativeBlockingNanos = 0L
+    _commitBarrier = null
   }
 
   //// nested, no alternatives
