@@ -55,7 +55,9 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
               throw x
             }
             case MemberWaiting => {
-              throw new Error("should not happen")
+              // interrupt during ExternalDecider decision
+              assert(x.isInstanceOf[InterruptedException])
+              throw x
             }
             case Cancelled(cause) => {
               // barrier state already updated
@@ -154,7 +156,11 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
               lock.wait()
             }
           } catch {
-            case x: InterruptedException => cancelAll(MemberUncaughtExceptionCause(x))
+            case x: InterruptedException => {
+              cancelAll(MemberUncaughtExceptionCause(x))
+              txn.rollback(Txn.UncaughtExceptionCause(x))
+              return false
+            }
           }
         }).asInstanceOf[Nothing]
       }
