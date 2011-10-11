@@ -79,8 +79,8 @@ object CommitBarrier {
      *  that if the transaction commits, all actions performed by all
      *  members of the commit barrier appear to occur simultaneously.  If
      *  the transaction commits then the value `v` returned by `body` is
-     *  returned as `Left(v)`.  If this member is cancelled then this method
-     *  returns `Right(c)`, where `c` describes the first cause passed to
+     *  returned as `Right(v)`.  If this member is cancelled then this method
+     *  returns `Left(c)`, where `c` describes the first cause passed to
      *  the `cancel` method.  If this member is not cancelled but the
      *  transaction is rolled back without the possibility of retry, then
      *  this method throws an exception the same as any other atomic block
@@ -107,14 +107,14 @@ object CommitBarrier {
      *  @param underlying the `TxnExecutor` that should be used to actually
      *         execute the transaction, defaulting to the STM's default
      *  @param body the code to run atomically
-     *  @return `Left(v)` where `v` is the result of successfully running
-     *          `body` in an atomic block, or `Right(c)` where `c` is the
+     *  @return `Right(v)` where `v` is the result of successfully running
+     *          `body` in an atomic block, or `Left(c)` where `c` is the
      *          reason for this member's cancellation
      *  @throws IllegalStateException if called from inside the dynamic
      *          scope of an existing transaction and that is not supported
      *          by the chosen STM implementation
      */
-    def atomic[Z](body: InTxn => Z): Either[Z, CancelCause]
+    def atomic[Z](body: InTxn => Z): Either[CancelCause, Z]
 
     /** Removes this member from the commit barrier, and causes any pending
      *  or future calls to `this.atomic` to return `None`.  If the commit

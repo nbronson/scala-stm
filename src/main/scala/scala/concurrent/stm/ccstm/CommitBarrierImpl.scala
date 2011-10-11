@@ -36,7 +36,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
 
     def commitBarrier = CommitBarrierImpl.this
 
-    def atomic[Z](body: InTxn => Z): Either[Z, CancelCause] = {
+    def atomic[Z](body: InTxn => Z): Either[CancelCause, Z] = {
       try {
         executor { implicit txn =>
           if (state != Active) {
@@ -44,7 +44,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
           }
           Txn.setExternalDecider(this)
           txn.asInstanceOf[InTxnImpl].commitBarrier = commitBarrier
-          Left(body(txn))
+          Right(body(txn))
         }
       } catch {
         case x => {
@@ -63,7 +63,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             }
             case Cancelled(cause) => {
               // barrier state already updated
-              Right(cause)
+              Left(cause)
             }
             case Committed => {
               // control flow exception as part of group commit, tricky!

@@ -18,7 +18,7 @@ class CommitBarrierSuite extends FunSuite {
       x() = x() + 1
       "result"
     }
-    assert(z === Left("result"))
+    assert(z === Right("result"))
     assert(x.single() === 1)
   }
 
@@ -31,7 +31,7 @@ class CommitBarrierSuite extends FunSuite {
       x() = x() + 1
       "result"
     }
-    assert(z === Right(CommitBarrier.UserCancel("cancel")))
+    assert(z === Left(CommitBarrier.UserCancel("cancel")))
     assert(x.single() === 0)
 
     // commit barrier can still be used
@@ -40,7 +40,7 @@ class CommitBarrierSuite extends FunSuite {
       x() = x() + 1
       "result2"
     }
-    assert(z2 === Left("result2"))
+    assert(z2 === Right("result2"))
     assert(x.single() === 1)
   }
 
@@ -166,7 +166,7 @@ class CommitBarrierSuite extends FunSuite {
           refs(i)() = 1
           if (i == 1) Thread.sleep(200)
         }
-        assert(z === Right(CommitBarrier.Timeout))
+        assert(z === Left(CommitBarrier.Timeout))
         assert(refs(i).single() === 0)
       } finally {
         elapsed(i) = System.currentTimeMillis - t0
@@ -189,9 +189,9 @@ class CommitBarrierSuite extends FunSuite {
           Thread.sleep(100)
           "result"
         }
-        assert(z.isRight)
-        assert(z.right.get.isInstanceOf[CommitBarrier.MemberUncaughtExceptionCause])
-        assert(z.right.get.asInstanceOf[CommitBarrier.MemberUncaughtExceptionCause].x.isInstanceOf[InterruptedException])
+        assert(z.isLeft)
+        assert(z.left.get.isInstanceOf[CommitBarrier.MemberUncaughtExceptionCause])
+        assert(z.left.get.asInstanceOf[CommitBarrier.MemberUncaughtExceptionCause].x.isInstanceOf[InterruptedException])
         assert(refs(i).single() === 0)
       } else if (i == 1) {
         // thread 1 must wait and receives the interrupt
@@ -233,8 +233,8 @@ class CommitBarrierSuite extends FunSuite {
         refs(i) += 1
         refs((i + 1) % cycleSize) += 1
       }
-      assert(z.isRight)
-      assert(z.right.get.isInstanceOf[CommitBarrier.MemberCycle])
+      assert(z.isLeft)
+      assert(z.left.get.isInstanceOf[CommitBarrier.MemberCycle])
     }
   }
 
