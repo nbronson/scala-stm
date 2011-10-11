@@ -43,7 +43,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             Txn.rollback(Txn.UncaughtExceptionCause(MemberCancelException))
           }
           Txn.setExternalDecider(this)
-          txn.asInstanceOf[InTxnImpl].setCommitBarrier(commitBarrier)
+          txn.asInstanceOf[InTxnImpl].commitBarrier = commitBarrier
           Left(body(txn))
         }
       } catch {
@@ -56,8 +56,9 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
               throw x
             }
             case MemberWaiting => {
-              // interrupt during ExternalDecider decision
+              // interrupt during ExternalDecider, all already cancelled
               assert(x.isInstanceOf[InterruptedException])
+              assert(groupState.isInstanceOf[Cancelled])
               throw x
             }
             case Cancelled(cause) => {
@@ -104,67 +105,67 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
     }
 
     def shouldCommit(implicit txn: InTxnEnd): Boolean = {
-      lock.synchronized {
-        if (state == Active) {
-          state = MemberWaiting
-          waitingCount += 1
-          checkBarrierCommit_nl()
+      var cause = lock.synchronized { shouldCommit_nl() }
+      if (cause != null)
+        txn.rollback(cause)
+      true
+    }
+
+    private def shouldCommit_nl(): Txn.RollbackCause = {
+      if (state == Active) {
+        state = MemberWaiting
+        waitingCount += 1
+        checkBarrierCommit_nl()
+      }
+
+      var t0 = 0L
+
+      (while (true) {
+        // cancelImpl is a no-op if we're already cancelled
+        groupState match {
+          case Cancelled(cause) => cancelImpl(cause)
+          case Committed if state == MemberWaiting => {
+            state = Committed
+            return null
+          }
+          case _ => {}
         }
 
-        var t0 = 0L
+        state match {
+          case Cancelled(_) => return Txn.UncaughtExceptionCause(MemberCancelException)
+          case MemberWaiting => {}
+          case _ => throw new Error("impossible state " + state)
+        }
 
-        (while (true) {
-          // cancelImpl is a no-op if we're already cancelled
-          groupState match {
-            case Cancelled(cause) => cancelImpl(cause)
-            case Committed if state == MemberWaiting => {
-              state = Committed
-              return true
+        // wait
+        try {
+          if (timeoutNanos < Long.MaxValue) {
+            val now = System.nanoTime()
+            if (t0 == 0) {
+              t0 = now
             }
-            case _ => {}
-          }
 
-          state match {
-            case Cancelled(_) => {
-              // calling txn.rollback with UncaughtExceptionCause skips the
-              // isControlflow check, never leads to atomic retry
-              txn.rollback(Txn.UncaughtExceptionCause(MemberCancelException))
-              return false
-            }
-            case MemberWaiting => {}
-            case _ => throw new Error("impossible state " + state)
-          }
-
-          // TODO cycle detection
-
-          // wait
-          try {
-            if (timeoutNanos < Long.MaxValue) {
-              val now = System.nanoTime()
-              if (t0 == 0) {
-                t0 = now
-              }
-
-              val remaining = now - (t0 + timeoutNanos)
-              if (remaining <= 0) {
-                cancelAll(Timeout)
-              } else {
-                val millis = TimeUnit.NANOSECONDS.toMillis(remaining)
-                val nanos = remaining - TimeUnit.MILLISECONDS.toNanos(millis)
-                lock.wait(millis, nanos.asInstanceOf[Int])
-              }
+            val remaining = (t0 + timeoutNanos) - now
+            if (remaining <= 0) {
+              cancelAll(Timeout)
+              cancelImpl(Timeout)
+              return Txn.UncaughtExceptionCause(MemberCancelException)
             } else {
-              lock.wait()
+              val millis = TimeUnit.NANOSECONDS.toMillis(remaining)
+              val nanos = remaining - TimeUnit.MILLISECONDS.toNanos(millis)
+              lock.wait(millis, nanos.asInstanceOf[Int])
             }
-          } catch {
-            case x: InterruptedException => {
-              cancelAll(MemberUncaughtExceptionCause(x))
-              txn.rollback(Txn.UncaughtExceptionCause(x))
-              return false
-            }
+          } else {
+            lock.wait()
           }
-        }).asInstanceOf[Nothing]
-      }
+        } catch {
+          case x: InterruptedException => {
+            // don't cancel ourself so we can throw InterruptedException
+            cancelAll(MemberUncaughtExceptionCause(x))
+            return Txn.UncaughtExceptionCause(x)
+          }
+        }
+      }).asInstanceOf[Nothing]
     }
   }
 

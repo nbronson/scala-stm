@@ -155,7 +155,7 @@ object CommitBarrier {
  *  Because there is no ordering possible between the atomic blocks that
  *  make up a commit barrier, if those transactions conflict then the only
  *  way to avoid deadlock is to roll back all of the barrier's members.  If
- *  you observe a cancel cause of CommitBarrier.MemberCycle` then this has
+ *  you observe a cancel cause of `CommitBarrier.MemberCycle` then this has
  *  happened to you, and you need to run more of the logic on a single
  *  thread inside a single transaction.
  * 

@@ -97,11 +97,12 @@ class CommitBarrierSuite extends FunSuite {
     }
   }
 
-  def runStress(barrierSize: Int, barrierCount: Int) {
+  def runStress(barrierSize: Int, barrierCount: Int, check: Boolean = true): Long = {
     val refs = Array.tabulate(barrierSize) { _ => Ref(0) }
     val cbs = Array.tabulate(barrierCount) { _ => CommitBarrier() }
     val members = Array.tabulate(barrierCount, barrierSize) { (i, _) => cbs(i).addMember() }
-    parRun(barrierSize + 1) { j =>
+    val t0 = System.nanoTime
+    parRun(barrierSize + (if (check) 1 else 0)) { j =>
       if (j == barrierSize) {
         // we are the cpu-hogging observer
         var prev = 0
@@ -126,6 +127,7 @@ class CommitBarrierSuite extends FunSuite {
         }
       }
     }
+    return System.nanoTime - t0
   }
 
   test("stress 2") {
@@ -133,25 +135,45 @@ class CommitBarrierSuite extends FunSuite {
   }
 
   test("stress 10") {
-    runStress(10, 1000)
+    runStress(10, 500)
   }
 
   test("stress 1000") {
-    runStress(1000, 10)
+    runStress(400, 10)
+  }
+
+  test("perf 2") {
+    val count = 20000
+    val elapsed = runStress(2, count, false)
+    println("commit barrier, 2 threads, " + (elapsed / count) + " nanos/barrier")
+  }
+
+  test("perf 10") {
+    val count = 2000
+    val elapsed = runStress(10, count, false)
+    println("commit barrier, 10 threads, " + (elapsed / count) + " nanos/barrier")
   }
 
   test("timeout") {
     val refs = Array.tabulate(2) { _ => Ref(0) }
     val cb = CommitBarrier(100, TimeUnit.MILLISECONDS)
     val members = Array.tabulate(2) { _ => cb.addMember() }
+    val t0 = System.currentTimeMillis
+    val elapsed = Array(0L, 0L)
     parRun(2) { i =>
-      val z = members(i).atomic { implicit txn =>
-        refs(i)() = 1
-        if (i == 1) Thread.sleep(200)
+      try {
+        val z = members(i).atomic { implicit txn =>
+          refs(i)() = 1
+          if (i == 1) Thread.sleep(200)
+        }
+        assert(z === Right(CommitBarrier.Timeout))
+        assert(refs(i).single() === 0)
+      } finally {
+        elapsed(i) = System.currentTimeMillis - t0
       }
-      assert(z === Right(CommitBarrier.Timeout))
-      assert(refs(i).single() === 0)
     }
+    assert(elapsed(0) >= 100 && elapsed(0) < 150, elapsed.toList)
+    assert(elapsed(1) >= 200, elapsed.toList)
   }
 
   test("interrupt") {
@@ -202,18 +224,32 @@ class CommitBarrierSuite extends FunSuite {
     assert(ref.single() === 1)
   }
 
-  test("cycle") {
-    val refs = Array.tabulate(3) { _ => Ref(0) }
-    val cb = CommitBarrier(100, TimeUnit.MILLISECONDS)
-    val members = Array.tabulate(3) { _ => cb.addMember() }
-    parRun(3) { i =>
+  def doCycle(cycleSize: Int) {
+    val refs = Array.tabulate(cycleSize) { _ => Ref(0) }
+    val cb = CommitBarrier()
+    val members = Array.tabulate(cycleSize) { _ => cb.addMember() }
+    parRun(cycleSize) { i =>
       val z = members(i).atomic { implicit txn =>
         refs(i) += 1
-        refs((i + 1) % 3) += 1
+        refs((i + 1) % cycleSize) += 1
       }
-      println(z)
       assert(z.isRight)
       assert(z.right.get.isInstanceOf[CommitBarrier.MemberCycle])
     }
+  }
+
+  test("cycle 2 x 1000") {
+    for (i <- 0 until 1000)
+      doCycle(2)
+  }
+
+  test("cycle 3 x 1000") {
+    for (i <- 0 until 1000)
+      doCycle(3)
+  }
+
+  test("cycle 1000 x 3") {
+    for (i <- 0 until 3)
+      doCycle(1000)
   }
 }
