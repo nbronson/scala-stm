@@ -11,17 +11,6 @@ private[ccstm] object TxnLevelImpl {
 
   private val stateUpdater = new TxnLevelImpl(null, null, null, false).newStateUpdater
 
-  // We are looking for a chain of blockedBy txns that ends in a Prepared txn,
-  // and the beginning and the end of the chain have the same non-null commit
-  // barrier.  This is made a bit tricky because the deadlock chain might not
-  // form from either end, some of the links might not be commit barrier
-  // members, and one of the steps to building the chain might not be a call to
-  // blockedBy.
-  //
-  // Our design places responsibility for checking on the begining (Active) end
-  // of the chain, and places responsibility for waking up threads that might
-  // need to check on any thread that might complete a chain.
-
   /** Maps blocked `InTxnImpl` that are members of a commit barrier to the
    *  `TxnLevelImpl` instance on which they are waiting.  All of the values
    *  in this map must be notified when a new link in a (potential) deadlock
