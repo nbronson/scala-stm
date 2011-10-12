@@ -46,8 +46,8 @@ object CommitBarrier {
    *  originally generated the exception, all other members will get this
    *  `CancelCause`.
    *
-   *  This cancel cause will be used if a member thread receives an interrupt
-   *  while it is waiting for the commit barrier.
+   *  This cancel cause will also be used if a member thread receives an
+   *  interrupt while it is waiting for the commit barrier.
    */
   case class MemberUncaughtExceptionCause(x: Throwable) extends CancelCause
 
@@ -66,7 +66,7 @@ object CommitBarrier {
     /** Returns the commit barrier of which this instance is a member. */
     def commitBarrier: CommitBarrier
 
-    /** Returns the `TxnExecutor` that will be used by `atomic.  This is
+    /** Returns the `TxnExecutor` that will be used by `atomic`.  This is
      *  initialized during construction to the default `TxnExecutor`
      *  (returned by `scala.concurrent.stm.atomic`).
      */
@@ -129,17 +129,19 @@ object CommitBarrier {
     def cancel(cause: UserCancel)
   }
 
-  /** Constructs and returns a new `CommitBarrier`. Each commit barrier may
-   *  be used for at most one coordinated commit (it is not cyclic).
+  /** Constructs and returns a new `CommitBarrier` with no timeout. Each
+   *  commit barrier may be used for at most one coordinated commit (it is
+   *  not cyclic).
    */
-  def apply(): CommitBarrier = apply(Long.MaxValue, TimeUnit.MILLISECONDS);
+  def apply(): CommitBarrier = apply(Long.MaxValue);
 
   /** Constructs and returns a new `CommitBarrier` in which each member will
    *  wait at most `timeout` `unit` for other members of the barrier to
    *  become ready to commit.  If timeout occurs all members will be
-   *  cancelled with a `CancelCause` of `Timeout`.
+   *  cancelled with a `CancelCause` of `Timeout`.  Each commit barrier may
+   *  be used for at most one coordinated commit (it is not cyclic).
    */
-  def apply(timeout: Long, unit: TimeUnit): CommitBarrier =
+  def apply(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): CommitBarrier =
       impl.STMImpl.instance.newCommitBarrier(timeout, unit)
 }
 

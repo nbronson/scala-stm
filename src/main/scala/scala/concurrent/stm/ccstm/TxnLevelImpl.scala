@@ -155,7 +155,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   // members, and one of the steps to building the chain might not be a call to
   // blockedBy.
   //
-  // Our design places responsibility for checking on the begining (Active) end
+  // Our design places responsibility for checking on the beginning (Active) end
   // of the chain, and places responsibility for waking up threads that might
   // need to check on any thread that might complete a chain.
 
