@@ -9,6 +9,8 @@ Changes between 0.3 and 0.4-SNAPSHOT:
 
 * STMBench7 benchmark support added.
 
+* Automatic selection of STMImpl in most cases.
+
 Snapshot releases deployed to the scala-tools.org repository are tested
 and functional, but may have changing APIs.
 
