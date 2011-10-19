@@ -37,6 +37,8 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
   override def isEmpty: Boolean = singleIsEmpty
   override def size: Int = singleSize
   override def iterator: Iterator[(A, B)] = mapIterator
+  override def keysIterator: Iterator[A] = mapKeyIterator
+  override def valuesIterator: Iterator[B] = mapValueIterator
   override def foreach[U](f: ((A, B)) => U) { singleMapForeach(f) }
 
   override def clear() { root() = TxnHashTrie.emptyMapNode[A, B] }

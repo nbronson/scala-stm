@@ -5,6 +5,7 @@ package skel
 
 import java.lang.Throwable
 import scala.collection.mutable.Builder
+import actors.threadpool.TimeUnit
 
 class StubSTMImpl extends impl.STMImpl {
 
@@ -57,4 +58,8 @@ class StubSTMImpl extends impl.STMImpl {
   def withControlFlowRecognizer(pf: PartialFunction[Throwable, Boolean]): TxnExecutor = throw new AbstractMethodError
   def postDecisionFailureHandler: (Txn.Status, Throwable) => Unit = throw new AbstractMethodError
   def withPostDecisionFailureHandler(handler: (Txn.Status, Throwable) => Unit): TxnExecutor = throw new AbstractMethodError
+
+  //////// STMImpl
+
+  def newCommitBarrier(timeout: Long, unit: TimeUnit): CommitBarrier = throw new AbstractMethodError
 }

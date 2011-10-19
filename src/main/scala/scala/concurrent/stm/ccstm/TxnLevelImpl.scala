@@ -10,6 +10,33 @@ import skel.{AbstractNestingLevel, RollbackError}
 private[ccstm] object TxnLevelImpl {
 
   private val stateUpdater = new TxnLevelImpl(null, null, null, false).newStateUpdater
+
+  /** Maps blocked `InTxnImpl` that are members of a commit barrier to the
+   *  `TxnLevelImpl` instance on which they are waiting.  All of the values
+   *  in this map must be notified when a new link in a (potential) deadlock
+   *  chain is formed.
+   */
+  @volatile private var _blockedBarrierMembers = Map.empty[InTxnImpl, TxnLevelImpl]
+
+  def notifyBlockedBarrierMembers() {
+    val m = _blockedBarrierMembers
+    if (!m.isEmpty) {
+      for (v <- m.values)
+        v.synchronized { v.notifyAll() }
+    }
+  }
+
+  def addBlockedBarrierMember(waiter: InTxnImpl, monitor: TxnLevelImpl) {
+    synchronized {
+      _blockedBarrierMembers += (waiter -> monitor)
+    }
+  }
+
+  def removeBlockedBarrierMember(waiter: InTxnImpl) {
+    synchronized {
+      _blockedBarrierMembers -= waiter
+    }
+  }
 }
 
 /** `TxnLevelImpl` bundles the data and behaviors from `AccessHistory.UndoLog`
@@ -22,12 +49,17 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
                                   val parUndo: TxnLevelImpl,
                                   val phantom: Boolean)
         extends AccessHistory.UndoLog with AbstractNestingLevel {
-  import TxnLevelImpl.stateUpdater
+  import TxnLevelImpl._
 
   // this is the first non-hidden parent
   val parLevel: AbstractNestingLevel = if (parUndo == null || !parUndo.phantom) parUndo else parUndo.parLevel
 
   val root: AbstractNestingLevel = if (parLevel == null) this else parLevel.root
+
+  /** The transaction attempt on which this transaction is blocked, if any.
+   *  Only set for roots.
+   */
+  @volatile private var _blockedBy: TxnLevelImpl = null
 
   /** To make `requireActive` more efficient we store the raw state of
    *  `Txn.Active` as null.  If the raw state is a `TxnLevelImpl`, then that
@@ -78,7 +110,12 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     f
   }
 
-  def tryActiveToPreparing(): Boolean = stateUpdater.compareAndSet(this, null, Txn.Preparing)
+  def tryActiveToPreparing(): Boolean = {
+    val f = stateUpdater.compareAndSet(this, null, Txn.Preparing)
+    if (f && txn.commitBarrier != null)
+      notifyBlockedBarrierMembers()
+    f
+  }
 
   def tryPreparingToPrepared(): Boolean = stateUpdater.compareAndSet(this, Txn.Preparing, Txn.Prepared)
 
@@ -100,9 +137,34 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
       synchronized { notifyAll() }
   }
 
-  /** Blocks until `status.completed`. */
+  // We are looking for a chain of blockedBy txns that ends in a Prepared txn,
+  // and the beginning and the end of the chain have the same non-null commit
+  // barrier.  This is made a bit tricky because the deadlock chain might not
+  // form from either end, some of the links might not be commit barrier
+  // members, and one of the steps to building the chain might not be a call to
+  // blockedBy.
+  //
+  // Our design places responsibility for checking on the beginning (Active) end
+  // of the chain, and places responsibility for waking up threads that might
+  // need to check on any thread that might complete a chain.
+
+  @tailrec private def hasMemberCycle(cb: CommitBarrierImpl, src: TxnLevelImpl): Boolean = {
+    if (src._state.isInstanceOf[Txn.RolledBack])
+      false
+    else {
+      val next = src._blockedBy
+      if (next == null)
+        src.txn.commitBarrier == cb
+      else
+        hasMemberCycle(cb, next)
+    }
+  }
+
+  /** Blocks until `status.completed`, possibly returning early if `waiter`
+   *  has been rolled back.
+   */
   @throws(classOf[InterruptedException])
-  def awaitCompleted() {
+  def awaitCompleted(waiter: TxnLevelImpl, debugInfo: Any) {
     assert(parUndo == null)
 
     _waiters = true
@@ -110,9 +172,35 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     if (Stats.top != null)
       Stats.top.blockingAcquires += 1
 
-    synchronized {
-      while (!status.completed)
-        wait
+    if (waiter != null) {
+      val cb = waiter.txn.commitBarrier
+      try {
+        waiter._blockedBy = this
+        notifyBlockedBarrierMembers()
+        if (cb != null)
+          addBlockedBarrierMember(waiter.txn, this)
+
+        synchronized {
+          // We would not have to check that the waiter has been stolen from
+          // except that when there is a commit barrier the thief might also be
+          // the txn on which we are blocked
+          while (!status.completed && !waiter._state.isInstanceOf[Txn.RolledBack]) {
+            if (cb != null && hasMemberCycle(cb, waiter))
+              cb.cancelAll(CommitBarrier.MemberCycle(debugInfo))
+            wait()
+          }
+        }
+
+      } finally {
+        if (cb != null)
+          removeBlockedBarrierMember(waiter.txn)
+        waiter._blockedBy = null
+      }
+    } else {
+      synchronized {
+        while (!status.completed)
+          wait()
+      }
     }
   }
 

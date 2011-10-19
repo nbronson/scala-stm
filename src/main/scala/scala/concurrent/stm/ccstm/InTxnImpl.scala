@@ -85,6 +85,8 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
    */
   private var _readVersion: Version = 0
 
+  /** The commit barrier in which this transaction is participating. */
+  var commitBarrier: CommitBarrierImpl = null
 
   //////////// value-like operations
 
@@ -110,7 +112,9 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
             ", writeCount=" + writeCount +
             ", readVersion=0x" + _readVersion.toHexString +
             (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") +
-            ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos + ")")
+            ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos +
+            ", commitBarrier=" + commitBarrier +
+            ")")
   }
 
 
@@ -290,6 +294,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   private def clearAttemptHistory() {
     _subsumptionAllowed = true
     _cumulativeBlockingNanos = 0L
+    commitBarrier = null
   }
 
   //// nested, no alternatives
@@ -658,7 +663,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       return false
 
     // this is our linearization point
-    val cv = freshCommitVersion(_readVersion, globalVersion.get)
+    val cv = freshCommitVersion(_readVersion)
 
     // if the reads are still valid, then they were valid at the linearization
     // point

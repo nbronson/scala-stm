@@ -2,7 +2,7 @@
 .*.swp
 .idea/workspace.xml
 out/
-target/
+target
 lib_managed/
 src_managed/
 project/boot/

@@ -141,7 +141,9 @@ trait TxnExecutor {
   def withRetryTimeoutNanos(timeoutNanos: Option[Long]): TxnExecutor
 
   /** Returns a `TxnExecutor` that is identical to this one except that it has
-   *  the specified retry timeout.  The default time unit is milliseconds.
+   *  the specified retry timeout.  The default time unit is milliseconds.  If
+   *  the retry timeout expires the retry will be cancelled with an
+   *  `InterruptedException`.
    */
   def withRetryTimeout(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): TxnExecutor =
       withRetryTimeoutNanos(Some(unit.toNanos(timeout)))

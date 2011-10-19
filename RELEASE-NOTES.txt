@@ -1,8 +1,10 @@
-ScalaSTM - 1.0-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.4-SNAPSHOT RELEASE NOTES
 
-Changes between 0.3 and 1.0-SNAPSHOT:
+Changes between 0.3 and 0.4-SNAPSHOT:
 
-* None yet
+* Small performance improvements.
+
+* STMBench7 support.
 
 Snapshot releases deployed to the scala-tools.org repository are tested
 and functional, but may have changing APIs.
@@ -13,7 +15,7 @@ Changes between 0.2 and 0.3:
 
 * Support for Scala 2.9.0.RC1.
 
-* Bug fixes (see https://github.com/nbronson/scala-stm/issues/closed )
+* Bug fixes (see https://github.com/nbronson/scala-stm/issues/closed ).
 
 * Timeouts for modular blocking.  Set timeouts at the atomic block using
   atomic.withRetryTimeout, or at the retry site using retryFor.

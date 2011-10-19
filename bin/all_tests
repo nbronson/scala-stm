@@ -3,8 +3,6 @@
 set -x
 set -e
 
-SCALATEST_VERSION=1.2
-
 BASE="`dirname $0`/.."
 cd $BASE
 
@@ -14,7 +12,7 @@ fi
 
 for v in $SCALA_VERSIONS; do
   TARGET_BASE="target/scala_$v"
-  SCALATEST="lib_managed/scala_$v/compile/scalatest-$SCALATEST_VERSION.jar"
+  SCALATEST=$(echo lib_managed/scala_$v/compile/scalatest*.jar)
   sbt ++$v test-compile
   scala -Dccstm.stats=1 -cp ${SCALATEST}:$TARGET_BASE/classes org.scalatest.tools.Runner -l slow -oW -p $TARGET_BASE/test-classes 
   scala -cp ${SCALATEST}:$TARGET_BASE/classes org.scalatest.tools.Runner -oW -p $TARGET_BASE/test-classes 
