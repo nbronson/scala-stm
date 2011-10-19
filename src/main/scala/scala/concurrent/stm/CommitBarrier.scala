@@ -129,12 +129,6 @@ object CommitBarrier {
     def cancel(cause: UserCancel)
   }
 
-  /** Constructs and returns a new `CommitBarrier` with no timeout. Each
-   *  commit barrier may be used for at most one coordinated commit (it is
-   *  not cyclic).
-   */
-  def apply(): CommitBarrier = apply(Long.MaxValue);
-
   /** Constructs and returns a new `CommitBarrier` in which each member will
    *  wait at most `timeout` `unit` for other members of the barrier to
    *  become ready to commit.  If timeout occurs all members will be

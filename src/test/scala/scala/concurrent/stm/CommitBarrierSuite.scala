@@ -12,7 +12,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("single member commit") {
     val x = Ref(0)
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(Long.MaxValue)
     val m = cb.addMember()
     val z = m.atomic { implicit t =>
       x() = x() + 1
@@ -24,7 +24,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("single member cancel") {
     val x = Ref(0)
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     val m = cb.addMember()
     val z = m.atomic { implicit t =>
       m.cancel(CommitBarrier.UserCancel("cancel"))
@@ -46,7 +46,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("single member failure") {
     val x = Ref(0)
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     val m = cb.addMember()
     intercept[Exception] {
       m.atomic { implicit t =>
@@ -64,7 +64,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("override executor") {
     val x = Ref(0)
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     val m = cb.addMember()
     m.executor = m.executor.withRetryTimeout(10)
     intercept[InterruptedException] {
@@ -122,7 +122,7 @@ class CommitBarrierSuite extends FunSuite {
                 check: Boolean = true,
                 failurePct: Int = 0): Long = {
     val refs = Array.tabulate(barrierSize) { _ => Ref(0) }
-    val cbs = Array.tabulate(barrierCount) { _ => CommitBarrier() }
+    val cbs = Array.tabulate(barrierCount) { _ => CommitBarrier(60000) }
     val members = Array.tabulate(barrierCount, barrierSize) { (i, _) => cbs(i).addMember() }
     val t0 = System.nanoTime
     parRun(barrierSize + (if (check) 1 else 0)) { j =>
@@ -218,7 +218,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("interrupt") {
     val refs = Array.tabulate(2) { _ => Ref(0) }
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     val members = Array.tabulate(2) { _ => cb.addMember() }
     val target = new LinkedTransferQueue[Thread]()
     parRun(3) { i =>
@@ -250,7 +250,7 @@ class CommitBarrierSuite extends FunSuite {
   test("control flow exception") {
     val slower = Ref(0)
     val ref = Ref(0)
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     val b = new Breaks()
 
     b.breakable {
@@ -277,7 +277,7 @@ class CommitBarrierSuite extends FunSuite {
 
   def doCycle(cycleSize: Int) {
     val refs = Array.tabulate(cycleSize) { _ => Ref(0) }
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     val members = Array.tabulate(cycleSize) { _ => cb.addMember() }
     parRun(cycleSize) { i =>
       val z = members(i).atomic { implicit txn =>
@@ -306,7 +306,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("auto-cancel") {
     for (reps <- 0 until 1000) {
-      val cb = CommitBarrier()
+      val cb = CommitBarrier(60000)
       var i = 0
       val commits = new java.util.concurrent.atomic.AtomicInteger(0)
       val x = Ref(0)
@@ -338,7 +338,7 @@ class CommitBarrierSuite extends FunSuite {
 
   test("no auto-cancel") {
     val x = Ref(0)
-    val cb = CommitBarrier()
+    val cb = CommitBarrier(60000)
     var t: Thread = null
     val outer = cb.addMember()
     outer.atomic { implicit txn =>
@@ -361,7 +361,7 @@ class CommitBarrierSuite extends FunSuite {
   test("embedded orAtomic") {
     val x = Ref(0)
     val y = Ref(0)
-    val z = CommitBarrier().addMember().atomic { implicit txn =>
+    val z = CommitBarrier(60000).addMember().atomic { implicit txn =>
       atomic { implicit txn =>
         y() = 1
         if (x() == 0)
@@ -395,7 +395,7 @@ class CommitBarrierSuite extends FunSuite {
         }
       }
     }
-    val m = CommitBarrier().addMember()
+    val m = CommitBarrier(60000).addMember()
     m.atomic { implicit txn => body(m, 0) }
 
     // by sleeping and then awaiting we can (probabilistically) catch both
