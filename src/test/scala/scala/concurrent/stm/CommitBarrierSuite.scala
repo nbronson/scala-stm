@@ -62,6 +62,26 @@ class CommitBarrierSuite extends FunSuite {
     }
   }
 
+  test("override executor") {
+    val x = Ref(0)
+    val cb = CommitBarrier()
+    val m = cb.addMember()
+    m.executor = m.executor.withRetryTimeout(10)
+    intercept[InterruptedException] {
+      m.atomic { implicit txn =>
+        if (x() == 0)
+          retry
+        x() = 10
+      }
+    }
+    assert(x.single() === 0)
+
+    // commit barrier is now dead
+    intercept[IllegalStateException] {
+      cb.addMember()
+    }
+  }
+
   def parRun(n: Int)(body: Int => Unit) {
     // the CountDownLatch is not strictly necessary, but increases the chance
     // of truly concurrent execution
@@ -97,17 +117,20 @@ class CommitBarrierSuite extends FunSuite {
     }
   }
 
-  def runStress(barrierSize: Int, barrierCount: Int, check: Boolean = true): Long = {
+  def runStress(barrierSize: Int,
+                barrierCount: Int,
+                check: Boolean = true,
+                failurePct: Int = 0): Long = {
     val refs = Array.tabulate(barrierSize) { _ => Ref(0) }
     val cbs = Array.tabulate(barrierCount) { _ => CommitBarrier() }
     val members = Array.tabulate(barrierCount, barrierSize) { (i, _) => cbs(i).addMember() }
     val t0 = System.nanoTime
     parRun(barrierSize + (if (check) 1 else 0)) { j =>
+      val rand = new SimpleRandom()
       if (j == barrierSize) {
         // we are the cpu-hogging observer
         var prev = 0
         var samples = 0
-        val rand = new SimpleRandom()
         while (prev < barrierCount) {
           val x = refs(rand.nextInt(barrierSize)).single()
           assert(x >= prev)
@@ -121,13 +144,22 @@ class CommitBarrierSuite extends FunSuite {
       } else {
         // we are a member
         for (m <- members) {
+          // failurePct/2 out of 100% -> cancel before atomic
+          // failurePct/2 out of 100% -> cancel inside atomic
+          val p = rand.nextInt(200)
+          if (p < failurePct)
+            m(j).cancel(CommitBarrier.UserCancel("early"))
+
           m(j).atomic { implicit txn =>
+            assert(p >= failurePct)
+            if (p < failurePct * 2)
+              m(j).cancel(CommitBarrier.UserCancel("late, inside"))
             refs(j) += 1
           }
         }
       }
     }
-    return System.nanoTime - t0
+    System.nanoTime - t0
   }
 
   test("stress 2") {
@@ -138,8 +170,16 @@ class CommitBarrierSuite extends FunSuite {
     runStress(10, 500)
   }
 
-  test("stress 1000") {
+  test("stress 400") {
     runStress(400, 10)
+  }
+
+  test("partial success 2") {
+    runStress(2, 10000, false, 25)
+  }
+
+  test("partial success 400") {
+    runStress(400, 10, false, 75)
   }
 
   test("perf 2") {
@@ -208,12 +248,22 @@ class CommitBarrierSuite extends FunSuite {
   }
 
   test("control flow exception") {
+    val slower = Ref(0)
     val ref = Ref(0)
     val cb = CommitBarrier()
     val b = new Breaks()
 
     b.breakable {
       while (true) {
+        val m = cb.addMember()
+        new Thread() {
+          override def run() {
+            Thread.sleep(100)
+            m.atomic { implicit txn =>
+              slower() = slower() + 1
+            }
+          }
+        }.start()
         cb.addMember().atomic { implicit txn =>
           ref() = ref() + 1
           b.break
@@ -221,6 +271,7 @@ class CommitBarrierSuite extends FunSuite {
       }
     }
 
+    assert(slower.single() === 1)
     assert(ref.single() === 1)
   }
 
@@ -283,5 +334,73 @@ class CommitBarrierSuite extends FunSuite {
       assert(x.single() === 1)
       assert(y.single() === 10)
     }
+  }
+
+  test("no auto-cancel") {
+    val x = Ref(0)
+    val cb = CommitBarrier()
+    var t: Thread = null
+    val outer = cb.addMember()
+    outer.atomic { implicit txn =>
+      val inner = cb.addMember(false)
+      t = new Thread() {
+        override def run() {
+          inner.atomic { implicit txn =>
+            x() = x() + 1
+          }
+        }
+      }
+      t.start()
+
+      outer.cancel(CommitBarrier.UserCancel("cancel outer"))
+    }
+    t.join()
+    assert(x.single() === 1)
+  }
+
+  test("embedded orAtomic") {
+    val x = Ref(0)
+    val y = Ref(0)
+    val z = CommitBarrier().addMember().atomic { implicit txn =>
+      atomic { implicit txn =>
+        y() = 1
+        if (x() == 0)
+          retry
+        "first"
+      } orAtomic { implicit txn =>
+        x() = 1
+        if (y() == 1)
+          retry
+        "second"
+      }
+    }
+    assert(z === Right("second"))
+    assert(x.single() === 1)
+    assert(y.single() === 0)
+  }
+
+  test("recursive") {
+    val commits = Ref(0).single
+    def body(m: CommitBarrier.Member, depth: Int)(implicit txn: InTxn) {
+      if (depth < 8) {
+        for (m <- Array.tabulate(2) { _ => m.commitBarrier.addMember() }) {
+          new Thread() {
+            override def run() {
+              m.atomic { implicit txn =>
+                body(m, depth + 1)
+                Txn.afterCommit { _ => commits += 1 }
+              }
+            }
+          }.start()
+        }
+      }
+    }
+    val m = CommitBarrier().addMember()
+    m.atomic { implicit txn => body(m, 0) }
+
+    // by sleeping and then awaiting we can (probabilistically) catch both
+    // too few and too many commits
+    Thread.sleep(100)
+    commits.await { _ == 510 }
   }
 }
