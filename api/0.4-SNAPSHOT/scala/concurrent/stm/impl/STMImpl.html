@@ -169,6 +169,20 @@
  error exception are rolled back.</p><p> All implementations of this method must return true for instances that
  implement <code>scala.util.control.ControlThrowable</code>.
 </p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd><dt>Definition Classes</dt><dd><a name="scala.concurrent.stm.TxnExecutor" class="extype" href="../TxnExecutor.html">TxnExecutor</a></dd></dl></div>
+    </li><li visbl="pub" name="scala.concurrent.stm.impl.STMImpl#newCommitBarrier" data-isabs="true">
+      <a id="newCommitBarrier(Long,TimeUnit):CommitBarrier"></a>
+      <h4 class="signature">
+      <span class="kind">def</span>
+      <span class="symbol"> 
+        <span class="name">newCommitBarrier</span>
+        
+        <span class="params">(<span name="timeout">timeout: <span name="scala.Long" class="extype">Long</span></span>, <span name="unit">unit: <span name="scala.actors.threadpool.TimeUnit" class="extype">TimeUnit</span></span>)</span><span class="result">: <a name="scala.concurrent.stm.CommitBarrier" class="extype" href="../CommitBarrier.html">CommitBarrier</a></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Returns a new commit barrier suitable for coordinating commits by this
+ STM implementation.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a new commit barrier suitable for coordinating commits by this
+ STM implementation.
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>abstract </dd></dl></div>
     </li><li visbl="pub" name="scala.concurrent.stm.impl.RefFactory#newRef" data-isabs="true">
       <a id="newRef[A](A)(ClassManifest[A]):Ref[A]"></a>
       <h4 class="signature">
@@ -771,7 +785,9 @@
       </h4>
       <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
  the specified retry timeout.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one except that it has
- the specified retry timeout.  The default time unit is milliseconds.
+ the specified retry timeout.  The default time unit is milliseconds.  If
+ the retry timeout expires the retry will be cancelled with an
+ <code>InterruptedException</code>.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a name="scala.concurrent.stm.TxnExecutor" class="extype" href="../TxnExecutor.html">TxnExecutor</a></dd></dl></div>
     </li></ol>
             </div>

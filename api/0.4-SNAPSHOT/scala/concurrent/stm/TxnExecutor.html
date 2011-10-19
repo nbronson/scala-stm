@@ -554,7 +554,9 @@
       </h4>
       <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
  the specified retry timeout.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a <code>TxnExecutor</code> that is identical to this one except that it has
- the specified retry timeout.  The default time unit is milliseconds.
+ the specified retry timeout.  The default time unit is milliseconds.  If
+ the retry timeout expires the retry will be cancelled with an
+ <code>InterruptedException</code>.
 </p></div></div>
     </li></ol>
             </div>
