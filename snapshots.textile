@@ -4,8 +4,9 @@ title: Snapshot releases
 ---
 
 Changes between 0.3 and 0.4-SNAPSHOT:
+* CommitBarrier added, which allows multiple atomic blocks (each on its own thread) to commit together.
 * Small performance improvements.
-* STMBench7 support.
+* STMBench7 benchmark support added.
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
