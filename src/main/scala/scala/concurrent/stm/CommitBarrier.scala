@@ -86,9 +86,8 @@ object CommitBarrier {
      *  this method throws an exception the same as any other atomic block
      *  (see `TxnExecutor.apply`).
      * 
-     *  It is not syntactically possible to chain `orAtomic` onto this form
-     *  of `atomic`, but you can accomplish the same effect with a nested
-     *  atomic block:{{{
+     *  It is not allowed to chain `orAtomic` onto this form of `atomic`,
+     *  but you can accomplish the same effect with a nested atomic block:{{{
      *    member.atomic { implicit txn =>
      *      atomic { implicit txn =>
      *        ... first alternative
