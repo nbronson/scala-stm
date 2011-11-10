@@ -19,7 +19,7 @@ mkdir $TMP
   git checkout "$BRANCH" ; \
   sbt doc )
 
-VERSION=`awk -F= '$1=="project.version" {print $2}' $TMP/scala-stm/project/build.properties`
+VERSION=`awk -F'"' '/^version/ {print $2}' $TMP/scala-stm/build.sbt`
 if [ -x "$VERSION" ]; then
   mv "$VERSION" .orig."$VERSION".$$
 fi
