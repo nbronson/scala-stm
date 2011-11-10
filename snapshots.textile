@@ -3,27 +3,22 @@ layout: default
 title: Snapshot releases
 ---
 
-Changes between 0.3 and 0.4-SNAPSHOT:
-* CommitBarrier added, which allows multiple atomic blocks (each on its own thread) to commit together.
-* Small performance improvements.
-* STMBench7 benchmark support added.
-* Automatic selection of STMImpl in most cases.
+Currently there are no changes between 0.4 and 0.5-SNAPSHOT.
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.9.1-0.4-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.1/0.4-SNAPSHOT/scala-stm_2.9.1-0.4-SNAPSHOT.jar]
-* ScalaDoc: ["0.4-SNAPSHOT":api/0.4-SNAPSHOT/index.html#scala.concurrent.stm.package]
+* Manual download: ["scala-stm_2.9.1-0.5-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.1/0.5-SNAPSHOT/scala-stm_2.9.1-0.5-SNAPSHOT.jar]
+* ScalaDoc: ["0.5-SNAPSHOT":api/0.5-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
 
-Tell @sbt@ about the @scala-tools.org@ snapshot repository and the ScalaSTM artifact by adding the following two lines to your project definition class (in @project/build@)
+Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file). You will also need to add a resolver that can find the @scala-tools.org@ snapshot repository.
 
 {% highlight scala %}
-val scala_tools_snapshots = ("Scala-Tools Maven2 Repository - snapshots" at
-    "http://scala-tools.org/repo-snapshots")
-val scala_stm = "org.scala-tools" %% "scala-stm" % "0.4-SNAPSHOT"
+libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5-SNAPSHOT")
+resolvers += ScalaToolsSnapshots
 {% endhighlight %}
 
 @sbt update@ will download the latest @scala-stm@ snapshot JAR and make it available for building.
@@ -37,7 +32,7 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.9.1</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.5-SNAPSHOT</version>
   </dependency>
 </dependencies>
 {% endhighlight %}

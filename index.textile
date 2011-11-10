@@ -15,6 +15,11 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
+*(major) _2011 Nov 9_ -- ScalaSTM version 0.4 ["released":releases.html], including
+** @CommitBarrier@, support for group commit
+** STMBench7 benchmark support
+** Better implementation selection
+
 * _2011 Sep 5_ -- ScalaSTM 0.3 and 0.4-SNAPSHOT for Scala 2.9.1 ["released":releases.html]
 
 * _2011 Jul 8_ -- ["0.4-SNAPSHOT":snapshots.html]: STMBench7 support.  See ["Benchmarking":benchmark.html]
