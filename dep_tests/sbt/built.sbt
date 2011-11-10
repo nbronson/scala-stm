@@ -11,4 +11,4 @@ crossScalaVersions := Seq("2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
 
 resolvers += ScalaToolsSnapshots
 
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.4-SNAPSHOT")
+libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5-SNAPSHOT")
