@@ -1,6 +1,6 @@
-ScalaSTM - 0.4-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.4 RELEASE NOTES
 
-Changes between 0.3 and 0.4-SNAPSHOT:
+Changes between 0.3 and 0.4:
 
 * CommitBarrier added, which allows multiple atomic blocks (each on its
   own thread) to commit together.
@@ -10,9 +10,6 @@ Changes between 0.3 and 0.4-SNAPSHOT:
 * STMBench7 benchmark support added.
 
 * Automatic selection of STMImpl in most cases.
-
-Snapshot releases deployed to the scala-tools.org repository are tested
-and functional, but may have changing APIs.
 
 ----
 
