@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
+import java.util.concurrent.CountDownLatch
 
 
 class CallbackSuite extends FunSuite {
@@ -37,11 +38,14 @@ class CallbackSuite extends FunSuite {
   }
 
   test("retry in beforeCommit") {
+    val n = 50
     val x = Ref(0)
+    val b = Array.tabulate(n) { _ => new CountDownLatch(1) }
     val t = new Thread("trigger") {
       override def run() {
-        for (i <- 0 until 5) {
-          Thread.sleep(200)
+        for (i <- 0 until n) {
+          b(i).await()
+          Thread.sleep(5)
           x.single() += 1
         }
       }
@@ -53,11 +57,14 @@ class CallbackSuite extends FunSuite {
       tries += 1
       y() = 1
       Txn.beforeCommit { implicit t =>
-        if (x() < 5)
+        if (x() < n) {
+          for (i <- 0 until math.min(n, tries))
+            b(i).countDown()
           retry
+        }
       }
     }
-    assert(tries >= 5)
+    assert(tries >= n)
   }
 
   test("exception in beforeCommit") {

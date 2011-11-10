@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
+import java.util.concurrent.CountDownLatch
 
 
 /** Tests of the relaxed validation methods `getWith` and `relaxedGet` in
@@ -23,12 +24,19 @@ class RelaxedValidationSuite extends FunSuite {
 
   test("self-write vs getWith with interference") {
     val x = Ref(0)
+    val b1 = new CountDownLatch(1)
+    val b2 = new CountDownLatch(1)
 
-    (new Thread { override def run { Thread.sleep(50) ; x.single() = 2 } }).start
+    (new Thread { override def run {
+      b1.await()
+      x.single() = 2
+      b2.countDown()
+    } }).start
 
     atomic { implicit txn =>
       assert(x.getWith { _ & 1 } === 0)
-      Thread.sleep(100)
+      b1.countDown()
+      b2.await()
       assert(x.swap(1) === 2)
     }
     assert(x.single() === 1)
@@ -36,6 +44,8 @@ class RelaxedValidationSuite extends FunSuite {
 
   test("getWith multiple revalidations") {
     val x = Ref("abc")
+
+    // sleep is okay for this test because all interleavings should pass
 
     (new Thread {
       override def run {
@@ -69,14 +79,21 @@ class RelaxedValidationSuite extends FunSuite {
 
   test("self-write vs failing transformIfDefined with interference") {
     val x = Ref(0)
+    val b1 = new CountDownLatch(1)
+    val b2 = new CountDownLatch(1)
 
-    (new Thread { override def run { Thread.sleep(50) ; x.single() = 2 } }).start
+    (new Thread { override def run {
+      b1.await()
+      x.single() = 2
+      b2.countDown()
+    } }).start
 
     atomic { implicit txn =>
       assert(!x.transformIfDefined {
         case v if (v & 1) != 0 => v
       })
-      Thread.sleep(100)
+      b1.countDown()
+      b2.await()
       assert(x.swap(1) === 2)
     }
     assert(x.single() === 1)
@@ -93,12 +110,19 @@ class RelaxedValidationSuite extends FunSuite {
 
   test("self-write vs relaxedGet with interference") {
     val x = Ref(0)
+    val b1 = new CountDownLatch(1)
+    val b2 = new CountDownLatch(1)
 
-    (new Thread { override def run { Thread.sleep(50) ; x.single() = 2 } }).start
+    (new Thread { override def run {
+      b1.await()
+      x.single() = 2
+      b2.countDown()
+    } }).start
 
     atomic { implicit txn =>
       assert(x.relaxedGet({ (seen, correct) => (seen & 1) == (correct & 1) }) === 0)
-      Thread.sleep(100)
+      b1.countDown()
+      b2.await()
       assert(x.swap(1) === 2)
     }
     assert(x.single() === 1)
@@ -106,6 +130,8 @@ class RelaxedValidationSuite extends FunSuite {
 
   test("relaxedGet multiple accepting revalidations") {
     val x = Ref("abc")
+
+    // sleep is okay for this test because all interleavings should pass
 
     (new Thread {
       override def run {
@@ -131,6 +157,8 @@ class RelaxedValidationSuite extends FunSuite {
 
   test("relaxedGet multiple ending with equality check") {
     val x = Ref("abc")
+
+    // sleep is okay for this test because all interleavings should pass
 
     (new Thread {
       override def run {

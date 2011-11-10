@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
+import java.util.concurrent.CountDownLatch
 
 
 class TxnSuite extends FunSuite {
@@ -83,15 +84,18 @@ class TxnSuite extends FunSuite {
   test("basic retry") {
     val x = Ref(0)
     val y = Ref(false)
+    val b = new CountDownLatch(1)
     new Thread {
       override def run() {
-        Thread.sleep(200)
+        b.await()
+        Thread.sleep(10)
         y.single() = true
         x.single() = 1
       }
     } start
 
     atomic { implicit txn =>
+      b.countDown()
       if (x() == 0)
         retry
     }
@@ -101,9 +105,11 @@ class TxnSuite extends FunSuite {
   test("nested retry") {
     val x = Ref(0)
     val y = Ref(false)
+    val b = new CountDownLatch(1)
     new Thread {
       override def run() {
-        Thread.sleep(200)
+        b.await()
+        Thread.sleep(10)
         y.single() = true
         x.single() = 1
       }
@@ -114,6 +120,7 @@ class TxnSuite extends FunSuite {
         // this will cause the nesting to materialize
         NestingLevel.current
 
+        b.countDown()
         if (x() == 0)
           retry
       }

@@ -21,7 +21,7 @@ class InterruptSuite extends FunSuite {
   }
 
   test("txn retry pending interrupt") {
-    Thread.currentThread.interrupt
+    Thread.currentThread.interrupt()
     val x = Ref(0)
     intercept[InterruptedException] {
       atomic { implicit txn =>
@@ -39,7 +39,7 @@ class InterruptSuite extends FunSuite {
   }
 
   test("single await pending interrupt") {
-    Thread.currentThread.interrupt
+    Thread.currentThread.interrupt()
     val x = Ref(0)
     intercept[InterruptedException] {
       x.single.await( _ != 0 )
@@ -69,7 +69,7 @@ class InterruptSuite extends FunSuite {
                 case x: InterruptedException => nonTxnInterrupts.incrementAndGet
               }
             }
-            threads(SimpleRandom.nextInt(threads.length)).interrupt
+            threads(SimpleRandom.nextInt(threads.length)).interrupt()
           }
         } catch {
           case x => failure = x
