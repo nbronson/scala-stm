@@ -32,10 +32,12 @@ You can directly access the snapshot functionality via the functions @snapshot@ 
 
 h2(#how). How does it work?
 
-Underneath, @TMap@ and @TSet@ use mutable hash tries constructed from @Ref@-s, with generation numbers that control copy-on-write.  The algorithm is a novel hybrid of Nathan Bronson's SnapTree [2] and Transactional Predication [3].  As with transactional predication, no atomic block is required for accessing the collection outside a transaction, which substantially reduces overheads when no composition of operations is required.  Until Nathan's PhD thesis is finished you'll have to look at the source for more details.
+Underneath, @TMap@ and @TSet@ use mutable hash tries constructed from @Ref@-s, with generation numbers that control copy-on-write.  The algorithm is a novel hybrid of Nathan Bronson's SnapTree [2] and Transactional Predication [3], described in Chapter 4 of his thesis [4].  As with transactional predication, no atomic block is required for accessing the collection outside a transaction, which substantially reduces overheads when no composition of operations is required.
 
 fn1. The @snapshot@ operation on @TMap@ and @TSet@ is actually provided via an implicit conversion, so you can call it even if you don't see it in their class definitions.
 
 fn2. N. G. Bronson, J. Casper, H. Chafi, and K. Olukotun. A Practical Concurrent Binary Search Tree. In _PPoPP '10: Proceedings of the 15th Annual Symposium on Principles and Practice of Parallel Programming_, 2010.
 
 fn3. N. G. Bronson, J. Casper, H. Chafi, and K. Olukotun. Transactional Predication: High-Performance Concurrent Sets and Maps for STM. In _PODC'10: Proceedings of the 29th Annual ACM Conference on Principles of Distributed Computing_, 2010.
+
+fn4. N. G. Bronson. Composable Operations on High-Performance Concurrent Collections. _Ph.D. Dissertation_, Stanford University, 2011. ["http://purl.stanford.edu/gm457gs5369":http://purl.stanford.edu/gm457gs5369]
