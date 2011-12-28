@@ -30,7 +30,7 @@ h2(#news).  News
 
 * _2011 May 6_ -- ScalaSTM version 0.3 for 2.9.0.RC3 ["released":releases.html]
 
-*(major) _2011 Mar 26_ -- ScalaSTM version 0.3 ["released":releases.html], including
+*(major) _2011 Mar 26_ -- ScalaSTM version 0.3 ["released":releases.html], a pure-Scala software TM library.  Included
 ** Support for Scala 2.9.0.RC1
 ** Timeouts for @retry@
 
@@ -40,7 +40,7 @@ h2(#news).  News
 
 * _2011 Jan 2_ -- ["0.3-SNAPHOT":snapshots.html]: Bug fixes.
 
-*(major) _2010 Dec 27_ -- ScalaSTM version 0.2 ["released":releases.html], including
+*(major) _2010 Dec 27_ -- ScalaSTM version 0.2 ["released":releases.html], a library-based software transactional memory (STM) for Scala.  Included
 ** Performance improvements and bug fixes
 ** Better @TSet@, @TMap@ and @TxnLocal@
 ** Transaction statistics
@@ -49,4 +49,4 @@ h2(#news).  News
 
 * _2010 Dec 8_ -- ["0.2-SNAPSHOT":snapshots.html]: Substantial performance improvements, especially for nested atomic blocks.  @TMap.View@ and @TSet.View@ are integrated with Scala collection class hierarchy.
 
-*(major) _2010 Dec 6_ -- ScalaSTM version 0.1 released.  "Get it...":releases.html
+*(major) _2010 Dec 6_ -- ScalaSTM version 0.1 released, a library-based software transactional memory (STM) for Scala.  "Get it...":releases.html
