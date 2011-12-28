@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -17,10 +17,10 @@ object Sink {
      */
     def ref: Sink[A]
 
-    /** Performs an atomic write of the value in `ref`.  If an atomic block is
-     *  active (see `Txn.current`) then the write will be performed as part of
-     *  the transaction, otherwise it will act as if it was performed inside a
-     *  new atomic block.  Equivalent to `set(v)`.
+    /** Performs an atomic write of the value in `ref`.  If an atomic block
+     *  is active (see `Txn.findCurrent`) then the write will be performed
+     *  as part of the transaction, otherwise it will act as if it was
+     *  performed inside a new atomic block.  Equivalent to `set(v)`.
      */
     def update(v: A) { set(v) }
 

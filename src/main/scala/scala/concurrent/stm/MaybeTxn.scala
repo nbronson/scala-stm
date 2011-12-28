@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -10,7 +10,7 @@ object MaybeTxn {
  *  if the `InTxn` is not known at compile time.  `implicitly[MaybeTxn]` will
  *  bind to an implicit `InTxn` if one is available, otherwise it will bind to
  *  the object `TxnUnkown`.  A `MaybeTxn` of `TxnUnknown` should trigger a
- *  dynamically-scoped `InTxn` search using `Txn.current`.
+ *  dynamically-scoped `InTxn` search using `Txn.findCurrent`.
  *
  *  @author Nathan Bronson
  */
