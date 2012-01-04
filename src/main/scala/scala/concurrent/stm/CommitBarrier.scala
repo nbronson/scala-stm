@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -116,7 +116,7 @@ object CommitBarrier {
     def atomic[Z](body: InTxn => Z): Either[CancelCause, Z]
 
     /** Removes this member from the commit barrier, and causes any pending
-     *  or future calls to `this.atomic` to return `None`.  If the commit
+     *  or future calls to `this.atomic` to return a `Left`.  If the commit
      *  barrier has already committed successfully this method throws
      *  `IllegalStateException`.  It is safe to call this method multiple
      *  times.
