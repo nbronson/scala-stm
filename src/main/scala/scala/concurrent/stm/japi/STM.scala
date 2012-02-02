@@ -13,7 +13,7 @@ import scala.runtime.AbstractFunction1
  * Java-friendly API for ScalaSTM.
  * These methods can also be statically imported.
  */
-object Stm {
+object STM {
 
   /**
    * Create a Ref with an initial value. Return a `Ref.View`, which does not
@@ -63,7 +63,7 @@ object Stm {
    * @param length the length of the `TArray.View` to be created
    * @return a new, empty `TArray.View` wrapped as a `java.util.List`.
    */
-  def newList[A <: AnyRef](length: Int): JList[A] = JavaConversions.mutableSeqAsJavaList(newTArray[A](length))
+  def newArrayAsList[A <: AnyRef](length: Int): JList[A] = JavaConversions.mutableSeqAsJavaList(newTArray[A](length))
 
   /**
    * Atomic block that takes a `Runnable`.

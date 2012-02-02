@@ -5,8 +5,7 @@ package scala.concurrent.stm;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-import scala.concurrent.stm.japi.Stm;
-import static scala.concurrent.stm.japi.Stm.*;
+import static scala.concurrent.stm.japi.STM.*;
 
 import scala.runtime.AbstractFunction1;
 import java.util.concurrent.Callable;
@@ -142,7 +141,7 @@ public class JavaAPITests {
 
     @Test
     public void createAndUseTArray() {
-        List<String> list = newList(3);
+        List<String> list = newArrayAsList(3);
         assertEquals(null, list.get(0));
         assertEquals(null, list.get(1));
         assertEquals(null, list.get(2));
