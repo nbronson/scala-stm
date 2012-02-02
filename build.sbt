@@ -12,6 +12,8 @@ crossScalaVersions := Seq("2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
 // 2.8.* -> 1.5.1, 2.9.* -> 1.6.1
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
+libraryDependencies += ("junit" % "junit" % "4.5" % "test")
+
 // skip exhaustive tests
 testOptions += Tests.Argument("-l", "slow")
 
@@ -26,7 +28,7 @@ publishMavenStyle := true
 publishTo <<= (version) { v: String =>
     val nexus = "http://nexus.scala-tools.org/content/repositories/"
     if (v.trim.endsWith("SNAPSHOT"))
-      Some("snapshots" at nexus + "snapshots/") 
+      Some("snapshots" at nexus + "snapshots/")
     else
       Some("releases" at nexus + "releases/")
   }
