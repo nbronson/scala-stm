@@ -117,31 +117,30 @@ object STM {
    */
   def increment(ref: Ref.View[java.lang.Long], delta: Long): Unit = ref.transform { v ⇒ v.longValue + delta }
 
+  private def activeTxn = Txn.findCurrent match {
+    case Some(txn) => txn
+    case None => throw new IllegalStateException("not in a transaction")
+  }
+
   /**
    * Add a task to run after the current transaction has committed.
    * @param task the `Runnable` task to run after transaction commit
+   * @throws IllegalStateException if called from outside a transaction
    */
-  def afterCommit(task: Runnable): Unit = {
-    val txn = Txn.findCurrent
-    if (txn.isDefined) Txn.afterCommit(status ⇒ task.run)(txn.get)
-  }
+  def afterCommit(task: Runnable): Unit = Txn.afterCommit(status ⇒ task.run)(activeTxn)
 
   /**
    * Add a task to run after the current transaction has rolled back.
    * @param task the `Runnable` task to run after transaction rollback
+   * @throws IllegalStateException if called from outside a transaction
    */
-  def afterRollback(task: Runnable): Unit = {
-    val txn = Txn.findCurrent
-    if (txn.isDefined) Txn.afterRollback(status ⇒ task.run)(txn.get)
-  }
+  def afterRollback(task: Runnable): Unit = Txn.afterRollback(status ⇒ task.run)(activeTxn)
 
   /**
    * Add a task to run after the current transaction has either rolled back
    * or committed.
    * @param task the `Runnable` task to run after transaction completion
+   * @throws IllegalStateException if called from outside a transaction
    */
-  def afterCompletion(task: Runnable): Unit = {
-    val txn = Txn.findCurrent
-    if (txn.isDefined) Txn.afterCompletion(status ⇒ task.run)(txn.get)
-  }
+  def afterCompletion(task: Runnable): Unit = Txn.afterCompletion(status ⇒ task.run)(activeTxn)
 }
