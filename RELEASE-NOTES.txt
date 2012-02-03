@@ -1,9 +1,16 @@
-ScalaSTM - 0.5-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.6-SNAPSHOT RELEASE NOTES
 
-There are currently no changes between 0.4 and 0.5-SNAPSHOT.
+There are currently no changes between 0.5 and 0.6-SNAPSHOT.
 
 Snapshot releases deployed to the scala-tools.org repository are tested
 and functional, but may have changing APIs.
+
+----
+
+Changes between 0.4 and 0.5:
+
+* Added scala.concurrent.stm.japi.STM, which makes it much cleaner to
+  access ScalaSTM functionality from Java.
 
 ----
 
