@@ -3,12 +3,16 @@ layout: default
 title: Releases
 ---
 
-The latest release of ScalaSTM is version 0.4.  To get it you can
+The latest release of ScalaSTM is version 0.5.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
-* download a prebuilt JAR for 2.9.1: ["scala-stm_2.9.1-0.4.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.1/0.4/scala-stm_2.9.1-0.4.jar]
-* download a prebuilt JAR for 2.8.2: ["scala-stm_2.8.2-0.4.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.2/0.4/scala-stm_2.8.2-0.4.jar]
+* download a prebuilt JAR for 2.9.1: ["scala-stm_2.9.1-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.1/0.5/scala-stm_2.9.1-0.5.jar]
+* download a prebuilt JAR for 2.8.2: ["scala-stm_2.8.2-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.2/0.5/scala-stm_2.8.2-0.5.jar]
 
 h2(#notes). Release notes
+
+Changes between 0.4 and 0.5
+
+* @scala.concurrent.stm.japi.STM@ added, which makes it much cleaner to access ScalaSTM functionality from Java.
 
 Changes between 0.3 and 0.4
 * @CommitBarrier@ added, which allows multiple atomic blocks (each on its own thread) to commit together.
@@ -40,7 +44,7 @@ h2(#sbt). SBT
 Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file)
 
 {% highlight scala %}
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.4")
+libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5")
 {% endhighlight %}
 
 @sbt update@ will then download the correct @scala-stm@ JAR and use it for building.
@@ -54,7 +58,7 @@ Separate artifacts are published for each version of Scala, so the desired Scala
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.9.1</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
   </dependency>
 </dependencies>
 {% endhighlight %}
@@ -63,7 +67,11 @@ The deployment tests inside the ScalaSTM source include a complete ["pom.xml":ht
 
 h2(#previous). Previous releases
 
-Version 0.2
+Version 0.4
+* Manual download: ["scala-stm_2.9.1-0.4.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.1/0.4/scala-stm_2.9.1-0.4.jar]
+* ScalaDoc: "0.4":api/0.4/index.html
+
+Version 0.3
 * Manual download: ["scala-stm_2.9.1-0.3.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.1/0.3/scala-stm_2.9.1-0.3.jar]
 * ScalaDoc: "0.3":api/0.3/index.html
 

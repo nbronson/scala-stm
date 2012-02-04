@@ -3,21 +3,21 @@ layout: default
 title: Snapshot releases
 ---
 
-Currently there are no changes between 0.4 and 0.5-SNAPSHOT.
+Currently there are no changes between 0.5 and 0.6-SNAPSHOT.
 
 Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.9.1-0.5-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.1/0.5-SNAPSHOT/scala-stm_2.9.1-0.5-SNAPSHOT.jar]
-* ScalaDoc: ["0.5-SNAPSHOT":api/0.5-SNAPSHOT/index.html#scala.concurrent.stm.package]
+* Manual download: ["scala-stm_2.9.1-0.6-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.1/0.6-SNAPSHOT/scala-stm_2.9.1-0.6-SNAPSHOT.jar]
+* ScalaDoc: ["0.6-SNAPSHOT":api/0.6-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
 
 Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file). You will also need to add a resolver that can find the @scala-tools.org@ snapshot repository.
 
 {% highlight scala %}
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5-SNAPSHOT")
+libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6-SNAPSHOT")
 resolvers += ScalaToolsSnapshots
 {% endhighlight %}
 
@@ -32,7 +32,7 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.9.1</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.6-SNAPSHOT</version>
   </dependency>
 </dependencies>
 {% endhighlight %}
