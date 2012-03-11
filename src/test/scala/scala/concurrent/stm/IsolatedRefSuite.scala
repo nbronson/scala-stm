@@ -428,35 +428,35 @@ class IsolatedRefSuite extends FunSuite {
     }
 
     createTests(name + " Ref equality", v0) { view =>
-      assert(view() == view())
-      assert(view().ref == view())
-      assert(view() == view().ref)
-      assert(view().ref == view().ref)
-      assert(view().ref.single == view())
-      assert(view() != Ref(v0))
-      assert(view() != "abc")
+      assert(view().asInstanceOf[Any] == view())
+      assert(view().ref.asInstanceOf[Any] == view())
+      assert(view().asInstanceOf[Any] == view().ref)
+      assert(view().ref.asInstanceOf[Any] == view().ref)
+      assert(view().ref.single.asInstanceOf[Any] == view())
+      assert(view().asInstanceOf[Any] != Ref(v0))
+      assert(view().asInstanceOf[Any] != "abc")
     }
 
     test(name + " TArray Ref equality") {
       val a = TArray(Seq(v0))
-      assert(a.refs(0) == a.refs(0))
-      assert(a.single.refViews(0) == a.refs(0))
-      assert(a.single.refViews(0).ref == a.refs(0))
-      assert(a.single.refViews(0) == a.single.refViews(0))
-      assert(a.refs(0) == a.refs(0).single)
-      assert(a.single.tarray.refs(0) == a.refs(0).single)
-      assert(a.refs(0) != "abc")
+      assert(a.refs(0).asInstanceOf[Any] == a.refs(0))
+      assert(a.single.refViews(0).asInstanceOf[Any] == a.refs(0))
+      assert(a.single.refViews(0).ref.asInstanceOf[Any] == a.refs(0))
+      assert(a.single.refViews(0).asInstanceOf[Any] == a.single.refViews(0))
+      assert(a.refs(0).asInstanceOf[Any] == a.refs(0).single)
+      assert(a.single.tarray.refs(0).asInstanceOf[Any] == a.refs(0).single)
+      assert(a.refs(0).asInstanceOf[Any] != "abc")
     }
 
     test(name + " TArray Ref inequality between arrays") {
       val a = TArray(Seq(v0))
       val b = TArray(Seq(v1))
-      assert(b.refs(0) != a.refs(0))
-      assert(b.single.refViews(0) != a.refs(0))
-      assert(b.single.refViews(0).ref != a.refs(0))
-      assert(b.single.refViews(0) != a.single.refViews(0))
-      assert(b.refs(0) != a.refs(0).single)
-      assert(b.single.tarray.refs(0) != a.refs(0).single)
+      assert(b.refs(0).asInstanceOf[Any] != a.refs(0))
+      assert(b.single.refViews(0).asInstanceOf[Any] != a.refs(0))
+      assert(b.single.refViews(0).ref.asInstanceOf[Any] != a.refs(0))
+      assert(b.single.refViews(0).asInstanceOf[Any] != a.single.refViews(0))
+      assert(b.refs(0).asInstanceOf[Any] != a.refs(0).single)
+      assert(b.single.tarray.refs(0).asInstanceOf[Any] != a.refs(0).single)
     }
   }
 
@@ -475,12 +475,12 @@ class IsolatedRefSuite extends FunSuite {
     val a = TArray.ofDim[Int](1000)
     println(a.refs(0))
     for (i <- 1 until 1000) {
-      assert(a.refs(i) != a.refs(0))
-      assert(a.single.refViews(i) != a.refs(0))
-      assert(a.single.refViews(i).ref != a.refs(0))
-      assert(a.single.refViews(i) != a.single.refViews(0))
-      assert(a.refs(i) != a.refs(0).single)
-      assert(a.single.tarray.refs(i) != a.refs(0).single)
+      assert(a.refs(i).asInstanceOf[Any] != a.refs(0))
+      assert(a.single.refViews(i).asInstanceOf[Any] != a.refs(0))
+      assert(a.single.refViews(i).ref.asInstanceOf[Any] != a.refs(0))
+      assert(a.single.refViews(i).asInstanceOf[Any] != a.single.refViews(0))
+      assert(a.refs(i).asInstanceOf[Any] != a.refs(0).single)
+      assert(a.single.tarray.refs(i).asInstanceOf[Any] != a.refs(0).single)
     }
   }
 

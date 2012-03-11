@@ -9,5 +9,5 @@ class ImmutableSeqImpl[A](contents: Seq[A]) extends ImmutableCollection[A] {
   override def clone = this
   def contains(element: A) = contents.contains(element)
   def size = contents.size
-  def iterator = JavaConversions.asIterator(contents.iterator)
+  def iterator = JavaConversions.asJavaIterator(contents.iterator)
 }
