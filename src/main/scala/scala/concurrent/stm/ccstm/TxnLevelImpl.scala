@@ -241,7 +241,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   }
 
   def requestRollback(cause: Txn.RollbackCause): Txn.Status = {
-    if (cause == Txn.ExplicitRetryCause)
+    if (cause.isInstanceOf[Txn.ExplicitRetryCause])
       throw new IllegalArgumentException("explicit retry is not available via requestRollback")
     rollbackImpl(Txn.RolledBack(cause))
   }
