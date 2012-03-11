@@ -55,6 +55,5 @@ private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
         if (!p(x))
           tset -= x
     }
-    this
   }
 }

@@ -203,12 +203,12 @@ trait RefCompanion {
    *  }}}
    */
   def apply[A](initialValue: A)(implicit om: OptManifest[A]): Ref[A] = om match {
-    case m: AnyValManifest[_] => newPrimitiveRef(initialValue, m.asInstanceOf[AnyValManifest[A]])
+    case m: AnyValManifest[_] => newPrimitiveRef(initialValue, m)
     case m: ClassManifest[_] => factory.newRef(initialValue)(m.asInstanceOf[ClassManifest[A]])
     case _ => factory.newRef[Any](initialValue).asInstanceOf[Ref[A]]
   }
 
-  private def newPrimitiveRef[A](initialValue: A, m: AnyValManifest[A]): Ref[A] = {
+  private def newPrimitiveRef[A](initialValue: A, m: AnyValManifest[_]): Ref[A] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
       case _: Array[Int]     => apply(initialValue.asInstanceOf[Int])
       case _: Array[Boolean] => apply(initialValue.asInstanceOf[Boolean])
