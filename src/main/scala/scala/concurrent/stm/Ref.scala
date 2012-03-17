@@ -67,6 +67,11 @@ object Ref extends RefCompanion {
     /** Atomically replaces the value ''v'' stored in the `Ref` with
      *  `f`(''v'').  Some `Ref` implementations may defer execution of `f` or
      *  call `f` multiple times to avoid transaction conflicts.
+     *
+     *  While `Ref.View` methods nest into an existing transaction (if any),
+     *  to keep overheads low they don't create a full transaction context if
+     *  there isn't already one active.  This means that if `f` starts a
+     *  transaction the results are implementation-specific.
      *  @param f a function that is safe to call multiple times, and safe to
      *      call later during the enclosing atomic block, if any.
      */
