@@ -19,6 +19,10 @@ p(faqq). *Q.* Doesn't having both @Ref@-s and @Ref.View@-s result in a lot of wa
 
 p(faqa). *A.* Underneath, a single instance can implement both @Ref@ and @Ref.View@.  Also, if it is known when creating a @Ref@ that it holds a primitive value, the returned instance can be specialized to the primitive type to avoid long-term boxing.  In the reference implementation a @Ref[Int]@ is 8 bytes larger than a boxed @Int@.
 
+p(faqq). *Q.* @Ref.View@ (from @Ref.single@) nests in a transaction, but does a transaction nest in @Ref.View.transform@?  In other words, is it safe to call @transform(_ => atomic { ... })@ on a @Ref.View@?
+
+p(faqa). *A.* No, to keep overhead low @Ref.View.transform@ doesn't create a full transaction if one isn't already active.  Also, remember that the function passed to @transform@ might be executed multiple times.
+
 p(faqq). *Q.* I want to make a big array of primitive values, won't @Array[Ref[Int]]@ be too wasteful then?
 
 p(faqa). *A.* Yes.  To address this we provide @TArray[A]@, which acts like an @Array[Ref[A]]@ but allows for more efficient storage.
