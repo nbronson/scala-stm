@@ -5,9 +5,9 @@ organization := "org.scala-tools"
 
 version := "0.6-SNAPSHOT"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
+crossScalaVersions := Seq("2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
 
 // 2.8.* -> 1.5.1, 2.9.* -> 1.6.1
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
@@ -23,14 +23,35 @@ parallelExecution in Test := false
 ////////////////////
 // publishing
 
+pomExtra :=
+  <url>http://nbronson.github.com/scala-stm/</url>
+  <licenses>
+    <license>
+      <name>BSD</name>
+      <url>https://github.com/nbronson/scala-stm/blob/master/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:git@github.com:nbronson/scala-stm.git</connection>
+    <url>git@github.com:nbronson/scala-stm.git</url>
+  </scm>
+  <developers>
+    <developer>
+      <id>nbronson</id>
+      <name>Nathan Bronson</name>
+      <email>ngbronson@gmail.com</email>
+    </developer>
+  </developers>
+
 publishMavenStyle := true
 
 publishTo <<= (version) { v: String =>
-    val nexus = "http://nexus.scala-tools.org/content/repositories/"
+    val base = "https://oss.sonatype.org/"
     if (v.trim.endsWith("SNAPSHOT"))
-      Some("snapshots" at nexus + "snapshots/")
+      Some("snapshots" at base + "content/repositories/snapshots/")
     else
-      Some("releases" at nexus + "releases/")
+      Some("releases" at base + "service/local/staging/deploy/maven2/")
   }
 
 // exclude scalatest from the Maven POM
