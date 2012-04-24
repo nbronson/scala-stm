@@ -5,7 +5,7 @@ title: Releases
 
 The latest release of ScalaSTM is version 0.5.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
-* download a prebuilt JAR for 2.9.1: ["scala-stm_2.9.1-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.1/0.5/scala-stm_2.9.1-0.5.jar]
+* download a prebuilt JAR for 2.9.2: ["scala-stm_2.9.2-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.2/0.5/scala-stm_2.9.2-0.5.jar]
 * download a prebuilt JAR for 2.8.2: ["scala-stm_2.8.2-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.2/0.5/scala-stm_2.8.2-0.5.jar]
 
 h2(#notes). Release notes
@@ -51,13 +51,13 @@ libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5")
 
 h2(#maven). Maven2
 
-Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.9.1) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). The ScalaSTM dependency for your @pom.xml@ is
+Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.9.2) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). The ScalaSTM dependency for your @pom.xml@ is
 
 {% highlight xml %}
 <dependencies>
   <dependency>
     <groupId>org.scala-tools</groupId>
-    <artifactId>scala-stm_2.9.1</artifactId>
+    <artifactId>scala-stm_2.9.2</artifactId>
     <version>0.5</version>
   </dependency>
 </dependencies>
