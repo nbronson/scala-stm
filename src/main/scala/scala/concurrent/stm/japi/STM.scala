@@ -4,6 +4,7 @@ package scala.concurrent.stm.japi
 
 import java.util.concurrent.Callable
 import java.util.{ List ⇒ JList, Map ⇒ JMap, Set ⇒ JSet }
+import scala.actors.threadpool.TimeUnit
 import scala.collection.JavaConversions
 import scala.concurrent.stm
 import scala.concurrent.stm._
@@ -96,6 +97,25 @@ object STM {
    * @return the value returned by the `Callable`
    */
   def atomic[A <: AnyRef](callable: Callable[A]): A = stm.atomic(callable)
+
+  /**
+   * Causes the enclosing transaction to back up and wait until one
+   * of the `Ref`s touched by this transaction has changed.
+   * @throws IllegalStateException if not in a transaction
+   */
+  def retry(): Unit = Txn.findCurrent match {
+    case Some(txn) => Txn.retry(txn)
+    case None => throw new IllegalStateException("retry outside atomic")
+  }
+
+  /**
+   * Like `retry`, but limits the total amount of blocking.  This method
+   * only returns normally when the timeout has expired.
+   */
+  def retryFor(timeoutMillis: Long): Unit = Txn.findCurrent match {
+    case Some(txn) => Txn.retryFor(timeoutMillis)(txn)
+    case None => throw new IllegalStateException("retry outside atomic")
+  }
 
   abstract class Transformer[A <: AnyRef] {
     def apply(v: A): A
