@@ -1,16 +1,26 @@
 /* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
-import actors.threadpool.TimeUnit
+
 import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
 
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running maybe_txn " + name)
+    println("running retry " + name)
     block
   }
 
-  private def context(implicit mt: MaybeTxn) = mt
+  def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
+    try {
+      block
+      assert(false, "expected " + xm.erasure)
+    } catch {
+      case x if (xm.erasure.isAssignableFrom(x.getClass)) => // okay
+    }
+  }
 
   def main(args: Array[String]) {
     test("implicit InTxn match") {
@@ -36,6 +46,8 @@ object Test {
         assert(context eq t)
       }
     }
+
+    def context(implicit mt: MaybeTxn) = mt
 
     test("Static nesting lookup") {
       val x = Ref(10)
@@ -79,15 +91,18 @@ object Test {
       val n0 = atomic { t =>
         t0 = t
         assert(Txn.findCurrent == Some(t))
+        assert(impl.STMImpl.instance.findCurrent == Some(t))
         NestingLevel.root
       }
       assert(n0.status == Txn.Committed)
       assert(Txn.findCurrent == None)
+      assert(impl.STMImpl.instance.findCurrent == None)
       atomic { t =>
         assert(NestingLevel.current(t) != n0)
         assert(NestingLevel.root(t).status == Txn.Active)
         assert(Txn.status == Txn.Active)
         assert(Txn.findCurrent == Some(t))
+        assert(impl.STMImpl.instance.findCurrent == Some(t))
       }
     }
   }

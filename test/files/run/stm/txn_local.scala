@@ -1,11 +1,16 @@
 /* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
+
 import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
+
 
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running txn_local " + name)
+    println("running retry " + name)
     block
   }
 
@@ -52,10 +57,10 @@ object Test {
         initialValue = { txn => NestingLevel.root(txn).## }
       )
       atomic { implicit txn =>
-        assert(tl() == NestingLevel.root.##)
+        assert(tl() == NestingLevel.root(txn).##)
       }
       atomic { implicit txn =>
-        assert(tl() == NestingLevel.root.##)
+        assert(tl() == NestingLevel.root(txn).##)
       }
     }
 
@@ -292,9 +297,9 @@ object Test {
       val tl = TxnLocal(
         init = "init",
         initialValue = { implicit txn => ran += "initialValue" ; "initialValue" },
-        beforeCommit = { implicit txn => assert(Txn.status == Txn.Active) ; ran += "beforeCommit" },
-        whilePreparing = { implicit txn => assert(Txn.status == Txn.Preparing) ; ran += "whilePreparing" },
-        whileCommitting = { implicit txn => assert(Txn.status == Txn.Committing) ; ran += "whileCommitting" },
+        beforeCommit = { implicit txn => assert(Txn.status(txn) == Txn.Active) ; ran += "beforeCommit" },
+        whilePreparing = { implicit txn => assert(Txn.status(txn) == Txn.Preparing) ; ran += "whilePreparing" },
+        whileCommitting = { implicit txn => assert(Txn.status(txn) == Txn.Committing) ; ran += "whileCommitting" },
         afterCommit = { (v: String) => assert(v == "initialValue") ; ran += "afterCommit" },
         afterRollback = { status => assert(false) },
         afterCompletion = { status => assert(status == Txn.Committed) ; ran += "afterCompletion" }

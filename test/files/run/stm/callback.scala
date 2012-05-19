@@ -1,16 +1,18 @@
 /* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
+
 import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
+import java.util.concurrent.CountDownLatch
+
 
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running callback " + name)
+    println("running retry " + name)
     block
-  }
-
-  def slowTest(name: String)(block: => Unit) {
-    //test(name)(block)
   }
 
   def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
@@ -18,13 +20,13 @@ object Test {
       block
       assert(false, "expected " + xm.erasure)
     } catch {
-      case x if xm.erasure.isAssignableFrom(x.getClass) => // okay
+      case x if (xm.erasure.isAssignableFrom(x.getClass)) => // okay
     }
   }
 
-  class UserException extends Exception
-
   def main(args: Array[String]) {
+
+    class UserException extends Exception
 
     test("many callbacks") {
       var n = 0
@@ -54,11 +56,14 @@ object Test {
     }
 
     test("retry in beforeCommit") {
+      val n = 50
       val x = Ref(0)
+      val b = Array.tabulate(n) { _ => new CountDownLatch(1) }
       val t = new Thread("trigger") {
         override def run() {
-          for (i <- 0 until 5) {
-            Thread.sleep(200)
+          for (i <- 0 until n) {
+            b(i).await()
+            Thread.sleep(5)
             x.single() += 1
           }
         }
@@ -70,11 +75,14 @@ object Test {
         tries += 1
         y() = 1
         Txn.beforeCommit { implicit t =>
-          if (x() < 5)
+          if (x() < n) {
+            for (i <- 0 until math.min(n, tries))
+              b(i).countDown()
             retry
+          }
         }
       }
-      assert(tries >= 5)
+      assert(tries >= n)
     }
 
     test("exception in beforeCommit") {
@@ -324,7 +332,7 @@ object Test {
       assert(count == 1)
     }
 
-    slowTest("whileCommitting ordering") {
+    if ("slow" == "enabled") test("whileCommitting ordering") {
       val numThreads = 10
       val numPutsPerThread = 100000
       val startingGate = new java.util.concurrent.CountDownLatch(1)
@@ -375,7 +383,7 @@ object Test {
         x() = 1
         Txn.setExternalDecider(new Txn.ExternalDecider {
           def shouldCommit(implicit txn: InTxnEnd): Boolean = {
-            assert(Txn.status == Txn.Prepared)
+            assert(Txn.status(txn) == Txn.Prepared)
             true
           }
         })
@@ -389,7 +397,7 @@ object Test {
         x() = 1
         val d = new Txn.ExternalDecider {
           def shouldCommit(implicit txn: InTxnEnd): Boolean = {
-            assert(Txn.status == Txn.Prepared)
+            assert(Txn.status(txn) == Txn.Prepared)
             true
           }
         }
@@ -423,7 +431,7 @@ object Test {
         x() = tries
         Txn.setExternalDecider(new Txn.ExternalDecider {
           def shouldCommit(implicit txn: InTxnEnd): Boolean = {
-            assert(Txn.status == Txn.Prepared)
+            assert(Txn.status(txn) == Txn.Prepared)
             tries == 3
           }
         })

@@ -1,15 +1,29 @@
 /* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
+
+import scala.concurrent.stm._
 import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
 
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running simple_random " + name)
+    println("running retry " + name)
     block
   }
 
+  def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
+    try {
+      block
+      assert(false, "expected " + xm.erasure)
+    } catch {
+      case x if (xm.erasure.isAssignableFrom(x.getClass)) => // okay
+    }
+  }
+
   def main(args: Array[String]) {
+
     test("nextInt") {
       val f = new SimpleRandom
       val rand = new scala.util.Random

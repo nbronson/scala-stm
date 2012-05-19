@@ -1,31 +1,27 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+
 
 import scala.concurrent.stm._
-import scala.concurrent.stm.skel.SimpleRandom
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
+import skel.SimpleRandom
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Verifies that blocking STM operations can be interrupted. */
 object Test {
-
-  def test(name: String)(block: => Unit) {
-    println("running interrupt " + name)
-    try {
-      block
-    } finally {
-      waitForPendingInterrupts
-    }
-  }
 
   def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
     try {
       block
       assert(false, "expected " + xm.erasure)
     } catch {
-      case x if xm.erasure.isAssignableFrom(x.getClass) => // okay
+      case x if (xm.erasure.isAssignableFrom(x.getClass)) => // okay
     }
   }
 
   def main(args: Array[String]) {
+
 
     test("txn retry arriving interrupt") {
       delayedInterrupt(100)
@@ -38,7 +34,7 @@ object Test {
     }
 
     test("txn retry pending interrupt") {
-      Thread.currentThread.interrupt
+      Thread.currentThread.interrupt()
       val x = Ref(0)
       intercept[InterruptedException] {
         atomic { implicit txn =>
@@ -56,7 +52,7 @@ object Test {
     }
 
     test("single await pending interrupt") {
-      Thread.currentThread.interrupt
+      Thread.currentThread.interrupt()
       val x = Ref(0)
       intercept[InterruptedException] {
         x.single.await( _ != 0 )
@@ -86,7 +82,7 @@ object Test {
                   case x: InterruptedException => nonTxnInterrupts.incrementAndGet
                 }
               }
-              threads(SimpleRandom.nextInt(threads.length)).interrupt
+              threads(SimpleRandom.nextInt(threads.length)).interrupt()
             }
           } catch {
             case x => failure = x
@@ -97,28 +93,45 @@ object Test {
       for (t <- threads) t.join
       if (failure != null)
         throw failure
-      println(txnInterrupts.get + " txn rollbacks, " + nonTxnInterrupts.get + " non-txn interrupts")
+      if (false) println(txnInterrupts.get + " txn rollbacks, " + nonTxnInterrupts.get + " non-txn interrupts")
     }
   }
 
-  //////// machinery to handle delayed interrupt generation interrupts
+  //////// machinery for InterruptSuite
 
-  private val pendingInterrupts = new ThreadLocal[List[Thread]] { override def initialValue = Nil }
+  val pendingInterrupts = new ThreadLocal[List[Thread]] { override def initialValue = Nil }
 
-  private def waitForPendingInterrupts() {
-    while (!pendingInterrupts.get.isEmpty) {
-      try {
-        pendingInterrupts.get.head.join
-        pendingInterrupts.set(pendingInterrupts.get.tail)
-      } catch {
-        case _ =>
+  def test(name: String)(block: => Unit) {
+    println("running retry " + name)
+    var failure = null : Throwable
+    val t = new Thread {
+      override def run {
+        try {
+          block
+        } catch {
+          case x => failure = x
+        } finally {
+          while (!pendingInterrupts.get.isEmpty) {
+            try {
+              pendingInterrupts.get.head.join
+              pendingInterrupts.set(pendingInterrupts.get.tail)
+            } catch {
+              case _ =>
+            }
+          }
+          Thread.interrupted
+        }
       }
     }
-    Thread.interrupted
+    t.start
+    t.join
+    if (failure != null)
+      throw failure
   }
 
-  private def delayedInterrupt(delay: Long) {
-    val target = Thread.currentThread
+  def delayedInterrupt(delay: Long) { delayedInterrupt(Thread.currentThread, delay) }
+
+  def delayedInterrupt(target: Thread, delay: Long) {
     val t = new Thread {
       override def run {
         Thread.sleep(delay)

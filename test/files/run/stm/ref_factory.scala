@@ -1,39 +1,53 @@
 /* scala-stm - (c) 2009-2010, Stanford University, PPL */
 
+
 import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
 import scala.concurrent.stm.impl._
+import java.lang.String
 
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running ref_factory " + name)
+    println("running retry " + name)
     block
   }
 
-  private case class Fact(expected: String) extends skel.StubSTMImpl with RefFactory {
-
-    private def called(w: String) = {
-      assert(w == expected)
-      null
+  def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
+    try {
+      block
+      assert(false, "expected " + xm.erasure)
+    } catch {
+      case x if (xm.erasure.isAssignableFrom(x.getClass)) => // okay
     }
-
-    override def newRef(v0: Boolean): Ref[Boolean] = called("Boolean")
-    override def newRef(v0: Byte): Ref[Byte] = called("Byte")
-    override def newRef(v0: Short): Ref[Short] = called("Short")
-    override def newRef(v0: Char): Ref[Char] = called("Char")
-    override def newRef(v0: Int): Ref[Int] = called("Int")
-    override def newRef(v0: Float): Ref[Float] = called("Float")
-    override def newRef(v0: Long): Ref[Long] = called("Long")
-    override def newRef(v0: Double): Ref[Double] = called("Double")
-    override def newRef(v0: Unit): Ref[Unit] = called("Unit")
-    override def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
-  }
-
-  object TestRef extends RefCompanion {
-    var factory: RefFactory = null
   }
 
   def main(args: Array[String]) {
+
+    case class Fact(expected: String) extends skel.StubSTMImpl with RefFactory {
+
+      def called(w: String) = {
+        assert(w == expected)
+        null
+      }
+
+      override def newRef(v0: Boolean): Ref[Boolean] = called("Boolean")
+      override def newRef(v0: Byte): Ref[Byte] = called("Byte")
+      override def newRef(v0: Short): Ref[Short] = called("Short")
+      override def newRef(v0: Char): Ref[Char] = called("Char")
+      override def newRef(v0: Int): Ref[Int] = called("Int")
+      override def newRef(v0: Float): Ref[Float] = called("Float")
+      override def newRef(v0: Long): Ref[Long] = called("Long")
+      override def newRef(v0: Double): Ref[Double] = called("Double")
+      override def newRef(v0: Unit): Ref[Unit] = called("Unit")
+      override def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
+    }
+
+    object TestRef extends RefCompanion {
+      var factory: RefFactory = null
+    }
+
     test("signature specialization") {
       TestRef.factory = Fact("Boolean")
       TestRef(false)
@@ -86,15 +100,15 @@ object Test {
         TestRef.factory = Fact(which)
         TestRef(v0)
       }
-
+      
       go(false, "Boolean")
-      go(0 : Byte, "Byte")
-      go(0 : Short, "Short")
+      go(0 : Byte, "Byte") 
+      go(0 : Short, "Short") 
       go(0 : Char, "Char")
       go(0 : Int, "Int")
-      go(0 : Float, "Float")
-      go(0 : Long, "Long")
-      go(0 : Double, "Double")
+      go(0 : Float, "Float") 
+      go(0 : Long, "Long") 
+      go(0 : Double, "Double") 
       go((), "Unit")
       go("abc", "Any")
       go(null, "Any")
@@ -144,5 +158,6 @@ object Test {
       go[Null]()
       go[Any]()
     }
+
   }
 }

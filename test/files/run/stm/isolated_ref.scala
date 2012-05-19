@@ -1,17 +1,19 @@
 /* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
-import actors.threadpool.TimeUnit
-import scala.concurrent.stm._
 
+import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
+import actors.threadpool.TimeUnit
+
+
+/** Performs single-threaded tests of `Ref`. */
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running isolated_ref " + name)
+    println("running retry " + name)
     block
-  }
-
-  def slowTest(name: String)(block: => Unit) {
-    //test(name)(block)
   }
 
   def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
@@ -23,239 +25,167 @@ object Test {
     }
   }
 
-  class UserException extends Exception
+  def main(args: Array[String]) {
 
-  // Ref factories produces Ref from an initial value
+    // Ref factories produces Ref from an initial value
 
-  object PrimitiveIntFactory extends (Int => Ref[Int]) {
-    def apply(v0: Int) = Ref(v0)
-    override def toString = "Primitive"
-  }
-
-  class KnownGenericFactory[A : ClassManifest] extends (A => Ref[A]) {
-    def apply(v0: A) = Ref(v0)
-    override def toString = "KnownGeneric"
-  }
-
-  class UnknownGenericFactory[A] extends (A => Ref[A]) {
-    def apply(v0: A) = Ref(v0)
-    override def toString = "UnknownGeneric"
-  }
-
-  class ArrayElementFactory[A : ClassManifest] extends (A => Ref[A]) {
-    def apply(v0: A) = {
-      val ref = TArray.ofDim[A](10).refs(5)
-      ref.single() = v0
-      ref
-    }
-    override def toString = "ArrayElement"
-  }
-
-
-  // This implements Ref.View, but requires a surrounding InTxn context and
-  // forwards to Ref's methods.
-  class DynamicView[A](val ref: Ref[A]) extends Ref.View[A] {
-    implicit def txn = Txn.findCurrent.get
-
-    def get: A = ref.get
-    def getWith[Z](f: A => Z): Z = ref.getWith(f)
-    def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
-    def await(f: A => Boolean) { if (!f(get)) retry }
-    def tryAwait(timeout: Long, unit: TimeUnit)(f: A => Boolean): Boolean = f(get) || { retryFor(timeout, unit) ; false }
-    def set(v: A) { ref.set(v) }
-    def trySet(v: A) = ref.trySet(v)
-    def swap(v: A): A = ref.swap(v)
-    def compareAndSet(before: A, after: A): Boolean = {
-      if (get == before) { set(after) ; true } else false
-    }
-    def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = {
-      if (before eq get.asInstanceOf[AnyRef]) { set(after) ; true } else false
-    }
-    def transform(f: A => A) { ref.transform(f) }
-    def getAndTransform(f: A => A): A = { val z = get ; ref.transform(f) ; z }
-    def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
-    def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
-
-    override def +=(rhs: A)(implicit num: Numeric[A]) = ref += rhs
-    override def -=(rhs: A)(implicit num: Numeric[A]) = ref -= rhs
-    override def *=(rhs: A)(implicit num: Numeric[A]) = ref *= rhs
-    override def /=(rhs: A)(implicit num: Numeric[A]) = ref /= rhs
-
-    override def hashCode: Int = ref.hashCode
-    override def equals(rhs: Any): Boolean = ref == rhs
-  }
-
-  abstract class TestingView[A](innerDepth: Int, val ref: Ref[A]) extends Ref.View[A] {
-    private def wrap[Z](block: => Z): Z = nest(innerDepth, block)
-    private def nest[Z](d: Int, block: => Z): Z = {
-      if (d == 0)
-        block
-      else
-        atomic { implicit txn => nest(d - 1, block) }
+    object PrimitiveIntFactory extends (Int => Ref[Int]) {
+      def apply(v0: Int) = Ref(v0)
+      override def toString = "Primitive"
     }
 
-    protected def view: Ref.View[A]
-
-    def get: A = wrap { view.get }
-    def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
-    def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
-    def await(f: (A) => Boolean) { wrap { view.await(f) } }
-    def tryAwait(timeout: Long, unit: TimeUnit)(f: (A) => Boolean): Boolean = wrap { view.tryAwait(timeout, unit)(f) }
-    def set(v: A) { wrap { view.set(v) } }
-    def trySet(v: A) = wrap { view.trySet(v) }
-    def swap(v: A): A = wrap { view.swap(v) }
-    def compareAndSet(before: A, after: A): Boolean = wrap { view.compareAndSet(before, after) }
-    def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = wrap { view.compareAndSetIdentity(before, after) }
-    def transform(f: A => A) { wrap { view.transform(f) } }
-    def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
-    def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
-    def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
-
-    override def +=(rhs: A)(implicit num: Numeric[A]) = wrap { view += rhs }
-    override def -=(rhs: A)(implicit num: Numeric[A]) = wrap { view -= rhs }
-    override def *=(rhs: A)(implicit num: Numeric[A]) = wrap { view *= rhs }
-    override def /=(rhs: A)(implicit num: Numeric[A]) = wrap { view /= rhs }
-
-    override def hashCode: Int = ref.hashCode
-    override def equals(rhs: Any): Boolean = ref == rhs
-  }
-
-  trait ViewFactory {
-    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A]
-  }
-
-  object SingleAccess extends ViewFactory {
-    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
-      protected def view = ref.single
+    class KnownGenericFactory[A : ClassManifest] extends (A => Ref[A]) {
+      def apply(v0: A) = Ref(v0)
+      override def toString = "KnownGeneric"
     }
-    override def toString = "Single"
-  }
 
-  object RefAccess extends ViewFactory {
-    def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
-      protected val view = new DynamicView[A](ref)
+    class UnknownGenericFactory[A] extends (A => Ref[A]) {
+      def apply(v0: A) = Ref(v0)
+      override def toString = "UnknownGeneric"
     }
-    override def toString = "Ref"
-  }
 
-  // The test environment is determined by
-  //  outerLevels: the number of atomic block nesting levels that surround
-  //               the entire test;
-  //  innerLevels: the number of atomic block nesting levels that surround
-  //               the individual operations of the test;
-  //  refFactory:  Ref[Int] can be created with or without the appropriate
-  //               manifest, or via the overloaded Ref.apply(Int); and
-  //  viewFactory: one of FreshSingleAccess, ReuseSingleAccess, or RefAccess
-  //               (which requires outerLevels + innerLevels > 0).
-  //
-  // Now we enumerate the environments, generating a set of tests for each
-  // configuration.
+    class ArrayElementFactory[A : ClassManifest] extends (A => Ref[A]) {
+      def apply(v0: A) = {
+        val ref = TArray.ofDim[A](10).refs(5)
+        ref.single() = v0
+        ref
+      }
+      override def toString = "ArrayElement"
+    }
 
-  private def createTests[A : ClassManifest](name: String, v0: A)(block: (() => Ref.View[A]) => Unit) {
-    test(name) {
-      for (outerLevels <- 0 until 2;
-           innerLevels <- 0 until 2;
-           refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
-           viewFactory <- List(SingleAccess, RefAccess);
-           if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
-        val current = "outer=" + outerLevels + ", inner=" + innerLevels + ", " + refFactory + ", " + viewFactory
-        try {
-          val ref = refFactory(v0)
-          def getView = viewFactory(ref, innerLevels)
-          nest(outerLevels) { block(getView _) }
-        } catch {
-          case x => {
-            println(name + " failed for " + current)
-            x.printStackTrace
-            assert(false, current + ": " + name)
+
+    // This implements Ref.View, but requires a surrounding InTxn context and
+    // forwards to Ref's methods.
+    class DynamicView[A](val ref: Ref[A]) extends Ref.View[A] {
+      implicit def txn = Txn.findCurrent.get
+
+      def get: A = ref.get
+      def getWith[Z](f: A => Z): Z = ref.getWith(f)
+      def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
+      def await(f: A => Boolean) { if (!f(get)) retry }
+      def tryAwait(timeout: Long, unit: TimeUnit)(f: A => Boolean): Boolean = f(get) || { retryFor(timeout, unit) ; false }
+      def set(v: A) { ref.set(v) }
+      def trySet(v: A) = ref.trySet(v)
+      def swap(v: A): A = ref.swap(v)
+      def compareAndSet(before: A, after: A): Boolean = {
+        if (get == before) { set(after) ; true } else false
+      }
+      def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = {
+        if (before eq get.asInstanceOf[AnyRef]) { set(after) ; true } else false
+      }
+      def transform(f: A => A) { ref.transform(f) }
+      def getAndTransform(f: A => A): A = { val z = get ; ref.transform(f) ; z }
+      def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
+      def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
+
+      override def +=(rhs: A)(implicit num: Numeric[A]) = ref += rhs
+      override def -=(rhs: A)(implicit num: Numeric[A]) = ref -= rhs
+      override def *=(rhs: A)(implicit num: Numeric[A]) = ref *= rhs
+      override def /=(rhs: A)(implicit num: Numeric[A]) = ref /= rhs
+
+      override def hashCode: Int = ref.hashCode
+      override def equals(rhs: Any): Boolean = ref == rhs
+    }
+
+    abstract class TestingView[A](innerDepth: Int, val ref: Ref[A]) extends Ref.View[A] {
+      def wrap[Z](block: => Z): Z = nest(innerDepth, block)
+      def nest[Z](d: Int, block: => Z): Z = {
+        if (d == 0)
+          block
+        else
+          atomic { implicit txn => nest(d - 1, block) }
+      }
+
+      protected def view: Ref.View[A]
+
+      def get: A = wrap { view.get }
+      def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
+      def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
+      def await(f: (A) => Boolean) { wrap { view.await(f) } }
+      def tryAwait(timeout: Long, unit: TimeUnit)(f: (A) => Boolean): Boolean = wrap { view.tryAwait(timeout, unit)(f) }
+      def set(v: A) { wrap { view.set(v) } }
+      def trySet(v: A) = wrap { view.trySet(v) }
+      def swap(v: A): A = wrap { view.swap(v) }
+      def compareAndSet(before: A, after: A): Boolean = wrap { view.compareAndSet(before, after) }
+      def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = wrap { view.compareAndSetIdentity(before, after) }
+      def transform(f: A => A) { wrap { view.transform(f) } }
+      def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
+      def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
+      def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
+
+      override def +=(rhs: A)(implicit num: Numeric[A]) = wrap { view += rhs }
+      override def -=(rhs: A)(implicit num: Numeric[A]) = wrap { view -= rhs }
+      override def *=(rhs: A)(implicit num: Numeric[A]) = wrap { view *= rhs }
+      override def /=(rhs: A)(implicit num: Numeric[A]) = wrap { view /= rhs }
+
+      override def hashCode: Int = ref.hashCode
+      override def equals(rhs: Any): Boolean = ref == rhs
+    }
+
+    trait ViewFactory {
+      def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A]
+    }
+
+    object SingleAccess extends ViewFactory {
+      def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
+        protected def view = ref.single
+      }
+      override def toString = "Single"
+    }
+
+    object RefAccess extends ViewFactory {
+      def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
+        protected val view = new DynamicView[A](ref)
+      }
+      override def toString = "Ref"
+    }
+
+    // The test environment is determined by
+    //  outerLevels: the number of atomic block nesting levels that surround
+    //               the entire test;
+    //  innerLevels: the number of atomic block nesting levels that surround
+    //               the individual operations of the test;
+    //  refFactory:  Ref[Int] can be created with or without the appropriate
+    //               manifest, or via the overloaded Ref.apply(Int); and
+    //  viewFactory: one of FreshSingleAccess, ReuseSingleAccess, or RefAccess
+    //               (which requires outerLevels + innerLevels > 0).
+    //
+    // Now we enumerate the environments, generating a set of tests for each
+    // configuration.
+
+    def createTests[A : ClassManifest](name: String, v0: A)(block: (() => Ref.View[A]) => Unit) {
+      test(name) {
+        for (outerLevels <- 0 until 2;
+             innerLevels <- 0 until 2;
+             refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
+             viewFactory <- List(SingleAccess, RefAccess);
+             if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
+          val current = "outer=" + outerLevels + ", inner=" + innerLevels + ", " + refFactory + ", " + viewFactory
+          try {
+            val ref = refFactory(v0)
+            def getView = viewFactory(ref, innerLevels)
+            nest(outerLevels) { block(getView _) }
+          } catch {
+            case x => {
+              println(name + " failed for " + current)
+              throw new Error(current + ": " + name + " failure", x)
+            }
           }
         }
       }
     }
-  }
 
-  private def nest(depth: Int)(block: => Unit) {
-    if (depth == 0)
-      block
-    else
-      atomic { implicit txn => nest(depth - 1)(block) }
-  }
-
-  class AngryEquals(val polarity: Boolean) {
-    override def equals(rhs: Any): Boolean = {
-      if (this eq rhs.asInstanceOf[AnyRef])
-        true
-      else {
-        // equal polarities actively repel
-        if (rhs.asInstanceOf[AngryEquals].polarity == polarity)
-          throw new UserException
-        false
-      }
-    }
-  }
-
-  private def perTypeTests[A : ClassManifest](v0: A, v1: A) {
-    val name = v0.asInstanceOf[AnyRef].getClass.getSimpleName
-
-    createTests(name + " simple get+set", v0) { view =>
-      assert(view()() == v0)
-      view()() = v1
-      assert(view()() == v1)
-    }
-
-    createTests(name + " Ref equality", v0) { view =>
-      assert(view() == view())
-      assert(view().ref == view())
-      assert(view() == view().ref)
-      assert(view().ref == view().ref)
-      assert(view().ref.single == view())
-      assert(view() != Ref(v0))
-      assert(view() != "abc")
-    }
-
-    test(name + " TArray Ref equality") {
-      val a = TArray(Seq(v0))
-      assert(a.refs(0) == a.refs(0))
-      assert(a.single.refViews(0) == a.refs(0))
-      assert(a.single.refViews(0).ref == a.refs(0))
-      assert(a.single.refViews(0) == a.single.refViews(0))
-      assert(a.refs(0) == a.refs(0).single)
-      assert(a.single.tarray.refs(0) == a.refs(0).single)
-      assert(a.refs(0) != "abc")
-    }
-
-    test(name + " TArray Ref inequality between arrays") {
-      val a = TArray(Seq(v0))
-      val b = TArray(Seq(v1))
-      assert(b.refs(0) != a.refs(0))
-      assert(b.single.refViews(0) != a.refs(0))
-      assert(b.single.refViews(0).ref != a.refs(0))
-      assert(b.single.refViews(0) != a.single.refViews(0))
-      assert(b.refs(0) != a.refs(0).single)
-      assert(b.single.tarray.refs(0) != a.refs(0).single)
-    }
-  }
-
-  class ProxyRef[A](underlying: Ref[A]) extends Ref[A] {
-    override def single = throw new AbstractMethodError
-    def get(implicit txn: InTxn) = throw new AbstractMethodError
-    def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
-    def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError
-    def set(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
-    def trySet(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
-    def swap(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
-    def transform(f: (A) => A)(implicit txn: InTxn) = throw new AbstractMethodError
-    def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxn) = throw new AbstractMethodError
-
-    override def hashCode = underlying.hashCode
-    override def equals(rhs: Any) = underlying.equals(rhs)
-  }
-
-  def main(args: Array[String]) {
     test("primitive factory and ClassManifest generic produce same type") {
       // this cuts down on the proliferation of tests
       val g = new KnownGenericFactory[Int]
       assert(PrimitiveIntFactory(10).getClass == g(10).getClass)
+    }
+
+    def nest(depth: Int)(block: => Unit) {
+      if (depth == 0)
+        block
+      else
+        atomic { implicit txn => nest(depth - 1)(block) }
     }
 
     createTests("get and set", 1) { view =>
@@ -403,6 +333,8 @@ object Test {
       assert(!view().tryAwait(0)( _ == 20 ))
     }
 
+    class UserException extends Exception
+
     createTests("excepting transform", 1) { view =>
       intercept[UserException] {
         view().transform(v => throw new UserException)
@@ -422,6 +354,19 @@ object Test {
       assert(view().get == 1)
       view().transform(_ + 1)
       assert(view().get == 2)
+    }
+
+    class AngryEquals(val polarity: Boolean) {
+      override def equals(rhs: Any): Boolean = {
+        if (this eq rhs.asInstanceOf[AnyRef])
+          true
+        else {
+          // equal polarities actively repel
+          if (rhs.asInstanceOf[AngryEquals].polarity == polarity)
+            throw new UserException
+          false
+        }
+      }
     }
 
     createTests(".equals not involved in get and set", new AngryEquals(true)) { view =>
@@ -491,6 +436,48 @@ object Test {
       assert(view()().toString == "924.75")
     }
 
+    def perTypeTests[A : ClassManifest](v0: A, v1: A) {
+      val name = v0.asInstanceOf[AnyRef].getClass.getSimpleName
+
+      createTests(name + " simple get+set", v0) { view =>
+        assert(view()() == v0)
+        view()() = v1
+        assert(view()() == v1)
+      }
+
+      createTests(name + " Ref equality", v0) { view =>
+        assert(view().asInstanceOf[Any] == view())
+        assert(view().ref.asInstanceOf[Any] == view())
+        assert(view().asInstanceOf[Any] == view().ref)
+        assert(view().ref.asInstanceOf[Any] == view().ref)
+        assert(view().ref.single.asInstanceOf[Any] == view())
+        assert(view().asInstanceOf[Any] != Ref(v0))
+        assert(view().asInstanceOf[Any] != "abc")
+      }
+
+      test(name + " TArray Ref equality") {
+        val a = TArray(Seq(v0))
+        assert(a.refs(0).asInstanceOf[Any] == a.refs(0))
+        assert(a.single.refViews(0).asInstanceOf[Any] == a.refs(0))
+        assert(a.single.refViews(0).ref.asInstanceOf[Any] == a.refs(0))
+        assert(a.single.refViews(0).asInstanceOf[Any] == a.single.refViews(0))
+        assert(a.refs(0).asInstanceOf[Any] == a.refs(0).single)
+        assert(a.single.tarray.refs(0).asInstanceOf[Any] == a.refs(0).single)
+        assert(a.refs(0).asInstanceOf[Any] != "abc")
+      }
+
+      test(name + " TArray Ref inequality between arrays") {
+        val a = TArray(Seq(v0))
+        val b = TArray(Seq(v1))
+        assert(b.refs(0).asInstanceOf[Any] != a.refs(0))
+        assert(b.single.refViews(0).asInstanceOf[Any] != a.refs(0))
+        assert(b.single.refViews(0).ref.asInstanceOf[Any] != a.refs(0))
+        assert(b.single.refViews(0).asInstanceOf[Any] != a.single.refViews(0))
+        assert(b.refs(0).asInstanceOf[Any] != a.refs(0).single)
+        assert(b.single.tarray.refs(0).asInstanceOf[Any] != a.refs(0).single)
+      }
+    }
+
     perTypeTests(false, true)
     perTypeTests(1 : Byte, 2 : Byte)
     perTypeTests(1 : Short, 2 : Short)
@@ -504,14 +491,15 @@ object Test {
 
     test("TArray Ref inequality between indices") {
       val a = TArray.ofDim[Int](1000)
-      println(a.refs(0))
+      val s = a.refs(0).toString
+      if (false) println(s)
       for (i <- 1 until 1000) {
-        assert(a.refs(i) != a.refs(0))
-        assert(a.single.refViews(i) != a.refs(0))
-        assert(a.single.refViews(i).ref != a.refs(0))
-        assert(a.single.refViews(i) != a.single.refViews(0))
-        assert(a.refs(i) != a.refs(0).single)
-        assert(a.single.tarray.refs(i) != a.refs(0).single)
+        assert(a.refs(i).asInstanceOf[Any] != a.refs(0))
+        assert(a.single.refViews(i).asInstanceOf[Any] != a.refs(0))
+        assert(a.single.refViews(i).ref.asInstanceOf[Any] != a.refs(0))
+        assert(a.single.refViews(i).asInstanceOf[Any] != a.single.refViews(0))
+        assert(a.refs(i).asInstanceOf[Any] != a.refs(0).single)
+        assert(a.single.tarray.refs(i).asInstanceOf[Any] != a.refs(0).single)
       }
     }
 
@@ -536,6 +524,21 @@ object Test {
 
       val b = TArray.ofDim[String](0)
       assert(b.single.isEmpty)
+    }
+
+    class ProxyRef[A](underlying: Ref[A]) extends Ref[A] {
+      override def single = throw new AbstractMethodError
+      def get(implicit txn: InTxn) = throw new AbstractMethodError
+      def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
+      def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError
+      def set(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+      def trySet(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+      def swap(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+      def transform(f: (A) => A)(implicit txn: InTxn) = throw new AbstractMethodError
+      def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxn) = throw new AbstractMethodError
+
+      override def hashCode = underlying.hashCode
+      override def equals(rhs: Any) = underlying.equals(rhs)
     }
 
     test("proxy Ref equality") {

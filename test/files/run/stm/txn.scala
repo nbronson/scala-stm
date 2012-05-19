@@ -1,17 +1,18 @@
 /* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
-import actors.threadpool.TimeUnit
+
 import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
+import java.util.concurrent.CountDownLatch
+
 
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running txn " + name)
+    println("running retry " + name)
     block
-  }
-
-  def slowTest(name: String)(block: => Unit) {
-    //test(name)(block)
   }
 
   def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
@@ -23,17 +24,8 @@ object Test {
     }
   }
 
-  class UserException extends Exception
-
-  def nonLocalReturnHelper(x: Ref[Int]): Int = {
-    atomic { implicit t =>
-      x() = x() + 1
-      return x()
-    }
-    return -1
-  }
-
   def main(args: Array[String]) {
+
     test("empty transaction") {
       atomic { implicit t =>
         () // do nothing
@@ -72,6 +64,8 @@ object Test {
       assert(x.single.get == 3)
     }
 
+    class UserException extends Exception
+
     test("failure atomicity") {
       val x = Ref(1)
       intercept[UserException] {
@@ -90,6 +84,14 @@ object Test {
       assert(y == 2)
     }
 
+    def nonLocalReturnHelper(x: Ref[Int]): Int = {
+      atomic { implicit t =>
+        x() = x() + 1
+        return x()
+      }
+      return -1
+    }
+
     test("strings") {
       atomic.toString
       atomic.withRetryTimeout(100).toString
@@ -100,15 +102,18 @@ object Test {
     test("basic retry") {
       val x = Ref(0)
       val y = Ref(false)
+      val b = new CountDownLatch(1)
       new Thread {
         override def run() {
-          Thread.sleep(200)
+          b.await()
+          Thread.sleep(10)
           y.single() = true
           x.single() = 1
         }
       } start
 
       atomic { implicit txn =>
+        b.countDown()
         if (x() == 0)
           retry
       }
@@ -118,9 +123,11 @@ object Test {
     test("nested retry") {
       val x = Ref(0)
       val y = Ref(false)
+      val b = new CountDownLatch(1)
       new Thread {
         override def run() {
-          Thread.sleep(200)
+          b.await()
+          Thread.sleep(10)
           y.single() = true
           x.single() = 1
         }
@@ -131,6 +138,7 @@ object Test {
           // this will cause the nesting to materialize
           NestingLevel.current
 
+          b.countDown()
           if (x() == 0)
             retry
         }
@@ -147,7 +155,7 @@ object Test {
       } orAtomic { implicit txn =>
         true
       }
-      assert(f)
+      assert(f)    
     }
 
     test("single atomic.oneOf") {
@@ -156,20 +164,6 @@ object Test {
         x() = "one"
       })
       assert(x.single() == "one")
-    }
-
-    def oneOfExpect(refs: Array[Ref[Boolean]], which: Int, sleeps: Array[Int]) {
-      val result = Ref(-1)
-      atomic.oneOf(
-          { t: InTxn => implicit val txn = t; result() = 0 ; if (!refs(0)()) retry },
-          { t: InTxn => implicit val txn = t; if (refs(1)()) result() = 1 else retry },
-          { t: InTxn => implicit val txn = t; if (refs(2)()) result() = 2 else retry },
-          { t: InTxn => implicit val txn = t; sleeps(0) += 1 ; retry }
-        )
-      refs(which).single() = false
-      assert(result.single.get == which)
-      if (sleeps(0) != 0)
-        assert(sleeps(0) == 1)
     }
 
     test("atomic.oneOf") {
@@ -220,6 +214,20 @@ object Test {
         }
         assert(f)
       }
+    }
+
+    def oneOfExpect(refs: Array[Ref[Boolean]], which: Int, sleeps: Array[Int]) {
+      val result = Ref(-1)
+      atomic.oneOf(
+          { t: InTxn => implicit val txn = t; result() = 0 ; if (!refs(0)()) retry },
+          { t: InTxn => implicit val txn = t; if (refs(1)()) result() = 1 else retry },
+          { t: InTxn => implicit val txn = t; if (refs(2)()) result() = 2 else retry },
+          { t: InTxn => implicit val txn = t; sleeps(0) += 1 ; retry }
+        )
+      refs(which).single() = false
+      assert(result.single.get == which)
+      if (sleeps(0) != 0)
+        assert(sleeps(0) == 1)
     }
 
     test("orAtomic w/ exception") {
@@ -543,7 +551,7 @@ object Test {
       }).toString
     }
 
-    slowTest("many simultaneous Txns") {
+    if ("slow" == "enabled") test("many simultaneous Txns") {
       // CCSTM supports 2046 simultaneous transactions
       val threads = Array.tabulate(2500) { _ => new Thread {
         override def run { atomic { implicit txn => Thread.sleep(1000) } }
@@ -552,7 +560,100 @@ object Test {
       for (t <- threads) t.start
       for (t <- threads) t.join
       val elapsed = System.currentTimeMillis - begin
-      println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
+      if (false) println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
+    }
+
+    perfTest("uncontended R+W txn perf") { (x, y) =>
+      var i = 0
+      while (i < 5) {
+        i += 1
+        atomic { implicit t =>
+          assert(x() == "abc")
+          x() = "def"
+        }
+        atomic { implicit t =>
+          assert(x() == "def")
+          x() = "abc"
+        }
+      }
+    }
+
+    for (depth <- List(0, 1, 2, 8)) {
+      perfTest("uncontended R+W txn perf: nesting depth " + depth) { (x, y) =>
+        var i = 0
+        while (i < 5) {
+          i += 1
+          nested(depth) { implicit t =>
+            assert(x() == "abc")
+            x() = "def"
+          }
+          nested(depth) { implicit t =>
+            assert(x() == "def")
+            x() = "abc"
+          }
+        }
+      }
+    }
+
+    perfTest("uncontended R+R txn perf") { (x, y) =>
+      var i = 0
+      while (i < 10) {
+        i += 1
+        atomic { implicit t =>
+          assert(x() == "abc")
+          assert(y() == 10)
+        }
+      }
+    }
+
+    for (depth <- List(0, 1, 2, 8)) {
+      perfTest("uncontended R+R txn perf: nesting depth " + depth) { (x, y) =>
+        var i = 0
+        while (i < 10) {
+          i += 1
+          nested(depth) { implicit t =>
+            assert(x() == "abc")
+            assert(y() == 10)
+          }
+        }
+      }
+    }
+
+//  for (i <- 0 until 50) {
+//    perfTest("uncontended R+R txn perf: nesting depth 8, take " + i) { (x, y) =>
+//      var i = 0
+//      while (i < 10) {
+//        i += 1
+//        nested(8) { implicit t =>
+//          assert(x() == "abc")
+//          assert(y() == 10)
+//        }
+//      }
+//    }
+//  }
+
+    def nested(depth: Int)(body: InTxn => Unit) {
+      atomic { implicit txn =>
+        if (depth == 0)
+          body(txn)
+        else
+          nested(depth - 1)(body)
+      }
+    }
+
+    def perfTest(name: String)(runTen: (Ref[String], Ref[Int]) => Unit) {
+      if ("slow" == "enabled") test(name) {
+        val x = Ref("abc")
+        val y = Ref(10)
+        var best = java.lang.Long.MAX_VALUE
+        for (pass <- 0 until 50000) {
+          val begin = System.nanoTime
+          runTen(x, y)
+          val elapsed = System.nanoTime - begin
+          best = best min elapsed
+        }
+        if (false) println(name + ": best was " + (best / 10.0) + " nanos/txn")
+      }
     }
   }
 }

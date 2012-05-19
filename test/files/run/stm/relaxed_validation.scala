@@ -1,6 +1,12 @@
 /* scala-stm - (c) 2009-2011, Stanford University, PPL */
 
+
 import scala.concurrent.stm._
+import scala.concurrent.stm.skel._
+import scala.concurrent.stm.japi._
+import scala.concurrent.stm.impl._
+import java.util.concurrent.CountDownLatch
+
 
 /** Tests of the relaxed validation methods `getWith` and `relaxedGet` in
  *  multi-threaded contexts.  Single-threaded tests are found in
@@ -10,11 +16,21 @@ import scala.concurrent.stm._
 object Test {
 
   def test(name: String)(block: => Unit) {
-    println("running relaxed_validation " + name)
+    println("running retry " + name)
     block
   }
 
+  def intercept[X](block: => Unit)(implicit xm: ClassManifest[X]) {
+    try {
+      block
+      assert(false, "expected " + xm.erasure)
+    } catch {
+      case x if (xm.erasure.isAssignableFrom(x.getClass)) => // okay
+    }
+  }
+
   def main(args: Array[String]) {
+
     test("self-write vs getWith") {
       val x = Ref(0)
       atomic { implicit txn =>
@@ -26,12 +42,19 @@ object Test {
 
     test("self-write vs getWith with interference") {
       val x = Ref(0)
+      val b1 = new CountDownLatch(1)
+      val b2 = new CountDownLatch(1)
 
-      (new Thread { override def run { Thread.sleep(50) ; x.single() = 2 } }).start
+      (new Thread { override def run {
+        b1.await()
+        x.single() = 2
+        b2.countDown()
+      } }).start
 
       atomic { implicit txn =>
         assert(x.getWith { _ & 1 } == 0)
-        Thread.sleep(100)
+        b1.countDown()
+        b2.await()
         assert(x.swap(1) == 2)
       }
       assert(x.single() == 1)
@@ -39,6 +62,8 @@ object Test {
 
     test("getWith multiple revalidations") {
       val x = Ref("abc")
+
+      // sleep is okay for this test because all interleavings should pass
 
       (new Thread {
         override def run {
@@ -72,14 +97,21 @@ object Test {
 
     test("self-write vs failing transformIfDefined with interference") {
       val x = Ref(0)
+      val b1 = new CountDownLatch(1)
+      val b2 = new CountDownLatch(1)
 
-      (new Thread { override def run { Thread.sleep(50) ; x.single() = 2 } }).start
+      (new Thread { override def run {
+        b1.await()
+        x.single() = 2
+        b2.countDown()
+      } }).start
 
       atomic { implicit txn =>
         assert(!x.transformIfDefined {
           case v if (v & 1) != 0 => v
         })
-        Thread.sleep(100)
+        b1.countDown()
+        b2.await()
         assert(x.swap(1) == 2)
       }
       assert(x.single() == 1)
@@ -96,12 +128,19 @@ object Test {
 
     test("self-write vs relaxedGet with interference") {
       val x = Ref(0)
+      val b1 = new CountDownLatch(1)
+      val b2 = new CountDownLatch(1)
 
-      (new Thread { override def run { Thread.sleep(50) ; x.single() = 2 } }).start
+      (new Thread { override def run {
+        b1.await()
+        x.single() = 2
+        b2.countDown()
+      } }).start
 
       atomic { implicit txn =>
         assert(x.relaxedGet({ (seen, correct) => (seen & 1) == (correct & 1) }) == 0)
-        Thread.sleep(100)
+        b1.countDown()
+        b2.await()
         assert(x.swap(1) == 2)
       }
       assert(x.single() == 1)
@@ -109,6 +148,8 @@ object Test {
 
     test("relaxedGet multiple accepting revalidations") {
       val x = Ref("abc")
+
+      // sleep is okay for this test because all interleavings should pass
 
       (new Thread {
         override def run {
@@ -134,6 +175,8 @@ object Test {
 
     test("relaxedGet multiple ending with equality check") {
       val x = Ref("abc")
+
+      // sleep is okay for this test because all interleavings should pass
 
       (new Thread {
         override def run {
