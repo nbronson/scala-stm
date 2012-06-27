@@ -12,28 +12,28 @@
 
   <repositories>
     <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <id>oss.sonatype.org</id>
+      <name>OSS Sonatype Release Repository</name>
+      <url>http://oss.sonatype.org/content/repositories/releases</url>
     </repository>
     <repository>
-      <id>scala-tools.org.snapshots</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
+      <id>oss.sonatype.org.snapshots</id>
+      <name>OSS Sonatype Snapshot Repository</name>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
       <snapshots/>
     </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <id>oss.sonatype.org</id>
+      <name>OSS Sonatype Release Repository</name>
+      <url>http://oss.sonatype.org/content/repositories/releases</url>
     </pluginRepository>
     <pluginRepository>
-      <id>scala-tools.org.snapshots</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
+      <id>oss.sonatype.org.snapshots</id>
+      <name>OSS Sonatype Snapshot Repository</name>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
     </pluginRepository>
   </pluginRepositories>
 

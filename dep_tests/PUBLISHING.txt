@@ -14,7 +14,7 @@ Make sure to disable the scala-tools snapshot repo when testing release
 builds.  Then
 
   cd dep_tests/sbt
-  sbt +update +run
+  sbt +run
 
 To test building using maven2, edit dep_tests/maven/pom.xml, then
 
