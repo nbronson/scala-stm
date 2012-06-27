@@ -12,6 +12,9 @@ If you use @sbt@, add the following dependency to your project @build.sbt@ and r
 
 {% highlight scala %}
 libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5")
+
+resolvers += ("releases" at
+    "http://oss.sonatype.org/content/repositories/releases")
 {% endhighlight %}
 
 

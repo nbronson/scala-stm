@@ -5,8 +5,10 @@ title: Releases
 
 The latest release of ScalaSTM is version 0.5.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
-* download a prebuilt JAR for 2.9.2: ["scala-stm_2.9.2-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.9.2/0.5/scala-stm_2.9.2-0.5.jar]
-* download a prebuilt JAR for 2.8.2: ["scala-stm_2.8.2-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.2/0.5/scala-stm_2.8.2-0.5.jar]
+* download a prebuilt JAR
+** for 2.10.0-M4: ["scala-stm_2.10.0-M4-0.5.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-tools/scala-stm_2.10.0-M4/0.5/scala-stm_2.10.0-M4-0.5.jar]
+** for 2.9.2: ["scala-stm_2.9.2-0.5.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-tools/scala-stm_2.9.2/0.5/scala-stm_2.9.2-0.5.jar]
+** for 2.8.2: ["scala-stm_2.8.2-0.5.jar":http://scala-tools.org/repo-releases/org/scala-tools/scala-stm_2.8.2/0.5/scala-stm_2.8.2-0.5.jar]
 
 h2(#notes). Release notes
 
@@ -41,10 +43,13 @@ Changes between 0.1 and 0.2
 
 h2(#sbt). SBT
 
-Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file)
+Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file), and add the oss.sonatype.org repository
 
 {% highlight scala %}
 libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.5")
+
+resolvers += ("releases" at
+    "http://oss.sonatype.org/content/repositories/releases")
 {% endhighlight %}
 
 @sbt update@ will then download the correct @scala-stm@ JAR and use it for building.
@@ -63,7 +68,7 @@ Separate artifacts are published for each version of Scala, so the desired Scala
 </dependencies>
 {% endhighlight %}
 
-The deployment tests inside the ScalaSTM source include a complete ["pom.xml":https://github.com/nbronson/scala-stm/blob/master/dep_tests/maven/pom.xml], including the repository configuration for @org.scala-tools@.
+The deployment tests inside the ScalaSTM source include a complete ["pom.xml":https://github.com/nbronson/scala-stm/blob/master/dep_tests/maven/pom.xml], including the repository configuration for @oss.sonatype.org@.
 
 h2(#previous). Previous releases
 

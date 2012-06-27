@@ -3,22 +3,30 @@ layout: default
 title: Snapshot releases
 ---
 
-Currently there are no changes between 0.5 and 0.6-SNAPSHOT.
+Changes between 0.5 and 0.6-SNAPSHOT:
 
-Snapshot releases deployed to the @scala-tools.org@ repository are fully tested and functional, but may have changing APIs.
+* retry and retryFor added to the Java compatibility interface.
+
+Snapshot releases deployed to the @oss.sonatype.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.9.2-0.6-SNAPSHOT.jar":http://scala-tools.org/repo-snapshots/org/scala-tools/scala-stm_2.9.2/0.6-SNAPSHOT/scala-stm_2.9.2-0.6-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.10.0-M4-0.6-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-tools/scala-stm_2.10.0-M4/0.6-SNAPSHOT/scala-stm_2.10.0-M4-0.6-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.2-0.6-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-tools/scala-stm_2.9.2/0.6-SNAPSHOT/scala-stm_2.9.2-0.6-SNAPSHOT.jar]
 * ScalaDoc: ["0.6-SNAPSHOT":api/0.6-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
 
-Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file). You will also need to add a resolver that can find the @scala-tools.org@ snapshot repository.
+Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file). You will also need to add a resolver that can find the @oss.sonatype.org@ snapshot repository.
 
 {% highlight scala %}
 libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6-SNAPSHOT")
-resolvers += ScalaToolsSnapshots
+
+resolvers += ("releases" at
+    "http://oss.sonatype.org/content/repositories/releases")
+
+resolvers += ("snapshots" at
+    "http://oss.sonatype.org/content/repositories/snapshots")
 {% endhighlight %}
 
 @sbt update@ will download the latest @scala-stm@ snapshot JAR and make it available for building.
@@ -37,14 +45,14 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
 </dependencies>
 {% endhighlight %}
 
-Make sure you have the @org.scala-tools@ snapshot repository available
+Make sure you have the @oss.sonatype.org@ snapshot repository available
 
 {% highlight xml %}
 <repositories>
   <repository>
-    <id>scala-tools.org.snapshots</id>
-    <name>Scala-Tools Maven2 Repository - snapshots</name>
-    <url>http://scala-tools.org/repo-snapshots</url>
+    <id>oss.sonatype.org.snapshots</id>
+    <name>OSS Sonatype Snapshot Repository</name>
+    <url>http://oss.sonatype.org/content/repositories/snapshots</url>
     <snapshots/>
   </repository>
 </repositories>
