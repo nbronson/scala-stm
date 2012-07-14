@@ -721,7 +721,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       if (!externalDecider.shouldCommit(this))
         _currentLevel.forceRollback(OptimisticFailureCause('external_decision, None))
     } catch {
-      case x => _currentLevel.forceRollback(UncaughtExceptionCause(x))
+      case x: Throwable => _currentLevel.forceRollback(UncaughtExceptionCause(x))
     }
     this.status eq Prepared
   }

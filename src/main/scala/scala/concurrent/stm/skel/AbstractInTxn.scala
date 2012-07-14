@@ -113,12 +113,12 @@ private[stm] trait AbstractInTxn extends InTxn {
       handler(arg)
       f
     } catch {
-      case x => {
+      case x: Throwable => {
         try {
           exec.postDecisionFailureHandler(s, x)
           f
         } catch {
-          case xx => xx
+          case xx: Throwable => xx
         }
       }
     }
@@ -184,7 +184,7 @@ private[stm] trait AbstractInTxn extends InTxn {
         try {
           _whileValidatingList(i)(level)
         } catch {
-          case x => level.requestRollback(UncaughtExceptionCause(x))
+          case x: Throwable => level.requestRollback(UncaughtExceptionCause(x))
         }
         fireWhileValidating(i - 1, level)
       }

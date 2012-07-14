@@ -49,7 +49,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
           Right(body(txn))
         }
       } catch {
-        case x => {
+        case x: Throwable => {
           state match {
             case Active => {
               // txn rolled back before involving external decider, all

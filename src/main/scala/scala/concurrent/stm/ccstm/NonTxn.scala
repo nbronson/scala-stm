@@ -393,7 +393,7 @@ private[ccstm] object NonTxn {
 
   private def getAndTransformImpl[T](handle: Handle[T], f: T => T, m0: Meta): T = {
     val v0 = handle.data
-    val repl = try { f(v0) } catch { case x => discardLock(handle, m0) ; throw x }
+    val repl = try { f(v0) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
     val m1 = upgradeLock(handle, m0)
     commitUpdate(handle, m1, repl)
     v0
@@ -405,7 +405,7 @@ private[ccstm] object NonTxn {
   }
 
   private def transformAndGetImpl[T](handle: Handle[T], f: T => T, m0: Meta): T = {
-    val repl = try { f(handle.data) } catch { case x => discardLock(handle, m0) ; throw x }
+    val repl = try { f(handle.data) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
     val m1 = upgradeLock(handle, m0)
     commitUpdate(handle, m1, repl)
     repl
@@ -416,8 +416,8 @@ private[ccstm] object NonTxn {
     if (pf.isDefinedAt(get(handle))) {
       val m0 = acquireLock(handle, false)
       val v = handle.data
-      if (try { pf.isDefinedAt(v) } catch { case x => discardLock(handle, m0) ; throw x }) {
-        val repl = try { pf(v) } catch { case x => discardLock(handle, m0) ; throw x }
+      if (try { pf.isDefinedAt(v) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }) {
+        val repl = try { pf(v) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
         val m1 = upgradeLock(handle, m0)
         commitUpdate(handle, m1, repl)
         true
@@ -469,7 +469,7 @@ private[ccstm] object NonTxn {
     val (a, b, z) = try {
       f(handleA.data, handleB.data)
     } catch {
-      case x => {
+      case x: Throwable => {
         discardLock(handleA, mA0)
         discardLock(handleB, mB0)
         throw x

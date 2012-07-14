@@ -67,7 +67,7 @@ private[stm] class CallbackList[A] {
       try {
         _data(i)(arg)
       } catch {
-        case x => {
+        case x: Throwable => {
           val s = level.requestRollback(Txn.UncaughtExceptionCause(x))
           assert(s.isInstanceOf[Txn.RolledBack])
         }
