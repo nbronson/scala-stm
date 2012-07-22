@@ -14,9 +14,6 @@ libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
 libraryDependencies += ("junit" % "junit" % "4.5" % "test")
 
-libraryDependencies <<= (libraryDependencies, scalaVersion) { (d, v) =>
-    if (v.startsWith("2.10")) d :+ ("org.scala-lang" % "scala-actors" % v) else d }
-
 // skip exhaustive tests
 testOptions += Tests.Argument("-l", "slow")
 

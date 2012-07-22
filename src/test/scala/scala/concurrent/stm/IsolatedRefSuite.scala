@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 
 /** Performs single-threaded tests of `Ref`. */

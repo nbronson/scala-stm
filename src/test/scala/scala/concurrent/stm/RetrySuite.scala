@@ -3,8 +3,7 @@
 package scala.concurrent.stm
 
 import org.scalatest.FunSuite
-import actors.threadpool.TimeUnit
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.{ CountDownLatch, TimeUnit }
 
 /** Contains extended tests of `retry`, `retryFor` and `tryAwait`.  Some basic
  *  tests are included in `TxnSuite`.

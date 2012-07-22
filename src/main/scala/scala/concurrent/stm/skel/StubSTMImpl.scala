@@ -5,7 +5,7 @@ package skel
 
 import java.lang.Throwable
 import scala.collection.mutable.Builder
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 class StubSTMImpl extends impl.STMImpl {
 

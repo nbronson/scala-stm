@@ -2,9 +2,8 @@
 
 package scala.concurrent.stm.japi
 
-import java.util.concurrent.Callable
+import java.util.concurrent.{ Callable, TimeUnit }
 import java.util.{ List ⇒ JList, Map ⇒ JMap, Set ⇒ JSet }
-import scala.actors.threadpool.TimeUnit
 import scala.collection.JavaConversions
 import scala.concurrent.stm
 import scala.concurrent.stm._
