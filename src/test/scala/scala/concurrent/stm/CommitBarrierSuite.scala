@@ -4,7 +4,7 @@ package scala.concurrent.stm
 
 import org.scalatest.FunSuite
 import skel.SimpleRandom
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 import concurrent.forkjoin.LinkedTransferQueue
 import util.control.Breaks
 

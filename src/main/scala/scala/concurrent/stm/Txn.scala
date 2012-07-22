@@ -2,7 +2,7 @@
 
 package scala.concurrent.stm
 
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 /** The `Txn` object provides methods that operate on the current transaction
  *  context.  These methods are only valid within an atomic block or a

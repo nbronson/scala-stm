@@ -2,7 +2,7 @@
 
 package scala.concurrent.stm
 
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 object CommitBarrier {
 

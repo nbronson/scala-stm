@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package ccstm
 
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 private[ccstm] object CommitBarrierImpl {
   object MemberCancelException extends Exception
