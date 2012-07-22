@@ -1,15 +1,12 @@
-ScalaSTM - 0.6-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.6 RELEASE NOTES
 
-Changes between 0.5 and 0.6-SNAPSHOT:
+Changes between 0.5 and 0.6:
 
 * retry and retryFor added to the Java compatibility interface.
 
 * uses of scala.actor.threadpool.TimeUnit in the interface replaced with
   java.util.concurrent.TimeUnit, to avoid making ScalaSTM depend on the
   separate scala-actors jar in Scala 2.10.
-
-Snapshot releases deployed to the oss.sonatype.org repository are tested
-and functional, but may have changing APIs.
 
 ----
 

@@ -11,6 +11,6 @@ crossScalaVersions := Seq("2.10.0-M4", "2.9.2", "2.9.1", "2.9.0-1", "2.9.0", "2.
 
 resolvers += ("releases" at "http://oss.sonatype.org/content/repositories/releases")
 
-resolvers += ("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots")
+// resolvers += ("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots")
 
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6-SNAPSHOT")
+libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6")
