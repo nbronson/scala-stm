@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package impl
 
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 private[impl] object STMImplHolder {
   var instance: STMImpl = STMImpl.createInstance()

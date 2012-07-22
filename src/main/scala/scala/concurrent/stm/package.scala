@@ -2,7 +2,7 @@
 
 package scala.concurrent
 
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 package object stm {
 

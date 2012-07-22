@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 package ccstm
 
-import actors.threadpool.TimeUnit
+import java.util.concurrent.TimeUnit
 
 /** The default implementation of `Ref.View`'s operations in CCSTM. */
 private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
