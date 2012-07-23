@@ -3,24 +3,24 @@ layout: default
 title: Snapshot releases
 ---
 
-Changes between 0.5 and 0.6-SNAPSHOT:
+Changes between 0.6 and 0.7-SNAPSHOT:
 
-* retry and retryFor added to the Java compatibility interface.
+* Currently there are no changes between 0.6 and 0.7-SNAPSHOT.
 
 Snapshot releases deployed to the @oss.sonatype.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.10.0-M4-0.6-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-tools/scala-stm_2.10.0-M4/0.6-SNAPSHOT/scala-stm_2.10.0-M4-0.6-SNAPSHOT.jar]
-* Manual download: ["scala-stm_2.9.2-0.6-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-tools/scala-stm_2.9.2/0.6-SNAPSHOT/scala-stm_2.9.2-0.6-SNAPSHOT.jar]
-* ScalaDoc: ["0.6-SNAPSHOT":api/0.6-SNAPSHOT/index.html#scala.concurrent.stm.package]
+* Manual download: ["scala-stm_2.10.0-M4-0.7-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-tools/scala-stm_2.10.0-M4/0.7-SNAPSHOT/scala-stm_2.10.0-M4-0.7-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.2-0.7-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-tools/scala-stm_2.9.2/0.7-SNAPSHOT/scala-stm_2.9.2-0.7-SNAPSHOT.jar]
+* ScalaDoc: ["0.7-SNAPSHOT":api/0.7-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
 
 Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file). You will also need to add a resolver that can find the @oss.sonatype.org@ snapshot repository.
 
 {% highlight scala %}
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6-SNAPSHOT")
+libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.7-SNAPSHOT")
 
 resolvers += ("releases" at
     "http://oss.sonatype.org/content/repositories/releases")
@@ -40,7 +40,7 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
   <dependency>
     <groupId>org.scala-tools</groupId>
     <artifactId>scala-stm_2.9.2</artifactId>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.7-SNAPSHOT</version>
   </dependency>
 </dependencies>
 {% endhighlight %}

@@ -16,7 +16,11 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
-*(major) _2011 Feb 2_ -- ScalaSTM version 0.5 ["released":releases.html], including
+*(major) _2012 Jul 22_ -- ScalaSTM version 0.6 ["released":releases.html], including
+** enhancements to the Java convenience layer
+** uses of @scala.actors.threadpool.TimeUnit@ replaced by @java.util.concurrent.TimeUnit@
+
+*(major) _2012 Feb 2_ -- ScalaSTM version 0.5 ["released":releases.html], including
 ** Java convenience layer @scala.concurrent.stm.japi.STM@
 
 *(major) _2011 Nov 9_ -- ScalaSTM version 0.4 ["released":releases.html], including
