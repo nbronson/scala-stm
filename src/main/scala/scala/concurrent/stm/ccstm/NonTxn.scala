@@ -412,6 +412,15 @@ private[ccstm] object NonTxn {
   }
 
   @throws(classOf[InterruptedException])
+  def transformAndExtract[T,V](handle: Handle[T], f: T => (T,V)): V = {
+    val m0 = acquireLock(handle, false)
+    val pair = try { f(handle.data) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
+    val m1 = upgradeLock(handle, m0)
+    commitUpdate(handle, m1, pair._1)
+    pair._2
+  }
+
+  @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
     if (pf.isDefinedAt(get(handle))) {
       val m0 = acquireLock(handle, false)

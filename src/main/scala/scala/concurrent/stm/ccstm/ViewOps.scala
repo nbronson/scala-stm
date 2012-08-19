@@ -62,6 +62,11 @@ private[ccstm] trait ViewOps[T] extends Ref.View[T] with Handle.Provider[T] {
     case null => NonTxn.transformAndGet(handle, f)
     case txn => txn.transformAndGet(handle, f)
   }
+  override def transformAndExtract[V](f: T => (T,V)): V = InTxnImpl.dynCurrentOrNull match {
+    case null => NonTxn.transformAndExtract(handle, f)
+    case txn => txn.transformAndExtract(handle, f)
+  }
+
   def transformIfDefined(pf: PartialFunction[T,T]): Boolean = InTxnImpl.dynCurrentOrNull match {
     case null => NonTxn.transformIfDefined(handle, pf)
     case txn => txn.transformIfDefined(handle, pf)

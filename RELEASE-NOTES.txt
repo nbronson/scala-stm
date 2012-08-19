@@ -2,7 +2,11 @@ ScalaSTM - 0.7-SNAPSHOT RELEASE NOTES
 
 Changes between 0.6 and 0.7-SNAPSHOT:
 
-* there are currently no changes between 0.6 and 0.7-SNAPSHOT.
+* added transformAndExtract, which allows an arbitrary value to be
+  returned from the transformation function
+
+* added transformAndGet and getAndTransform to Ref and TxnLocal,
+  previously these were only defined for Ref.View
 
 Snapshot releases deployed to the oss.sonatype.org repository are tested
 and functional, but may have changing APIs.

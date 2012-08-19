@@ -45,6 +45,7 @@ private[ccstm] object AccessHistory {
         handle: Handle[T], freshOwner: Boolean, before: R, after: T): Boolean
     protected def getAndTransform[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
     protected def transformAndGet[T](handle: Handle[T], freshOwner: Boolean, func: T => T): T
+    protected def transformAndExtract[T,V](handle: Handle[T], freshOwner: Boolean, func: T => (T,V)): V
     protected def getAndAdd(handle: Handle[Int], freshOwner: Boolean, delta: Int): Int
   }
 
@@ -542,6 +543,13 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
     val after = func(getWriteSpecValue[T](i))
     setSpecValue(i, after)
     return after
+  }
+
+  protected def transformAndExtract[T,V](handle: Handle[T], freshOwner: Boolean, func: T => (T,V)): V = {
+    val i = findOrAllocate(handle, freshOwner)
+    val pair = func(getWriteSpecValue[T](i))
+    setSpecValue(i, pair._1)
+    return pair._2
   }
 
   protected def getAndAdd(handle: Handle[Int], freshOwner: Boolean, delta: Int): Int = {

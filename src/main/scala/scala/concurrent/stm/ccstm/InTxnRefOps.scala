@@ -355,6 +355,17 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
   }
 
   @throws(classOf[InterruptedException])
+  def transformAndExtract[T,V](handle: Handle[T], func: T => (T,V)): V = {
+    requireActive()
+    val mPrev = acquireOwnership(handle)
+    val f = freshOwner(mPrev)
+    val v1 = transformAndExtract(handle, f, func)
+    if (f)
+      revalidateIfRequired(version(mPrev))
+    v1
+  }
+
+  @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
     requireActive()
     val u = unrecordedRead(handle)

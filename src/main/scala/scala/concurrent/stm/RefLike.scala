@@ -29,6 +29,30 @@ trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Contex
    */
   def transform(f: A => A)(implicit txn: Context)
 
+  /** Transforms the value referenced by this `Ref` by applying the function
+   *  `f`, and returns the new value.
+   *  @param f a function that is safe to call multiple times.
+   *  @return the new value of this `Ref` (the value returned from `f`).
+   *  @throws IllegalStateException if `txn` is not active.
+   */
+  def transformAndGet(f: A => A)(implicit txn: Context): A = { val z = f(get) ; set(z) ; z }
+
+  /** Transforms the value referenced by this `Ref` by applying the function
+   *  `f`, and returns the previous value.
+   *  @param f a function that is safe to call multiple times.
+   *  @return the previous value of this `Ref` (the value passed to `f`).
+   *  @throws IllegalStateException if `txn` is not active.
+   */
+  def getAndTransform(f: A => A)(implicit txn: Context): A = { val z = get ; set(f(z)) ; z }
+
+  /** Transforms the value referenced by this `Ref` from ''v'' to
+   *  `f`(''v'')`._1`, and returns `f`(''v'')`._2`.
+   *  @param f a function that is safe to call multiple times.
+   *  @return the second element of the pair returned by `f`.
+   *  @throws IllegalStateException if `txn` is not active.
+   */
+  def transformAndExtract[B](f: A => (A,B))(implicit txn: Context): B = { val p = f(get) ; set(p._1) ; p._2 }
+
   /** Transforms the value ''v'' referenced by this `Ref` by to
    *  `pf.apply`(''v''), but only if `pf.isDefinedAt`(''v'').  Returns true if
    *  a transformation was performed, false otherwise.  `pf.apply` and

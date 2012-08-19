@@ -56,14 +56,15 @@ class IsolatedRefSuite extends FunSuite {
       if (before eq get.asInstanceOf[AnyRef]) { set(after) ; true } else false
     }
     def transform(f: A => A) { ref.transform(f) }
-    def getAndTransform(f: A => A): A = { val z = get ; ref.transform(f) ; z }
-    def transformAndGet(f: A => A): A = { ref.transform(f) ; get }
+    def getAndTransform(f: A => A): A = ref.getAndTransform(f)
+    def transformAndGet(f: A => A): A = ref.transformAndGet(f)
+    override def transformAndExtract[B](f: A => (A,B)): B = ref.transformAndExtract(f)
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
 
-    override def +=(rhs: A)(implicit num: Numeric[A]) = ref += rhs
-    override def -=(rhs: A)(implicit num: Numeric[A]) = ref -= rhs
-    override def *=(rhs: A)(implicit num: Numeric[A]) = ref *= rhs
-    override def /=(rhs: A)(implicit num: Numeric[A]) = ref /= rhs
+    override def +=(rhs: A)(implicit num: Numeric[A]) { ref += rhs }
+    override def -=(rhs: A)(implicit num: Numeric[A]) { ref -= rhs }
+    override def *=(rhs: A)(implicit num: Numeric[A]) { ref *= rhs }
+    override def /=(rhs: A)(implicit num: Numeric[A]) { ref /= rhs }
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -93,6 +94,7 @@ class IsolatedRefSuite extends FunSuite {
     def transform(f: A => A) { wrap { view.transform(f) } }
     def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
     def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
+    override def transformAndExtract[B](f: A => (A,B)): B = wrap { view.transformAndExtract(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
 
     override def +=(rhs: A)(implicit num: Numeric[A]) = wrap { view += rhs }
@@ -232,6 +234,14 @@ class IsolatedRefSuite extends FunSuite {
     for (i <- 1 until 10) {
       assert(view()() === i)
       assert(view().transformAndGet(_ + 1) === i + 1)
+    }
+    assert(view()() === 10)
+  }
+
+  createTests("transformAndExtract", 1) { view =>
+    for (i <- 1 until 10) {
+      assert(view()() === i)
+      assert(view().transformAndExtract { i => (i+1, ""+i) } === ""+i)
     }
     assert(view()() === 10)
   }

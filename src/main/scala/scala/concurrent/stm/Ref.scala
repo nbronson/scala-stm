@@ -27,8 +27,8 @@ object Ref extends RefCompanion {
 
     /** Returns a `Ref` that accesses the same memory location as this view.
      *  The returned `Ref` might be the original reference that was used to
-     *  construct this view, or it might be a `Ref` that is equivalent (and
-     *  `==`) to the original.
+     *  construct this view, or it might be a `Ref` that is equivalent
+     *  (and `==`) to the original.
      *  @return a `Ref` that accesses the same memory location as this view.
      */
     override def ref: Ref[A]
@@ -92,6 +92,14 @@ object Ref extends RefCompanion {
      */
     def transformAndGet(f: A => A): A
 
+    /** Atomically replaces the value ''v'' stored in the `Ref` with the first
+     *  element of the 2-tuple returned by `f`(''v''), returning the second
+     *  element.
+     *  @param f a function that is safe to call multiple times.
+     *  @return the second element of the tuple returned by `f`.
+     */
+    def transformAndExtract[B](f: A => (A,B)): B = atomic { implicit txn => ref.transformAndExtract(f) }
+
     /** Atomically replaces the value ''v'' stored in the `Ref` with
      *  `pf`(''v'') if `pf.isDefinedAt`(''v''), returning true, otherwise
      *  leaves the element unchanged and returns false.  `pf.apply` and
@@ -99,7 +107,7 @@ object Ref extends RefCompanion {
      *  be called later in any enclosing atomic block.
      *  @param pf a partial function that is safe to call multiple times, and
      *      safe to call later during any enclosing atomic block.
-     *  @return `pf.isDefinedAt``(''v''), where ''v'' is the element held by
+     *  @return `pf.isDefinedAt`(''v''), where ''v'' is the element held by
      *      this `Ref` on entry.
      */
     def transformIfDefined(pf: PartialFunction[A,A]): Boolean

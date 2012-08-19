@@ -35,6 +35,12 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
     impl.getAndTransform(handle, f)
   }
 
+  override def transformAndGet(f: T => T)(implicit txn: InTxn): T = impl.transformAndGet(handle, f)
+
+  override def getAndTransform(f: T => T)(implicit txn: InTxn): T = impl.getAndTransform(handle, f)
+
+  override def transformAndExtract[V](f: T => (T,V))(implicit txn: InTxn): V = impl.transformAndExtract(handle, f)
+
   def transformIfDefined(pf: PartialFunction[T,T])(implicit txn: InTxn): Boolean = {
     impl.transformIfDefined(handle, pf)
   }
