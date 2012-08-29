@@ -135,8 +135,8 @@ class TMapSuite extends FunSuite {
       if (pct < 15) {
         assert(base.get(k) === mut.get(k))
       } else if (pct < 20) {
-        val a = try { Some(base(k)) } catch { case _ => None }
-        val b = try { Some(mut(k)) } catch { case _ => None }
+        val a = try { Some(base(k)) } catch { case _: NoSuchElementException => None }
+        val b = try { Some(mut(k)) } catch { case _: NoSuchElementException => None }
         assert(a === b)
       } else if (pct < 35) {
         assert(base.put(k, v) === mut.put(k, v))
@@ -207,8 +207,8 @@ class TMapSuite extends FunSuite {
       } else if (pct < 115) {
         assert(base.get(k) === atomic { implicit t => mut.tmap.get(k) })
       } else if (pct < 120) {
-        val a = try { Some(base(k)) } catch { case _ => None }
-        val b = try { Some(atomic { implicit t => mut.tmap(k) }) } catch { case _ => None }
+        val a = try { Some(base(k)) } catch { case _: NoSuchElementException => None }
+        val b = try { Some(atomic { implicit t => mut.tmap(k) }) } catch { case _: NoSuchElementException => None }
         assert(a === b)
       } else if (pct < 135) {
         assert(base.put(k, v) === atomic { implicit t => mut.tmap.put(k, v) })
