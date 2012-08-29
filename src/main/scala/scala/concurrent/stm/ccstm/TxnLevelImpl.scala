@@ -50,6 +50,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
                                   val phantom: Boolean)
         extends AccessHistory.UndoLog with AbstractNestingLevel {
   import TxnLevelImpl._
+  import WakeupManager.blocking
 
   // this is the first non-hidden parent
   val parLevel: AbstractNestingLevel = if (parUndo == null || !parUndo.phantom) parUndo else parUndo.parLevel
@@ -187,7 +188,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
           while (!status.completed && !waiter._state.isInstanceOf[Txn.RolledBack]) {
             if (cb != null && hasMemberCycle(cb, waiter))
               cb.cancelAll(CommitBarrier.MemberCycle(debugInfo))
-            wait()
+            blocking { wait() }
           }
         }
 
@@ -199,7 +200,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     } else {
       synchronized {
         while (!status.completed)
-          wait()
+          blocking { wait() }
       }
     }
   }

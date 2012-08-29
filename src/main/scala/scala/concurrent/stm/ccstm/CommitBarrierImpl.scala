@@ -18,6 +18,7 @@ private[ccstm] object CommitBarrierImpl {
 private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier {
   import CommitBarrier._
   import CommitBarrierImpl._
+  import WakeupManager.blocking
 
   private val lock = new Object
 
@@ -170,10 +171,10 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             } else {
               val millis = TimeUnit.NANOSECONDS.toMillis(remaining)
               val nanos = remaining - TimeUnit.MILLISECONDS.toNanos(millis)
-              lock.wait(millis, nanos.asInstanceOf[Int])
+              blocking { lock.wait(millis, nanos.asInstanceOf[Int]) }
             }
           } else {
-            lock.wait()
+            blocking { lock.wait() }
           }
         } catch {
           case x: InterruptedException => {

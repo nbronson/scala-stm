@@ -5,6 +5,7 @@ package scala.concurrent.stm.ccstm
 
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
+import java.lang.reflect.{InvocationTargetException, Method}
 
 private[ccstm] object WakeupManager {
   trait Event {
@@ -20,6 +21,34 @@ private[ccstm] object WakeupManager {
     @throws(classOf[InterruptedException])
     def tryAwaitUntil(nanoDeadline: Long): Boolean
   }
+
+  // TODO: remove WakeupManager.blocking once we no longer compile for 2.9
+  // This is a hack so that we can use the new scala.concurrent.BlockContext
+  // (available in Scala >= 2.10) while still compiling for 2.9.  Although
+  // there is a bit of overhead, we are careful to only pay it when we are
+  // actually about to park the thread (which is quite expensive on its own).
+
+  private val blockingMethod: Method = {
+    try {
+      Class.forName("scala.concurrent.package").getMethod("blocking", classOf[Function0[_]])
+    } catch {
+      case _: ClassNotFoundException => null
+      case _: NoSuchMethodException => null
+    }
+  }
+
+  /** Returns `body()`, cooperating with 2.10's fork-join system. */
+  def blocking[A](body: => A): A = {
+    if (blockingMethod != null) {
+      try {
+        blockingMethod.invoke(null, (body _).asInstanceOf[Function0[_]]).asInstanceOf[A]
+      } catch {
+        case x: InvocationTargetException => throw x.getTargetException
+      }
+    } else {
+      body
+    }
+  }
 }
 
 /** Provides a service that extends the paradigm of wait+notifyAll to allow
@@ -27,10 +56,11 @@ private[ccstm] object WakeupManager {
  *  the notifier share an object reference.  There is a chance of a false
  *  positive.
  *
- *  @author Nathan Bronson
+ *@author Nathan Bronson
  */
 private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
   import CCSTM.hash
+  import WakeupManager.blocking
 
   def this() = this(64, 512)
 
@@ -148,11 +178,11 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
       if (triggered) {
         true
       } else if (nanoDeadline == Long.MaxValue) {
-        acquireSharedInterruptibly(1)
+        blocking { acquireSharedInterruptibly(1) }
         true
       } else {
         val remaining = nanoDeadline - System.nanoTime
-        remaining > 0 && tryAcquireSharedNanos(1, remaining)
+        remaining > 0 && blocking { tryAcquireSharedNanos(1, remaining) }
       }
     }
 
