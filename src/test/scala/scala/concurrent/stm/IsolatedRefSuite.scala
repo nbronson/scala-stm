@@ -13,17 +13,17 @@ class IsolatedRefSuite extends FunSuite {
 
   object PrimitiveIntFactory extends (Int => Ref[Int]) {
     def apply(v0: Int) = Ref(v0)
-    override def toString = "Primitive"
+    override def toString() = "Primitive"
   }
 
   class KnownGenericFactory[A : ClassManifest] extends (A => Ref[A]) {
     def apply(v0: A) = Ref(v0)
-    override def toString = "KnownGeneric"
+    override def toString() = "KnownGeneric"
   }
 
   class UnknownGenericFactory[A] extends (A => Ref[A]) {
     def apply(v0: A) = Ref(v0)
-    override def toString = "UnknownGeneric"
+    override def toString() = "UnknownGeneric"
   }
 
   class ArrayElementFactory[A : ClassManifest] extends (A => Ref[A]) {
@@ -32,7 +32,7 @@ class IsolatedRefSuite extends FunSuite {
       ref.single() = v0
       ref
     }
-    override def toString = "ArrayElement"
+    override def toString() = "ArrayElement"
   }
 
 
@@ -114,14 +114,14 @@ class IsolatedRefSuite extends FunSuite {
     def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
       protected def view = ref.single
     }
-    override def toString = "Single"
+    override def toString() = "Single"
   }
 
   object RefAccess extends ViewFactory {
     def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
       protected val view = new DynamicView[A](ref)
     }
-    override def toString = "Ref"
+    override def toString() = "Ref"
   }
 
   // The test environment is determined by

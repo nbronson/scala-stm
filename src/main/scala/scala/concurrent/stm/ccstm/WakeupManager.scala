@@ -4,7 +4,6 @@ package scala.concurrent.stm.ccstm
 
 
 import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
-import java.util.concurrent.{TimeUnit, CountDownLatch}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
 private[ccstm] object WakeupManager {
@@ -15,7 +14,7 @@ private[ccstm] object WakeupManager {
     def addSource(handle: Handle[_]): Boolean
 
     @throws(classOf[InterruptedException])
-    def await
+    def await()
 
     /** Use a nanoDeadline of `Long.MaxValue` to wait forever. */
     @throws(classOf[InterruptedException])
@@ -81,7 +80,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     val i = channel * ChannelSpacing
     val e = events.get(i)
     if (e != null) {
-      e.trigger
+      e.trigger()
       events.compareAndSet(i, e, null)
     }
   }
@@ -125,7 +124,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     /** Returns false if triggered. */
     def addSource(handle: Handle[_]): Boolean = {
       if (triggered) {
-        return false
+        false
       } else {
         val i = hash(handle.base, handle.metaOffset) & (numSources - 1)
         var p = pending.get(i)
@@ -134,12 +133,12 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
             return false
           p = pending.get(i)
         }
-        return true
+        true
       }
     }
 
     @throws(classOf[InterruptedException])
-    def await {
+    def await() {
       val f = tryAwaitUntil(Long.MaxValue)
       assert(f)
     }

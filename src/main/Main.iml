@@ -18,9 +18,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="TEST" name="ScalaTest" level="project" />
     <orderEntry type="library" name="scala" level="application" />
     <orderEntry type="library" scope="TEST" name="STMBench7" level="project" />
+    <orderEntry type="library" name="scalatest" level="application" />
   </component>
 </module>
 
