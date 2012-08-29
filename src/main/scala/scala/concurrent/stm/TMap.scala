@@ -82,6 +82,10 @@ trait TMap[A, B] {
 
   def clone(implicit txn: InTxn): TMap[A, B] = single.clone.tmap
 
+  // Fast snapshots are one of TMap's core features, so we don't want the
+  // implicit conversion to hide it from ScalaDoc and IDE completion
+  def snapshot: immutable.Map[A, B] = single.snapshot
+
   // The following methods work fine via the asMap mechanism, but are heavily
   // used.  We add transactional versions of them to allow overrides to get
   // access to the InTxn instance without a ThreadLocal lookup.

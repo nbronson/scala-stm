@@ -82,6 +82,10 @@ trait TSet[A] {
 
   def clone(implicit txn: InTxn): TSet[A] = single.clone.tset
 
+  // Fast snapshots are one of TSet's core features, so we don't want the
+  // implicit conversion to hide it from ScalaDoc and IDE completion
+  def snapshot: immutable.Set[A] = single.snapshot
+
   // The following methods work fine via the asSet mechanism, but are heavily
   // used.  We add transactional versions of them to allow overrides.
 
