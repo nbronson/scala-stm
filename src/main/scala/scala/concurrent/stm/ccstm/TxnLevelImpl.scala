@@ -161,6 +161,8 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
     }
   }
 
+  private def isRolledBack: Boolean = _state.isInstanceOf[Txn.RolledBack]
+
   /** Blocks until `status.completed`, possibly returning early if `waiter`
    *  has been rolled back.
    */
@@ -182,13 +184,17 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
           addBlockedBarrierMember(waiter.txn, this)
 
         synchronized {
-          // We would not have to check that the waiter has been stolen from
-          // except that when there is a commit barrier the thief might also be
-          // the txn on which we are blocked
-          while (!status.completed && !waiter._state.isInstanceOf[Txn.RolledBack]) {
-            if (cb != null && hasMemberCycle(cb, waiter))
-              cb.cancelAll(CommitBarrier.MemberCycle(debugInfo))
-            blocking { wait() }
+          if (!status.completed && !waiter.isRolledBack) {
+            blocking {
+              // We would not have to check that the waiter has been stolen from
+              // except that when there is a commit barrier the thief might also be
+              // the txn on which we are blocked
+              while (!status.completed && !waiter.isRolledBack) {
+                if (cb != null && hasMemberCycle(cb, waiter))
+                  cb.cancelAll(CommitBarrier.MemberCycle(debugInfo))
+                wait()
+              }
+            }
           }
         }
 
@@ -199,8 +205,8 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
       }
     } else {
       synchronized {
-        while (!status.completed)
-          blocking { wait() }
+        if (!status.completed)
+          blocking { while (!status.completed) wait() }
       }
     }
   }
