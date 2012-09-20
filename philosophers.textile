@@ -36,7 +36,7 @@ h2(#ownership). Recording ownership
 
 First, we'll change the forks so that they use an @Option@ to record both the existence of an owner and the owner's name. Note that when using the @Ref@ factory method to create a @Ref[Option[String]]@ we need to coerce the type of @None@. If we didn't do this then @owner@ would end up as a @Ref[None]@, which isn't very useful.
 
-We'll also give each philosopher name and a @Ref[Int]@ in which to record their progress. For convenience, @Ref@ and @Ref.View@ provide in-place arithmetic operations such as @+=@ for types @A@ that have an associated @Numeric[A]@.
+We'll also give each philosopher a name and a @Ref[Int]@ in which to record their progress. For convenience, @Ref@ and @Ref.View@ provide in-place arithmetic operations such as @+=@ for types @A@ that have an associated @Numeric[A]@.
 
 {% highlight scala %}
   class Fork {
