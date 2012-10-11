@@ -9,9 +9,11 @@ scalaVersion := "2.9.2"
 
 crossScalaVersions := Seq("2.10.0-M7", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
 
-// 2.8.* -> 1.5.1, 2.9.* -> 1.6.1
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
-//libraryDependencies += ("org.scalatest" % "scalatest_2.10.0-M6" % "1.9-2.10.0-M6-B2" % "test")
+
+// hack for missing scala-actors dep in scalatest for 2.10.0-M7
+libraryDependencies <<= (libraryDependencies, scalaVersion) { (d, v) =>
+    if (v.startsWith("2.10")) d :+ ("org.scala-lang" % "scala-actors" % v) else d }
 
 libraryDependencies += ("junit" % "junit" % "4.5" % "test")
 
@@ -58,12 +60,12 @@ publishTo <<= (version) { v: String =>
 // exclude scalatest from the Maven POM
 pomPostProcess := { xi: scala.xml.Node =>
     import scala.xml._
-    val badDep = (xi \\ "dependency") find {
-      x => (x \ "groupId").text == "org.scalatest"
-    }
+    val badDeps = (xi \\ "dependency") filter {
+      x => (x \ "artifactId").text != "scala-library"
+    } toSet
     def filt(root: Node): Node = root match {
       case x: Elem => {
-        val ch = x.child filter { Some(_) != badDep } map { filt(_) }
+        val ch = x.child filter { !badDeps(_) } map { filt(_) }
         Elem(x.prefix, x.label, x.attributes, x.scope, ch: _*)
       }
       case x => x
