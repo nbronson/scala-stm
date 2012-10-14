@@ -7,7 +7,7 @@ version := "0.6"
 
 scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.10.0-M7", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
+crossScalaVersions := Seq("2.10.0-RC1", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
 
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
