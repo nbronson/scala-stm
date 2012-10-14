@@ -2,24 +2,39 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.impl</title>
+          <title>impl - scala.concurrent.stm.impl</title>
+          <meta name="description" content="impl - scala.concurrent.stm.impl" />
+          <meta name="keywords" content="impl scala.concurrent.stm.impl" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link type="text/css" media="screen" rel="stylesheet" href="../../../../lib/template.css" />
-      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
       <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'scala.concurrent.stm.impl.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
     
         </head>
-        <body onload="sh_highlightDocument('../lib/', '.min.js');" class="value">
+        <body class="value">
       <div id="definition">
         <img src="../../../../lib/package_big.png" />
-        <p id="owner"><a name="scala" class="extype" href="../../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="../package.html">stm</a></p>
+        <p id="owner"><a href="../../../package.html" class="extype" name="scala">scala</a>.<a href="../../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="../package.html" class="extype" name="scala.concurrent.stm">stm</a></p>
         <h1>impl</h1>
       </div>
 
-      <h4 class="signature" id="signature">
+      <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">package</span>
@@ -29,11 +44,11 @@
       </span>
       </h4>
       
-      <div class="fullcommenttop" id="comment"></div>
-    
+          <div id="comment" class="fullcommenttop"></div>
+        
 
       <div id="mbrsel">
-        <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
         
         
         <div id="visbl">
@@ -46,9 +61,10 @@
         <div id="allMembers">
         
 
-        <div class="types members" id="types">
+        <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li visbl="pub" name="scala.concurrent.stm.impl.RefFactory" data-isabs="true">
+              <ol><li name="scala.concurrent.stm.impl.RefFactory" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RefFactoryextendsObject"></a>
       <a id="RefFactory:RefFactory"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -56,11 +72,12 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="RefFactory.html"><span class="name">RefFactory</span></a><span class="result"> extends AnyRef</span>
+        <a href="RefFactory.html"><span class="name">RefFactory</span></a><span class="result"> extends <a href="../../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
       <p class="comment cmt"><code>RefFactory</code> is responsible for creating concrete <code>Ref</code> instances.</p>
-    </li><li visbl="pub" name="scala.concurrent.stm.impl.STMImpl" data-isabs="true">
+    </li><li name="scala.concurrent.stm.impl.STMImpl" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="STMImplextendsRefFactorywithTxnContextwithTxnExecutor"></a>
       <a id="STMImpl:STMImpl"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -68,12 +85,13 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="STMImpl.html"><span class="name">STMImpl</span></a><span class="result"> extends RefFactory with TxnContext with TxnExecutor</span>
+        <a href="STMImpl.html"><span class="name">STMImpl</span></a><span class="result"> extends <a href="RefFactory.html" class="extype" name="scala.concurrent.stm.impl.RefFactory">RefFactory</a> with <a href="TxnContext.html" class="extype" name="scala.concurrent.stm.impl.TxnContext">TxnContext</a> with <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
       </span>
       </h4>
       <p class="comment cmt"><code>STMImpl</code> gathers all of the functionality required to plug an STM
  implementation into <code>scala.concurrent.stm</code>.</p>
-    </li><li visbl="pub" name="scala.concurrent.stm.impl.TxnContext" data-isabs="true">
+    </li><li name="scala.concurrent.stm.impl.TxnContext" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TxnContextextendsObject"></a>
       <a id="TxnContext:TxnContext"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -81,7 +99,7 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="TxnContext.html"><span class="name">TxnContext</span></a><span class="result"> extends AnyRef</span>
+        <a href="TxnContext.html"><span class="name">TxnContext</span></a><span class="result"> extends <a href="../../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
       <p class="comment cmt"><code>TxnContext</code> captures the implementation-specific functionality of locating
@@ -91,9 +109,10 @@
 
         
 
-        <div class="values members" id="values">
+        <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li visbl="pub" name="scala.concurrent.stm.impl.STMImpl" data-isabs="false">
+              <ol><li name="scala.concurrent.stm.impl.STMImpl" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="STMImpl"></a>
       <a id="STMImpl:STMImpl"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -101,7 +120,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="STMImpl$.html"><span class="name">STMImpl</span></a><span class="result"> extends AnyRef</span>
+        <a href="STMImpl$.html"><span class="name">STMImpl</span></a>
       </span>
       </h4>
       <p class="comment cmt"><code>STMImpl</code> gathers all of the functionality required to plug an STM
@@ -110,10 +129,20 @@
             </div>
 
         
+
+        
         </div>
 
         <div id="inheritedMembers">
         
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
         </div>
 
       </div>
