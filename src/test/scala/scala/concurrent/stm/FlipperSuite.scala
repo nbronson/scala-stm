@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -41,7 +41,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       DEFAULT_REF_ARRAY_FACTORY,
-      DEFAULT_MASKED_READER).runTest
+      DEFAULT_MASKED_READER).runTest()
   }
 
   test("small flipper test using getWith") {
@@ -54,7 +54,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       DEFAULT_REF_ARRAY_FACTORY,
-      GET_WITH_MASKED_READER).runTest
+      GET_WITH_MASKED_READER).runTest()
   }
 
   test("small flipper test using relaxedGet") {
@@ -67,7 +67,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       DEFAULT_REF_ARRAY_FACTORY,
-      RELAXED_GET_MASKED_READER).runTest
+      RELAXED_GET_MASKED_READER).runTest()
   }
 
   test("small flipper test reading using transformIfDefined") {
@@ -80,7 +80,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       DEFAULT_REF_ARRAY_FACTORY,
-      TRANSFORM_IF_DEFINED_MASKED_READER).runTest
+      TRANSFORM_IF_DEFINED_MASKED_READER).runTest()
   }
 
   test("default flipper test", Slow) {
@@ -93,7 +93,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       DEFAULT_REF_ARRAY_FACTORY,
-      DEFAULT_MASKED_READER).runTest
+      DEFAULT_MASKED_READER).runTest()
   }
 
   test("small flipper test w/TArray") {
@@ -106,7 +106,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       TARRAY_REF_ARRAY_FACTORY,
-      DEFAULT_MASKED_READER).runTest
+      DEFAULT_MASKED_READER).runTest()
   }
 
   test("default flipper test w/TArray", Slow) {
@@ -119,7 +119,7 @@ class FlipperSuite extends FunSuite {
       DEFAULT_FLIP_PROB,
       0,
       TARRAY_REF_ARRAY_FACTORY,
-      DEFAULT_MASKED_READER).runTest
+      DEFAULT_MASKED_READER).runTest()
   }
 
   test("random flipper test", Slow) {
@@ -133,7 +133,7 @@ class FlipperSuite extends FunSuite {
         DEFAULT_FLIP_PROB,
         System.currentTimeMillis + System.nanoTime,
         DEFAULT_REF_ARRAY_FACTORY,
-      DEFAULT_MASKED_READER).runTest
+      DEFAULT_MASKED_READER).runTest()
     }
   }
 
@@ -153,14 +153,14 @@ class FlipperSuite extends FunSuite {
     val F = Array.tabulate(len)({ _ => rand.nextDouble() < flipProb })
      
     def index(id: Int, sync: Int, trans: Int, instr: Int) = {
-      ((id*syncCount+sync)*transCount+trans)*instrCount+instr;
+      ((id*syncCount+sync)*transCount+trans)*instrCount+instr
     }
 
-    def runTest {
+    def runTest() {
       println(this)
 
       print("computing sequentially...")
-      Console.flush
+      Console.flush()
 
       val P = Array.tabulate[Ref[Boolean]](len)({ _ => Ref(false) })
       val expected = computeSequential(this, P)
@@ -262,20 +262,20 @@ class FlipperSuite extends FunSuite {
     val barrier = new CyclicBarrier(tasks.size)
     var failure: Throwable = null
     val threads = for (task <- tasks.toList) yield new Thread {
-      override def run {
+      override def run() {
         barrier.await
         try {
           task()
         } catch {
-          case x => {
-            x.printStackTrace
+          case x: Throwable => {
+            x.printStackTrace()
             failure = x
           }
         }
       }
     }
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
     if (null != failure)
       throw failure
   }

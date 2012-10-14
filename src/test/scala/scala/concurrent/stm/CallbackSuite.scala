@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -336,21 +336,21 @@ class CallbackSuite extends FunSuite {
                 val y = x()
                 Txn.whileCommitting { _ =>
                   if ((i & 127) == 0) // try to perturb the timing
-                    Thread.`yield`
+                    Thread.`yield`()
                   notifier.put(y)
                 }
               }
             }
           } catch {
-            case xx => failure.single() = xx
+            case xx: Throwable => failure.single() = xx
           }
           if (active.single.transformAndGet( _ - 1 ) == 0)
             notifier.put(EOF)
         }
-      }).start
+      }).start()
     }
 
-    startingGate.countDown
+    startingGate.countDown()
     for (expected <- 1 to numThreads * numPutsPerThread)
       assert(expected === notifier.take())
     assert(EOF === notifier.take())

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -71,7 +71,7 @@ class TxnSuite extends FunSuite {
       x() = x() + 1
       return x()
     }
-    return -1
+    -1
   }
 
   test("strings") {
@@ -92,7 +92,7 @@ class TxnSuite extends FunSuite {
         y.single() = true
         x.single() = 1
       }
-    } start
+    }.start()
 
     atomic { implicit txn =>
       b.countDown()
@@ -113,7 +113,7 @@ class TxnSuite extends FunSuite {
         y.single() = true
         x.single() = 1
       }
-    } start
+    }.start()
 
     atomic { implicit txn =>
       atomic { implicit txn =>
@@ -152,7 +152,7 @@ class TxnSuite extends FunSuite {
     val refs = Array(Ref(false), Ref(false), Ref(false))
     for (w <- 0 until 3) {
       new Thread("wakeup") {
-        override def run {
+        override def run() {
           Thread.sleep(200)
           refs(w).single() = true
         }
@@ -165,7 +165,7 @@ class TxnSuite extends FunSuite {
     val refs = Array(Ref(false), Ref(false), Ref(false))
     for (w <- 0 until 3) {
       new Thread("wakeup") {
-        override def run {
+        override def run() {
           Thread.sleep(200)
           refs(w).single() = true
         }
@@ -180,7 +180,7 @@ class TxnSuite extends FunSuite {
     val refs = Array(Ref(false), Ref(false), Ref(false))
     for (w <- 0 until 3) {
       new Thread("wakeup") {
-        override def run {
+        override def run() {
           Thread.sleep(200)
           refs(w).single() = true
         }
@@ -286,7 +286,7 @@ class TxnSuite extends FunSuite {
     val x = Ref(0)
     val y = Ref(0)
 
-    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start
+    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start()
 
     atomic { implicit t =>
       x()
@@ -349,7 +349,7 @@ class TxnSuite extends FunSuite {
         try {
           Txn.rollback(Txn.UncaughtExceptionCause(new UserException()))
         } catch {
-          case _ => // swallow
+          case _: Throwable => // swallow
         }
         x()
         okay = false
@@ -366,7 +366,7 @@ class TxnSuite extends FunSuite {
         try {
           Txn.rollback(Txn.UncaughtExceptionCause(new UserException()))
         } catch {
-          case _ => // swallow
+          case _: Throwable => // swallow
         }
         throw new InterruptedException // this should be swallowed
       }
@@ -397,7 +397,7 @@ class TxnSuite extends FunSuite {
     val y = Ref(0)
     var ytries = 0
 
-    (new Thread { override def run { Thread.sleep(100) ; y.single() = 1 } }).start
+    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start()
 
     atomic { implicit txn =>
       xtries += 1
@@ -420,14 +420,14 @@ class TxnSuite extends FunSuite {
   test("await") {
     val x = Ref(0)
 
-    (new Thread {
-      override def run {
+    new Thread {
+      override def run() {
         Thread.sleep(50)
         x.single() = 1
         Thread.sleep(50)
         x.single() = 2
       }
-    }).start
+    }.start()
 
     x.single.await( _ == 2 )
     assert(x.single() === 2)
@@ -446,13 +446,13 @@ class TxnSuite extends FunSuite {
       intercept[UserException] {
         atomic { implicit txn =>
           val active = NestingLevel.current
-          (new Thread {
-            override def run {
+          new Thread {
+            override def run() {
               val cause = Txn.UncaughtExceptionCause(new UserException)
               assert(finished.requestRollback(cause) === Txn.Committed)
               assert(active.requestRollback(cause) == Txn.RolledBack(cause))
             }
-          }).start
+          }.start()
 
           while (true)
             x() = x() + 1
@@ -478,15 +478,15 @@ class TxnSuite extends FunSuite {
           atomic { implicit txn => NestingLevel.current }
 
           val active = NestingLevel.current
-          (new Thread {
-            override def run {
-              Thread.`yield`
-              Thread.`yield`
+          new Thread {
+            override def run() {
+              Thread.`yield`()
+              Thread.`yield`()
               val cause = Txn.UncaughtExceptionCause(new UserException)
               assert(finished.requestRollback(cause) === Txn.Committed)
               assert(active.requestRollback(cause) == Txn.RolledBack(cause))
             }
-          }).start
+          }.start()
 
           while (true)
             atomic { implicit txn => x += 1 }
@@ -504,14 +504,14 @@ class TxnSuite extends FunSuite {
         atomic { implicit txn =>
           atomic { implicit txn =>
             val active = NestingLevel.current
-            (new Thread {
-              override def run {
-                Thread.`yield`
-                Thread.`yield`
+            new Thread {
+              override def run() {
+                Thread.`yield`()
+                Thread.`yield`()
                 val cause = Txn.UncaughtExceptionCause(new UserException)
                 assert(active.requestRollback(cause) == Txn.RolledBack(cause))
               }
-            }).start
+            }.start()
 
             while (true)
               x() = x() + 1
@@ -536,11 +536,11 @@ class TxnSuite extends FunSuite {
   test("many simultaneous Txns", Slow) {
     // CCSTM supports 2046 simultaneous transactions
     val threads = Array.tabulate(2500) { _ => new Thread {
-      override def run { atomic { implicit txn => Thread.sleep(1000) } }
+      override def run() { atomic { implicit txn => Thread.sleep(1000) } }
     }}
     val begin = System.currentTimeMillis
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
     val elapsed = System.currentTimeMillis - begin
     println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
   }

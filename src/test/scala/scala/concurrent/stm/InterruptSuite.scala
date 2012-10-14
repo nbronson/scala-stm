@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -51,7 +51,7 @@ class InterruptSuite extends FunSuite {
     val txnInterrupts = new AtomicInteger
     val nonTxnInterrupts = new AtomicInteger
     var failure = null : Throwable
-    lazy val threads: Array[Thread] = Array.tabulate(10)( _ => new Thread {
+    lazy val threads: Array[Thread] = Array.tabulate[Thread](10)( _ => new Thread {
       override def run() {
         try {
           for (i <- 0 until 10000) {
@@ -72,12 +72,12 @@ class InterruptSuite extends FunSuite {
             threads(SimpleRandom.nextInt(threads.length)).interrupt()
           }
         } catch {
-          case x => failure = x
+          case x: Throwable => failure = x
         }
       }
     })
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
     if (failure != null)
       throw failure
     println(txnInterrupts.get + " txn rollbacks, " + nonTxnInterrupts.get + " non-txn interrupts")
@@ -93,26 +93,26 @@ class InterruptSuite extends FunSuite {
       // its worker threads
       var failure = null : Throwable
       val t = new Thread {
-        override def run {
+        override def run() {
           try {
             f
           } catch {
-            case x => failure = x
+            case x: Throwable => failure = x
           } finally {
             while (!pendingInterrupts.get.isEmpty) {
               try {
-                pendingInterrupts.get.head.join
+                pendingInterrupts.get.head.join()
                 pendingInterrupts.set(pendingInterrupts.get.tail)
               } catch {
-                case _ =>
+                case _: Throwable =>
               }
             }
             Thread.interrupted
           }
         }
       }
-      t.start
-      t.join
+      t.start()
+      t.join()
       if (failure != null)
         throw failure
     }
@@ -122,12 +122,12 @@ class InterruptSuite extends FunSuite {
 
   private def delayedInterrupt(target: Thread, delay: Long) {
     val t = new Thread {
-      override def run {
+      override def run() {
         Thread.sleep(delay)
         target.interrupt()
       }
     }
     pendingInterrupts.set(t :: pendingInterrupts.get)
-    t.start
+    t.start()
   }
 }

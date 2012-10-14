@@ -97,10 +97,10 @@ class IsolatedRefSuite extends FunSuite {
     override def transformAndExtract[B](f: A => (A,B)): B = wrap { view.transformAndExtract(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
 
-    override def +=(rhs: A)(implicit num: Numeric[A]) = wrap { view += rhs }
-    override def -=(rhs: A)(implicit num: Numeric[A]) = wrap { view -= rhs }
-    override def *=(rhs: A)(implicit num: Numeric[A]) = wrap { view *= rhs }
-    override def /=(rhs: A)(implicit num: Numeric[A]) = wrap { view /= rhs }
+    override def +=(rhs: A)(implicit num: Numeric[A]) { wrap { view += rhs } }
+    override def -=(rhs: A)(implicit num: Numeric[A]) { wrap { view -= rhs } }
+    override def *=(rhs: A)(implicit num: Numeric[A]) { wrap { view *= rhs } }
+    override def /=(rhs: A)(implicit num: Numeric[A]) { wrap { view /= rhs } }
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -114,14 +114,14 @@ class IsolatedRefSuite extends FunSuite {
     def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
       protected def view = ref.single
     }
-    override def toString() = "Single"
+    override def toString = "Single"
   }
 
   object RefAccess extends ViewFactory {
     def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
       protected val view = new DynamicView[A](ref)
     }
-    override def toString() = "Ref"
+    override def toString = "Ref"
   }
 
   // The test environment is determined by
@@ -142,7 +142,7 @@ class IsolatedRefSuite extends FunSuite {
       for (outerLevels <- 0 until 2;
            innerLevels <- 0 until 2;
            refFactory <- List(new KnownGenericFactory[A], new UnknownGenericFactory[A], new ArrayElementFactory[A]);
-           viewFactory <- List(SingleAccess, RefAccess);
+           viewFactory <- List(SingleAccess, RefAccess)
            if !(innerLevels + outerLevels == 0 && viewFactory == RefAccess)) {
         val current = "outer=" + outerLevels + ", inner=" + innerLevels + ", " + refFactory + ", " + viewFactory
         try {
@@ -150,7 +150,7 @@ class IsolatedRefSuite extends FunSuite {
           def getView = viewFactory(ref, innerLevels)
           nest(outerLevels) { block(getView _) }
         } catch {
-          case x => {
+          case x: Throwable => {
             println(name + " failed for " + current)
             fail(current + ": " + name + " failure", x)
           }
@@ -522,10 +522,10 @@ class IsolatedRefSuite extends FunSuite {
     def get(implicit txn: InTxn) = throw new AbstractMethodError
     def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
     def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError
-    def set(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def set(v: A)(implicit txn: InTxn) { throw new AbstractMethodError }
     def trySet(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
     def swap(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
-    def transform(f: (A) => A)(implicit txn: InTxn) = throw new AbstractMethodError
+    def transform(f: (A) => A)(implicit txn: InTxn) { throw new AbstractMethodError }
     def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxn) = throw new AbstractMethodError
 
     override def hashCode = underlying.hashCode

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 
@@ -297,7 +297,7 @@ class TxnLocalSuite extends FunSuite {
     val tl = TxnLocal("init")
     var failure: Throwable = null
     new Thread {
-      override def run {
+      override def run() {
         try {
           atomic { implicit txn =>
             barrier.await
@@ -309,11 +309,11 @@ class TxnLocalSuite extends FunSuite {
             barrier.await
           }
         } catch {
-          case x => failure = x
+          case x: Throwable => failure = x
         }
         barrier.await
       }
-    }.start
+    }.start()
 
     atomic { implicit txn =>
       barrier.await
