@@ -185,6 +185,7 @@ private[ccstm] abstract class AccessHistory extends AccessHistory.ReadSet with A
       case Txn.ExplicitRetryCause(_) => stat.explicitRetries += 1
       case Txn.OptimisticFailureCause(tag, _) => stat.optimisticRetries += tag
       case Txn.UncaughtExceptionCause(x) => stat.failures += x.getClass
+      case Txn.UnrecordedTxnCause(_) => stat.unrecordedTxns += 1
     }
   }
 

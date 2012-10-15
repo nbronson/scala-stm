@@ -156,10 +156,16 @@ object Txn {
    */
   case class UncaughtExceptionCause(x: Throwable) extends PermanentRollbackCause
 
+  /** The `RollbackCause` of a successfully completed `atomic.unrecorded`
+   *  block.  See `TxnExecutor.unrecorded`.
+   */
+  case class UnrecordedTxnCause[Z](z: Z) extends PermanentRollbackCause
+
   /** Returns the status of the current nesting level of the current
    *  transaction, equivalent to `NestingLevel.current.status`.
    */
   def status(implicit txn: InTxnEnd): Status = txn.status
+
 
   //////////// explicit retry and rollback
 

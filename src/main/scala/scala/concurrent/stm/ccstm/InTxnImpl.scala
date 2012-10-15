@@ -20,6 +20,10 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
   def currentOrNull(implicit mt: MaybeTxn) = active(apply())
 }
 
+private[stm] object RewindUnrecordedTxnError extends Error {
+  override def fillInStackTrace(): Throwable = this
+}
+
 /** In CCSTM there is one `InTxnImpl` per thread, and it is reused across all
  *  transactions.
  *
@@ -255,6 +259,24 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     atomicImpl(exec, b.head, b.tail)
   }
 
+  @throws(classOf[InterruptedException])
+  def unrecorded[Z](exec: TxnExecutor, block: InTxn => Z, outerFailure: RollbackCause => Z): Z = {
+    if (!_alternatives.isEmpty)
+      throw new IllegalStateException("atomic.unrecorded can't be mixed with orAtomic")
+    var z: Z = null.asInstanceOf[Z]
+    try {
+      atomicImpl(exec, { implicit txn =>
+        z = block(txn)
+        Txn.rollback(Txn.UnrecordedTxnCause(z))
+      }, Nil)
+    } catch {
+      case RewindUnrecordedTxnError => z
+      case RollbackError if outerFailure != null => {
+        outerFailure(_currentLevel.statusAsCurrent.asInstanceOf[RolledBack].cause)
+      }
+    }
+  }
+
   def rollback(cause: RollbackCause): Nothing = {
     // We need to grab the version numbers from writes and pessimistic reads
     // before the status is set to rollback, because as soon as the top-level
@@ -386,7 +408,8 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     throw new impl.AlternativeResult(z)
   }
 
-  /** On commit, returns a Z or throws an exception other than `RollbackError`.
+  /** If parent level has status `RolledBack`, throws RollbackError.  On
+   *  commit, returns a Z or throws an exception other than `RollbackError`.
    *  On permanent rollback, throws an exception other than `RollbackError`.
    *  On nested explicit retry, throws `RollbackError` and sets the parent
    *  level's status to `RolledBack(ExplicitRetryCause(_))`.  All other cases
@@ -441,7 +464,6 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       // (if all of the alternatives triggered retry), in which case we treat
       // them the same as a regular block with no alternatives.
       val phantom = reusedReadThreshold >= 0
-      val cause = level.status.asInstanceOf[RolledBack].cause.asInstanceOf[Txn.ExplicitRetryCause]
       minRetryTimeout = level.minRetryTimeoutNanos
       if (!phantom && !alternatives.isEmpty) {
         // rerun a phantom
@@ -549,6 +571,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       case rb: RolledBack => {
         rb.cause match {
           case UncaughtExceptionCause(x) => throw x
+          case _: UnrecordedTxnCause[_] => throw RewindUnrecordedTxnError
           case _: TransientRollbackCause => throw RollbackError
         }
       }

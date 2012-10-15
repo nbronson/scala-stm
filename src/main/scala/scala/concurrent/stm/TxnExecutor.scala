@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import java.util.concurrent.TimeUnit
+import concurrent.stm.Txn.RollbackCause
 
 
 /** `object TxnExecutor` manages the system-wide default `TxnExecutor`. */
@@ -76,6 +77,39 @@ trait TxnExecutor {
    *  first block does not call `retry`, no other blocks will be executed.
    */
   def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z
+
+  /** Performs a computation in a transaction and returns the result, but
+   *  always rolls back the transaction.  No writes performed by `block` will
+   *  be committed or exposed to other threads.  This may be useful for
+   *  heuristic decisions or for debugging, as for the various `dbgStr`
+   *  implementations.
+   *
+   *  '''The caller is responsible for correctness:''' It is a code smell
+   *  if ''Z'' is a type that is constructed from Ref`, `TMap`, `TSet`, .....
+   *
+   *  If this method is executed inside an outer transaction that has status
+   *  `Txn.RolledBack` then `block` can't complete.  The default behavior
+   *  (if `outerFailure` is null) in that case is to immediately roll back
+   *  the outer transaction.  If a non-null `outerFailure` handler has been
+   *  provided, however, it allow this method to return.  This is useful when
+   *  the unrecorded transaction is being used for debugging or logging.
+   *
+   *  `atomic.unrecorded { implicit txn => code }` is roughly equivalent to
+   *  the following, except that the rollback cause used will be
+   *  `Txn.UnrecordedTxnCause`: {{{
+   *    case class Tunnel(z: Z) extends Exception {}
+   *    try {
+   *      atomic.withControlFlowRecognizer({
+   *        case Tunnel(_) => false
+   *      }) { implicit txn =>
+   *        throw Tunnel(code)
+   *      }
+   *    } catch {
+   *      case Tunnel(z) => z
+   *    }
+   *  }}}
+   */
+  def unrecorded[Z](block: InTxn => Z, outerFailure: (RollbackCause => Z) = null)(implicit mt: MaybeTxn): Z
 
   /** (rare) Associates an alternative atomic block with the current thread.
    *  The next call to `apply` will consider `block` to be an alternative.

@@ -289,6 +289,8 @@ private[ccstm] object CCSTM extends GV6 {
  *    sample per top-level blocking event
  *  - `explicitRetries` -- explicit retries using `retry`, `retryFor`,
  *    `Ref.View.await` or `Ref.View.tryAwait`
+ *  - `unrecordedTxns` -- rollbacks that were to erase a successful use of
+ *    `atomic.unrecorded`
  *  - `optimisticRetries` -- rollbacks that were automatically retried, one
  *    line per `OptimisticFailureCause.category`
  *  - `failures` -- rollbacks that were not retried, one line for each type of

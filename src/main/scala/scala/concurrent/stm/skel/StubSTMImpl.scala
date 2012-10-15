@@ -49,6 +49,7 @@ class StubSTMImpl extends impl.STMImpl {
 
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
   def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
+  def unrecorded[Z](block: InTxn => Z, outerFailure: Txn.RollbackCause => Z)(implicit mt: MaybeTxn): Z = throw new AbstractMethodError
   def pushAlternative[Z](mt: MaybeTxn, block: InTxn => Z): Boolean = throw new AbstractMethodError
   def compareAndSet[A, B](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = throw new AbstractMethodError
   def compareAndSetIdentity[A <: AnyRef, B <: AnyRef](a: Ref[A], a0: A, a1: A, b: Ref[B], b0: B, b1: B): Boolean = throw new AbstractMethodError

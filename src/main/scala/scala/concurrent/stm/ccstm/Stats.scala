@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm.ccstm
 
@@ -80,6 +80,7 @@ private[ccstm] object Stats {
     val retrySet = if (isTop) new ExponentialHisto else null
     val retryWaitElapsed = if (isTop) new ExponentialHisto else null
     val explicitRetries = new Counter
+    val unrecordedTxns = new Counter
     val optimisticRetries = new LazyCounterMap[Symbol]
     val failures = new LazyCounterMap[Class[_]] { override def toStr(k: Class[_]) = k.getSimpleName }
     val blockingAcquires = new Counter

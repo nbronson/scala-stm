@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -24,6 +24,10 @@ private[ccstm] case class CCSTMExecutor private (
   def apply[Z](block: InTxn => Z)(implicit mt: MaybeTxn): Z = InTxnImpl().atomic(this, block)
 
   def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = InTxnImpl().atomicOneOf(this, blocks)
+
+  def unrecorded[Z](block: InTxn => Z, outerFailure: Txn.RollbackCause => Z)(implicit mt: MaybeTxn) = {
+    InTxnImpl().unrecorded(this, block, outerFailure)
+  }
 
   def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean = InTxnImpl().pushAlternative(block)
 
