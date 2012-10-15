@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2011, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -46,6 +46,9 @@ private[ccstm] object CCSTMRefs {
     def base: AnyRef = this
     def metaOffset: Int = 0
     def offset: Int = 0
+
+    override def dbgStr: String = super[RefOps].dbgStr
+    override def dbgValue: Any = super[RefOps].dbgValue
   }
 
   // Every call to AtomicLongFieldUpdater checks the receiver's type with

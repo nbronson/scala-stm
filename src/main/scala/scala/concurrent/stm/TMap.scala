@@ -26,12 +26,12 @@ object TMap {
   }
 
   /** A `Map` that provides atomic execution of all of its methods. */
-  trait View[A, B] extends mutable.Map[A, B] with mutable.MapLike[A, B, View[A, B]] {
+  trait View[A, B] extends mutable.Map[A, B] with mutable.MapLike[A, B, View[A, B]] with TxnDebuggable {
     /** Returns the `TMap` perspective on this transactional map, which
      *  provides map functionality only inside atomic blocks.
      */
     def tmap: TMap[A, B]
-    
+
     def clone: TMap.View[A, B]
 
     /** Takes an atomic snapshot of this transactional map. */
@@ -40,6 +40,8 @@ object TMap {
     override def empty: View[A, B] = TMap.empty[A, B].single
 
     override protected[this] def newBuilder: mutable.Builder[(A, B), View[A, B]] = View.newBuilder[A, B]
+
+    override def stringPrefix = "TMap"
   }
 
 
@@ -72,7 +74,7 @@ object TMap {
  *
  *  @author Nathan Bronson
  */
-trait TMap[A, B] {
+trait TMap[A, B] extends TxnDebuggable {
 
   /** Returns an instance that provides transactional map functionality without
    *  requiring that operations be performed inside the static scope of an
@@ -82,8 +84,10 @@ trait TMap[A, B] {
 
   def clone(implicit txn: InTxn): TMap[A, B] = single.clone.tmap
 
-  // Fast snapshots are one of TMap's core features, so we don't want the
-  // implicit conversion to hide it from ScalaDoc and IDE completion
+  // The following method work fine via the asMap mechanism, but is important
+  // enough that we don't want the implicit conversion to make it invisible to
+  // ScalaDoc or IDE auto-completion
+
   def snapshot: immutable.Map[A, B] = single.snapshot
 
   // The following methods work fine via the asMap mechanism, but are heavily

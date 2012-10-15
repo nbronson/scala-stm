@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 package ccstm
@@ -9,7 +9,7 @@ import scala.reflect.ClassManifest
 import scala.collection._
 
 
-private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A]) extends TArray[A] with TArray.View[A] {
+private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A])(implicit m: ClassManifest[A]) extends TArray[A] with TArray.View[A] {
   import TArray._
 
   def this(length0: Int)(implicit m: ClassManifest[A]) = this(AtomicArray[A](length0))
@@ -48,6 +48,12 @@ private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A]) extends T
     def apply(index: Int) = getRef(index).single
   }
 
+  /////////////// TxnDebuggable
+
+  def dbgStr: String = atomic.unrecorded({ _ => mkStringPrefix("TArray", single) }, { _.toString })
+
+  def dbgValue: Any = atomic.unrecorded({ _ => toArray }, { x => x })
+
   /////////////// Internal implementation
 
   private val metaIndexMask = {
@@ -80,6 +86,9 @@ private[ccstm] class TArrayImpl[A](private val values: AtomicArray[A]) extends T
       def metaOffset = index & metaIndexMask
       def data = values(index)
       def data_=(v: A) { values(index) = v }
+
+      override def dbgStr: String = super[RefOps].dbgStr
+      override def dbgValue: Any = super[RefOps].dbgValue
 
       override def toString = {
         "TArray@" + Integer.toHexString(System.identityHashCode(TArrayImpl.this)) + "(" + index + ")"

@@ -10,7 +10,7 @@ object TArray {
    *  scope of a `Txn`.  `TArray.View` is to `TArray` as `Ref.View` is to
    *  `Ref`.
    */
-  trait View[A] extends mutable.IndexedSeq[A] {
+  trait View[A] extends mutable.IndexedSeq[A] with TxnDebuggable {
     /** The `TArray` from which this view was created. */
     def tarray: TArray[A]
 
@@ -57,7 +57,7 @@ object TArray {
  *
  *  @author Nathan Bronson
  */
-trait TArray[A] {
+trait TArray[A] extends TxnDebuggable {
 
   /** Returns the length of this `TArray`, which does not change. */
   def length: Int

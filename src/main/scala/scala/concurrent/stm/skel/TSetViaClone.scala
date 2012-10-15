@@ -32,12 +32,20 @@ private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
   def tset: TSet[A] = this
   def single: TSet.View[A] = this
 
+  /** Something like `"TSet[size=3](3, 1, 10)"`, stopping after 1K chars */
+  def dbgStr: String = atomic.unrecorded({ _ => mkStringPrefix("TSet", single) }, { _.toString })
+
+  /** Returns an array of elements, since that is likely to be the
+   *  easiest to examine in a debugger.  Also, this avoids problems with
+   *  relying on copy-on-write after discarding `Ref` writes.
+   */
+  def dbgValue: Any = atomic.unrecorded({ _ => toArray[Any] }, { x => x })
 
   //////////// builder functionality (from mutable.SetLike via TSet.View)
 
   override protected[this] def newBuilder: TSet.View[A] = empty
 
-  override def result: TSet.View[A] = this
+  override def result(): TSet.View[A] = this
 
 
   //////////// construction of new TSets
@@ -45,7 +53,7 @@ private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
   // A cheap clone() means that mutable.SetLike's implementations of +, ++,
   // -, and -- are all pretty reasonable.
 
-  override def clone(): TSet.View[A]
+  override def clone: TSet.View[A]
 
   //////////// atomic compound ops
 

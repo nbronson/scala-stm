@@ -3,13 +3,15 @@
 package scala.concurrent.stm
 
 import java.util.concurrent.TimeUnit
+import skel.RollbackError
+import concurrent.stm.Txn.RolledBack
 
 object Source {
 
   /** `Source.View[+A]` consists of the covariant read-only operations of
    *  `Ref.View[A]`.
    */
-  trait View[+A] {
+  trait View[+A] extends TxnDebuggable {
 
     /** Returns a `Source` that accesses the same memory location as this view.
      *  The returned `Source` might be the original reference that was used to
@@ -83,12 +85,18 @@ object Source {
      *      out.
      */
     def tryAwait(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(f: A => Boolean): Boolean
+
+    def dbgStr: String = ref.dbgStr
+    def dbgValue: Any = ref.dbgValue
   }
 }
 
 /** `Source[+A]` consists of the covariant read-only operations of `Ref[A]`. */
-trait Source[+A] extends SourceLike[A, InTxn] {
+trait Source[+A] extends SourceLike[A, InTxn] with TxnDebuggable {
 
   /** See `Ref.single`. */
   def single: Source.View[A]
+
+  def dbgStr: String = atomic.unrecorded({ implicit txn => "Ref(" + get + ")" }, { _.toString })
+  def dbgValue: Any = atomic.unrecorded({ get(_) }, { x => x })
 }

@@ -1,4 +1,4 @@
-/* scala-stm - (c) 2009-2010, Stanford University, PPL */
+/* scala-stm - (c) 2009-2012, Stanford University, PPL */
 
 package scala.concurrent.stm
 package skel
@@ -33,20 +33,30 @@ private[stm] trait TMapViaClone[A, B] extends TMap.View[A, B] with TMap[A, B] {
   def tmap: TMap[A, B] = this
   def single: TMap.View[A, B] = this
 
+  /** Something like `"TMap[size=1]((1 -> 10))"`, stopping after 1K chars */
+  def dbgStr: String = atomic.unrecorded({ txn =>
+    mkStringPrefix("TMap", single.view.map { kv => kv._1 + " -> " + kv._2 })
+  }, { _.toString })
+
+  /** Returns an array of key/value pairs, since that is likely to be the
+   *  easiest to examine in a debugger.  Also, this avoids problems with
+   *  relying on copy-on-write after discarding `Ref` writes.
+   */
+  def dbgValue: Any = atomic.unrecorded({ _ => toArray }, { x => x })
 
   //////////// builder functionality (from mutable.MapLike via TMap.View)
 
   override protected[this] def newBuilder: TMap.View[A, B] = empty
 
-  override def result: TMap.View[A, B] = this
+  override def result(): TMap.View[A, B] = this
 
 
   //////////// construction of new TMaps
 
-  // A cheap clone() means that mutable.MapLike's implementations of +, ++,
+  // A cheap clone means that mutable.MapLike's implementations of +, ++,
   // -, and -- are all pretty reasonable.
 
-  override def clone(): TMap.View[A, B]
+  override def clone: TMap.View[A, B]
 
   //////////// atomic compound ops
 

@@ -428,6 +428,14 @@ class IsolatedRefSuite extends FunSuite {
     assert(view()().toString === "924.75")
   }
 
+  createTests("TxnDebuggable", 10) { view =>
+    assert(view().dbgStr === "Ref(10)")
+    assert(view().dbgValue === 10)
+    view()() = 11
+    assert(view().dbgStr === "Ref(11)")
+    assert(view().dbgValue === 11)
+  }
+
   private def perTypeTests[A : ClassManifest](v0: A, v1: A) {
     val name = v0.asInstanceOf[AnyRef].getClass.getSimpleName
 
@@ -515,6 +523,20 @@ class IsolatedRefSuite extends FunSuite {
 
     val b = TArray.ofDim[String](0)
     assert(b.single.isEmpty)
+  }
+
+  test("TArray TxnDebuggable") {
+    val a = TArray.ofDim[String](3)
+    a.single(0) = "zero"
+    a.refs(1).single() = "one"
+    atomic { implicit txn => a(2) = "two" }
+
+    assert(a.dbgStr === "TArray[size=3](zero, one, two)")
+    val aa = a.dbgValue.asInstanceOf[Array[_]]
+    assert(aa.length === 3)
+    assert(aa(0) === "zero")
+    assert(aa(1) === "one")
+    assert(aa(2) === "two")
   }
 
   class ProxyRef[A](underlying: Ref[A]) extends Ref[A] {

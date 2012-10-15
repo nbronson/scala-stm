@@ -48,7 +48,7 @@ abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[T, AtomicArra
   def apply(index: Int): T
 
   /** Update element at given index, with volatile write semantics */
-  def update(index: Int, elem: T): Unit
+  def update(index: Int, elem: T)
 
   /** Atomic swap of the element at index */
   def swap(index: Int, elem: T): T
@@ -70,7 +70,7 @@ abstract class AtomicArray[T] extends IndexedSeq[T] with ArrayLike[T, AtomicArra
     val b = newBuilder
     b.sizeHint(length)
     b ++= this
-    b.result
+    b.result()
   }
 
   override def newBuilder: AtomicArrayBuilder[T] = throw new AbstractMethodError
@@ -133,7 +133,7 @@ object AtomicArray {
         b.sizeHint(from.length)
         b
       }
-      def apply: Builder[T, AtomicArray[T]] = AtomicArrayBuilder of m
+      def apply(): Builder[T, AtomicArray[T]] = AtomicArrayBuilder of m
     }
   }
 

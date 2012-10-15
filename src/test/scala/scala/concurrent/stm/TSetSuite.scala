@@ -398,4 +398,24 @@ class TSetSuite extends FunSuite {
     for (k <- atomic { implicit txn => s.snapshot }) n += k
     assert(n === 4950)
   }
+
+  test("TxnDebuggable") {
+    val s1 = TSet[Int]()
+    val s2 = TSet(1)
+    val s3 = TSet(1, 2).single
+    val s4 = TSet((0 until 10000): _*).single
+
+    assert(s1.dbgStr === "TSet[size=0]()")
+    assert(s2.dbgStr === "TSet[size=1](1)")
+    assert(s3.dbgStr == "TSet[size=2](1, 2)" ||
+           s3.dbgStr == "TSet[size=2](2, 1)")
+    assert(s4.dbgStr.startsWith("TSet[size=10000]("))
+    assert(s4.dbgStr.length >= 1000)
+    assert(s4.dbgStr.length < 1100)
+
+    assert(s1.dbgValue.asInstanceOf[Array[_]].length === 0)
+    assert(s2.dbgValue.asInstanceOf[Array[_]].length === 1)
+    assert(s3.dbgValue.asInstanceOf[Array[_]].length === 2)
+    assert(s4.dbgValue.asInstanceOf[Array[_]].length === 10000)
+  }
 }

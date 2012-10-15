@@ -130,8 +130,8 @@ class TMapSuite extends FunSuite {
 
     for (i <- 0 until total) {
       val pct = rand.nextInt(250)
-      val k = nextKey
-      val v = nextValue
+      val k = nextKey()
+      val v = nextValue()
       if (pct < 15) {
         assert(base.get(k) === mut.get(k))
       } else if (pct < 20) {
@@ -150,7 +150,7 @@ class TMapSuite extends FunSuite {
       } else if (pct < 60) {
         for (j <- 0 until (i / (total / 20))) {
           if (!base.isEmpty) {
-            val k1 = base.iterator.next._1
+            val k1 = base.iterator.next()._1
             assert(base.remove(k1) === mut.remove(k1))
           }
         }
@@ -181,13 +181,13 @@ class TMapSuite extends FunSuite {
         assert(base eq (base -= k))
         assert(mut eq (mut -= k))
       } else if (pct < 91) {
-        val k2 = nextKey
-        val k3 = nextKey
+        val k2 = nextKey()
+        val k3 = nextKey()
         assert(base eq (base -= (k, k2, k3)))
         assert(mut eq (mut -= (k, k2, k3)))
       } else if (pct < 93) {
-        val k2 = nextKey
-        val k3 = nextKey
+        val k2 = nextKey()
+        val k3 = nextKey()
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut eq (mut --= Array(k, k2, k3)))
       } else if (pct < 94) {
@@ -222,7 +222,7 @@ class TMapSuite extends FunSuite {
       } else if (pct < 160) {
         for (j <- 0 until (i / (total / 20))) {
           if (!base.isEmpty) {
-            val k1 = base.iterator.next._1
+            val k1 = base.iterator.next()._1
             assert(base.remove(k1) === atomic { implicit t => mut.tmap.remove(k1) })
           }
         }
@@ -253,13 +253,13 @@ class TMapSuite extends FunSuite {
         assert(base eq (base -= k))
         assert(mut.tmap eq atomic { implicit t => mut.tmap -= k })
       } else if (pct < 191) {
-        val k2 = nextKey
-        val k3 = nextKey
+        val k2 = nextKey()
+        val k3 = nextKey()
         assert(base eq (base -= (k, k2, k3)))
         assert(mut.tmap eq atomic { implicit t => mut.tmap -= (k, k2, k3) })
       } else if (pct < 193) {
-        val k2 = nextKey
-        val k3 = nextKey
+        val k2 = nextKey()
+        val k3 = nextKey()
         assert(base eq (base --= Array(k, k2, k3)))
         assert(mut.tmap eq atomic { implicit t => mut.tmap --= Array(k, k2, k3) })
       } else if (pct < 194) {
@@ -286,7 +286,7 @@ class TMapSuite extends FunSuite {
         assert(b.iterator.toMap === s.iterator.toMap)
         while (!b.isEmpty) {
           if (rand.nextInt(100) < 75) {
-            val k = b.keysIterator.next
+            val k = b.keysIterator.next()
             assert(b(k) === s(k))
             b -= k
             s -= k
@@ -303,23 +303,23 @@ class TMapSuite extends FunSuite {
         s += kv
         assert(b === s)
       } else if (pct < 208) {
-        val cutoff = rand.nextInt
+        val cutoff = rand.nextInt()
         assert(base eq (base.retain { (k, v) => v < cutoff }))
         assert(mut eq (mut.retain { (k, v) => v < cutoff }))
       } else if (pct < 211) {
-        val cutoff = rand.nextInt
+        val cutoff = rand.nextInt()
         assert(base eq (base.retain { (k, v) => v < cutoff }))
         assert(mut.tmap eq atomic { implicit txn => mut.tmap.retain { (k, v) => v < cutoff } })
       } else if (pct < 214) {
-        val k = nextKey
-        val v = nextValue
+        val k = nextKey()
+        val v = nextValue()
         var bf = false
         var mf = false
         assert(base.getOrElseUpdate(k, { bf = true ; v }) === mut.getOrElseUpdate(k, { mf = true ; v }))
         assert(bf === mf)
       } else if (pct < 217) {
-        val k = nextKey
-        val v = nextValue
+        val k = nextKey()
+        val v = nextValue()
         var bf = false
         var mf = false
         assert(base.getOrElseUpdate(k, { bf = true ; v }) === atomic { implicit txn => mut.getOrElseUpdate(k, { mf = true ; v }) })
@@ -345,14 +345,14 @@ class TMapSuite extends FunSuite {
         b ++= mut
         b.clear()
         b ++= mut
-        mut = b.result
+        mut = b.result()
       } else if (pct < 233) {
         mut = (atomic { implicit txn =>
           val b = TMap.newBuilder[String, Int]
           b ++= mut.tmap
           b.clear()
           b ++= mut.tmap
-          b.result
+          b.result()
         }).single
       }
     }
@@ -446,7 +446,7 @@ class TMapSuite extends FunSuite {
       val numThreads = 8
       val m = TMap.empty[Int, String]
       val threads = for (t <- 0 until numThreads) yield new Thread {
-        override def run {
+        override def run() {
           var rand = new SimpleRandom(t)
           var i = 0
           while (i < 1000000) {
@@ -503,7 +503,7 @@ class TMapSuite extends FunSuite {
     val failed = Ref(-1).single
     val threads = Array.tabulate(2) { _ =>
       new Thread {
-        override def run {
+        override def run() {
           val r = new SimpleRandom
           for (i <- 0 until 100000) {
             if (r.nextInt(2) == 0) {
@@ -522,8 +522,8 @@ class TMapSuite extends FunSuite {
         }
       }
     }
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
     assert(failed() === -1)
   }
 
@@ -592,7 +592,7 @@ class TMapSuite extends FunSuite {
         val t0 = now
         var i = 0
         while (i < 1000000) {
-          val r = rand.nextInt
+          val r = rand.nextInt()
           val k = math.abs(r % size)
           if (r > 0)
             m.put(k, values(i % values.length))
@@ -641,7 +641,7 @@ class TMapSuite extends FunSuite {
             atomic { implicit txn =>
               var i = ii
               while (i < ii + txnSize) {
-                val r = rand.nextInt
+                val r = rand.nextInt()
                 val k = math.abs(r % size)
                 if (r > 0)
                   m.put(k, values(i % values.length))
@@ -656,5 +656,25 @@ class TMapSuite extends FunSuite {
         }
       }
     }
+  }
+
+  test("TxnDebuggable") {
+    val m1 = TMap[Int, Int]()
+    val m2 = TMap(1 -> "one")
+    val m3 = TMap(1 -> "one", 2 -> "two").single
+    val m4 = TMap(kvRange(0, 10000): _*).single
+
+    assert(m1.dbgStr === "TMap[size=0]()")
+    assert(m2.dbgStr === "TMap[size=1](1 -> one)")
+    assert(m3.dbgStr == "TMap[size=2](1 -> one, 2 -> two)" ||
+           m3.dbgStr == "TMap[size=2](2 -> two, 1 -> one)")
+    assert(m4.dbgStr.startsWith("TMap[size=10000]("))
+    assert(m4.dbgStr.length >= 1000)
+    assert(m4.dbgStr.length < 1100)
+
+    assert(m1.dbgValue.asInstanceOf[Array[_]].length === 0)
+    assert(m2.dbgValue.asInstanceOf[Array[_]].length === 1)
+    assert(m3.dbgValue.asInstanceOf[Array[_]].length === 2)
+    assert(m4.dbgValue.asInstanceOf[Array[_]].length === 10000)
   }
 }

@@ -25,7 +25,7 @@ object TSet {
   }
 
   /** A `Set` that provides atomic execution of all of its methods. */
-  trait View[A] extends mutable.Set[A] with mutable.SetLike[A, View[A]] {
+  trait View[A] extends mutable.Set[A] with mutable.SetLike[A, View[A]] with TxnDebuggable {
 
     /** Returns the `TSet` perspective on this transactional set, which
      *  provides set functionality only inside atomic blocks.
@@ -40,6 +40,8 @@ object TSet {
     override def empty: View[A] = TSet.empty[A].single
     override def companion: generic.GenericCompanion[View] = View    
     override protected[this] def newBuilder: mutable.Builder[A, View[A]] = View.newBuilder[A]
+
+    override def stringPrefix = "TSet"
   }
   
 
@@ -72,7 +74,7 @@ object TSet {
  *
  *  @author Nathan Bronson
  */
-trait TSet[A] {
+trait TSet[A] extends TxnDebuggable {
 
   /** Returns an instance that provides transactional set functionality without
    *  requiring that operations be performed inside the static scope of an
