@@ -1,7 +1,7 @@
 
 name := "scala-stm-dep-tests-sbt"
 
-organization := "org.scala-tools"
+organization := "org.scala-stm"
 
 version := "0.1-SNAPSHOT"
 
@@ -13,4 +13,4 @@ resolvers += ("releases" at "http://oss.sonatype.org/content/repositories/releas
 
 resolvers += ("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots")
 
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.7-SNAPSHOT")
+libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.7-SNAPSHOT")

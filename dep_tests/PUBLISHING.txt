@@ -9,9 +9,7 @@ accomplished with
 TESTING DEPLOYMENT AND ARTIFACT USAGE
 
 To test using published artifacts via sbt, select the desired scala-stm
-artifact in dep_tests/sbt/project/build/DepTestsSBTProject.scala .
-Make sure to disable the scala-tools snapshot repo when testing release
-builds.  Then
+artifact in dep_tests/sbt/build.sbt .  Then
 
   cd dep_tests/sbt
   sbt +run
