@@ -1,7 +1,7 @@
 
 name := "scala-stm"
 
-organization := "org.scala-tools"
+organization := "org.scala-stm"
 
 version := "0.6"
 
@@ -11,7 +11,7 @@ crossScalaVersions := Seq("2.10.0-RC1", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", 
 
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
-// hack for missing scala-actors dep in scalatest for 2.10.0-M7
+// hack for missing scala-actors dep in scalatest for 2.10.0-RC1
 libraryDependencies <<= (libraryDependencies, scalaVersion) { (d, v) =>
     if (v.startsWith("2.10")) d :+ ("org.scala-lang" % "scala-actors" % v) else d }
 
