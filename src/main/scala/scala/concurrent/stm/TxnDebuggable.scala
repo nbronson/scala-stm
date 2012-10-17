@@ -15,7 +15,7 @@ package scala.concurrent.stm
  *  If you use Eclipse, you can make this method the default view by going to
  *  ''Window->Preferences->Java[+]->Debug[+]->Detail Formatters'' and
  *  entering the code snippet `dbgStr()` (or `dbgValue()`) for instances of
- *  scala.concurrent.stm.TxnDebuggable`.
+ *  `scala.concurrent.stm.TxnDebuggable`.
  *
  *  If you use IntelliJ IDEA, go to
  *  ''File->Settings...->Debugger->Data Type Renderers'' and create a new
