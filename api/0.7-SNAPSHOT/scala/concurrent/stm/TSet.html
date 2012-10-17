@@ -40,7 +40,7 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">TSet</span><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">TSet</span><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
       </span>
       </h4>
       
@@ -53,7 +53,7 @@
  affecting atomicity.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a>, <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -71,7 +71,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="scala.concurrent.stm.TSet"><span>TSet</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="scala.concurrent.stm.TSet"><span>TSet</span></li><li class="in" name="scala.concurrent.stm.TxnDebuggable"><span>TxnDebuggable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -121,6 +121,44 @@
       </span>
       </h4>
       
+    </li><li name="scala.concurrent.stm.TxnDebuggable#dbgStr" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="dbgStr:String"></a>
+      <a id="dbgStr:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dbgStr</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Returns a string representation of the transactional value in this
+ instance for debugging convenience.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the transactional value in this
+ instance for debugging convenience.  The <code>Ref</code> reads (and writes)
+ performed while constructing the result will be discarded before
+ returning.  This method works fine outside a transaction.</p><p> If this method is called from within a transaction that is already
+ doomed (status <code>Txn.Rolledback</code>), a string describing the reason
+ for the outer transaction's rollback will be returned.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></dd></dl></div>
+    </li><li name="scala.concurrent.stm.TxnDebuggable#dbgValue" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="dbgValue:Any"></a>
+      <a id="dbgValue:Any"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dbgValue</span><span class="result">: <span class="extype" name="scala.Any">Any</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Returns some value that is suitable for examination in a debugger,
+ or returns a <code>Txn.RollbackCause</code> if called from inside a doomed atomic
+ block.</p><div class="fullcomment"><div class="comment cmt"><p>Returns some value that is suitable for examination in a debugger,
+ or returns a <code>Txn.RollbackCause</code> if called from inside a doomed atomic
+ block.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></dd></dl></div>
     </li><li name="scala.concurrent.stm.TSet#foreach" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="foreach[U](f:A=&gt;U)(implicittxn:scala.concurrent.stm.InTxn):Unit"></a>
       <a id="foreach[U]((A)⇒U)(InTxn):Unit"></a>
@@ -633,7 +671,9 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.concurrent.stm.TxnDebuggable">
+              <h3>Inherited from <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>

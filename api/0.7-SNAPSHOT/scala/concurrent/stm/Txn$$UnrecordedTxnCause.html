@@ -2,9 +2,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>TArray - scala.concurrent.stm.TArray</title>
-          <meta name="description" content="TArray - scala.concurrent.stm.TArray" />
-          <meta name="keywords" content="TArray scala.concurrent.stm.TArray" />
+          <title>UnrecordedTxnCause - scala.concurrent.stm.Txn.UnrecordedTxnCause</title>
+          <meta name="description" content="UnrecordedTxnCause - scala.concurrent.stm.Txn.UnrecordedTxnCause" />
+          <meta name="keywords" content="UnrecordedTxnCause scala.concurrent.stm.Txn.UnrecordedTxnCause" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -17,7 +17,7 @@
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
-            var hash = 'scala.concurrent.stm.TArray$';
+            var hash = 'scala.concurrent.stm.Txn$$UnrecordedTxnCause';
             var anchor = window.location.hash;
             var anchor_opt = '';
             if (anchor.length >= 1)
@@ -27,26 +27,28 @@
    	  </script>
     
         </head>
-        <body class="value">
+        <body class="type">
       <div id="definition">
-        <a href="TArray.html" title="Go to companion"><img src="../../../lib/object_to_trait_big.png" /></a>
-        <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a></p>
-        <h1><a href="TArray.html" title="Go to companion">TArray</a></h1>
+        <img src="../../../lib/class_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a>.<a href="Txn$.html" class="extype" name="scala.concurrent.stm.Txn">Txn</a></p>
+        <h1>UnrecordedTxnCause</h1>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">object</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">TArray</span>
+        <span class="name">UnrecordedTxnCause</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="z">z: <span class="extype" name="scala.concurrent.stm.Txn.UnrecordedTxnCause.Z">Z</span></span>)</span><span class="result"> extends <a href="Txn$$PermanentRollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.PermanentRollbackCause">PermanentRollbackCause</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The <code>RollbackCause</code> of a successfully completed <code>atomic.unrecorded</code>
+ block.  See <code>TxnExecutor.unrecorded</code>.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">java.io.Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="Txn$$PermanentRollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.PermanentRollbackCause">PermanentRollbackCause</a>, <a href="Txn$$RollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.RollbackCause">RollbackCause</a>, <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -64,7 +66,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="scala.concurrent.stm.TArray"><span>TArray</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="scala.concurrent.stm.Txn.UnrecordedTxnCause"><span>UnrecordedTxnCause</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="scala.concurrent.stm.Txn.PermanentRollbackCause"><span>PermanentRollbackCause</span></li><li class="in" name="scala.concurrent.stm.Txn.RollbackCause"><span>RollbackCause</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -82,26 +84,25 @@
 
       <div id="template">
         <div id="allMembers">
-        
-
-        <div id="types" class="types members">
-              <h3>Type Members</h3>
-              <ol><li name="scala.concurrent.stm.TArray.View" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="View[A]extendsIndexedSeq[A]withTxnDebuggable"></a>
-      <a id="View[A]:View[A]"></a>
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="scala.concurrent.stm.Txn.UnrecordedTxnCause#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(z:Z):scala.concurrent.stm.Txn.UnrecordedTxnCause[Z]"></a>
+      <a id="&lt;init&gt;:UnrecordedTxnCause[Z]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">trait</span>
+        <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <a href="TArray$$View.html"><span class="name">View</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.collection.mutable.IndexedSeq">collection.mutable.IndexedSeq</span>[<span class="extype" name="scala.concurrent.stm.TArray.View.A">A</span>] with <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
+        <span class="name">UnrecordedTxnCause</span><span class="params">(<span name="z">z: <span class="extype" name="scala.concurrent.stm.Txn.UnrecordedTxnCause.Z">Z</span></span>)</span>
       </span>
       </h4>
-      <p class="comment cmt">A view that supports accesses to a <code>TArray</code> instance outside the static
- scope of a <code>Txn</code>.</p>
+      
     </li></ol>
             </div>
+
+        
 
         
 
@@ -172,19 +173,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="scala.concurrent.stm.TArray#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply[A](data:TraversableOnce[A])(implicitevidence$2:ClassManifest[A]):scala.concurrent.stm.TArray[A]"></a>
-      <a id="apply[A](TraversableOnce[A])(ClassManifest[A]):TArray[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">apply</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="data">data: <a href="../../package.html#TraversableOnce[+A]=scala.collection.TraversableOnce[A]" class="extmbr" name="scala.TraversableOnce">TraversableOnce</a>[<span class="extype" name="scala.concurrent.stm.TArray.apply.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="scala.Predef.ClassManifest">ClassManifest</span>[<span class="extype" name="scala.concurrent.stm.TArray.apply.A">A</span>]</span>)</span><span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[<span class="extype" name="scala.concurrent.stm.TArray.apply.A">A</span>]</span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Returns a new <code>TArray[A]</code> containing the elements of <code>data</code>.</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -227,19 +215,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a>
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -266,19 +241,6 @@
       </span>
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <a id="hashCode():Int"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -334,20 +296,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.concurrent.stm.TArray#ofDim" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ofDim[A](length:Int)(implicitevidence$1:ClassManifest[A]):scala.concurrent.stm.TArray[A]"></a>
-      <a id="ofDim[A](Int)(ClassManifest[A]):TArray[A]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">ofDim</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="length">length: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="scala.Predef.ClassManifest">ClassManifest</span>[<span class="extype" name="scala.concurrent.stm.TArray.ofDim.A">A</span>]</span>)</span><span class="result">: <a href="TArray.html" class="extype" name="scala.concurrent.stm.TArray">TArray</a>[<span class="extype" name="scala.concurrent.stm.TArray.ofDim.A">A</span>]</span>
-      </span>
-      </h4>
-      <p class="shortcomment cmt">Returns a new <code>TArray[A]</code> containing <code>length</code> copies of the default value
- for elements of type <code>A</code>.</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -361,19 +309,6 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <a id="toString():String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -422,6 +357,19 @@
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="scala.concurrent.stm.Txn.UnrecordedTxnCause#z" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="z:Z"></a>
+      <a id="z:Z"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">z</span><span class="result">: <span class="extype" name="scala.concurrent.stm.Txn.UnrecordedTxnCause.Z">Z</span></span>
+      </span>
+      </h4>
+      
     </li></ol>
             </div>
 
@@ -431,7 +379,19 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.Serializable">
+              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">java.io.Serializable</span></h3>
+            </div><div class="parent" name="scala.Product">
+              <h3>Inherited from <span class="extype" name="scala.Product">Product</span></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <span class="extype" name="scala.Equals">Equals</span></h3>
+            </div><div class="parent" name="scala.concurrent.stm.Txn.PermanentRollbackCause">
+              <h3>Inherited from <a href="Txn$$PermanentRollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.PermanentRollbackCause">PermanentRollbackCause</a></h3>
+            </div><div class="parent" name="scala.concurrent.stm.Txn.RollbackCause">
+              <h3>Inherited from <a href="Txn$$RollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.RollbackCause">RollbackCause</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>

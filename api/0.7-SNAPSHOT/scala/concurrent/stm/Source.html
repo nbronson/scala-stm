@@ -40,13 +40,13 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Source</span><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</span>
+        <span class="name">Source</span><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>] with <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
       </span>
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p><code>Source[+A]</code> consists of the covariant read-only operations of <code>Ref[A]</code>.</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>], <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a>, <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>], <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div><div class="toggleContainer block">
           <span class="toggle">Known Subclasses</span>
           <div class="subClasses hiddenContent"><a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a></div>
@@ -67,7 +67,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="scala.concurrent.stm.Source"><span>Source</span></li><li class="in" name="scala.concurrent.stm.SourceLike"><span>SourceLike</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="scala.concurrent.stm.Source"><span>Source</span></li><li class="in" name="scala.concurrent.stm.TxnDebuggable"><span>TxnDebuggable</span></li><li class="in" name="scala.concurrent.stm.SourceLike"><span>SourceLike</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -290,6 +290,44 @@ atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="scala.concurrent.stm.Source#dbgStr" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dbgStr:String"></a>
+      <a id="dbgStr:String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dbgStr</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Returns a string representation of the transactional value in this
+ instance for debugging convenience.</p><div class="fullcomment"><div class="comment cmt"><p>Returns a string representation of the transactional value in this
+ instance for debugging convenience.  The <code>Ref</code> reads (and writes)
+ performed while constructing the result will be discarded before
+ returning.  This method works fine outside a transaction.</p><p> If this method is called from within a transaction that is already
+ doomed (status <code>Txn.Rolledback</code>), a string describing the reason
+ for the outer transaction's rollback will be returned.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="scala.concurrent.stm.Source">Source</a> → <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></dd></dl></div>
+    </li><li name="scala.concurrent.stm.Source#dbgValue" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dbgValue:Any"></a>
+      <a id="dbgValue:Any"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dbgValue</span><span class="result">: <span class="extype" name="scala.Any">Any</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Returns some value that is suitable for examination in a debugger,
+ or returns a <code>Txn.RollbackCause</code> if called from inside a doomed atomic
+ block.</p><div class="fullcomment"><div class="comment cmt"><p>Returns some value that is suitable for examination in a debugger,
+ or returns a <code>Txn.RollbackCause</code> if called from inside a doomed atomic
+ block.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="scala.concurrent.stm.Source">Source</a> → <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -493,7 +531,9 @@ atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.concurrent.stm.SourceLike">
+        <div class="parent" name="scala.concurrent.stm.TxnDebuggable">
+              <h3>Inherited from <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></h3>
+            </div><div class="parent" name="scala.concurrent.stm.SourceLike">
               <h3>Inherited from <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>

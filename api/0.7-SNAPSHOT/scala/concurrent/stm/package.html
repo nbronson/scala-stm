@@ -241,7 +241,7 @@
       <p class="comment cmt">Provides all of the operations of a <code>Sink[A]</code>, without the ability to get
  a <code>Sink.View</code>.</p>
     </li><li name="scala.concurrent.stm.Source" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="Source[+A]extendsSourceLike[A,scala.concurrent.stm.InTxn]"></a>
+      <a id="Source[+A]extendsSourceLike[A,scala.concurrent.stm.InTxn]withTxnDebuggable"></a>
       <a id="Source[+A]:Source[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -249,7 +249,7 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="Source.html"><span class="name">Source</span></a><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</span>
+        <a href="Source.html"><span class="name">Source</span></a><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>] with <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
       </span>
       </h4>
       <p class="comment cmt"><code>Source[+A]</code> consists of the covariant read-only operations of <code>Ref[A]</code>.</p>
@@ -268,7 +268,7 @@
       <p class="comment cmt">Provides all of the operations of a <code>Source[A]</code>, without the ability to get
  a <code>Source.View</code>.</p>
     </li><li name="scala.concurrent.stm.TArray" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="TArray[A]extendsObject"></a>
+      <a id="TArray[A]extendsTxnDebuggable"></a>
       <a id="TArray[A]:TArray[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -276,13 +276,13 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="TArray.html"><span class="name">TArray</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="TArray.html"><span class="name">TArray</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
       </span>
       </h4>
       <p class="comment cmt">Bulk transactional storage, roughly equivalent to <code>Array[Ref[T]]</code> but
  potentially much more space efficient.</p>
     </li><li name="scala.concurrent.stm.TMap" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="TMap[A,B]extendsObject"></a>
+      <a id="TMap[A,B]extendsTxnDebuggable"></a>
       <a id="TMap[A,B]:TMap[A,B]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -290,13 +290,13 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="TMap.html"><span class="name">TMap</span></a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="TMap.html"><span class="name">TMap</span></a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
       </span>
       </h4>
       <p class="comment cmt">A transactional map implementation that requires that all of its map-like
  operations be called from inside an atomic block.</p>
     </li><li name="scala.concurrent.stm.TSet" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="TSet[A]extendsObject"></a>
+      <a id="TSet[A]extendsTxnDebuggable"></a>
       <a id="TSet[A]:TSet[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -304,11 +304,26 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="TSet.html"><span class="name">TSet</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="TSet.html"><span class="name">TSet</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
       </span>
       </h4>
       <p class="comment cmt">A transactional set implementation that requires that all of its set-like
  operations be called from inside an atomic block.</p>
+    </li><li name="scala.concurrent.stm.TxnDebuggable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TxnDebuggableextendsObject"></a>
+      <a id="TxnDebuggable:TxnDebuggable"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnDebuggable.html"><span class="name">TxnDebuggable</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">This trait implements methods that can be used to examine the content of
+ transactional data structures in a debugger with minimal modification to
+ the behavior of the program.</p>
     </li><li name="scala.concurrent.stm.TxnExecutor" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="TxnExecutorextendsObject"></a>
       <a id="TxnExecutor:TxnExecutor"></a>

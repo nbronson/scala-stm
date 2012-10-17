@@ -61,7 +61,8 @@
    to <code>atomic</code></li><li><code>retrySet</code> -- memory locations watched while performing modular
    blocking, one sample per top-level blocking event</li><li><code>retryWaitElapsed</code> -- milliseconds elapsed during modular blocking, one
    sample per top-level blocking event</li><li><code>explicitRetries</code> -- explicit retries using <code>retry</code>, <code>retryFor</code>,
-   <code>Ref.View.await</code> or <code>Ref.View.tryAwait</code></li><li><code>optimisticRetries</code> -- rollbacks that were automatically retried, one
+   <code>Ref.View.await</code> or <code>Ref.View.tryAwait</code></li><li><code>unrecordedTxns</code> -- rollbacks that were to erase a successful use of
+   <code>atomic.unrecorded</code></li><li><code>optimisticRetries</code> -- rollbacks that were automatically retried, one
    line per <code>OptimisticFailureCause.category</code></li><li><code>failures</code> -- rollbacks that were not retried, one line for each type of
    exception in <code>UncaughtExceptionCause</code></li><li><code>blockingAcquires</code> -- internal locks that could not be acquired
    immediately</li><li><code>commitReadSet</code> -- optimistic <code>Ref</code> reads, one sample per committed
@@ -808,6 +809,41 @@ f
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>CCSTMExecutor → AnyRef → Any</dd></dl></div>
+    </li><li name="scala.concurrent.stm.ccstm.CCSTMExecutor#unrecorded" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="unrecorded[Z](block:scala.concurrent.stm.InTxn=&gt;Z,outerFailure:scala.concurrent.stm.Txn.RollbackCause=&gt;Z)(implicitmt:scala.concurrent.stm.MaybeTxn):Z"></a>
+      <a id="unrecorded[Z]((InTxn)⇒Z,(RollbackCause)⇒Z)(MaybeTxn):Z"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">unrecorded</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="block">block: (<a href="../InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMExecutor.unrecorded.Z">Z</span></span>, <span name="outerFailure">outerFailure: (<a href="../Txn$$RollbackCause.html" class="extype" name="scala.concurrent.stm.Txn.RollbackCause">RollbackCause</a>) ⇒ <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMExecutor.unrecorded.Z">Z</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="../MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span><span class="result">: <span class="extype" name="scala.concurrent.stm.ccstm.CCSTMExecutor.unrecorded.Z">Z</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Performs a computation in a transaction and returns the result, but
+ always rolls back the transaction.</p><div class="fullcomment"><div class="comment cmt"><p>Performs a computation in a transaction and returns the result, but
+ always rolls back the transaction.  No writes performed by <code>block</code> will
+ be committed or exposed to other threads.  This may be useful for
+ heuristic decisions or for debugging, as for the various <code>dbgStr</code>
+ implementations.</p><p> <b>The caller is responsible for correctness:</b> It is a code smell
+ if <i>Z</i> is a type that is constructed from Ref<code>, </code>TMap<code>, </code>TSet<code>, .....</code></p><p> If this method is executed inside an outer transaction that has status
+ <code>Txn.RolledBack</code> then <code>block</code> can't complete.  The default behavior
+ (if <code>outerFailure</code> is null) in that case is to immediately roll back
+ the outer transaction.  If a non-null <code>outerFailure</code> handler has been
+ provided, however, it allow this method to return.  This is useful when
+ the unrecorded transaction is being used for debugging or logging.</p><p> <code>atomic.unrecorded { implicit txn =&gt; code }</code> is roughly equivalent to
+ the following, except that the rollback cause used will be
+ <code>Txn.UnrecordedTxnCause</code>: </p><pre><span class="kw">case</span> <span class="kw">class</span> Tunnel(z: Z) <span class="kw">extends</span> Exception {}
+<span class="kw">try</span> {
+  atomic.withControlFlowRecognizer({
+    <span class="kw">case</span> Tunnel(_) <span class="kw">=&gt;</span> <span class="kw">false</span>
+  }) { <span class="kw">implicit</span> txn <span class="kw">=&gt;</span>
+    <span class="kw">throw</span> Tunnel(code)
+  }
+} <span class="kw">catch</span> {
+  <span class="kw">case</span> Tunnel(z) <span class="kw">=&gt;</span> z
+}</pre></div><dl class="attributes block"> <dt>Definition Classes</dt><dd>CCSTMExecutor → <a href="../TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
