@@ -16,6 +16,10 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 
 h2(#news).  News
 
+* _2012 Oct 16_ -- ["0.7-SNAPSHOT":snapshots.html]: Improved support for interactive debuggers via @scala.concurrent.stm.TxnDebuggable@
+
+* _2012 Oct 16_ -- Maven artifacts are now published under the "org.scala-stm" group id (publishing to "org.scala-tools" will continue for current versions), and are now synced automatically with the Maven central repo
+
 *(major) _2012 Jul 22_ -- ScalaSTM version 0.6 ["released":releases.html], including
 ** enhancements to the Java convenience layer
 ** uses of @scala.actors.threadpool.TimeUnit@ replaced by @java.util.concurrent.TimeUnit@

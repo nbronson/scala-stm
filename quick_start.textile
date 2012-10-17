@@ -11,10 +11,7 @@ h2(#install).  Install
 If you use @sbt@, add the following dependency to your project @build.sbt@ and run @sbt update@.  Maven2 configuration and manual download links are "here":releases.html.
 
 {% highlight scala %}
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6")
-
-resolvers += ("releases" at
-    "http://oss.sonatype.org/content/repositories/releases")
+libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.6")
 {% endhighlight %}
 
 

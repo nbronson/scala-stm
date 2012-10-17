@@ -6,9 +6,9 @@ title: Releases
 The latest release of ScalaSTM is version 0.6.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
 * download a prebuilt JAR
-** for 2.10.0-RC1: ["scala-stm_2.10.0-RC1-0.6.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-tools/scala-stm_2.10.0-RC1/0.6/scala-stm_2.10.0-RC1-0.6.jar]
-** for 2.9.2: ["scala-stm_2.9.2-0.6.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-tools/scala-stm_2.9.2/0.6/scala-stm_2.9.2-0.6.jar]
-** for 2.8.2: ["scala-stm_2.8.2-0.6.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-tools/scala-stm_2.8.2/0.6/scala-stm_2.8.2-0.6.jar]
+** for 2.10.0-RC1: ["scala-stm_2.10.0-RC1-0.6.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.10.0-RC1/0.6/scala-stm_2.10.0-RC1-0.6.jar]
+** for 2.9.2: ["scala-stm_2.9.2-0.6.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.9.2/0.6/scala-stm_2.9.2-0.6.jar]
+** for 2.8.2: ["scala-stm_2.8.2-0.6.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.8.2/0.6/scala-stm_2.8.2-0.6.jar]
 
 h2(#notes). Release notes
 
@@ -47,13 +47,10 @@ Changes between 0.1 and 0.2
 
 h2(#sbt). SBT
 
-Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file), and add the oss.sonatype.org repository
+Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file)
 
 {% highlight scala %}
-libraryDependencies += ("org.scala-tools" %% "scala-stm" % "0.6")
-
-resolvers += ("releases" at
-    "http://oss.sonatype.org/content/repositories/releases")
+libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.6")
 {% endhighlight %}
 
 @sbt update@ will then download the correct @scala-stm@ JAR and use it for building.
@@ -65,7 +62,7 @@ Separate artifacts are published for each version of Scala, so the desired Scala
 {% highlight xml %}
 <dependencies>
   <dependency>
-    <groupId>org.scala-tools</groupId>
+    <groupId>org.scala-stm</groupId>
     <artifactId>scala-stm_2.9.2</artifactId>
     <version>0.6</version>
   </dependency>
