@@ -2,34 +2,49 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html>
         <head>
-          <title>scala.concurrent.stm.TxnExecutor</title>
+          <title>TxnExecutor - scala.concurrent.stm.TxnExecutor</title>
+          <meta name="description" content="TxnExecutor - scala.concurrent.stm.TxnExecutor" />
+          <meta name="keywords" content="TxnExecutor scala.concurrent.stm.TxnExecutor" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
-      <link type="text/css" media="screen" rel="stylesheet" href="../../../lib/template.css" />
-      <script type="text/javascript" src="../../../lib/jquery.js"></script>
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'scala.concurrent.stm.TxnExecutor';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
     
         </head>
-        <body onload="sh_highlightDocument('../lib/', '.min.js');" class="type">
+        <body class="type">
       <div id="definition">
-        <a title="Go to companion" href="TxnExecutor$.html"><img src="../../../lib/trait_to_object_big.png" /></a>
-        <p id="owner"><a name="scala" class="extype" href="../../package.html">scala</a>.<a name="scala.concurrent" class="extype" href="../package.html">concurrent</a>.<a name="scala.concurrent.stm" class="extype" href="package.html">stm</a></p>
-        <h1><a title="Go to companion" href="TxnExecutor$.html">TxnExecutor</a></h1>
+        <a href="TxnExecutor$.html" title="Go to companion"><img src="../../../lib/trait_to_object_big.png" /></a>
+        <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a>.<a href="package.html" class="extype" name="scala.concurrent.stm">stm</a></p>
+        <h1><a href="TxnExecutor$.html" title="Go to companion">TxnExecutor</a></h1>
       </div>
 
-      <h4 class="signature" id="signature">
+      <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">TxnExecutor</span><span class="result"> extends AnyRef</span>
+        <span class="name">TxnExecutor</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
       
-      <div class="fullcommenttop" id="comment"><div class="comment cmt"><p>A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
  using a set of configuration parameters.  Configuration changes are made by
  constructing a new <code>TxnExecutor</code> using <code>withConfig</code> or <code>withHint</code>.  The
  new executor may be used immediately, saved and used multiple times, or
@@ -37,25 +52,37 @@
  <code>TxnExecutor.transformDefault</code>.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent">AnyRef, <span name="scala.Any" class="extype">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div><div class="toggleContainer block">
           <span class="toggle">Known Subclasses</span>
-          <div class="subClasses hiddenContent"><a name="scala.concurrent.stm.ccstm.CCSTM" class="extype" href="ccstm/CCSTM.html">CCSTM</a>, <a name="scala.concurrent.stm.impl.STMImpl" class="extype" href="impl/STMImpl.html">STMImpl</a>, <a name="scala.concurrent.stm.skel.StubSTMImpl" class="extype" href="skel/StubSTMImpl.html">StubSTMImpl</a></div>
+          <div class="subClasses hiddenContent"><a href="ccstm/CCSTM.html" class="extype" name="scala.concurrent.stm.ccstm.CCSTM">CCSTM</a>, <a href="impl/STMImpl.html" class="extype" name="scala.concurrent.stm.impl.STMImpl">STMImpl</a>, <a href="skel/StubSTMImpl.html" class="extype" name="scala.concurrent.stm.skel.StubSTMImpl">StubSTMImpl</a></div>
         </div></div>
-    
+        
 
       <div id="mbrsel">
-        <div id="textfilter"><span class="pre"></span><span class="input"><input accesskey="/" type="text" /></span><span class="post"></span></div>
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
         <div id="order">
               <span class="filtertype">Ordering</span>
-              <ol><li class="alpha in"><span>Alphabetic</span></li><li class="inherit out"><span>By inheritance</span></li></ol>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
             </div>
         <div id="ancestors">
-              <span class="filtertype">Inherited</span>
-              <ol><li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li></ol>
-              <ol id="linearization"><li name="scala.concurrent.stm.TxnExecutor" class="in"><span>TxnExecutor</span></li><li name="scala.AnyRef" class="in"><span>AnyRef</span></li><li name="scala.Any" class="in"><span>Any</span></li></ol>
-            </div>
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="scala.concurrent.stm.TxnExecutor"><span>TxnExecutor</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
+          </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
             <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
@@ -68,17 +95,18 @@
 
         
 
-        <div class="values members" id="values">
+        <div id="values" class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#apply" data-isabs="true">
-      <a id="apply[Z]((InTxn) ⇒ Z)(MaybeTxn):Z"></a>
+              <ol><li name="scala.concurrent.stm.TxnExecutor#apply" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="apply[Z](block:scala.concurrent.stm.InTxn=&gt;Z)(implicitmt:scala.concurrent.stm.MaybeTxn):Z"></a>
+      <a id="apply[Z]((InTxn)⇒Z)(MaybeTxn):Z"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">apply</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="block">block: (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a></span>)</span><span class="result">: Z</span>
+        <span class="name">apply</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="block">block: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.concurrent.stm.TxnExecutor.apply.Z">Z</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span><span class="result">: <span class="extype" name="scala.concurrent.stm.TxnExecutor.apply.Z">Z</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Executes <code>block</code> one or more times until an atomic execution is achieved,
@@ -87,49 +115,48 @@
 </p></div><dl class="paramcmts block"><dt class="tparam">Z</dt><dd class="cmt"><p>the return type of the atomic block</p></dd><dt class="param">block</dt><dd class="cmt"><p>code to execute atomically</p></dd><dt>returns</dt><dd class="cmt"><p>the value returned from <code>block</code> after a successful optimistic
            concurrency attempt
 </p></dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#compareAndSet" data-isabs="true">
-      <a id="compareAndSet[A, B](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
+    </li><li name="scala.concurrent.stm.TxnExecutor#compareAndSet" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="compareAndSet[A,B](a:scala.concurrent.stm.Ref[A],a0:A,a1:A,b:scala.concurrent.stm.Ref[B],b0:B,b1:B):Boolean"></a>
+      <a id="compareAndSet[A,B](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">compareAndSet</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="a">a: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[A]</span>, <span name="a0">a0: A</span>, <span name="a1">a1: A</span>, <span name="b">b: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[B]</span>, <span name="b0">b0: B</span>, <span name="b1">b1: B</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">compareAndSet</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="a">a: <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[<span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSet.A">A</span>]</span>, <span name="a0">a0: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSet.A">A</span></span>, <span name="a1">a1: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSet.A">A</span></span>, <span name="b">b: <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[<span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSet.B">B</span>]</span>, <span name="b0">b0: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSet.B">B</span></span>, <span name="b1">b1: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSet.B">B</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
  the corresponding transaction.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s, probably more efficiently then
- the corresponding transaction.  Equivalent to </p><pre>
-    atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
-      a() == a0 &amp;&amp; b() == b0 &amp;&amp; { a() = a1 ; b() = b1 ; <span class="kw">true</span> }
-    }
-</pre></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#compareAndSetIdentity" data-isabs="true">
-      <a id="compareAndSetIdentity[A&lt;:AnyRef, B&lt;:AnyRef](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
+ the corresponding transaction.  Equivalent to </p><pre>atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
+a() == a0 &amp;&amp; b() == b0 &amp;&amp; { a() = a1 ; b() = b1 ; <span class="kw">true</span> }
+}</pre></div></div>
+    </li><li name="scala.concurrent.stm.TxnExecutor#compareAndSetIdentity" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="compareAndSetIdentity[A&lt;:AnyRef,B&lt;:AnyRef](a:scala.concurrent.stm.Ref[A],a0:A,a1:A,b:scala.concurrent.stm.Ref[B],b0:B,b1:B):Boolean"></a>
+      <a id="compareAndSetIdentity[A&lt;:AnyRef,B&lt;:AnyRef](Ref[A],A,A,Ref[B],B,B):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">compareAndSetIdentity</span><span class="tparams">[<span name="A">A &lt;: AnyRef</span>, <span name="B">B &lt;: AnyRef</span>]</span><span class="params">(<span name="a">a: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[A]</span>, <span name="a0">a0: A</span>, <span name="a1">a1: A</span>, <span name="b">b: <a name="scala.concurrent.stm.Ref" class="extype" href="Ref.html">Ref</a>[B]</span>, <span name="b0">b0: B</span>, <span name="b1">b1: B</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">compareAndSetIdentity</span><span class="tparams">[<span name="A">A &lt;: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>, <span name="B">B &lt;: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>]</span><span class="params">(<span name="a">a: <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[<span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSetIdentity.A">A</span>]</span>, <span name="a0">a0: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSetIdentity.A">A</span></span>, <span name="a1">a1: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSetIdentity.A">A</span></span>, <span name="b">b: <a href="Ref.html" class="extype" name="scala.concurrent.stm.Ref">Ref</a>[<span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSetIdentity.B">B</span>]</span>, <span name="b0">b0: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSetIdentity.B">B</span></span>, <span name="b1">b1: <span class="extype" name="scala.concurrent.stm.TxnExecutor.compareAndSetIdentity.B">B</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Atomically compares and sets two <code>Ref</code>s using identity comparison,
  probably more efficiently then the corresponding transaction.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically compares and sets two <code>Ref</code>s using identity comparison,
  probably more efficiently then the corresponding transaction.  Equivalent
- to </p><pre>
-   atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
-     <span class="kw">val</span> f = (a() eq a0) &amp;&amp; (b() eq b0)
-     <span class="kw">if</span> (f &amp;&amp; (a0 ne a1))
-       a() = a1
-     <span class="kw">if</span> (f &amp;&amp; (b0 ne b1))
-       b() = b1
-     f
-   }
-</pre></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#isControlFlow" data-isabs="true">
+ to </p><pre>atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
+<span class="kw">val</span> f = (a() eq a0) &amp;&amp; (b() eq b0)
+<span class="kw">if</span> (f &amp;&amp; (a0 ne a1))
+  a() = a1
+<span class="kw">if</span> (f &amp;&amp; (b0 ne b1))
+  b() = b1
+f
+}</pre></div></div>
+    </li><li name="scala.concurrent.stm.TxnExecutor#isControlFlow" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="isControlFlow(x:Throwable):Boolean"></a>
       <a id="isControlFlow(Throwable):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -137,7 +164,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isControlFlow</span><span class="params">(<span name="x">x: Throwable</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">isControlFlow</span><span class="params">(<span name="x">x: <a href="../../package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns true if <code>x</code> should be treated as a transfer of control, rather
@@ -147,33 +174,30 @@
  error exception are rolled back.</p><p> All implementations of this method must return true for instances that
  implement <code>scala.util.control.ControlThrowable</code>.
 </p></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#oneOf" data-isabs="true">
-      <a id="oneOf[Z]((InTxn) ⇒ Z*)(MaybeTxn):Z"></a>
+    </li><li name="scala.concurrent.stm.TxnExecutor#oneOf" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="oneOf[Z](blocks:scala.concurrent.stm.InTxn=&gt;Z*)(implicitmt:scala.concurrent.stm.MaybeTxn):Z"></a>
+      <a id="oneOf[Z]((InTxn)⇒Z*)(MaybeTxn):Z"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">oneOf</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="blocks">blocks: (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a></span>)</span><span class="result">: Z</span>
+        <span class="name">oneOf</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="blocks">blocks: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.concurrent.stm.TxnExecutor.oneOf.Z">Z</span>*</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mt">mt: <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>)</span><span class="result">: <span class="extype" name="scala.concurrent.stm.TxnExecutor.oneOf.Z">Z</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Atomically executes a transaction that is composed from <code>blocks</code> by
  joining with a left-biased <code>orAtomic</code> operator.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically executes a transaction that is composed from <code>blocks</code> by
  joining with a left-biased <code>orAtomic</code> operator.  The following two
- examples are equivalent.  Using <code>orAtomic</code>:</p><pre>
-   atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
-     <span class="cmt">// body A</span>
-   } orAtomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
-     <span class="cmt">// body B</span>
-   } ...
-</pre><p> Using <code>oneOf</code>:</p><pre>
-   atomic.oneOf( { <span class="kw">implicit</span> t: InTxn <span class="kw">=&gt;</span>
-     <span class="cmt">// body A</span>
-   }, { <span class="kw">implicit</span> t: InTxn <span class="kw">=&gt;</span>
-     <span class="cmt">// body B</span>
-   } )
-</pre><p> The first block will be attempted in an optimistic transaction until it
+ examples are equivalent.  Using <code>orAtomic</code>:</p><pre>atomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
+  <span class="cmt">// body A</span>
+} orAtomic { <span class="kw">implicit</span> t <span class="kw">=&gt;</span>
+  <span class="cmt">// body B</span>
+} ...</pre><p> Using <code>oneOf</code>:</p><pre>atomic.oneOf( { <span class="kw">implicit</span> t: InTxn <span class="kw">=&gt;</span>
+  <span class="cmt">// body A</span>
+}, { <span class="kw">implicit</span> t: InTxn <span class="kw">=&gt;</span>
+  <span class="cmt">// body B</span>
+} )</pre><p> The first block will be attempted in an optimistic transaction until it
  either succeeds, fails with no retry possible (in which case the causing
  exception will be rethrown), or performs a call to <code>retry</code>.  If a retry
  is requested, then the next block will be attempted in the same fashion.
@@ -182,29 +206,31 @@
  of the attempts.</p><p> The left-biasing of the <code>orAtomic</code> composition guarantees that if the
  first block does not call <code>retry</code>, no other blocks will be executed.
 </p></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#postDecisionFailureHandler" data-isabs="true">
-      <a id="postDecisionFailureHandler:(Status, Throwable) ⇒ Unit"></a>
+    </li><li name="scala.concurrent.stm.TxnExecutor#postDecisionFailureHandler" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="postDecisionFailureHandler:(scala.concurrent.stm.Txn.Status,Throwable)=&gt;Unit"></a>
+      <a id="postDecisionFailureHandler:(Status,Throwable)⇒Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postDecisionFailureHandler</span><span class="result">: (<a name="scala.concurrent.stm.Txn.Status" class="extype" href="Txn$$Status.html">Status</a>, Throwable) ⇒ <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">postDecisionFailureHandler</span><span class="result">: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>, <a href="../../package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns a function that records, reports or discards exceptions that were
  thrown from a while-committing, after-commit or after-rollback life-cycle
  callback.</p>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#pushAlternative" data-isabs="true">
-      <a id="pushAlternative[Z](MaybeTxn,(InTxn) ⇒ Z):Boolean"></a>
+    </li><li name="scala.concurrent.stm.TxnExecutor#pushAlternative" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="pushAlternative[Z](mt:scala.concurrent.stm.MaybeTxn,block:scala.concurrent.stm.InTxn=&gt;Z):Boolean"></a>
+      <a id="pushAlternative[Z](MaybeTxn,(InTxn)⇒Z):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">pushAlternative</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="mt">mt: <a name="scala.concurrent.stm.MaybeTxn" class="extype" href="MaybeTxn.html">MaybeTxn</a></span>, <span name="block">block: (<a name="scala.concurrent.stm.InTxn" class="extype" href="InTxn.html">InTxn</a>) ⇒ Z</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">pushAlternative</span><span class="tparams">[<span name="Z">Z</span>]</span><span class="params">(<span name="mt">mt: <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>, <span name="block">block: (<a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>) ⇒ <span class="extype" name="scala.concurrent.stm.TxnExecutor.pushAlternative.Z">Z</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">(rare) Associates an alternative atomic block with the current thread.</p><div class="fullcomment"><div class="comment cmt"><p>(rare) Associates an alternative atomic block with the current thread.
@@ -216,7 +242,8 @@
  instance of <code>TxnExecutor</code> as <code>apply</code>, just that they have been derived
  from the same original executor.
 </p></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#retryTimeoutNanos" data-isabs="true">
+    </li><li name="scala.concurrent.stm.TxnExecutor#retryTimeoutNanos" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="retryTimeoutNanos:Option[Long]"></a>
       <a id="retryTimeoutNanos:Option[Long]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -224,7 +251,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">retryTimeoutNanos</span><span class="result">: <span name="scala.Option" class="extype">Option</span>[<span name="scala.Long" class="extype">Long</span>]</span>
+        <span class="name">retryTimeoutNanos</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns <code>Some(t)</code> if <code>t</code> is the retry timeout in nanoseconds used by
@@ -235,22 +262,21 @@
  be cancelled with an <code>InterruptedException</code>.</p><p> The retry timeout has essentially the same effect as replacing calls to
  <code>retry</code> with
  <code>{ retryFor(timeout, NANOS) ; throw new InterruptedException }</code>.
- Alternately, <code>retryFor(timeout)</code> has roughly the same effect as </p><pre>
-   <span class="kw">try</span> {
-     atomic.withRetryTimeout(timeout) { <span class="kw">implicit</span> txn <span class="kw">=&gt;</span> retry }
-   } <span class="kw">catch</span> {
-     <span class="kw">case</span> _: InterruptedException <span class="kw">=&gt;</span>
-   }
-</pre></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withControlFlowRecognizer" data-isabs="true">
-      <a id="withControlFlowRecognizer(PartialFunction[Throwable, Boolean]):TxnExecutor"></a>
+ Alternately, <code>retryFor(timeout)</code> has roughly the same effect as </p><pre><span class="kw">try</span> {
+  atomic.withRetryTimeout(timeout) { <span class="kw">implicit</span> txn <span class="kw">=&gt;</span> retry }
+} <span class="kw">catch</span> {
+  <span class="kw">case</span> _: InterruptedException <span class="kw">=&gt;</span>
+}</pre></div></div>
+    </li><li name="scala.concurrent.stm.TxnExecutor#withControlFlowRecognizer" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="withControlFlowRecognizer(pf:PartialFunction[Throwable,Boolean]):scala.concurrent.stm.TxnExecutor"></a>
+      <a id="withControlFlowRecognizer(PartialFunction[Throwable,Boolean]):TxnExecutor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withControlFlowRecognizer</span><span class="params">(<span name="pf">pf: <span name="scala.PartialFunction" class="extype">PartialFunction</span>[Throwable, <span name="scala.Boolean" class="extype">Boolean</span>]</span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="name">withControlFlowRecognizer</span><span class="params">(<span name="pf">pf: <span class="extype" name="scala.PartialFunction">PartialFunction</span>[<a href="../../package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a>, <span class="extype" name="scala.Boolean">Boolean</span>]</span>)</span><span class="result">: <a href="" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns a <code>TxnExecutor e</code> that is identical to this one, except that
@@ -261,22 +287,21 @@
  system-wide recognition of a control-transfer exception that does not
  extend <code>scala.util.control.ControlThrowable</code>.  For example, to modify the
  default behavior of all <code>TxnExecutor.isControlFlow</code> calls to accept
- <code>DSLNonLocalControlTransferException</code>: </p><pre>
-   TxnExecutor.transformDefault { e <span class="kw">=&gt;</span>
-     e.withControlFlowRecognizer {
-       <span class="kw">case</span> _: DSLNonLocalControlTransferException <span class="kw">=&gt;</span> <span class="kw">true</span>
-     }
-   }
-</pre></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withPostDecisionFailureHandler" data-isabs="true">
-      <a id="withPostDecisionFailureHandler((Status, Throwable) ⇒ Unit):TxnExecutor"></a>
+ <code>DSLNonLocalControlTransferException</code>: </p><pre>TxnExecutor.transformDefault { e <span class="kw">=&gt;</span>
+e.withControlFlowRecognizer {
+  <span class="kw">case</span> _: DSLNonLocalControlTransferException <span class="kw">=&gt;</span> <span class="kw">true</span>
+}
+}</pre></div></div>
+    </li><li name="scala.concurrent.stm.TxnExecutor#withPostDecisionFailureHandler" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="withPostDecisionFailureHandler(handler:(scala.concurrent.stm.Txn.Status,Throwable)=&gt;Unit):scala.concurrent.stm.TxnExecutor"></a>
+      <a id="withPostDecisionFailureHandler((Status,Throwable)⇒Unit):TxnExecutor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withPostDecisionFailureHandler</span><span class="params">(<span name="handler">handler: (<a name="scala.concurrent.stm.Txn.Status" class="extype" href="Txn$$Status.html">Status</a>, Throwable) ⇒ <span name="scala.Unit" class="extype">Unit</span></span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="name">withPostDecisionFailureHandler</span><span class="params">(<span name="handler">handler: (<a href="Txn$$Status.html" class="extype" name="scala.concurrent.stm.Txn.Status">Status</a>, <a href="../../package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="result">: <a href="" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns a <code>TxnExecutor e</code> that is identical to this one, except that
@@ -285,7 +310,8 @@
  be called from inside a function passed to <code>TxnExecutor.transformDefault</code>
  to change the system-wide post-decision failure handler.
 </p></div></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withRetryTimeoutNanos" data-isabs="true">
+    </li><li name="scala.concurrent.stm.TxnExecutor#withRetryTimeoutNanos" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="withRetryTimeoutNanos(timeoutNanos:Option[Long]):scala.concurrent.stm.TxnExecutor"></a>
       <a id="withRetryTimeoutNanos(Option[Long]):TxnExecutor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -293,7 +319,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withRetryTimeoutNanos</span><span class="params">(<span name="timeoutNanos">timeoutNanos: <span name="scala.Option" class="extype">Option</span>[<span name="scala.Long" class="extype">Long</span>]</span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="name">withRetryTimeoutNanos</span><span class="params">(<span name="timeoutNanos">timeoutNanos: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Long">Long</span>]</span>)</span><span class="result">: <a href="" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one, except that it has
@@ -301,9 +327,10 @@
     </li></ol>
             </div>
 
-        <div class="values members" id="values">
+        <div id="values" class="values members">
               <h3>Concrete Value Members</h3>
-              <ol><li visbl="pub" name="scala.AnyRef#!=" data-isabs="false">
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:AnyRef):Boolean"></a>
       <a id="!=(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -311,11 +338,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name" title="gt4s: $bang$eq">!=</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.Any#!=" data-isabs="false">
+    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -323,11 +351,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name" title="gt4s: $bang$eq">!=</span><span class="params">(<span name="arg0">arg0: <span name="scala.Any" class="extype">Any</span></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef###" data-isabs="false">
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
       <a id="##():Int"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -335,11 +364,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name" title="gt4s: $hash$hash">##</span><span class="params">()</span><span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#==" data-isabs="false">
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:AnyRef):Boolean"></a>
       <a id="==(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -347,11 +377,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name" title="gt4s: $eq$eq">==</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.Any#==" data-isabs="false">
+    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -359,11 +390,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name" title="gt4s: $eq$eq">==</span><span class="params">(<span name="arg0">arg0: <span name="scala.Any" class="extype">Any</span></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.Any#asInstanceOf" data-isabs="false">
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -371,11 +403,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: T0</span>
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li visbl="prt" name="scala.AnyRef#clone" data-isabs="false">
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -383,14 +416,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: AnyRef</span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<span class="extype" name="java.lang">java.lang</span>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#eq" data-isabs="false">
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -398,11 +432,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#equals" data-isabs="false">
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
       <a id="equals(Any):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -410,11 +445,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span name="scala.Any" class="extype">Any</span></span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="prt" name="scala.AnyRef#finalize" data-isabs="false">
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -422,26 +458,28 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a name="java.lang" class="extype" href="../../../java/lang/package.html">lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<span class="extype" name="java.lang">java.lang</span>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#getClass" data-isabs="false">
-      <a id="getClass():java.lang.Class[_]"></a>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getClass</span><span class="params">()</span><span class="result">: java.lang.Class[_]</span>
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#hashCode" data-isabs="false">
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -449,11 +487,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span name="scala.Int" class="extype">Int</span></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.Any#isInstanceOf" data-isabs="false">
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -461,11 +500,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#ne" data-isabs="false">
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -473,11 +513,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: AnyRef</span>)</span><span class="result">: <span name="scala.Boolean" class="extype">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#notify" data-isabs="false">
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
       <a id="notify():Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -485,11 +526,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#notifyAll" data-isabs="false">
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
       <a id="notifyAll():Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -497,23 +539,25 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#synchronized" data-isabs="false">
-      <a id="synchronized[T0](⇒ T0):T0"></a>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ T0</span>)</span><span class="result">: T0</span>
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#toString" data-isabs="false">
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
       <a id="toString():String"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -521,11 +565,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span name="java.lang.String" class="extype">String</span></span>
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -533,14 +578,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
       <a id="wait(Long,Int):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -548,14 +594,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span name="scala.Long" class="extype">Long</span></span>, <span name="arg1">arg1: <span name="scala.Int" class="extype">Int</span></span>)</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li visbl="pub" name="scala.AnyRef#wait" data-isabs="false">
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
       <a id="wait(Long):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -563,14 +610,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span name="scala.Long" class="extype">Long</span></span>)</span><span class="result">: <span name="scala.Unit" class="extype">Unit</span></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li visbl="pub" name="scala.concurrent.stm.TxnExecutor#withRetryTimeout" data-isabs="false">
+    </li><li name="scala.concurrent.stm.TxnExecutor#withRetryTimeout" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="withRetryTimeout(timeout:Long,unit:java.util.concurrent.TimeUnit):scala.concurrent.stm.TxnExecutor"></a>
       <a id="withRetryTimeout(Long,TimeUnit):TxnExecutor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -578,7 +626,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withRetryTimeout</span><span class="params">(<span name="timeout">timeout: <span name="scala.Long" class="extype">Long</span></span>, <span name="unit">unit: <span name="java.util.concurrent.TimeUnit" class="extype">TimeUnit</span> = <span class="symbol"><span class="name"><a href="../../../java/package.html">TimeUnit.MILLISECONDS</a></span></span></span>)</span><span class="result">: <a name="scala.concurrent.stm.TxnExecutor" class="extype" href="">TxnExecutor</a></span>
+        <span class="name">withRetryTimeout</span><span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="java.util.concurrent.TimeUnit">TimeUnit</span> = <span class="symbol">TimeUnit.MILLISECONDS</span></span>)</span><span class="result">: <a href="" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns a <code>TxnExecutor</code> that is identical to this one except that it has
@@ -591,13 +639,23 @@
             </div>
 
         
+
+        
         </div>
 
         <div id="inheritedMembers">
-        <div name="scala.AnyRef" class="parent">
-              <h3>Inherited from AnyRef</h3>
-            </div><div name="scala.Any" class="parent">
-              <h3>Inherited from <span name="scala.Any" class="extype">Any</span></h3>
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
             </div>
         </div>
 
