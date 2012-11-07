@@ -7,11 +7,11 @@ version := "0.7-SNAPSHOT"
 
 scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.10.0-RC1", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
+crossScalaVersions := Seq("2.10.0-RC2", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
 
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
-// hack for missing scala-actors dep in scalatest for 2.10.0-RC1
+// hack for missing scala-actors dep in scalatest for 2.10.0-RC2
 libraryDependencies <<= (libraryDependencies, scalaVersion) { (d, v) =>
     if (v.startsWith("2.10")) d :+ ("org.scala-lang" % "scala-actors" % v) else d }
 
