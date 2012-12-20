@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray}
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 import java.lang.reflect.{InvocationTargetException, Method}
 
-private[ccstm] object WakeupManager {
+object WakeupManager {
   trait Event {
     def triggered: Boolean
 
@@ -28,7 +28,7 @@ private[ccstm] object WakeupManager {
   // there is a bit of overhead, we are careful to only pay it when we are
   // actually about to park the thread (which is quite expensive on its own).
 
-  private val blockingMethod: Method = {
+  val blockingMethod: Method = {
     try {
       Class.forName("scala.concurrent.package").getMethod("blocking", classOf[Function0[_]])
     } catch {
