@@ -3,27 +3,25 @@ layout: default
 title: Snapshot releases
 ---
 
-Changes between 0.6 and 0.7-SNAPSHOT:
+Changes between 0.7 and 0.8-SNAPSHOT:
 
-* better support for interactive debuggers, via @TxnDebuggable@ and @atomic.unrecorded@.  IntelliJ IDEA and Eclipse can now watch @Ref@ values inside a transaction without affecting the read or write sets.
-* ScalaSTM cooperates with 2.10's @scala.concurrent.BlockingContext@.
-* added @transformAndExtract@, which allows an arbitrary value to be returned from the transformation function through to the caller.
-* added @transformAndGet@ and @getAndTransform@ to @Ref@ and @TxnLocal@, previously these were only defined for @Ref.View@.
+Currently there are no changes between 0.7 and the development branch 0.8-SNAPSHOT.
 
 Snapshot releases deployed to the @oss.sonatype.org@ repository are fully tested and functional, but may have changing APIs.
 
 h2(#link). Links
 
-* Manual download: ["scala-stm_2.10.0-RC5-0.7-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.10.0-RC5/0.7-SNAPSHOT/scala-stm_2.10.0-RC5-0.7-SNAPSHOT.jar]
-* Manual download: ["scala-stm_2.9.2-0.7-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.2/0.7-SNAPSHOT/scala-stm_2.9.2-0.7-SNAPSHOT.jar]
-* ScalaDoc: ["0.7-SNAPSHOT":api/0.7-SNAPSHOT/index.html#scala.concurrent.stm.package]
+* Manual download: ["scala-stm_2.10-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.10/0.8-SNAPSHOT/scala-stm_2.10-0.8-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.3-RC1-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.3-RC1/0.8-SNAPSHOT/scala-stm_2.9.3-RC1-0.8-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.2-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.2/0.8-SNAPSHOT/scala-stm_2.9.2-0.8-SNAPSHOT.jar]
+* ScalaDoc: ["0.8-SNAPSHOT":api/0.8-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
 
 Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your @build.sbt@ file (or a Scala build file). You will also need to add a resolver that can find the @oss.sonatype.org@ snapshot repository.
 
 {% highlight scala %}
-libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.7-SNAPSHOT")
+libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.8-SNAPSHOT")
 
 resolvers += ("snapshots" at
     "http://oss.sonatype.org/content/repositories/snapshots")
@@ -39,8 +37,8 @@ The ScalaSTM snapshot dependency for your @pom.xml@ is
 <dependencies>
   <dependency>
     <groupId>org.scala-stm</groupId>
-    <artifactId>scala-stm_2.9.2</artifactId>
-    <version>0.7-SNAPSHOT</version>
+    <artifactId>scala-stm_2.10</artifactId>
+    <version>0.8-SNAPSHOT</version>
   </dependency>
 </dependencies>
 {% endhighlight %}
