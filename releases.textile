@@ -12,9 +12,9 @@ The latest release of ScalaSTM is version 0.7.  To get it you can
 h2(#notes). Release notes
 
 Changes between 0.6 and 0.7:
-* better support for interactive debuggers, via @TxnDebuggable@ and @atomic.unrecorded@.  IntelliJ IDEA and Eclipse can now watch @Ref@ values inside a transaction without affecting the read or write sets.
+* better support for interactive debuggers, via ["TxnDebuggable":api/0.7/scala/concurrent/stm/TxnDebuggable.html] and @atomic.unrecorded@.  IntelliJ IDEA and Eclipse can now watch @Ref@ values inside a transaction without affecting the read or write sets.
 * ScalaSTM cooperates with 2.10's @scala.concurrent.BlockingContext@.
-* added @transformAndExtract@, which allows an arbitrary value to be returned from the transformation function.
+* added @transformAndExtract@ to @Ref@, @Ref.View@, and @TxnLocal@, which allows an arbitrary value to be returned from the transformation function.
 * added @transformAndGet@ and @getAndTransform@ to @Ref@ and @TxnLocal@, previously these were only defined for @Ref.View@.
 
 Changes between 0.5 and 0.6:

@@ -18,7 +18,7 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 h2(#news).  News
 
 *(major) _2012 Dec 21_ -- ScalaSTM version 0.7 ["released":releases.html], including
-** debugger support
+** debugger support via ["TxnDebuggable":api/0.7/scala/concurrent/stm/TxnDebuggable.html]
 ** cooperation with Scala 2.10's thread pools
 ** additional convenience methods on @Ref@, @Ref.View@, and @TxnLocal@
 
