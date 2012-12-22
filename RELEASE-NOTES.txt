@@ -1,6 +1,6 @@
-ScalaSTM - 0.7-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.7 RELEASE NOTES
 
-Changes between 0.6 and 0.7-SNAPSHOT:
+Changes between 0.6 and 0.7:
 
 * better support for interactive debuggers, via TxnDebuggable and
   atomic.unrecorded.  IntelliJ IDEA and Eclipse can now watch Ref
@@ -13,9 +13,6 @@ Changes between 0.6 and 0.7-SNAPSHOT:
 
 * added transformAndGet and getAndTransform to Ref and TxnLocal,
   previously these were only defined for Ref.View.
-
-Snapshot releases deployed to the oss.sonatype.org repository are tested
-and functional, but may have changing APIs.
 
 ----
 

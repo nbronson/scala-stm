@@ -3,12 +3,13 @@ name := "scala-stm"
 
 organization := "org.scala-stm"
 
-version := "0.7-SNAPSHOT"
+version := "0.7"
 
 scalaVersion := "2.10.0"
 
-crossScalaVersions := Seq("2.10.0", "2.9.3-RC1", "2.9.2", "2.9.1-1", "2.9.1", "2.9.0-1", "2.9.0", "2.8.2", "2.8.1")
+crossScalaVersions := Seq("2.10.0", "2.9.3-RC1", "2.9.2")
 
+//libraryDependencies += ("org.scalatest" % "scalatest_2.10.0-RC5" % "[1.5,)" % "test")
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
 libraryDependencies += ("junit" % "junit" % "4.5" % "test")
