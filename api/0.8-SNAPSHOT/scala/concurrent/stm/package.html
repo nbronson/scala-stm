@@ -1,0 +1,671 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>stm - scala.concurrent.stm</title>
+          <meta name="description" content="stm - scala.concurrent.stm" />
+          <meta name="keywords" content="stm scala.concurrent.stm" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'scala.concurrent.stm.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="scala">scala</a>.<a href="../package.html" class="extype" name="scala.concurrent">concurrent</a></p>
+        <h1>stm</h1>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">stm</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="scala.concurrent.stm"><span>stm</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="scala.concurrent.stm.CommitBarrier" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="CommitBarrierextendsObject"></a>
+      <a id="CommitBarrier:CommitBarrier"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="CommitBarrier.html"><span class="name">CommitBarrier</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A <code>CommitBarrier</code> allows multiple transactions on separate threads to
+ perform a single atomic commit.</p>
+    </li><li name="scala.concurrent.stm.InTxn" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="InTxnextendsInTxnEnd"></a>
+      <a id="InTxn:InTxn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="InTxn.html"><span class="name">InTxn</span></a><span class="result"> extends <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">The presence of an implicit <code>InTxn</code> instance grants the caller permission
+ to perform transactional reads and writes on <code>Ref</code> instances, as well as
+ permission to call <code>object Txn</code> methods that require an <code>InTxnEnd</code>.</p>
+    </li><li name="scala.concurrent.stm.InTxnEnd" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="InTxnEndextendsMaybeTxn"></a>
+      <a id="InTxnEnd:InTxnEnd"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="InTxnEnd.html"><span class="name">InTxnEnd</span></a><span class="result"> extends <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">The presence of an implicit <code>InTxnEnd</code> instance inside a transaction
+ life-cycle handler grants permission to call methods in <code>object Txn</code> that
+ locate nesting levels or register additional handlers.</p>
+    </li><li name="scala.concurrent.stm.MaybeTxn" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="MaybeTxnextendsObject"></a>
+      <a id="MaybeTxn:MaybeTxn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="MaybeTxn.html"><span class="name">MaybeTxn</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt"><code>MaybeTxn</code> allows lookup of the implicit <code>InTxn</code> instance without failing
+ if the <code>InTxn</code> is not known at compile time.</p>
+    </li><li name="scala.concurrent.stm.NestingLevel" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="NestingLevelextendsObject"></a>
+      <a id="NestingLevel:NestingLevel"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="NestingLevel.html"><span class="name">NestingLevel</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A <code>NestingLevel</code> instance describes a single attempt to execute an atomic
+ block inside a transaction.</p>
+    </li><li name="scala.concurrent.stm.PendingAtomicBlock" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="PendingAtomicBlock[A]extendsObject"></a>
+      <a id="PendingAtomicBlock[A]:PendingAtomicBlock[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="PendingAtomicBlock.html"><span class="name">PendingAtomicBlock</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Instances of <code>PendingAtomicBlock</code> defer the execution of an atomic block
+ until all of the alternatives can be gathered from the user.</p>
+    </li><li name="scala.concurrent.stm.Ref" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Ref[A]extendsRefLike[A,scala.concurrent.stm.InTxn]withSource[A]withSink[A]"></a>
+      <a id="Ref[A]:Ref[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Ref.html"><span class="name">Ref</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[<span class="extype" name="scala.concurrent.stm.Ref.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>] with <a href="Source.html" class="extype" name="scala.concurrent.stm.Source">Source</a>[<span class="extype" name="scala.concurrent.stm.Ref.A">A</span>] with <a href="Sink.html" class="extype" name="scala.concurrent.stm.Sink">Sink</a>[<span class="extype" name="scala.concurrent.stm.Ref.A">A</span>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">Provides access to a single element of type <i>A</i>.</p>
+    </li><li name="scala.concurrent.stm.RefCompanion" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RefCompanionextendsObject"></a>
+      <a id="RefCompanion:RefCompanion"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RefCompanion.html"><span class="name">RefCompanion</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.RefLike" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RefLike[A,Context]extendsSourceLike[A,Context]withSinkLike[A,Context]"></a>
+      <a id="RefLike[A,Context]:RefLike[A,Context]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RefLike.html"><span class="name">RefLike</span></a><span class="tparams">[<span name="A">A</span>, <span name="Context">Context</span>]</span><span class="result"> extends <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.RefLike.A">A</span>, <span class="extype" name="scala.concurrent.stm.RefLike.Context">Context</span>] with <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[<span class="extype" name="scala.concurrent.stm.RefLike.A">A</span>, <span class="extype" name="scala.concurrent.stm.RefLike.Context">Context</span>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt">Provides all of the operations of a <code>Ref[A]</code>, without the ability to get a
+ <code>Ref.View</code>.</p>
+    </li><li name="scala.concurrent.stm.Sink" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Sink[-A]extendsSinkLike[A,scala.concurrent.stm.InTxn]"></a>
+      <a id="Sink[-A]:Sink[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Sink.html"><span class="name">Sink</span></a><span class="tparams">[<span name="A">-A</span>]</span><span class="result"> extends <a href="SinkLike.html" class="extype" name="scala.concurrent.stm.SinkLike">SinkLike</a>[<span class="extype" name="scala.concurrent.stm.Sink.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt"><code>Sink[+A]</code> consists of the contra-variant write-only operations of
+ <code>Ref[A]</code>.</p>
+    </li><li name="scala.concurrent.stm.SinkLike" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="SinkLike[-A,Context]extendsObject"></a>
+      <a id="SinkLike[-A,Context]:SinkLike[A,Context]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="SinkLike.html"><span class="name">SinkLike</span></a><span class="tparams">[<span name="A">-A</span>, <span name="Context">Context</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Provides all of the operations of a <code>Sink[A]</code>, without the ability to get
+ a <code>Sink.View</code>.</p>
+    </li><li name="scala.concurrent.stm.Source" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Source[+A]extendsSourceLike[A,scala.concurrent.stm.InTxn]withTxnDebuggable"></a>
+      <a id="Source[+A]:Source[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Source.html"><span class="name">Source</span></a><span class="tparams">[<span name="A">+A</span>]</span><span class="result"> extends <a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a>[<span class="extype" name="scala.concurrent.stm.Source.A">A</span>, <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a>] with <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt"><code>Source[+A]</code> consists of the covariant read-only operations of <code>Ref[A]</code>.</p>
+    </li><li name="scala.concurrent.stm.SourceLike" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="SourceLike[+A,Context]extendsObject"></a>
+      <a id="SourceLike[+A,Context]:SourceLike[A,Context]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="SourceLike.html"><span class="name">SourceLike</span></a><span class="tparams">[<span name="A">+A</span>, <span name="Context">Context</span>]</span><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Provides all of the operations of a <code>Source[A]</code>, without the ability to get
+ a <code>Source.View</code>.</p>
+    </li><li name="scala.concurrent.stm.TArray" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TArray[A]extendsTxnDebuggable"></a>
+      <a id="TArray[A]:TArray[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TArray.html"><span class="name">TArray</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">Bulk transactional storage, roughly equivalent to <code>Array[Ref[T]]</code> but
+ potentially much more space efficient.</p>
+    </li><li name="scala.concurrent.stm.TMap" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TMap[A,B]extendsTxnDebuggable"></a>
+      <a id="TMap[A,B]:TMap[A,B]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TMap.html"><span class="name">TMap</span></a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A transactional map implementation that requires that all of its map-like
+ operations be called from inside an atomic block.</p>
+    </li><li name="scala.concurrent.stm.TSet" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TSet[A]extendsTxnDebuggable"></a>
+      <a id="TSet[A]:TSet[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TSet.html"><span class="name">TSet</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="TxnDebuggable.html" class="extype" name="scala.concurrent.stm.TxnDebuggable">TxnDebuggable</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A transactional set implementation that requires that all of its set-like
+ operations be called from inside an atomic block.</p>
+    </li><li name="scala.concurrent.stm.TxnDebuggable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TxnDebuggableextendsObject"></a>
+      <a id="TxnDebuggable:TxnDebuggable"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnDebuggable.html"><span class="name">TxnDebuggable</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">This trait implements methods that can be used to examine the content of
+ transactional data structures in a debugger with minimal modification to
+ the behavior of the program.</p>
+    </li><li name="scala.concurrent.stm.TxnExecutor" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TxnExecutorextendsObject"></a>
+      <a id="TxnExecutor:TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnExecutor.html"><span class="name">TxnExecutor</span></a><span class="result"> extends <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">A <code>TxnExecutor</code> is responsible for executing atomic blocks transactionally
+ using a set of configuration parameters.</p>
+    </li><li name="scala.concurrent.stm.TxnLocal" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TxnLocal[A]extendsRefLike[A,scala.concurrent.stm.InTxnEnd]"></a>
+      <a id="TxnLocal[A]:TxnLocal[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnLocal.html"><span class="name">TxnLocal</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <a href="RefLike.html" class="extype" name="scala.concurrent.stm.RefLike">RefLike</a>[<span class="extype" name="scala.concurrent.stm.TxnLocal.A">A</span>, <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a>]</span>
+      </span>
+      </h4>
+      <p class="comment cmt"><code>TxnLocal[A]</code> holds an instance of <code>A</code> that is local to an atomic block.</p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.concurrent.stm.CommitBarrier" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommitBarrier"></a>
+      <a id="CommitBarrier:CommitBarrier"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="CommitBarrier$.html"><span class="name">CommitBarrier</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.MaybeTxn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MaybeTxn"></a>
+      <a id="MaybeTxn:MaybeTxn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="MaybeTxn$.html"><span class="name">MaybeTxn</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.NestingLevel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="NestingLevel"></a>
+      <a id="NestingLevel:NestingLevel"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="NestingLevel$.html"><span class="name">NestingLevel</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.Ref" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Ref"></a>
+      <a id="Ref:Ref"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Ref$.html"><span class="name">Ref</span></a><span class="result"> extends <a href="RefCompanion.html" class="extype" name="scala.concurrent.stm.RefCompanion">RefCompanion</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt"><code>object Ref</code> contains factory methods that allocate an STM-managed memory
+ location and return a <code>Ref</code> instance that provides access to that location.</p>
+    </li><li name="scala.concurrent.stm.Sink" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Sink"></a>
+      <a id="Sink:Sink"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Sink$.html"><span class="name">Sink</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.Source" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Source"></a>
+      <a id="Source:Source"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Source$.html"><span class="name">Source</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.TArray" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TArray"></a>
+      <a id="TArray:TArray"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TArray$.html"><span class="name">TArray</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.TMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TMap"></a>
+      <a id="TMap:TMap"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TMap$.html"><span class="name">TMap</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.TSet" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TSet"></a>
+      <a id="TSet:TSet"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TSet$.html"><span class="name">TSet</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.Txn" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Txn"></a>
+      <a id="Txn:Txn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Txn$.html"><span class="name">Txn</span></a>
+      </span>
+      </h4>
+      <p class="comment cmt">The <code>Txn</code> object provides methods that operate on the current transaction
+ context.</p>
+    </li><li name="scala.concurrent.stm.TxnExecutor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TxnExecutor"></a>
+      <a id="TxnExecutor:TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnExecutor$.html"><span class="name">TxnExecutor</span></a>
+      </span>
+      </h4>
+      <p class="comment cmt"><code>object TxnExecutor</code> manages the system-wide default <code>TxnExecutor</code>.</p>
+    </li><li name="scala.concurrent.stm.TxnLocal" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TxnLocal"></a>
+      <a id="TxnLocal:TxnLocal"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnLocal$.html"><span class="name">TxnLocal</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.TxnUnknown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TxnUnknown"></a>
+      <a id="TxnUnknown:TxnUnknown"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TxnUnknown$.html"><span class="name">TxnUnknown</span></a><span class="result"> extends <a href="MaybeTxn.html" class="extype" name="scala.concurrent.stm.MaybeTxn">MaybeTxn</a></span>
+      </span>
+      </h4>
+      <p class="comment cmt">An object that represents the absence of a statically-bound current
+ transaction.</p>
+    </li><li name="scala.concurrent.stm.package#atomic" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="atomic:scala.concurrent.stm.TxnExecutor"></a>
+      <a id="atomic:TxnExecutor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">atomic</span><span class="result">: <a href="TxnExecutor.html" class="extype" name="scala.concurrent.stm.TxnExecutor">TxnExecutor</a></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Atomically executes atomic blocks using the default <code>TxnExecutor</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Atomically executes atomic blocks using the default <code>TxnExecutor</code>.  See
+ <code>TxnExecutor.apply</code>.
+</p></div></div>
+    </li><li name="scala.concurrent.stm.ccstm" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ccstm"></a>
+      <a id="ccstm:ccstm"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="ccstm/package.html"><span class="name">ccstm</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.impl" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="impl"></a>
+      <a id="impl:impl"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="impl/package.html"><span class="name">impl</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.japi" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="japi"></a>
+      <a id="japi:japi"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="japi/package.html"><span class="name">japi</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.package#retry" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="retry(implicittxn:scala.concurrent.stm.InTxn):Nothing"></a>
+      <a id="retry(InTxn):Nothing"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">retry</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span><span class="result">: <span class="extype" name="scala.Nothing">Nothing</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Equivalent to <code>Txn.retry</code>.</p>
+    </li><li name="scala.concurrent.stm.package#retryFor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="retryFor(timeout:Long,unit:java.util.concurrent.TimeUnit)(implicittxn:scala.concurrent.stm.InTxn):Unit"></a>
+      <a id="retryFor(Long,TimeUnit)(InTxn):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">retryFor</span><span class="params">(<span name="timeout">timeout: <span class="extype" name="scala.Long">Long</span></span>, <span name="unit">unit: <span class="extype" name="java.util.concurrent.TimeUnit">TimeUnit</span> = <span class="symbol">TimeUnit.MILLISECONDS</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">Equivalent to <code>Txn.retryFor(timeout, unit)</code>.</p>
+    </li><li name="scala.concurrent.stm.skel" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="skel"></a>
+      <a id="skel:skel"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="skel/package.html"><span class="name">skel</span></a>
+      </span>
+      </h4>
+      
+    </li><li name="scala.concurrent.stm.package#wrapChainedAtomic" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="wrapChainedAtomic[A](lhs:=&gt;A):scala.concurrent.stm.PendingAtomicBlock[A]"></a>
+      <a id="wrapChainedAtomic[A](⇒A):PendingAtomicBlock[A]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wrapChainedAtomic</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="lhs">lhs: ⇒ <span class="extype" name="scala.concurrent.stm.wrapChainedAtomic.A">A</span></span>)</span><span class="result">: <a href="PendingAtomicBlock.html" class="extype" name="scala.concurrent.stm.PendingAtomicBlock">PendingAtomicBlock</a>[<span class="extype" name="scala.concurrent.stm.wrapChainedAtomic.A">A</span>]</span>
+      </span>
+      </h4>
+      <p class="shortcomment cmt">This is the first half of the machinery for implementing <code>orAtomic</code>.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
