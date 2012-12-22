@@ -1,7 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <properties>
-    <scala.version>2.9.2</scala.version>
-    <scala.stm.version>0.7-SNAPSHOT</scala.stm.version>
+    <scala.version>2.10.0</scala.version>
+    <scala.major.version>2.10</scala.major.version>
+    <scala.stm.version>0.7</scala.stm.version>
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
@@ -15,12 +16,6 @@
       <id>oss.sonatype.org</id>
       <name>OSS Sonatype Release Repository</name>
       <url>http://oss.sonatype.org/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>oss.sonatype.org.snapshots</id>
-      <name>OSS Sonatype Snapshot Repository</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-      <snapshots/>
     </repository>
   </repositories>
 
@@ -50,7 +45,7 @@
     </dependency>
     <dependency>
       <groupId>org.scala-stm</groupId>
-      <artifactId>scala-stm_${scala.version}</artifactId>
+      <artifactId>scala-stm_${scala.major.version}</artifactId>
       <version>${scala.stm.version}</version>
     </dependency>
   </dependencies>

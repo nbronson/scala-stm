@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# http://search.maven.org/remotecontent?filepath=org/scala-tools/scala-stm_2.10.0-M7/0.6/scala-stm_2.10.0-M7-0.6.pom
+# something like:
+#  http://search.maven.org/remotecontent?filepath=org/scala-tools/scala-stm_2.10.0-M7/0.6/scala-stm_2.10.0-M7-0.6.pom
 
 BUILD_SBT=$(dirname $0)/../build.sbt
 GROUP_ID="scala-stm"
@@ -10,7 +11,8 @@ echo
 
 sed 's/[":=(,)]/ /g' "$BUILD_SBT" | \
   awk '$1=="version" {stm=$2}
-       $1=="crossScalaVersions" {for(i=3;i<=NF;++i) {print stm,$i}}' | \
+       $1=="crossScalaVersions" {for(i=3;i<=NF;++i) {print stm,$i}}
+       END {print stm,"2.10"}' | \
   while read x y; do
     /bin/echo -en "stm $x  scala $y    \t"
     # URL="http://search.maven.org/remotecontent?filepath=org/scala-stm/scala-stm_$y/$x/scala-stm_$y-$x.pom"
