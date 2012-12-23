@@ -128,15 +128,15 @@
  perhaps more efficient.</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>an idempotent function.</p></dd><dt>returns</dt><dd class="cmt"><p>the result of applying <code>f</code> to the value contained in this <code>Ref</code>.
 </p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="SourceLike.html" class="extype" name="scala.concurrent.stm.SourceLike">SourceLike</a></dd></dl></div>
     </li><li name="scala.concurrent.stm.TxnLocal#isInitialized" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="isInitialized(implicittxn:scala.concurrent.stm.InTxn):Boolean"></a>
-      <a id="isInitialized(InTxn):Boolean"></a>
+      <a id="isInitialized(implicittxn:scala.concurrent.stm.InTxnEnd):Boolean"></a>
+      <a id="isInitialized(InTxnEnd):Boolean"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInitialized</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxn.html" class="extype" name="scala.concurrent.stm.InTxn">InTxn</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">isInitialized</span><span class="params">(<span class="implicit">implicit </span><span name="txn">txn: <a href="InTxnEnd.html" class="extype" name="scala.concurrent.stm.InTxnEnd">InTxnEnd</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
       </h4>
       <p class="shortcomment cmt">Returns true if a value is already associated with this <code>TxnLocal</code> in the
