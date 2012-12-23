@@ -2,7 +2,7 @@ ScalaSTM - 0.8-SNAPSHOT RELEASE NOTES
 
 Changes between 0.7 and 0.8-SNAPSHOT:
 
-So far there are no changes between 0.7 and 0.8-SNAPSHOT.
+* small improvement to TxnLocal interface.
 
 Snapshot releases deployed to the oss.sonatype.org repository are tested
 and functional, but may have changing APIs.

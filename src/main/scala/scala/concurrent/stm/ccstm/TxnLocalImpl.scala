@@ -28,7 +28,7 @@ private[ccstm] class TxnLocalImpl[A](init: => A,
 
   //////// TxnLocal
 
-  def isInitialized(implicit txn: InTxn): Boolean = {
+  def isInitialized(implicit txn: InTxnEnd): Boolean = {
     txn.asInstanceOf[InTxnImpl].txnLocalFind(this) >= 0
   }
 

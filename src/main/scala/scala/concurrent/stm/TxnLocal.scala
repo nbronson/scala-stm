@@ -75,5 +75,5 @@ trait TxnLocal[A] extends RefLike[A, InTxnEnd] {
   /** Returns true if a value is already associated with this `TxnLocal` in the
    *  current transactional context, false otherwise.
    */
-  def isInitialized(implicit txn: InTxn): Boolean
+  def isInitialized(implicit txn: InTxnEnd): Boolean
 }
