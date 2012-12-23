@@ -5,7 +5,7 @@ title: Snapshot releases
 
 Changes between 0.7 and 0.8-SNAPSHOT:
 
-Currently there are no changes between 0.7 and the development branch 0.8-SNAPSHOT.
+* small improvement to @TxnLocal@ interface 
 
 Snapshot releases deployed to the @oss.sonatype.org@ repository are fully tested and functional, but may have changing APIs.
 
