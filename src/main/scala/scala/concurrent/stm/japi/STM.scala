@@ -53,7 +53,7 @@ object STM {
    * Create an empty TMap. Return a `java.util.Map` view of this TMap.
    * @return a new, empty `TMap.View` wrapped as a `java.util.Map`.
    */
-  def newMap[A, B](): JMap[A, B] = JavaConversions.asJavaMap(newTMap[A, B])
+  def newMap[A, B](): JMap[A, B] = JavaConversions.mutableMapAsJavaMap(newTMap[A, B])
 
   /**
    * Create an empty TSet. Return a `TSet.View`, which does not require
@@ -66,7 +66,7 @@ object STM {
    * Create an empty TSet. Return a `java.util.Set` view of this TSet.
    * @return a new, empty `TSet.View` wrapped as a `java.util.Set`.
    */
-  def newSet[A](): JSet[A] = JavaConversions.asJavaSet(newTSet[A])
+  def newSet[A](): JSet[A] = JavaConversions.mutableSetAsJavaSet(newTSet[A])
 
   /**
    * Create a TArray containing `length` elements. Return a `TArray.View`,
@@ -82,7 +82,7 @@ object STM {
    * @param length the length of the `TArray.View` to be created
    * @return a new, empty `TArray.View` wrapped as a `java.util.List`.
    */
-  def newArrayAsList[A <: AnyRef](length: Int): JList[A] = JavaConversions.asJavaList(newTArray[A](length))
+  def newArrayAsList[A <: AnyRef](length: Int): JList[A] = JavaConversions.mutableSeqAsJavaList(newTArray[A](length))
 
   /**
    * Atomic block that takes a `Runnable`.
