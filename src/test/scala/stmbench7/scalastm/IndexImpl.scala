@@ -32,7 +32,7 @@ object IndexImpl {
 
     def iterator = makeValuesIterator(underlying())
 
-    def getKeys = JavaConversions.asJavaSet(underlying().keySet)
+    def getKeys = JavaConversions.setAsJavaSet(underlying().keySet)
 
     def getRange(minKey: A, maxKey: A) = new java.lang.Iterable[B] {
       val range = underlying().range(minKey, maxKey)
