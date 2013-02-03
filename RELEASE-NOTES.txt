@@ -4,6 +4,8 @@ Changes between 0.7 and 0.8-SNAPSHOT:
 
 * small improvement to TxnLocal interface.
 
+* fix for STMBench7 under Scala 2.10.
+
 Snapshot releases deployed to the oss.sonatype.org repository are tested
 and functional, but may have changing APIs.
 

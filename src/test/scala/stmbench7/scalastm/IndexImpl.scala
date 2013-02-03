@@ -39,9 +39,16 @@ object IndexImpl {
       def iterator = makeValuesIterator(range)
     }
 
-    // <hack>We implement our own iterator because the Scala one generates
-    // a large quantity of garbage.</hack>
     private def makeValuesIterator(m: TreeMap[A, B]) = {
+      if (treeMapTreeField == null)
+        JavaConversions.asJavaIterator(m.values.iterator)
+      else
+        makeCustomValuesIterator(m)
+    }
+
+    // <hack>We implement our own iterator because the Scala one generates
+    // a large quantity of garbage pre 2.10.</hack>
+    private def makeCustomValuesIterator(m: TreeMap[A, B]) = {
       val root = treeMapTreeField.get(m).asInstanceOf[RedBlack[A]#Tree[B]]
       new java.util.Iterator[B] {
         val avail = new ArrayBuffer[RedBlack[A]#NonEmpty[B]] // values ready to return
@@ -72,7 +79,13 @@ object IndexImpl {
 
   private val treeMapTreeField = {
     val f = classOf[TreeMap[String, String]].getDeclaredField("tree")
-    f.setAccessible(true)
-    f
+    if (f.getType == classOf[RedBlack[String]#Tree[String]]) {
+      // pre Scala 2.10, we need the custom iterator hack
+      f.setAccessible(true)
+      f
+    } else {
+      // Scala 2.10 or later uses RedBlackTree, which array-based iter
+      null
+    }
   }
 }
