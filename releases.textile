@@ -7,7 +7,7 @@ The latest release of ScalaSTM is version 0.7.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
 * download a prebuilt JAR
 ** for 2.10.0 and future 2.10 releases: ["scala-stm_2.10-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.10/0.7/scala-stm_2.10-0.7.jar]
-** for 2.9.2: ["scala-stm_2.9.2-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.9.2/0.7/scala-stm_2.9.2-0.7.jar]
+** for 2.9.3: ["scala-stm_2.9.3-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.9.3/0.7/scala-stm_2.9.3-0.7.jar]
 
 h2(#notes). Release notes
 
@@ -62,7 +62,7 @@ libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.7")
 
 h2(#maven). Maven2
 
-Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.10) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). For Scala versions before 2.10 this includes the minor version as well (such as 2.9.2). The ScalaSTM dependency for your @pom.xml@ is
+Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.10) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). For Scala versions before 2.10 this includes the minor version as well (such as 2.9.3). The ScalaSTM dependency for your @pom.xml@ is
 
 {% highlight xml %}
 <dependencies>

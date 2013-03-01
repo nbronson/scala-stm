@@ -13,7 +13,7 @@ h2(#link). Links
 
 * Manual download: ["scala-stm_2.10-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.10/0.8-SNAPSHOT/scala-stm_2.10-0.8-SNAPSHOT.jar]
 * Manual download: ["scala-stm_2.9.3-RC1-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.3-RC1/0.8-SNAPSHOT/scala-stm_2.9.3-RC1-0.8-SNAPSHOT.jar]
-* Manual download: ["scala-stm_2.9.2-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.2/0.8-SNAPSHOT/scala-stm_2.9.2-0.8-SNAPSHOT.jar]
+* Manual download: ["scala-stm_2.9.3-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.3/0.8-SNAPSHOT/scala-stm_2.9.3-0.8-SNAPSHOT.jar]
 * ScalaDoc: ["0.8-SNAPSHOT":api/0.8-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
