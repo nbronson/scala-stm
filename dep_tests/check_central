@@ -11,6 +11,7 @@ echo
 
 sed 's/[":=(,)]/ /g' "$BUILD_SBT" | \
   awk '$1=="version" {stm=$2}
+       $1=="scalaVersion" {print stm,$2}
        $1=="crossScalaVersions" {for(i=3;i<=NF;++i) {print stm,$i}}
        END {print stm,"2.10"}' | \
   while read x y; do
