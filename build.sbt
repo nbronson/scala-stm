@@ -5,9 +5,9 @@ organization := "org.scala-stm"
 
 version := "0.7"
 
-scalaVersion := "2.11.0-M3"
+scalaVersion := "2.11.0-M4"
 
-scalaBinaryVersion := "2.11.0-M3"
+scalaBinaryVersion := "2.11.0-M4"
 
 //crossScalaVersions := Seq("2.10.1-RC2", "2.10.0", "2.9.3", "2.9.2")
 
