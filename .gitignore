@@ -1,6 +1,7 @@
 *.iws
 .*.swp
-.idea/workspace.xml
+.idea/
+.idea_modules/
 out/
 target
 lib_managed/
