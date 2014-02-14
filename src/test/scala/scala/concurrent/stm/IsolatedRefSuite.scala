@@ -532,7 +532,7 @@ class IsolatedRefSuite extends FunSuite {
     atomic { implicit txn => a(2) = "two" }
 
     assert(a.dbgStr === "TArray[size=3](zero, one, two)")
-    val aa = a.dbgValue.asInstanceOf[Array[_]]
+    val aa = a.dbgValue.asInstanceOf[Array[String]]
     assert(aa.length === 3)
     assert(aa(0) === "zero")
     assert(aa(1) === "one")
