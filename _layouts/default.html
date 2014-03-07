@@ -62,7 +62,7 @@
         </ol>
       </div>
       <div id='content'>
-        <h1 id='title_{{ page.title | downcase | replace(' ', '_') }}'>{% if page.short_title %}{{ page.short_title }}{% else %}{{ page.title }}{% endif %}</h1>
+        <h1 id='title_{{ page.title | downcase | replace: ' ', '_' }}'>{% if page.short_title %}{{ page.short_title }}{% else %}{{ page.title }}{% endif %}</h1>
         {{ content }}
       </div>
       <div id='footer'>Copyright &copy; 2012-2014</div>
