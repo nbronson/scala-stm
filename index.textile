@@ -4,7 +4,7 @@ title: Library-Based Software Transactional Memory for Scala
 short_title: Welcome
 ---
 
-Welcome from the Scala STM ["Expert Group":expert_group.html].  We've built a lightweight software transactional memory for Scala, inspired by the STMs in Haskell and Clojure while taking advantage of Scala's power and performance.
+Welcome from the creators of Scala STM.  We've built a lightweight software transactional memory for Scala, inspired by the STMs in Haskell and Clojure while taking advantage of Scala's power and performance.
 
 ScalaSTM is a single JAR with no dependencies, and includes
 * An API that supports multiple STM implementations
@@ -16,6 +16,20 @@ ScalaSTM provides a mutable cell called a @Ref@.  If you build a shared data str
 "Learn more...":intro.html
 
 h2(#news).  News
+
+* _2014 Mar 7- -- ScalaSTM version 0.7 published for 2.11.0-RC1
+
+* _2014 Feb 4- -- ScalaSTM version 0.7 published for 2.11.0-M8
+
+* _2014 Jan 12- -- ScalaSTM version 0.7 published for 2.11.0-M7
+
+* _2013 Sep 15- -- ScalaSTM version 0.7 published for 2.11.0-M5
+
+* _2013 Jul 28- -- ScalaSTM version 0.7 published for 2.11.0-M4
+
+* _2013 May 22- -- ScalaSTM version 0.7 published for 2.11.0-M3
+
+* _2013 Jan 12- -- ScalaSTM version 0.7 published for 2.11.0-M1
 
 *(major) _2012 Dec 21_ -- ScalaSTM version 0.7 ["released":releases.html], including
 ** debugger support via ["TxnDebuggable":api/0.7/scala/concurrent/stm/TxnDebuggable.html]
