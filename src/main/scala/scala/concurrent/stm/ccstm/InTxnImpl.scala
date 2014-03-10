@@ -178,6 +178,16 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     if (ownerIsCommitting)
       return true
 
+    // CommitBarrier-s have the ability to create priority inversion during
+    // waiting, because a low-priority member can delay the completion of
+    // the group even if the rest is composed of high-priority transactions
+    // (or prepared transactions, that have infinite effective priority).
+    // Although it seems tempting to try to add extra conditions under which
+    // it is okay to wait, those conditions would need to hold during the
+    // entire wait duration so they are not practical.
+    if (commitBarrier != null)
+      return false
+
     // We know that priority <= currentOwner.priority, because we're the loser.
     // If the priorities match exactly (unlikely but possible) then we can't
     // have both losers wait or we will get a deadlock.
@@ -189,8 +199,9 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     // the number of thread sleep/wakeup transitions, each of which is
     // expensive.  Our heuristic is to wait only if we are barging, which
     // indicates that we are having trouble making forward progress using
-    // just blind optimism.  This also guarantees that doomed transactions
-    // never block anybody, because barging txns have visible readers.
+    // just blind optimism.  Also, since barging transactions prevent (some)
+    // conflicting writes, this choice means we minimize the chance that a
+    // doomed transaction blocks somebody that will be able to commit.
     return _barging
   }
 

@@ -403,4 +403,45 @@ class CommitBarrierSuite extends FunSuite {
     Thread.sleep(100)
     commits.await { _ == 510 }
   }
+
+  test("multi-barrier deadlock cycle") {
+    for (tries <- 0..100) {
+      val a1 = Ref(0)
+      val a2 = Ref(0)
+
+      val cb1 = CommitBarrier(1000)
+      val cb1m1 = cb1.addMember()
+      val cb1m2 = cb1.addMember()
+      val cb2 = CommitBarrier(1000)
+      val cb2m1 = cb2.addMember()
+      val cb2m2 = cb2.addMember()
+
+      val t1 = new Thread() {
+        override def run() {
+          cb1m1.atomic { implicit txn => a1() = a1() + 1 } 
+        }
+      }
+      val t2 = new Thread() {
+        override def run() {
+          cb1m2.atomic { implicit txn => a2() = a2() + 1 }
+        }
+      }
+      val t3 = new Thread() {
+        override def run() {
+          cb2m1.atomic { implicit txn => a1() = a1() + 1 }
+        }
+      }
+      val t4 = new Thread() {
+        override def run() {
+          cb2m2.atomic { implicit txn => a2() = a2() + 1 }
+        }
+      }
+
+      t1.start(); t2.start(); t3.start(); t4.start()
+      t1.join(); t2.join(); t3.join(); t4.join()
+
+      assert(a1.single() == 2);
+      assert(a2.single() == 2);
+    }
+  }
 }
