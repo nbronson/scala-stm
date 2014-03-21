@@ -5,7 +5,7 @@ organization := "org.scala-stm"
 
 version := "0.7"
 
-scalaVersion := "2.11.0-RC1"
+scalaVersion := "2.11.0-RC3"
 
 //scalaBinaryVersion := "2.11.0-M8"
 
