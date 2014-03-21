@@ -6,7 +6,7 @@ title: Releases
 The latest release of ScalaSTM is version 0.7.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
 * download a prebuilt JAR
-** for 2.11.0-RC1: ["scala-stm_2.11.0-RC-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.11.0-RC1/0.7/scala-stm_2.11.0-RC1-0.7.jar]
+** for 2.11.0-RC3: ["scala-stm_2.11.0-RC3-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.11.0-RC3/0.7/scala-stm_2.11.0-RC3-0.7.jar]
 ** for all 2.10 releases: ["scala-stm_2.10-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.10/0.7/scala-stm_2.10-0.7.jar]
 ** for 2.9.3: ["scala-stm_2.9.3-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.9.3/0.7/scala-stm_2.9.3-0.7.jar]
 
