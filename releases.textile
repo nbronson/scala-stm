@@ -6,7 +6,7 @@ title: Releases
 The latest release of ScalaSTM is version 0.7.  To get it you can
 * follow "sbt instructions":#sbt or "maven2 instructions":#maven
 * download a prebuilt JAR
-** for 2.11.0-RC4: ["scala-stm_2.11.0-RC4-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.11.0-RC4/0.7/scala-stm_2.11.0-RC4-0.7.jar]
+** for all 2.11 releases: ["scala-stm_2.11-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.11/0.7/scala-stm_2.11-0.7.jar]
 ** for all 2.10 releases: ["scala-stm_2.10-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.10/0.7/scala-stm_2.10-0.7.jar]
 ** for 2.9.3: ["scala-stm_2.9.3-0.7.jar":https://oss.sonatype.org/content/repositories/releases/org/scala-stm/scala-stm_2.9.3/0.7/scala-stm_2.9.3-0.7.jar]
 
@@ -63,17 +63,17 @@ libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.7")
 
 h2(#maven). Maven2
 
-Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.10) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). For Scala versions before 2.10 this includes the minor version as well (such as 2.9.3). The ScalaSTM dependency for your @pom.xml@ is
+Separate artifacts are published for each version of Scala, so the desired Scala version (such as 2.11) must be included in the @artifactId@ for Maven (@sbt@ automatically handles this). For Scala versions before 2.10 this includes the minor version as well (such as 2.9.3). The ScalaSTM dependency for your @pom.xml@ is
 
 {% highlight xml %}
 <dependencies>
   <dependency>
     <groupId>org.scala-stm</groupId>
-    <artifactId>scala-stm_2.10</artifactId>
+    <artifactId>scala-stm_2.11</artifactId>
     <version>0.7</version>
   </dependency>
 </dependencies>
 {% endhighlight %}
 
-The deployment tests inside the ScalaSTM source include a complete ["pom.xml":https://github.com/nbronson/scala-stm/blob/master/dep_tests/maven/pom.xml], including the repository configuration for @oss.sonatype.org@.
+The deployment tests inside the ScalaSTM source include a complete ["pom.xml":https://github.com/nbronson/scala-stm/blob/master/dep_tests/maven/pom.xml]
 
