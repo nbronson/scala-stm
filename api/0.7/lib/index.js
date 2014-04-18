@@ -14,9 +14,9 @@ var title = $(document).attr('title');
 var lastHash = "";
 
 $(document).ready(function() {
-    $('body').layout({ 
+    $('body').layout({
         west__size: '20%',
-        center__maskContents: true 
+        center__maskContents: true
     });
     $('#browser').layout({
         center__paneSelector: ".ui-west-center"
@@ -335,22 +335,24 @@ function keyboardScrolldownLeftPane() {
 /* Configures the text filter  */
 function configureTextFilter() {
     scheduler.add("init", function() {
-        $("#filter").append("<div id='textfilter'><span class='pre'/><span class='input'><input id='index-input' type='text' accesskey='/'/></span><span class='post'/></div>");
-        printAlphabet();
+        $("#textfilter").append("<span class='pre'/><span class='input'><input id='index-input' type='text' accesskey='/'/></span><span class='post'/>");
         var input = $("#textfilter input");
         resizeFilterBlock();
-        input.bind("keydown", function(event) {
+        input.bind('keyup', function(event) {
             if (event.keyCode == 27) { // escape
                 input.attr("value", "");
-            }
-            if (event.keyCode == 9) { // tab
-                $("#template").contents().find("#mbrsel-input").focus();
-                input.attr("value", "");
-                return false;
             }
             if (event.keyCode == 40) { // down arrow
                 $(window).unbind("keydown");
                 keyboardScrolldownLeftPane();
+                return false;
+            }
+            textFilter();
+        });
+        input.bind('keydown', function(event) {
+            if (event.keyCode == 9) { // tab
+                $("#template").contents().find("#mbrsel-input").focus();
+                input.attr("value", "");
                 return false;
             }
             textFilter();
@@ -381,51 +383,56 @@ function compilePattern(query) {
 // Filters all focused templates and packages. This function should be made less-blocking.
 //   @param query The string of the query
 function textFilter() {
-    scheduler.clear("filter");
-
-    $('#tpl').html('');
-
     var query = $("#textfilter input").attr("value") || '';
     var queryRegExp = compilePattern(query);
 
-    var index = 0;
+    if ((typeof textFilter.lastQuery === "undefined") || (textFilter.lastQuery !== query)) {
 
-    var searchLoop = function () {
-        var packages = Index.keys(Index.PACKAGES).sort();
+        textFilter.lastQuery = query;
 
-        while (packages[index]) {
-            var pack = packages[index];
-            var children = Index.PACKAGES[pack];
-            index++;
+        scheduler.clear("filter");
 
-            if (focusFilterState) {
-                if (pack == focusFilterState ||
-                    pack.indexOf(focusFilterState + '.') == 0) {
-                    ;
-                } else {
-                    continue;
+        $('#tpl').html('');
+
+        var index = 0;
+
+        var searchLoop = function () {
+            var packages = Index.keys(Index.PACKAGES).sort();
+
+            while (packages[index]) {
+                var pack = packages[index];
+                var children = Index.PACKAGES[pack];
+                index++;
+
+                if (focusFilterState) {
+                    if (pack == focusFilterState ||
+                        pack.indexOf(focusFilterState + '.') == 0) {
+                        ;
+                    } else {
+                        continue;
+                    }
+                }
+
+                var matched = $.grep(children, function (child, i) {
+                    return queryRegExp.test(child.name);
+                });
+
+                if (matched.length > 0) {
+                    $('#tpl').append(Index.createPackageTree(pack, matched,
+                                                             focusFilterState));
+                    scheduler.add('filter', searchLoop);
+                    return;
                 }
             }
 
-            var matched = $.grep(children, function (child, i) {
-                return queryRegExp.test(child.name);
+            $('#tpl a.packfocus').click(function () {
+                focusFilter($(this).parent().parent());
             });
+            configureHideFilter();
+        };
 
-            if (matched.length > 0) {
-                $('#tpl').append(Index.createPackageTree(pack, matched,
-                                                         focusFilterState));
-                scheduler.add('filter', searchLoop);
-                return;
-            }
-        }
-
-        $('#tpl a.packfocus').click(function () {
-            focusFilter($(this).parent().parent());
-        });
-        configureHideFilter();
-    };
-
-    scheduler.add('filter', searchLoop);
+        scheduler.add('filter', searchLoop);
+    }
 }
 
 /* Configures the hide tool by adding the hide link to all packages. */
@@ -532,19 +539,3 @@ function kindFilterSync() {
 function resizeFilterBlock() {
     $("#tpl").css("top", $("#filter").outerHeight(true));
 }
-
-function printAlphabet() {
-    var html = '<a target="template" href="index/index-_.html">#</a>';
-    var c;
-    for (c = 'a'; c <= 'z'; c = String.fromCharCode(c.charCodeAt(0) + 1)) {
-        html += [
-            '<a target="template" href="index/index-',
-            c,
-            '.html">',
-            c.toUpperCase(),
-            '</a>'
-        ].join('');
-    }
-    $("#filter").append('<div id="letters">' + html + '</div>');
-}
-

@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>concurrent - scala.concurrent</title>
@@ -132,7 +131,7 @@
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="scala.concurrent.package#blocking" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+              <ol><li name="scala.concurrent#blocking" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="blocking[T&lt;:&lt;?&gt;](body:&lt;?&gt;):T"></a>
       <a id="blocking[T](⇒T):T"></a>
       <h4 class="signature">
@@ -145,35 +144,12 @@
       </span>
       </h4>
       <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
-                <span class="name">@throws</span><span class="args">()</span>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Exception]</span>
+    </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.concurrent.package#future" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="future[T&lt;:&lt;?&gt;](body:&lt;?&gt;)(implicitexecctx:&lt;?&gt;):scala.concurrent.Future[T]"></a>
-      <a id="future[T](⇒T)(ExecutionContext):Future[T]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">future</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="body">body: ⇒ <span class="extype" name="scala.concurrent.future.T">T</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="execctx">execctx: <span class="extype" name="scala.concurrent.ExecutionContext">ExecutionContext</span></span>)</span><span class="result">: <span class="extype" name="scala.concurrent.Future">Future</span>[<span class="extype" name="scala.concurrent.future.T">T</span>]</span>
-      </span>
-      </h4>
-      
-    </li><li name="scala.concurrent.package#promise" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="promise[T&lt;:&lt;?&gt;]():scala.concurrent.Promise[T]"></a>
-      <a id="promise[T]():Promise[T]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">promise</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.concurrent.Promise">Promise</span>[<span class="extype" name="scala.concurrent.promise.T">T</span>]</span>
-      </span>
-      </h4>
-      
     </li><li name="scala.concurrent.stm" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="stm"></a>
       <a id="stm:stm"></a>
@@ -192,7 +168,42 @@
 
         
 
-        
+        <div id="values" class="values members">
+              <h3>Deprecated Value Members</h3>
+              <ol><li name="scala.concurrent#future" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="future[T&lt;:&lt;?&gt;](body:&lt;?&gt;)(implicitexecutor:&lt;?&gt;):scala.concurrent.Future[T]"></a>
+      <a id="future[T](⇒T)(ExecutionContext):Future[T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 2.11.0) Use Future { ... } instead.">future</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="body">body: ⇒ <span class="extype" name="scala.concurrent.future.T">T</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="executor">executor: <span class="extype" name="scala.concurrent.ExecutionContext">ExecutionContext</span></span>)</span><span class="result">: <span class="extype" name="scala.concurrent.Future">Future</span>[<span class="extype" name="scala.concurrent.future.T">T</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 2.11.0)</i> Use <code>Future { ... }</code> instead.</p></dd></dl></div>
+    </li><li name="scala.concurrent#promise" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="promise[T&lt;:&lt;?&gt;]():scala.concurrent.Promise[T]"></a>
+      <a id="promise[T]():Promise[T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 2.11.0) Use Promise[T]() instead.">promise</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.concurrent.Promise">Promise</span>[<span class="extype" name="scala.concurrent.promise.T">T</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 2.11.0)</i> Use <code>Promise[T]()</code> instead.</p></dd></dl></div>
+    </li></ol>
+            </div>
         </div>
 
         <div id="inheritedMembers">

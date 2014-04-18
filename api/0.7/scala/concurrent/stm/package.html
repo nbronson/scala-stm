@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html >
 <html>
         <head>
           <title>stm - scala.concurrent.stm</title>
@@ -87,7 +86,7 @@
         <div id="types" class="types members">
               <h3>Type Members</h3>
               <ol><li name="scala.concurrent.stm.CommitBarrier" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="CommitBarrierextendsObject"></a>
+      <a id="CommitBarrierextendsAnyRef"></a>
       <a id="CommitBarrier:CommitBarrier"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -131,7 +130,7 @@
  life-cycle handler grants permission to call methods in <code>object Txn</code> that
  locate nesting levels or register additional handlers.</p>
     </li><li name="scala.concurrent.stm.MaybeTxn" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="MaybeTxnextendsObject"></a>
+      <a id="MaybeTxnextendsAnyRef"></a>
       <a id="MaybeTxn:MaybeTxn"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -145,7 +144,7 @@
       <p class="comment cmt"><code>MaybeTxn</code> allows lookup of the implicit <code>InTxn</code> instance without failing
  if the <code>InTxn</code> is not known at compile time.</p>
     </li><li name="scala.concurrent.stm.NestingLevel" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="NestingLevelextendsObject"></a>
+      <a id="NestingLevelextendsAnyRef"></a>
       <a id="NestingLevel:NestingLevel"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -159,7 +158,7 @@
       <p class="comment cmt">A <code>NestingLevel</code> instance describes a single attempt to execute an atomic
  block inside a transaction.</p>
     </li><li name="scala.concurrent.stm.PendingAtomicBlock" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="PendingAtomicBlock[A]extendsObject"></a>
+      <a id="PendingAtomicBlock[A]extendsAnyRef"></a>
       <a id="PendingAtomicBlock[A]:PendingAtomicBlock[A]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -186,7 +185,7 @@
       </h4>
       <p class="comment cmt">Provides access to a single element of type <i>A</i>.</p>
     </li><li name="scala.concurrent.stm.RefCompanion" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="RefCompanionextendsObject"></a>
+      <a id="RefCompanionextendsAnyRef"></a>
       <a id="RefCompanion:RefCompanion"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -227,7 +226,7 @@
       <p class="comment cmt"><code>Sink[+A]</code> consists of the contra-variant write-only operations of
  <code>Ref[A]</code>.</p>
     </li><li name="scala.concurrent.stm.SinkLike" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="SinkLike[-A,Context]extendsObject"></a>
+      <a id="SinkLike[-A,Context]extendsAnyRef"></a>
       <a id="SinkLike[-A,Context]:SinkLike[A,Context]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -254,7 +253,7 @@
       </h4>
       <p class="comment cmt"><code>Source[+A]</code> consists of the covariant read-only operations of <code>Ref[A]</code>.</p>
     </li><li name="scala.concurrent.stm.SourceLike" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="SourceLike[+A,Context]extendsObject"></a>
+      <a id="SourceLike[+A,Context]extendsAnyRef"></a>
       <a id="SourceLike[+A,Context]:SourceLike[A,Context]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -310,7 +309,7 @@
       <p class="comment cmt">A transactional set implementation that requires that all of its set-like
  operations be called from inside an atomic block.</p>
     </li><li name="scala.concurrent.stm.TxnDebuggable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="TxnDebuggableextendsObject"></a>
+      <a id="TxnDebuggableextendsAnyRef"></a>
       <a id="TxnDebuggable:TxnDebuggable"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -325,7 +324,7 @@
  transactional data structures in a debugger with minimal modification to
  the behavior of the program.</p>
     </li><li name="scala.concurrent.stm.TxnExecutor" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="TxnExecutorextendsObject"></a>
+      <a id="TxnExecutorextendsAnyRef"></a>
       <a id="TxnExecutor:TxnExecutor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -530,7 +529,7 @@
       </h4>
       <p class="comment cmt">An object that represents the absence of a statically-bound current
  transaction.</p>
-    </li><li name="scala.concurrent.stm.package#atomic" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="scala.concurrent.stm#atomic" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="atomic:scala.concurrent.stm.TxnExecutor"></a>
       <a id="atomic:TxnExecutor"></a>
       <h4 class="signature">
@@ -584,7 +583,7 @@
       </span>
       </h4>
       
-    </li><li name="scala.concurrent.stm.package#retry" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="scala.concurrent.stm#retry" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="retry(implicittxn:scala.concurrent.stm.InTxn):Nothing"></a>
       <a id="retry(InTxn):Nothing"></a>
       <h4 class="signature">
@@ -597,7 +596,7 @@
       </span>
       </h4>
       <p class="shortcomment cmt">Equivalent to <code>Txn.retry</code>.</p>
-    </li><li name="scala.concurrent.stm.package#retryFor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="scala.concurrent.stm#retryFor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="retryFor(timeout:Long,unit:java.util.concurrent.TimeUnit)(implicittxn:scala.concurrent.stm.InTxn):Unit"></a>
       <a id="retryFor(Long,TimeUnit)(InTxn):Unit"></a>
       <h4 class="signature">
@@ -623,7 +622,7 @@
       </span>
       </h4>
       
-    </li><li name="scala.concurrent.stm.package#wrapChainedAtomic" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="scala.concurrent.stm#wrapChainedAtomic" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="wrapChainedAtomic[A](lhs:=&gt;A):scala.concurrent.stm.PendingAtomicBlock[A]"></a>
       <a id="wrapChainedAtomic[A](⇒A):PendingAtomicBlock[A]"></a>
       <h4 class="signature">
