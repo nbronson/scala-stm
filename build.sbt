@@ -5,7 +5,7 @@ organization := "org.scala-stm"
 
 version := "0.7"
 
-scalaVersion := "2.11.0-RC3"
+scalaVersion := "2.11.0"
 
 //scalaBinaryVersion := "2.11.0-M8"
 
@@ -21,6 +21,9 @@ testOptions += Tests.Argument("-l", "slow")
 
 // test of TxnExecutor.transformDefault must be run by itself
 parallelExecution in Test := false
+
+// make sure Java classes use 1.6 file format
+javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.6")
 
 ////////////////////
 // publishing
