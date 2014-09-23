@@ -193,7 +193,7 @@ object AtomicArray {
     def this(size: Int) = this(new AtomicIntegerArray(size))
 
     def length = elems.length
-    def apply(index: Int) = elems.get(index).toInt
+    def apply(index: Int) = elems.get(index)
     def update(index: Int, elem: Int): Unit = elems.set(index, elem)
     def swap(index: Int, elem: Int) = elems.getAndSet(index, elem)
     def compareAndSet(index: Int, expected: Int, elem: Int) =
@@ -220,7 +220,7 @@ object AtomicArray {
     def this(size: Int) = this(new AtomicLongArray(size))
 
     def length = elems.length
-    def apply(index: Int) = elems.get(index).toInt
+    def apply(index: Int) = elems.get(index)
     def update(index: Int, elem: Long): Unit = elems.set(index, elem)
     def swap(index: Int, elem: Long) = elems.getAndSet(index, elem)
     def compareAndSet(index: Int, expected: Long, elem: Long) =

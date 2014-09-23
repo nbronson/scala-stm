@@ -383,12 +383,12 @@ class IsolatedRefSuite extends FunSuite {
     assert(view().get === "eq")
   }
 
-  createTests("-= -1 long", 1L) { view =>
-    for (i <- 1 until 10) {
-      assert(view()() === i)
+  createTests("-= -1 long", Int.MaxValue + 1L) { view =>
+    for (i <- 1L until 10L) {
+      assert(view()() === Int.MaxValue + i)
       view() -= -1
     }
-    assert(view()() === 10L)
+    assert(view()() === Int.MaxValue + 10L)
   }
 
   createTests("/=", 11) { view =>

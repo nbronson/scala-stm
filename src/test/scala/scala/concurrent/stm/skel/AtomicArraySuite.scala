@@ -36,7 +36,7 @@ class AtomicArraySuite extends FunSuite {
   }
 
   test("Long") {
-    runIsolatedTest((100 until 200) map { _ - 1000L })
+    runIsolatedTest((100 until 200) map { _ - 100L * Int.MaxValue })
   }
 
   test("Double") {
