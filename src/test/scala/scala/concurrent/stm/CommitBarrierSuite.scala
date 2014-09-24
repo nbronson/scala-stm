@@ -405,7 +405,7 @@ class CommitBarrierSuite extends FunSuite {
   }
 
   test("multi-barrier deadlock cycle") {
-    for (tries <- 0..100) {
+    for (tries <- 0 to 100) {
       val a1 = Ref(0)
       val a2 = Ref(0)
 

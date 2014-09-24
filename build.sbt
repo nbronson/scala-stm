@@ -5,9 +5,9 @@ organization := "org.scala-stm"
 
 version := "0.8-SNAPSHOT"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.11.2"
 
-crossScalaVersions := Seq("2.10.1-RC2", "2.10.0", "2.9.3", "2.9.2")
+crossScalaVersions := Seq("2.11.2", "2.10.4", "2.9.3")
 
 libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
 
