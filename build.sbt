@@ -22,7 +22,7 @@ parallelExecution in Test := false
 ////////////////////
 // publishing
 
-pomExtra :=
+pomExtra := {
   <url>http://nbronson.github.com/scala-stm/</url>
   <licenses>
     <license>
@@ -42,6 +42,7 @@ pomExtra :=
       <email>ngbronson@gmail.com</email>
     </developer>
   </developers>
+}
 
 publishMavenStyle := true
 
