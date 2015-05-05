@@ -5,13 +5,13 @@ organization := "org.scala-stm"
 
 version := "0.8-SNAPSHOT"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.6"
 
-crossScalaVersions := Seq("2.11.2", "2.10.4", "2.9.3")
+crossScalaVersions := Seq("2.10.5", "2.11.6")
 
-libraryDependencies += ("org.scalatest" %% "scalatest" % "[1.5,)" % "test")
+libraryDependencies += ("org.scalatest" %% "scalatest" % "2.2.4" % "test")
 
-libraryDependencies += ("junit" % "junit" % "4.5" % "test")
+libraryDependencies += ("junit" % "junit" % "4.12" % "test")
 
 // skip exhaustive tests
 testOptions += Tests.Argument("-l", "slow")
