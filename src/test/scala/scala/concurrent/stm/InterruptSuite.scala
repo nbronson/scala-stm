@@ -87,7 +87,7 @@ class InterruptSuite extends FunSuite {
 
   private val pendingInterrupts = new ThreadLocal[List[Thread]] { override def initialValue = Nil }
 
-  override protected def test(testName: String, testTags: Tag*)(f: => Unit) {
+  override protected def test(testName: String, testTags: Tag*)(f: => Any)(implicit pos: org.scalactic.source.Position): Unit = {
     super.test(testName, testTags: _*) {
       // we have to use another thread, because sbt overrides .interrupt() on
       // its worker threads
