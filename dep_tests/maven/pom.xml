@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <properties>
-    <scala.version>2.10.0</scala.version>
-    <scala.major.version>2.10</scala.major.version>
+    <scala.version>2.12.0</scala.version>
+    <scala.major.version>2.12</scala.major.version>
     <scala.stm.version>0.8-SNAPSHOT</scala.stm.version>
   </properties>
 
@@ -15,12 +15,12 @@
     <repository>
       <id>oss.sonatype.org</id>
       <name>OSS Sonatype Release Repository</name>
-      <url>http://oss.sonatype.org/content/repositories/releases</url>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
     </repository>
     <repository>
       <id>oss.sonatype.org.snapshots</id>
       <name>OSS Sonatype Snapshot Repository</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       <snapshots/>
     </repository>
   </repositories>
@@ -29,12 +29,12 @@
     <pluginRepository>
       <id>oss.sonatype.org</id>
       <name>OSS Sonatype Release Repository</name>
-      <url>http://oss.sonatype.org/content/repositories/releases</url>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
     </pluginRepository>
     <pluginRepository>
       <id>oss.sonatype.org.snapshots</id>
       <name>OSS Sonatype Snapshot Repository</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </pluginRepository>
   </pluginRepositories>
 

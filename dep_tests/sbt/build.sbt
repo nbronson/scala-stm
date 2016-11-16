@@ -5,12 +5,12 @@ organization := "org.scala-stm"
 
 version := "0.1-SNAPSHOT"
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.12.0"
 
-crossScalaVersions := Seq("2.10.0", "2.9.3-RC1", "2.9.2")
+crossScalaVersions := Seq("2.12.0", "2.11.6")
 
-resolvers += ("releases" at "http://oss.sonatype.org/content/repositories/releases")
+resolvers += ("releases" at "https://oss.sonatype.org/content/repositories/releases")
 
-resolvers += ("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots")
+resolvers += ("snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
 
 libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.8-SNAPSHOT")
