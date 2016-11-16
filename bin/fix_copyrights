@@ -1,12 +1,8 @@
 #!/bin/bash
 
 cd `dirname $0`/..
-for f in `grep -l -r '2009-201[01]' src`; do
+for f in `grep -l -r '(c) 2009' src`; do
   d=`git log -1 --date=short --no-notes -- $f | awk 'NR==3 {print $2}'`
   y=`echo $d | sed 's/-.*//'`
-  if [ $y == 2012 ]; then
-    echo "updating copyright for $f"
-    sed 's/2009-201[01]/2009-2012/' $f > .tmp
-    mv .tmp $f
-  fi
+  sed -i "s/(c) 2009-201./(c) 2009-$y/" $f
 done
