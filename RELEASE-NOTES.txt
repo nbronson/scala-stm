@@ -2,9 +2,11 @@ ScalaSTM - 0.8-SNAPSHOT RELEASE NOTES
 
 Changes between 0.7 and 0.8-SNAPSHOT:
 
-* add 2.12 build and remove 2.10 build
+* correctness fix for AtomicArray.ofLong
 
 * small improvement to TxnLocal interface.
+
+* add 2.12 build and remove 2.10 build
 
 * add deprecated message about incomplete deadlock detection for
   CommitBarrier
