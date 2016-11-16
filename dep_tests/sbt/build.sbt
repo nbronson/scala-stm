@@ -13,4 +13,4 @@ resolvers += ("releases" at "https://oss.sonatype.org/content/repositories/relea
 
 resolvers += ("snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
 
-libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.8-SNAPSHOT")
+libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.8")

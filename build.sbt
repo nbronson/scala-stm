@@ -3,7 +3,7 @@ name := "scala-stm"
 
 organization := "org.scala-stm"
 
-version := "0.8-SNAPSHOT"
+version := "0.8"
 
 scalaVersion := "2.12.0"
 

@@ -1,6 +1,6 @@
-ScalaSTM - 0.8-SNAPSHOT RELEASE NOTES
+ScalaSTM - 0.8 RELEASE NOTES
 
-Changes between 0.7 and 0.8-SNAPSHOT:
+Changes between 0.7 and 0.8:
 
 * correctness fix for AtomicArray.ofLong
 
@@ -10,9 +10,6 @@ Changes between 0.7 and 0.8-SNAPSHOT:
 
 * add deprecated message about incomplete deadlock detection for
   CommitBarrier
-
-Snapshot releases deployed to the oss.sonatype.org repository are tested
-and functional, but may have changing APIs.
 
 ----
 
