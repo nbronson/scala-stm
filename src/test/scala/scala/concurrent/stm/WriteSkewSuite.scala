@@ -40,7 +40,7 @@ class WriteSkewSuite extends FunSuite {
               }
             }
           } catch {
-            case x => {
+            case x: Throwable => {
               if (null == failure)
                 failure = x
             }

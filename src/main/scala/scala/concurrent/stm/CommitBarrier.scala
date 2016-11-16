@@ -134,6 +134,7 @@ object CommitBarrier {
    *  cancelled with a `CancelCause` of `Timeout`.  Each commit barrier may
    *  be used for at most one coordinated commit (it is not cyclic).
    */
+  @deprecated("The current CommitBarrier implementation doesn't have proper deadlock avoidance, please avoid if possible", "0.8")
   def apply(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS): CommitBarrier =
       impl.STMImpl.instance.newCommitBarrier(timeout, unit)
 }

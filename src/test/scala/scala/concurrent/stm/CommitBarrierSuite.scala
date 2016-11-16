@@ -97,7 +97,7 @@ class CommitBarrierSuite extends FunSuite {
           try {
             body(i)
           } catch {
-            case x => failure.single() = x
+            case x : Throwable => failure.single() = x
           }
         }
       }
