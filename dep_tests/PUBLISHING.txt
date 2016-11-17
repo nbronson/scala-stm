@@ -4,7 +4,8 @@ With a proper credentials file publishing a snapshot or release artifact is
 accomplished with
 
   sbt +test (or bin/all_tests)
-  sbt +publish
+  sbt +publish (snapshot)
+  sbt +publish-signed (release)
 
 TESTING DEPLOYMENT AND ARTIFACT USAGE
 

@@ -11,6 +11,7 @@ echo
 sed 's/[":=(,)]/ /g' "$BUILD_SBT" | \
   awk '$1=="version" {stm=$2}
        $1=="crossScalaVersions" {for(i=3;i<=NF;++i) {print stm,$i}}' | \
+  sed 's/\([0-9]*[.][0-9]*\)[.][0-9]*/\1/' | \
   while read x y; do
     /bin/echo -en "stm $x  scala $y    \t"
     # URL="http://search.maven.org/remotecontent?filepath=org/scala-stm/scala-stm_$y/$x/scala-stm_$y-$x.pom"
