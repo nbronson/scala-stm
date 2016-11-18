@@ -7,10 +7,10 @@ the entire contents of the gh-pages branch through the jekyll markup tool,
 and then places the resulting site at username.github.com/scala-stm.
 
 If you want to test out changes to the website locally, install jekyll
-using RubyGems (see https://github.com/mojombo/jekyll/wiki/install).
+(https://help.github.com/articles/setting-up-your-github-pages-site-locally-with-jekyll/).
 In the root of a checkout of the gh-pages branch, run
 
-  jekyll --server --auto
+  bundle exec jekyll serve -w
   
 and the website will be available on localhost:4000, with edits
 immediately available.
