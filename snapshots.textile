@@ -3,18 +3,9 @@ layout: default
 title: Snapshot releases
 ---
 
-Changes between 0.7 and 0.8-SNAPSHOT:
-
-* small improvement to @TxnLocal@ interface 
+There's currently no SNAPSHOT release, as all changes on master have been incorporated into the 0.8 release.
 
 Snapshot releases deployed to the @oss.sonatype.org@ repository are fully tested and functional, but may have changing APIs.
-
-h2(#link). Links
-
-* Manual download: ["scala-stm_2.10-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.10/0.8-SNAPSHOT/scala-stm_2.10-0.8-SNAPSHOT.jar]
-* Manual download: ["scala-stm_2.9.3-RC1-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.3-RC1/0.8-SNAPSHOT/scala-stm_2.9.3-RC1-0.8-SNAPSHOT.jar]
-* Manual download: ["scala-stm_2.9.3-0.8-SNAPSHOT.jar":https://oss.sonatype.org/content/repositories/snapshots/org/scala-stm/scala-stm_2.9.3/0.8-SNAPSHOT/scala-stm_2.9.3-0.8-SNAPSHOT.jar]
-* ScalaDoc: ["0.8-SNAPSHOT":api/0.8-SNAPSHOT/index.html#scala.concurrent.stm.package]
 
 h2(#sbt). SBT
 
@@ -24,7 +15,7 @@ Tell @sbt@ about a dependency on ScalaSTM by adding a library dependency to your
 libraryDependencies += ("org.scala-stm" %% "scala-stm" % "0.8-SNAPSHOT")
 
 resolvers += ("snapshots" at
-    "http://oss.sonatype.org/content/repositories/snapshots")
+    "https://oss.sonatype.org/content/repositories/snapshots")
 {% endhighlight %}
 
 @sbt update@ will download the latest @scala-stm@ snapshot JAR and make it available for building.
@@ -50,7 +41,7 @@ Make sure you have the @oss.sonatype.org@ snapshot repository available
   <repository>
     <id>oss.sonatype.org.snapshots</id>
     <name>OSS Sonatype Snapshot Repository</name>
-    <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     <snapshots/>
   </repository>
 </repositories>

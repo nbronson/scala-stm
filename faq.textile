@@ -43,10 +43,6 @@ p(faqq). *Q.* How is ScalaSTM related to Nathan Bronson's ["CCSTM":http://ppl.st
 
 p(faqa). *A.* The ScalaSTM API borrows heavily from CCSTM's public interface, which was in turn inspired by Daniel Spiewak's STM.  The reference implementation included in ScalaSTM is an improved version of CCSTM's algorithm.
 
-p(faqq). *Q.* How is ScalaSTM related to Peter Veentjer's ["Multiverse":http://multiverse.codehaus.org]?
-
-p(faqa). *A.* A pluggable ScalaSTM implementation that uses Multiverse is planned.
-
 p(faqq). *Q.* How do you handle I/O and native method calls from inside transactions?
 
 p(faqa). *A.* We include a complete set of life-cycle handlers that can be used to perform manual cleanup, or to participate in a two-phase commit with other transactional resources.  There is no automatic support.
@@ -67,7 +63,7 @@ p(faqq). *Q.* Does ScalaSTM allow write skew?
 
 p(faqa). *A.* No, although pluggable implementations may allow it to be selectively enabled as an optimization.
 
-p(faqq). *Q.* Will ScalaSTM work with Scala on .NET?
+p(faqq). *Q.* Will ScalaSTM work with Scala on non-JVM platforms?
 
 p(faqa). *A.* The ScalaSTM reference implementation uses classes from @java.util.concurrent.atomic@ in a few key places internally, but it should be straightforward to replace these with the CLR functionality exposed by @System::Threading::Interlocked@.  Because ScalaSTM does not do bytecode rewriting there will be no need for MSIL rewriting.
 
