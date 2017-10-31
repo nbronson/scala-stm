@@ -3,7 +3,8 @@ layout: default
 title: Syntax Cheat Sheet
 ---
 
-h2(#ref). Ref, Ref.View and atomic
+Ref, Ref.View and atomic {#ref}
+------------------------
 
 {% highlight scala %}
 import scala.concurrent.stm._
@@ -41,5 +42,4 @@ val pre = y.single.getAndTransform { _.toUpperCase }
 val post = y.single.transformAndGet { _.filterNot { _ == ' ' } }
 {% endhighlight %}
 
-"SyntaxCheatSheet.scala":https://github.com/nbronson/scala-stm/blob/master/src/test/scala/scala/concurrent/stm/examples/SyntaxCheatSheet.scala
-
+[SyntaxCheatSheet.scala](https://github.com/nbronson/scala-stm/blob/master/src/test/scala/scala/concurrent/stm/examples/SyntaxCheatSheet.scala)
