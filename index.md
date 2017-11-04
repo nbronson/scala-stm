@@ -27,7 +27,7 @@ maps, and we also have an easier and safer replacement for `wait` and
 News
 ----
 
--   *2017 Nov 4* -- ScalaSTM version 0.8 published for 2.13-M2
+-   *2017 Nov 4* -- ScalaSTM version 0.8 published for 2.13.0-M2
 
 
 -   (major) *2016 Nov 17* -- ScalaSTM version 0.8
