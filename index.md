@@ -29,6 +29,7 @@ News
 
 -   *2017 Nov 4* -- ScalaSTM version 0.8 published for 2.13-M2
 
+
 -   (major) *2016 Nov 17* -- ScalaSTM version 0.8
     [released](releases.html), including
     -   added 2.12 build
