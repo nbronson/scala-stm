@@ -5,7 +5,8 @@ organization := "org.scala-stm"
 
 version := "0.8"
 
-scalaVersion := "2.12.3"
+//scalaVersion := "2.12.3"
+scalaVersion := "2.13.0-M2"
 
 crossScalaVersions := Seq("2.11.11", "2.12.3", "2.13.0-M2")
 

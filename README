@@ -3,4 +3,4 @@ inspired by the STMs in Haskell and Clojure.
 
 The current release is 0.8.  The next published snapshot will
 be 0.9-SNAPSHOT.  For download info and documentation see
-http://scala-stm.org
+https://nbronson.github.io/scala-stm/
