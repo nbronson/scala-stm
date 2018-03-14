@@ -322,7 +322,7 @@ class CallbackSuite extends FunSuite {
     val failure = Ref(null : Throwable)
 
     val x = Ref(0)
-    val notifier = new scala.concurrent.forkjoin.LinkedTransferQueue[Int]()
+    val notifier = new java.util.concurrent.LinkedTransferQueue[Int]()
     val EOF = -1
 
     for (_ <- 1 to numThreads) {
