@@ -1,20 +1,19 @@
 
-name := "scala-stm"
-
-organization := "org.scala-stm"
-
-version := "0.8-SNAPSHOT"
-
-scalaVersion := "2.12.3"
-
-crossScalaVersions := Seq("2.11.11", "2.12.3", "2.13.0-M2")
+name               := "scala-stm"
+organization       := "org.scala-stm"
+version            := "0.8-SNAPSHOT"
+scalaVersion       := "2.12.4"
+crossScalaVersions := Seq("2.11.12", "2.12.4", "2.13.0-M3")
 
 javacOptions in (Compile, compile) ++= {
   val javaVersion = if (scalaVersion.value.startsWith("2.11")) "1.6" else "1.8"
   Seq("-source", javaVersion, "-target", javaVersion)
 }
 
-libraryDependencies += ("org.scalatest" %% "scalatest" % "3.0.4" % "test")
+libraryDependencies += {
+  val v = if (scalaVersion.value == "2.13.0-M3") "3.0.5-M1" else "3.0.5"
+  "org.scalatest" %% "scalatest" % v % "test"
+}
 
 libraryDependencies += ("junit" % "junit" % "4.12" % "test")
 
