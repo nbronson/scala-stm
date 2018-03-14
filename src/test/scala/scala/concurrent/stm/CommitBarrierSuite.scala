@@ -2,11 +2,10 @@
 
 package scala.concurrent.stm
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{LinkedTransferQueue, TimeUnit}
 
 import org.scalatest.FunSuite
 
-import scala.concurrent.forkjoin.LinkedTransferQueue
 import scala.concurrent.stm.skel.SimpleRandom
 import scala.util.control.Breaks
 
