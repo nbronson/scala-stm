@@ -6,14 +6,14 @@ import collection.mutable.ArrayBuffer
 
 private[ccstm] object Stats {
 
-  val Enabled = "yYtT1".indexOf((System.getProperty("ccstm.stats", "") + "0").charAt(0)) >= 0
+  val Enabled: Boolean = "yYtT1".indexOf((System.getProperty("ccstm.stats", "") + "0").charAt(0)) >= 0
 
   class LazyCounterMap[A] {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
 
     private val _counters = new java.util.concurrent.ConcurrentHashMap[A, Counter]
 
-    def += (k: A) {
+    def += (k: A): Unit = {
       var v = _counters.get(k)
       if (v == null) {
         _counters.putIfAbsent(k, new Counter)
@@ -25,7 +25,7 @@ private[ccstm] object Stats {
     def toStr(k: A): String = k.toString
 
     def contents: Seq[(String, Long)] = {
-      val aa = _counters.entrySet.toSeq map { e => (toStr(e.getKey) -> e.getValue.apply()) }
+      val aa = _counters.entrySet.asScala.toSeq map { e => toStr(e.getKey) -> e.getValue.apply() }
       aa sortBy { -_._2 }
     }
   }
@@ -34,12 +34,11 @@ private[ccstm] object Stats {
     private val _sum = new Counter
     private val _buckets = Array.tabulate(numBuckets) { _ => new Counter }
 
-    def += (value: Int) {
+    def += (value: Int): Unit =
       if (value != 0) {
         _sum += value
         _buckets(bucketFor(value)) += 1
       }
-    }
 
     protected def bucketFor(value: Int): Int = {
       if (value < 0 || value >= _buckets.length)
@@ -53,7 +52,7 @@ private[ccstm] object Stats {
       snap.take(1 + snap.lastIndexWhere { _ != 0L })
     }
 
-    override def toString = {
+    override def toString: String = {
       val s = _sum()
       val c = contents
       val count = c.foldLeft(0L)( _ + _ )
@@ -75,21 +74,21 @@ private[ccstm] object Stats {
   }
 
   class Level(isTop: Boolean) {
-    val commits = new Counter
-    val alternatives = new Histo(10)
-    val retrySet = if (isTop) new ExponentialHisto else null
-    val retryWaitElapsed = if (isTop) new ExponentialHisto else null
-    val explicitRetries = new Counter
-    val unrecordedTxns = new Counter
+    val commits           = new Counter
+    val alternatives      = new Histo(10)
+    val retrySet          = if (isTop) new ExponentialHisto else null
+    val retryWaitElapsed  = if (isTop) new ExponentialHisto else null
+    val explicitRetries   = new Counter
+    val unrecordedTxns    = new Counter
     val optimisticRetries = new LazyCounterMap[Symbol]
-    val failures = new LazyCounterMap[Class[_]] { override def toStr(k: Class[_]) = k.getSimpleName }
-    val blockingAcquires = new Counter
-    val commitReadSet = if (isTop) new ExponentialHisto else null
-    val commitBargeSet = if (isTop) new ExponentialHisto else null
-    val commitWriteSet = if (isTop) new ExponentialHisto else null
-    val rollbackReadSet = new ExponentialHisto
-    val rollbackBargeSet = new ExponentialHisto
-    val rollbackWriteSet = new ExponentialHisto
+    val failures          = new LazyCounterMap[Class[_]] { override def toStr(k: Class[_]): String = k.getSimpleName }
+    val blockingAcquires  = new Counter
+    val commitReadSet     = if (isTop) new ExponentialHisto else null
+    val commitBargeSet    = if (isTop) new ExponentialHisto else null
+    val commitWriteSet    = if (isTop) new ExponentialHisto else null
+    val rollbackReadSet   = new ExponentialHisto
+    val rollbackBargeSet  = new ExponentialHisto
+    val rollbackWriteSet  = new ExponentialHisto
 
     def contents: Seq[String] = {
       val buf = new ArrayBuffer[String]
@@ -99,10 +98,10 @@ private[ccstm] object Stats {
         value match {
           case null =>
           case c: Counter => buf += "%17s= %d".format(name, c())
-          case m: LazyCounterMap[_] => {
+          case m: LazyCounterMap[_] =>
             for ((k, v) <- m.contents)
               buf += "%17s: %7d %s".format(name, v, k)
-          }
+
           case h: Histo => buf += "%17s: %s".format(name, h)
         }
       }
@@ -114,18 +113,16 @@ private[ccstm] object Stats {
     }
   }
 
-  val top = if (Enabled) new Level(true) else null
-  val nested = if (Enabled) new Level(false) else null
+  val top   : Level = if (Enabled) new Level(true)  else null
+  val nested: Level = if (Enabled) new Level(false) else null
   registerShutdownHook()
 
-  private def registerShutdownHook() {
+  private def registerShutdownHook(): Unit =
     if (top != null)
       Runtime.getRuntime.addShutdownHook(new Thread("shutdown stats printer") {
-        override def run() { println(Stats) }
+        override def run(): Unit = println(Stats)
       })
-  }
 
-  override def toString() = {
+  override def toString: String =
     top.mkString("CCSTM: top: ") + "\n" + nested.mkString("CCSTM: nested: ")
-  }
 }

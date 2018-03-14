@@ -3,8 +3,6 @@
 package scala.concurrent.stm
 
 import java.util.concurrent.TimeUnit
-import skel.RollbackError
-import concurrent.stm.Txn.RolledBack
 
 object Source {
 
@@ -15,8 +13,8 @@ object Source {
 
     /** Returns a `Source` that accesses the same memory location as this view.
      *  The returned `Source` might be the original reference that was used to
-     *  construct this view, or it might be a `Source` that is equivalent (and
-     *  `==`) to the original.
+     *  construct this view, or it might be a `Source` that is equivalent
+     *  (and `==`) to the original.
      *  @return a `Source` that accesses the same memory location as this view.
      */
     def ref: Source[A]
@@ -66,7 +64,7 @@ object Source {
      *  then use `retry` directly.
      *  @param f a predicate that is safe to evaluate multiple times.
      */
-    def await(f: A => Boolean)
+    def await(f: A => Boolean): Unit
 
     /** Blocks until `f(get)` is true and returns true, or returns false if
      *  the condition does not become true within within the specified timeout.

@@ -18,12 +18,12 @@ private[stm] class CallbackList[A] {
 
   def size: Int = _size
 
-  def size_= (newSize: Int) {
+  def size_= (newSize: Int): Unit = {
     if (newSize != _size)
       changeSize(newSize)
   }
 
-  private def changeSize(newSize: Int) {
+  private def changeSize(newSize: Int): Unit = {
     if (newSize < 0 || newSize > _size)
       throw new IllegalArgumentException
 
@@ -37,19 +37,19 @@ private[stm] class CallbackList[A] {
     }
   }
 
-  private def reset() {
+  private def reset(): Unit = {
     _data = new Array[A => Unit](InitialCapacity)
     _size = 0
   }
 
-  def += (handler: A => Unit) {
+  def += (handler: A => Unit): Unit = {
     if (_size == _data.length)
-      grow
+      grow()
     _data(_size) = handler
     _size += 1
   }
 
-  private def grow() {
+  private def grow(): Unit = {
     val a = new Array[A => Unit](_data.length * 2)
     System.arraycopy(_data, 0, a, 0, _data.length)
     _data = a
@@ -57,20 +57,19 @@ private[stm] class CallbackList[A] {
 
   def apply(i: Int): (A => Unit) = _data(i)
 
-  def fire(level: NestingLevel, arg: A) {
+  def fire(level: NestingLevel, arg: A): Unit = {
     if (_size > 0)
       fire(level, arg, 0)
   }
 
-  @tailrec private def fire(level: NestingLevel, arg: A, i: Int) {
+  @tailrec private def fire(level: NestingLevel, arg: A, i: Int): Unit = {
     if (i < _size && shouldFire(level)) {
       try {
         _data(i)(arg)
       } catch {
-        case x: Throwable => {
+        case x: Throwable =>
           val s = level.requestRollback(Txn.UncaughtExceptionCause(x))
           assert(s.isInstanceOf[Txn.RolledBack])
-        }
       }
       fire(level, arg, i + 1)
     }

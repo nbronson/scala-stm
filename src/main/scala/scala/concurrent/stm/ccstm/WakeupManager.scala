@@ -15,7 +15,7 @@ object WakeupManager {
     def addSource(handle: Handle[_]): Boolean
 
     @throws(classOf[InterruptedException])
-    def await()
+    def await(): Unit
 
     /** Use a nanoDeadline of `Long.MaxValue` to wait forever. */
     @throws(classOf[InterruptedException])
@@ -93,7 +93,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
    *  `e.await` will return now and any future calls will return
    *  immediately.
    */
-  def trigger(wakeups: Long) {
+  def trigger(wakeups: Long): Unit = {
     var channel = 0
     var w = wakeups
     while (w != 0) {
@@ -106,7 +106,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     }
   }
 
-  private def trigger(channel: Int) {
+  private def trigger(channel: Int): Unit = {
     val i = channel * ChannelSpacing
     val e = events.get(i)
     if (e != null) {
@@ -149,7 +149,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
 
     //// Event
 
-    def triggered = getState == 0
+    def triggered: Boolean = getState == 0
 
     /** Returns false if triggered. */
     def addSource(handle: Handle[_]): Boolean = {
@@ -168,7 +168,7 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
     }
 
     @throws(classOf[InterruptedException])
-    def await() {
+    def await(): Unit = {
       val f = tryAwaitUntil(Long.MaxValue)
       assert(f)
     }
@@ -186,6 +186,6 @@ private[ccstm] final class WakeupManager(numChannels: Int, numSources: Int) {
       }
     }
 
-    private[WakeupManager] def trigger() { releaseShared(1) }
+    private[WakeupManager] def trigger(): Unit = releaseShared(1)
   }
 }

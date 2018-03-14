@@ -16,7 +16,7 @@ private[ccstm] class Counter extends {
   // the old AtomicLong-s
   private var _stripes = Array(new AtomicLong)
 
-  private def grow() {
+  private def grow(): Unit =
     synchronized {
       if (_stripes.length < MaxStripes) {
         val repl = new Array[AtomicLong](_stripes.length * 2)
@@ -29,14 +29,13 @@ private[ccstm] class Counter extends {
         _stripes = repl
       }
     }
-  }
 
-  def += (delta: Int) {
-    if (delta != 0)
+  def += (delta: Int): Unit =
+    if (delta != 0) {
       incr(delta)
-  }
+    }
 
-  @tailrec private def incr(delta: Int) {
+  @tailrec private def incr(delta: Int): Unit = {
     val s = _stripes
     val i = CCSTM.hash(Thread.currentThread) & (s.length - 1)
     val prev = s(i).get
@@ -48,5 +47,5 @@ private[ccstm] class Counter extends {
 
   def apply(): Long = _stripes.foldLeft(0L)( _ + _.get )
 
-  override def toString = apply().toString
+  override def toString: String = apply().toString
 }

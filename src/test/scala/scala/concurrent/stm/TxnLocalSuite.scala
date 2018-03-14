@@ -26,7 +26,7 @@ class TxnLocalSuite extends FunSuite {
 
   test("initialize with init") {
     val tl = TxnLocal("hello")
-    for (i <- 0 until 100) {
+    for (_ <- 0 until 100) {
       atomic { implicit txn =>
         assert(tl() === "hello")
         tl() = "goodbye"
@@ -49,7 +49,7 @@ class TxnLocalSuite extends FunSuite {
   test("initialValue overrides init") {
     val x = Ref("abc")
     val tl = TxnLocal("hello", initialValue = { implicit txn => x() })
-    for (i <- 0 until 100) {
+    for (_ <- 0 until 100) {
       atomic { implicit txn =>
         assert(tl() === "abc")
         tl() = "goodbye"
@@ -60,13 +60,13 @@ class TxnLocalSuite extends FunSuite {
   test("use in afterCompletion handler") {
     val tl = TxnLocal("default")
     atomic { implicit txn =>
-      Txn.afterCompletion { status =>
+      Txn.afterCompletion { _ =>
         atomic { implicit txn =>
           assert(tl() === "default")
         }
       }
       tl() = "set once"
-      Txn.afterCompletion { status =>
+      Txn.afterCompletion { _ =>
         atomic { implicit txn =>
           assert(tl() === "default")
         }
@@ -179,7 +179,7 @@ class TxnLocalSuite extends FunSuite {
   test("first initialValue in whileCommitting handler") {
     val tl = TxnLocal(initialValue = { _ => 10 })
     var failure: Throwable = null
-    val handler = { (s: Txn.Status, x: Throwable) => failure = x }
+    val handler = { (_: Txn.Status, x: Throwable) => failure = x }
     val x = Ref("abc")
     atomic.withPostDecisionFailureHandler(handler) { implicit txn =>
       x() = "def"
@@ -283,7 +283,7 @@ class TxnLocalSuite extends FunSuite {
       whilePreparing = { implicit txn => assert(txn.status === Txn.Preparing) ; ran += "whilePreparing" },
       whileCommitting = { implicit txn => assert(txn.status === Txn.Committing) ; ran += "whileCommitting" },
       afterCommit = { (v: String) => assert(v === "initialValue") ; ran += "afterCommit" },
-      afterRollback = { status => assert(false) },
+      afterRollback = { _ => assert(false) },
       afterCompletion = { status => assert(status === Txn.Committed) ; ran += "afterCompletion" }
     )
     atomic { implicit txn =>
@@ -297,7 +297,7 @@ class TxnLocalSuite extends FunSuite {
     val tl = TxnLocal("init")
     var failure: Throwable = null
     new Thread {
-      override def run() {
+      override def run(): Unit = {
         try {
           atomic { implicit txn =>
             barrier.await

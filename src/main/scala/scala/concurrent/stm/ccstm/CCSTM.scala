@@ -10,12 +10,12 @@ private[ccstm] object CCSTM extends GV6 {
   /** The number of times to spin tightly when waiting for a condition to
    *  become true.
    */
-  val SpinCount = System.getProperty("ccstm.spin", "100").toInt
+  val SpinCount: Int = System.getProperty("ccstm.spin", "100").toInt
 
   /** The number of times to spin tightly when waiting for another thread to
    *  perform work that we can also perform.
    */
-  val StealSpinCount = System.getProperty("ccstm.steal.spin", "10").toInt
+  val StealSpinCount: Int = System.getProperty("ccstm.steal.spin", "10").toInt
 
   /** The number of times to spin with intervening calls to
    *  `Thread.yield` when waiting for a condition to become true.
@@ -23,20 +23,20 @@ private[ccstm] object CCSTM extends GV6 {
    *  `SpinCount + YieldCount` spins have been performed, the
    *  waiting thread will be blocked on a Java mutex.
    */
-  val YieldCount = System.getProperty("ccstm.yield", "2").toInt
+  val YieldCount: Int = System.getProperty("ccstm.yield", "2").toInt
 
   /** The number of optimistic failures to tolerate before switching to
    *  pessimistic reads for recently modified memory locations.  Set to zero to
    *  always use pessimistic reads for memory locations modified since the
    *  beginning of the first transaction attempt.
    */
-  val BargeRecentThreshold = System.getProperty("ccstm.barge.recent.threshold", "3").toInt
+  val BargeRecentThreshold: Int = System.getProperty("ccstm.barge.recent.threshold", "3").toInt
 
   /** The number of optimistic failures to tolerate before switching to
    *  pessimistic reads for all reads.  Set to zero to always use pessimistic
    *  reads.
    */
-  val BargeAllThreshold = System.getProperty("ccstm.barge.all.threshold", "30").toInt
+  val BargeAllThreshold: Int = System.getProperty("ccstm.barge.all.threshold", "30").toInt
 
   /** `slotManager` maps slot number to root `TxnLevelImpl`. */
   val slotManager = new TxnSlotManager[TxnLevelImpl](2048, 2)
@@ -78,17 +78,17 @@ private[ccstm] object CCSTM extends GV6 {
   // TODO: clean up the following mess
   
   def owner(m: Meta): Slot = (m >> 51).asInstanceOf[Int] & 2047
-  def version(m: Meta): Version = (m & ((1L << 51) - 1))
+  def version(m: Meta): Version = m & ((1L << 51) - 1)
   def pendingWakeups(m: Meta): Boolean = (m & (1L << 62)) != 0
   def changing(m: Meta): Boolean = m < 0
 
   // masks off owner and pendingWakeups
-  def changingAndVersion(m: Meta) = m & ((1L << 63) | ((1L << 51) - 1))
-  def ownerAndVersion(m: Meta) = m & ((2047L << 51) | ((1L << 51) - 1))
+  def changingAndVersion(m: Meta): Meta = m & ((1L << 63) | ((1L << 51) - 1))
+  def ownerAndVersion(m: Meta): Meta = m & ((2047L << 51) | ((1L << 51) - 1))
 
   def withOwner(m: Meta, o: Slot): Meta = (m & ~(2047L << 51)) | (o.asInstanceOf[Long] << 51)
   def withUnowned(m: Meta): Meta = withOwner(m, unownedSlot)
-  def withVersion(m: Meta, ver: Version) = (m & ~((1L << 51) - 1)) | ver
+  def withVersion(m: Meta, ver: Version): Meta = (m & ~((1L << 51) - 1)) | ver
 
   /** It is not allowed to set PendingWakeups if Changing. */
   def withPendingWakeups(m: Meta): Meta = m | (1L << 62)
@@ -96,10 +96,10 @@ private[ccstm] object CCSTM extends GV6 {
   def withUnchanging(m: Meta): Meta = m & ~(1L << 63)
 
   /** Clears all of the bits except the version. */
-  def withCommit(m: Meta, ver: Version) = ver
+  def withCommit(m: Meta, ver: Version): Meta = ver
 
   /** Includes withUnowned and withUnchanging. */
-  def withRollback(m: Meta) = withUnowned(withUnchanging(m))
+  def withRollback(m: Meta): Meta = withUnowned(withUnchanging(m))
 
 //  //////////////// Version continuity between separate Refs
 //
@@ -124,7 +124,7 @@ private[ccstm] object CCSTM extends GV6 {
 
   //////////////// lock release helping
 
-  def stealHandle(handle: Handle[_], m0: Meta, owningRoot: TxnLevelImpl) {
+  def stealHandle(handle: Handle[_], m0: Meta, owningRoot: TxnLevelImpl): Unit = {
 
     // We can definitely make forward progress below at the expense of a
     // couple of extra CAS, so it is not useful for us to do a big spin with
@@ -169,7 +169,7 @@ private[ccstm] object CCSTM extends GV6 {
    *  called before waiting for a transaction.
    */
   @throws(classOf[InterruptedException])
-  def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
+  def weakAwaitUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl): Unit = {
     if (owner(m0) == nonTxnSlot)
       weakAwaitNonTxnUnowned(handle, m0, currentTxn)
     else
@@ -177,7 +177,7 @@ private[ccstm] object CCSTM extends GV6 {
   }
 
   @throws(classOf[InterruptedException])
-  private def weakAwaitNonTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
+  private def weakAwaitNonTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl): Unit = {
     // Non-transaction owners only set the changing bit for a short time (no
     // user code and no loops), so we just wait them out.  Previously we used
     // the wakeup mechanism, but that requires all non-txn lock releases to use
@@ -189,7 +189,7 @@ private[ccstm] object CCSTM extends GV6 {
       if (spins > SpinCount) {
         if (Thread.interrupted)
           throw new InterruptedException
-        Thread.`yield`
+        Thread.`yield`()
       }
 
       val m = handle.meta
@@ -202,7 +202,7 @@ private[ccstm] object CCSTM extends GV6 {
   }
 
   @throws(classOf[InterruptedException])
-  private def weakAwaitTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl) {
+  private def weakAwaitTxnUnowned(handle: Handle[_], m0: Meta, currentTxn: TxnLevelImpl): Unit = {
     if (null == currentTxn) {
       // Spin a bit, but only from a non-txn context.  If this is a txn context
       // We need to roll ourself back ASAP if that is the proper resolution.
@@ -210,7 +210,7 @@ private[ccstm] object CCSTM extends GV6 {
       while (spins < SpinCount + YieldCount) {
         spins += 1
         if (spins > SpinCount)
-          Thread.`yield`
+          Thread.`yield`()
 
         val m = handle.meta
         if (ownerAndVersion(m) != ownerAndVersion(m0))

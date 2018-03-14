@@ -36,13 +36,13 @@ class ContentionSuite extends FunSuite {
   }
 
   /** Runs one thread per element of `txnSizes`. */
-  def runTest(numRefs: Int, numReads: Int, numWrites: Int, numThreads: Int, txnSize: Int, nested: Boolean, name: String) {
+  def runTest(numRefs: Int, numReads: Int, numWrites: Int, numThreads: Int, txnSize: Int, nested: Boolean, name: String): Unit = {
     val values = (0 until 37) map { i => "foo" + i }
 
     val refs = Array.tabulate(numRefs) { _ => Ref(values(0)) }
 
-    val threads = for (t <- 0 until numThreads) yield new Thread {
-      override def run {
+    val threads = for (_ <- 0 until numThreads) yield new Thread {
+      override def run(): Unit = {
         var rand = new SimpleRandom(hashCode)
         var i = 0
         while (i < numReads + numWrites) {
@@ -89,13 +89,13 @@ class ContentionSuite extends FunSuite {
   test("starving elder small") { runElderTest(8, 10) }
   test("starving elder large", Slow) { runElderTest(32, 100) }
 
-  def runElderTest(writerCount: Int, numElders: Int) {
+  def runElderTest(writerCount: Int, numElders: Int): Unit = {
     val writersStarted = Ref(0) // elder can't run until all writers are started
     val refs = Array.tabulate(1000) { i => Ref(i.toString) }
     val eldersLeft = Ref(numElders) // writers end after all elders are done
 
     val writers = for(i <- 0 until writerCount) yield new Thread("writer " + i) {
-      override def run {
+      override def run(): Unit = {
         writersStarted.single += 1
 
         val rand = new skel.SimpleRandom
@@ -153,17 +153,17 @@ class ContentionSuite extends FunSuite {
     val x = Ref(0)
     val total = Ref(0)
     val threads = for (t <- 0 until 10) yield new Thread {
-      override def run {
+      override def run(): Unit = {
         var failures = 0
-        for (i <- 0 until 1000000) {
+        for (_ <- 0 until 1000000) {
           if (!x.single.trySet(t))
             failures += 1
         }
         total.single += failures
       }
     }
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
     assert(total.single() > 0)
     println(total.single() + " rejected trySet-s")
   }

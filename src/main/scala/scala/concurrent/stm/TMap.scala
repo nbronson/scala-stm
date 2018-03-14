@@ -2,24 +2,23 @@
 
 package scala.concurrent.stm
 
-import scala.collection.{immutable, mutable, generic}
-import mutable.Iterable
-
+import scala.collection.{generic, immutable, mutable}
+import scala.language.implicitConversions
 
 object TMap {
 
-  object View extends generic.MutableMapFactory[TMap.View] {
+  object View extends generic.MutableMapFactory[View] {
 
-    implicit def canBuildFrom[A, B]: generic.CanBuildFrom[Coll, (A, B), TMap.View[A, B]] = new MapCanBuildFrom[A, B]
+    implicit def canBuildFrom[A, B]: generic.CanBuildFrom[Coll, (A, B), View[A, B]] = new MapCanBuildFrom[A, B]
 
-    def empty[A, B] = TMap.empty[A, B].single
+    def empty[A, B]: View[A, B] = TMap.empty[A, B].single
 
-    override def newBuilder[A, B] = new mutable.Builder[(A, B), View[A, B]] {
+    override def newBuilder[A, B]: mutable.Builder[(A, B), View[A, B]] = new mutable.Builder[(A, B), View[A, B]] {
       private val underlying = TMap.newBuilder[A, B]
 
-      def clear() { underlying.clear() }
+      def clear(): Unit = underlying.clear()
       def += (kv: (A, B)): this.type = { underlying += kv ; this }
-      def result() = underlying.result().single
+      def result(): View[A, B] = underlying.result().single
     }
 
     override def apply[A, B](kvs: (A, B)*): TMap.View[A, B] = (TMap.newBuilder[A, B] ++= kvs).result().single
@@ -96,11 +95,11 @@ trait TMap[A, B] extends TxnDebuggable {
 
   def isEmpty(implicit txn: InTxn): Boolean
   def size(implicit txn: InTxn): Int
-  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn)
+  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn): Unit
   def contains(key: A)(implicit txn: InTxn): Boolean
   def apply(key: A)(implicit txn: InTxn): B
   def get(key: A)(implicit txn: InTxn): Option[B]
-  def update(key: A, value: B)(implicit txn: InTxn) { put(key, value) }
+  def update(key: A, value: B)(implicit txn: InTxn): Unit = put(key, value)
   def put(key: A, value: B)(implicit txn: InTxn): Option[B]
   def remove(key: A)(implicit txn: InTxn): Option[B]
 

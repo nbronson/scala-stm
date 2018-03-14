@@ -73,7 +73,7 @@ object CommitBarrier {
     def executor: TxnExecutor
 
     /** Changes the `TxnExecutor` that will be used by `atomic`. */
-    def executor_=(v: TxnExecutor)
+    def executor_=(v: TxnExecutor): Unit
 
     /** Atomically executes `body` as part of a commit barrier, ensuring
      *  that if the transaction commits, all actions performed by all
@@ -103,8 +103,6 @@ object CommitBarrier {
      *  this thread.  This restriction might be relaxed in the future if
      *  there is a use case for it (and a semantics for how it should work).
      * 
-     *  @param underlying the `TxnExecutor` that should be used to actually
-     *         execute the transaction, defaulting to the STM's default
      *  @param body the code to run atomically
      *  @return `Right(v)` where `v` is the result of successfully running
      *          `body` in an atomic block, or `Left(c)` where `c` is the
@@ -125,7 +123,7 @@ object CommitBarrier {
      *  @throws IllegalStateException if the commit barrier has already
      *          decided to commit
      */
-    def cancel(cause: UserCancel)
+    def cancel(cause: UserCancel): Unit
   }
 
   /** Constructs and returns a new `CommitBarrier` in which each member will

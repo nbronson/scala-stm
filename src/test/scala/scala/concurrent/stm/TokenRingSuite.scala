@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import java.util.concurrent.CyclicBarrier
+
 import org.scalatest.FunSuite
 
 
@@ -27,12 +28,12 @@ class TokenRingSuite extends FunSuite {
   test("txn threesome reading via write", Slow) { tokenRing(3, 100000, true, true) }
   test("txn large ring reading via write", Slow) { tokenRing(32, 10000, true, true) }
 
-  def tokenRing(ringSize: Int, handoffsPerThread: Int, useTxns: Boolean, useSwap: Boolean) {
+  def tokenRing(ringSize: Int, handoffsPerThread: Int, useTxns: Boolean, useSwap: Boolean): Unit = {
     val ready = Array.tabulate(ringSize)(i => Ref(i == 0))
     val threads = new Array[Thread](ringSize - 1)
     val barrier = new CyclicBarrier(ringSize, new Runnable {
       var start = 0L
-      def run {
+      def run(): Unit = {
         val now = System.currentTimeMillis
         if (start == 0) {
           start = now
@@ -49,10 +50,10 @@ class TokenRingSuite extends FunSuite {
 
     for (index <- 0 until ringSize) {
       val work = new Runnable {
-        def run {
+        def run(): Unit = {
           val next = (index + 1) % ringSize
           barrier.await
-          for (h <- 0 until handoffsPerThread) {
+          for (_ <- 0 until handoffsPerThread) {
             if (!useTxns) {
               ready(index).single await { _ == true }
               ready(index).single() = false
@@ -74,12 +75,12 @@ class TokenRingSuite extends FunSuite {
       }
       if (index < ringSize - 1) {
         threads(index) = new Thread(work, "worker " + index)
-        threads(index).start
+        threads(index).start()
       } else {
-        work.run
+        work.run()
       }
     }
 
-    for (t <- threads) t.join
+    for (t <- threads) t.join()
   }
 }

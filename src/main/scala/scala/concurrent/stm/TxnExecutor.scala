@@ -14,13 +14,10 @@ object TxnExecutor {
   def defaultAtomic: TxnExecutor = _default
 
   /** Atomically replaces the default `TxnExecutor` with `f(defaultAtomic)`. */
-  def transformDefault(f: TxnExecutor => TxnExecutor) {
+  def transformDefault(f: TxnExecutor => TxnExecutor): Unit =
     synchronized { _default = f(_default) }
-  }
 
-  val DefaultPostDecisionExceptionHandler = { (status: Txn.Status, x: Throwable) =>
-    throw x
-  }
+  val DefaultPostDecisionExceptionHandler: (Txn.Status, Throwable) => Nothing = { (_, x) => throw x }
 }
 
 /** A `TxnExecutor` is responsible for executing atomic blocks transactionally
@@ -85,7 +82,7 @@ trait TxnExecutor {
    *  implementations.
    *
    *  '''The caller is responsible for correctness:''' It is a code smell
-   *  if ''Z'' is a type that is constructed from Ref`, `TMap`, `TSet`, .....
+   *  if ''Z'' is a type that is constructed from `Ref`, `TMap`, `TSet`, .....
    *
    *  If this method is executed inside an outer transaction that has status
    *  `Txn.RolledBack` then `block` can't complete.  The default behavior
@@ -96,7 +93,8 @@ trait TxnExecutor {
    *
    *  `atomic.unrecorded { implicit txn => code }` is roughly equivalent to
    *  the following, except that the rollback cause used will be
-   *  `Txn.UnrecordedTxnCause`: {{{
+   *  `Txn.UnrecordedTxnCause`:
+   *  {{{
    *    case class Tunnel(z: Z) extends Exception {}
    *    try {
    *      atomic.withControlFlowRecognizer({

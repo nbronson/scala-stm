@@ -2,23 +2,23 @@
 
 package scala.concurrent.stm
 
-import scala.collection.{immutable, mutable, generic}
-
+import scala.collection.{generic, immutable, mutable}
+import scala.language.implicitConversions
 
 object TSet {
 
-  object View extends generic.MutableSetFactory[TSet.View] {
+  object View extends generic.MutableSetFactory[View] {
 
-    implicit def canBuildFrom[A]: generic.CanBuildFrom[Coll, A, TSet.View[A]] = setCanBuildFrom[A]
+    implicit def canBuildFrom[A]: generic.CanBuildFrom[Coll, A, View[A]] = setCanBuildFrom[A]
 
-    override def empty[A] = TSet.empty[A].single
+    override def empty[A]: View[A] = TSet.empty[A].single
 
-    override def newBuilder[A] = new mutable.Builder[A, View[A]] {
+    override def newBuilder[A]: mutable.Builder[A, View[A]] = new mutable.Builder[A, View[A]] {
       private val underlying = TSet.newBuilder[A]
 
-      def clear() { underlying.clear() }
+      def clear(): Unit = underlying.clear()
       def += (x: A): this.type = { underlying += x ; this }
-      def result() = underlying.result().single
+      def result(): View[A] = underlying.result().single
     }
 
     override def apply[A](xs: A*): TSet.View[A] = (TSet.newBuilder[A] ++= xs).result().single
@@ -93,11 +93,11 @@ trait TSet[A] extends TxnDebuggable {
 
   def isEmpty(implicit txn: InTxn): Boolean
   def size(implicit txn: InTxn): Int
-  def foreach[U](f: A => U)(implicit txn: InTxn)
+  def foreach[U](f: A => U)(implicit txn: InTxn): Unit
   def contains(elem: A)(implicit txn: InTxn): Boolean
   def apply(elem: A)(implicit txn: InTxn): Boolean = contains(elem)
   def add(elem: A)(implicit txn: InTxn): Boolean
-  def update(elem: A, included: Boolean)(implicit txn: InTxn) { if (included) add(elem) else remove(elem) }
+  def update(elem: A, included: Boolean)(implicit txn: InTxn): Unit = if (included) add(elem) else remove(elem)
   def remove(elem: A)(implicit txn: InTxn): Boolean
 
   // The following methods return the wrong receiver when invoked via the asSet

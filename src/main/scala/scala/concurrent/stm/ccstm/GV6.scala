@@ -117,7 +117,7 @@ private[ccstm] trait GV6 {
     result
   }
 
-  private def reduceRevalidateProbability() {
+  private def reduceRevalidateProbability(): Unit = {
     // increment the commit version on more commits, so reduce the ratio
     val r = silentCommitRatio
     if (r > silentCommitRatioMin) {
@@ -127,7 +127,7 @@ private[ccstm] trait GV6 {
     }
   }
 
-  private def reduceContentionProbability() {
+  private def reduceContentionProbability(): Unit = {
     // increment the commit version on fewer commits, so reduce the ratio
     val r = silentCommitRatio
     if (r < silentCommitRatioMax) {

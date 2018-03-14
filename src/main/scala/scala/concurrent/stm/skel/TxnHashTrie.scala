@@ -4,6 +4,7 @@ package scala.concurrent.stm
 package skel
 
 import annotation.tailrec
+import scala.reflect.ClassTag
 
 /** `TxnHashTrie` implements a transactional mutable hash trie using Ref-s,
  *  with lazy cloning to allow efficient snapshots.  Fundamental operations are
@@ -30,14 +31,14 @@ private[skel] object TxnHashTrie {
 
   def keyHash[A](key: A): Int = if (key == null) 0 else mixBits(key.##)
 
-  def mixBits(h: Int) = {
+  def mixBits(h: Int): Int = {
     // make sure any bit change results in a change in the bottom LogBF bits
     val s = LogBF
     val x = h ^ (h >>> (s * 3)) ^ (h >>> (s * 6))
     x ^ (x >>> s) ^ (x >>> (s * 2))
   }
 
-  def indexFor(shift: Int, hash: Int) = (hash >>> shift) & (BF - 1)
+  def indexFor(shift: Int, hash: Int): Int = (hash >>> shift) & (BF - 1)
 
   //////// shared instances
   
@@ -48,8 +49,8 @@ private[skel] object TxnHashTrie {
   sealed abstract class Node[A, B] {
     def cappedSize(cap: Int): Int
     def txnIsEmpty(implicit txn: InTxn): Boolean
-    def keyForeach[U](f: A => U)
-    def mapForeach[U](f: ((A, B)) => U)
+    def keyForeach[U](f: A => U): Unit
+    def mapForeach[U](f: ((A, B)) => U): Unit
     def keyIterator: Iterator[A]
     def valueIterator: Iterator[B]
     def mapIterator: Iterator[(A, B)]
@@ -69,13 +70,13 @@ private[skel] object TxnHashTrie {
     def endBuild = this
 
     def cappedSize(cap: Int): Int = hashes.length
-    def txnIsEmpty(implicit txn: InTxn) = hashes.length == 0
+    def txnIsEmpty(implicit txn: InTxn): Boolean = hashes.length == 0
 
     def getKey(i: Int): A = kvs(2 * i).asInstanceOf[A]
-    def setKey(i: Int, k: A) { kvs(2 * i) = k.asInstanceOf[AnyRef] }
+    def setKey(i: Int, k: A): Unit = { kvs(2 * i) = k.asInstanceOf[AnyRef] }
 
     def getValue(i: Int): B = kvs(2 * i + 1).asInstanceOf[B]
-    def setValue(i: Int, v: B) { kvs(2 * i + 1) = v.asInstanceOf[AnyRef] }
+    def setValue(i: Int, v: B): Unit = { kvs(2 * i + 1) = v.asInstanceOf[AnyRef] }
 
     def getKeyValue(i: Int): (A, B) = (getKey(i), getValue(i))
 
@@ -106,7 +107,7 @@ private[skel] object TxnHashTrie {
         if (h < hash)
           return ~(i + 1)
       }
-      return ~0
+      ~0
     }
 
     private def keyEqual(lhs: AnyRef, rhs: AnyRef): Boolean = {
@@ -201,12 +202,12 @@ private[skel] object TxnHashTrie {
 
       // class manifests for classes that have type parameters are a bit
       // convoluted to construct, so it is better to do it only once per split
-      implicit val cm = implicitly[ClassManifest[Node[A, B]]]
+      val cm = implicitly[ClassTag[Node[A, B]]]
 
       val refs = new Array[Ref.View[Node[A, B]]](BF)
       var i = 0
       while (i < BF) {
-        refs(i) = Ref(children(i)).single
+        refs(i) = Ref(children(i))(cm).single
         i += 1
       }
       new Branch[A, B](gen, false, refs)      
@@ -218,7 +219,7 @@ private[skel] object TxnHashTrie {
       new BuildingBranch[A, B](children)
     }
 
-    private def splitInto[L >: Leaf[A, B]](shift: Int, children: Array[L]) {
+    private def splitInto[L >: Leaf[A, B]](shift: Int, children: Array[L]): Unit = {
       val sizes = new Array[Int](BF)
       var i = 0
       while (i < hashes.length) {
@@ -257,7 +258,7 @@ private[skel] object TxnHashTrie {
         new Leaf[A, B](new Array[Int](n), new Array[AnyRef](2 * n))
     }
 
-    def keyForeach[U](f: A => U) {
+    def keyForeach[U](f: A => U): Unit = {
       var i = 0
       while (i < hashes.length) {
         f(getKey(i))
@@ -265,7 +266,7 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def mapForeach[U](f: ((A, B)) => U) {
+    def mapForeach[U](f: ((A, B)) => U): Unit = {
       var i = 0
       while (i < hashes.length) {
         f(getKeyValue(i))
@@ -275,19 +276,19 @@ private[skel] object TxnHashTrie {
 
     def keyIterator: Iterator[A] = new Iterator[A] {
       var pos = 0
-      def hasNext = pos < hashes.length
+      def hasNext: Boolean = pos < hashes.length
       def next: A = { val z = getKey(pos) ; pos += 1 ; z }
     }
 
     def valueIterator: Iterator[B] = new Iterator[B] {
       var pos = 0
-      def hasNext = pos < hashes.length
+      def hasNext: Boolean = pos < hashes.length
       def next: B = { val z = getValue(pos) ; pos += 1 ; z }
     }
 
     def mapIterator: Iterator[(A, B)] = new Iterator[(A,B)] {
       var pos = 0
-      def hasNext = pos < hashes.length
+      def hasNext: Boolean = pos < hashes.length
       def next: (A, B) = { val z = getKeyValue(pos) ; pos += 1 ; z }
     }
   }
@@ -333,7 +334,7 @@ private[skel] object TxnHashTrie {
           return false
         i += 1
       }
-      return true
+      true
     }
 
     def withFreeze: Branch[A, B] = new Branch(gen, true, children)
@@ -348,7 +349,7 @@ private[skel] object TxnHashTrie {
       new Branch[A, B](newGen, false, cc)
     }
 
-    def keyForeach[U](f: A => U) {
+    def keyForeach[U](f: A => U): Unit = {
       var i = 0
       while (i < BF) {
         children(i)().keyForeach(f)
@@ -356,7 +357,7 @@ private[skel] object TxnHashTrie {
       }
     }
 
-    def mapForeach[U](f: ((A, B)) => U) {
+    def mapForeach[U](f: ((A, B)) => U): Unit = {
       var i = 0
       while (i < BF) {
         children(i)().mapForeach(f)
@@ -388,7 +389,7 @@ private[skel] object TxnHashTrie {
         }
       }
 
-      def hasNext = iter != null && iter.hasNext
+      def hasNext: Boolean = iter != null && iter.hasNext
 
       def next: Z = {
         val z = iter.next
@@ -399,15 +400,15 @@ private[skel] object TxnHashTrie {
     }
 
     def keyIterator: Iterator[A] = new Iter[A] {
-      def childIter(c: Node[A, B]) = c.keyIterator
+      def childIter(c: Node[A, B]): Iterator[A] = c.keyIterator
     }
 
     def valueIterator: Iterator[B] = new Iter[B] {
-      def childIter(c: Node[A, B]) = c.valueIterator
+      def childIter(c: Node[A, B]): Iterator[B] = c.valueIterator
     }
 
     def mapIterator: Iterator[(A, B)] = new Iter[(A,B)] {
-      def childIter(c: Node[A, B]) = c.mapIterator
+      def childIter(c: Node[A, B]): Iterator[(A, B)] = c.mapIterator
     }
   }
 
@@ -424,15 +425,14 @@ private[skel] object TxnHashTrie {
 
   private def buildingPut[A, B](current: BuildingNode[A, B], shift: Int, hash: Int, key: A, value: B): BuildingNode[A, B] = {
     current match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         val i = leaf.find(hash, key)
         if (leaf.noChange(i, value)) leaf else leaf.withBuildingPut(shift, hash, key, value, i)
-      }
-      case branch: BuildingBranch[A, B] => {
+
+      case branch: BuildingBranch[A, B] =>
         val i = indexFor(shift, hash)
         branch.children(i) = buildingPut(branch.children(i), shift + LogBF, hash, key, value)
         branch
-      }
     }
   }
 }
@@ -446,14 +446,14 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   private final val contentionThreshold = 1 * pct
   private var contentionEstimate = 0
 
-  private def recordNoContention() {
+  private def recordNoContention(): Unit = {
     if (SimpleRandom.nextInt(32) == 0) {
       val e = contentionEstimate
       contentionEstimate = e - (e >> 4) // this is 15/16, applied every 32nd time, so about 99.8%
     }
   }
 
-  private def recordContention() {
+  private def recordContention(): Unit = {
     val e = contentionEstimate
     contentionEstimate = e + ((100 * pct - e) >> 9) // 100 * pct is the max
   }
@@ -466,13 +466,12 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
     root() match {
       case leaf: Leaf[A, B] => leaf // leaf is already immutable
       case branch: Branch[A, B] if branch.frozen => branch
-      case branch: Branch[A, B] => {
+      case branch: Branch[A, B] =>
         // If this CAS fails it means someone else already installed a frozen
         // branch, and we can benefit from their work.
         val b = branch.withFreeze
         root.compareAndSetIdentity(branch, b)
         b
-      }
     }
   }
 
@@ -493,7 +492,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   protected def singleSize: Int = frozenRoot.cappedSize(Int.MaxValue)
 
-  protected def singleSetForeach[U](f: A => U) {
+  protected def singleSetForeach[U](f: A => U): Unit = {
     // don't freeze the root if we use .single in a txn
     impl.STMImpl.instance.dynCurrentOrNull match {
       case null => frozenRoot.keyForeach(f)
@@ -501,7 +500,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
     }
   }
 
-  protected def singleMapForeach[U](f: ((A, B)) => U) {
+  protected def singleMapForeach[U](f: ((A, B)) => U): Unit = {
     impl.STMImpl.instance.dynCurrentOrNull match {
       case null => frozenRoot.mapForeach(f)
       case txn => txnMapForeach(f)(txn)
@@ -514,16 +513,15 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   @tailrec private def singleContains(rootNode: Node[A, B], n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Boolean = {
     n() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         if (shift != 0 && (rootNode ne root()))
           singleContains(null, root, 0, hash, key)
         else
           leaf.contains(hash, key)
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val rn = if (shift == 0) branch else rootNode
         singleContains(rn, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
-      }
     }
   }
 
@@ -531,7 +529,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   @tailrec private def singleGetOrThrow(rootNode: Node[A, B], n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): B = {
     n() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         if (shift != 0 && (rootNode ne root()))
           singleGetOrThrow(null, root, 0, hash, key)
         else {
@@ -540,11 +538,10 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
             throw new NoSuchElementException("key not found: " + key)
           leaf.getValue(i)
         }
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val rn = if (shift == 0) branch else rootNode
         singleGetOrThrow(rn, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
-      }
     }
   }
 
@@ -552,16 +549,15 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   @tailrec private def singleGet(rootNode: Node[A, B], n: Ref.View[Node[A, B]], shift: Int, hash: Int, key: A): Option[B] = {
     n() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         if (shift != 0 && (rootNode ne root()))
           singleGet(null, root, 0, hash, key)
         else
           leaf.get(hash, key)
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val rn = if (shift == 0) branch else rootNode
         singleGet(rn, branch.children(indexFor(shift, hash)), shift + LogBF, hash, key)
-      }
     }
   }
 
@@ -570,20 +566,20 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   @tailrec private def singleRootPut(hash: Int, key: A, value: B, failures: Int): Option[B] = {
     if (failures < 10) {
       root() match {
-        case leaf: Leaf[A, B] => {
+        case leaf: Leaf[A, B] =>
           val i = leaf.find(hash, key)
-          if (leaf.noChange(i, value) || root.compareAndSetIdentity(leaf, leaf.withPut(0L, 0, hash, key, value, i, false)))
+          if (leaf.noChange(i, value) ||
+              root.compareAndSetIdentity(leaf, leaf.withPut(0L, 0, hash, key, value, i, contended = false)))
             leaf.get(i) // success, read from old leaf
           else
             singleRootPut(hash, key, value, failures + 1)
-        }
-        case branch: Branch[A, B] => {
+
+        case branch: Branch[A, B] =>
           val b = if (!branch.frozen) branch else singleUnshare(branch.gen + 1, root, branch)
           if (b != null)
             singleChildPut(b, b.children(indexFor(0, hash)), LogBF, hash, key, value, 0)
           else
             singleRootPut(hash, key, value, failures + 1)
-        }
       }
     } else
       failingPut(hash, key, value)
@@ -608,7 +604,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
                                       failures: Int): Option[B] = {
     if (failures < 10) {
       current() match {
-        case leaf: Leaf[A, B] => {
+        case leaf: Leaf[A, B] =>
           val i = leaf.find(hash, key)
           if (leaf.noChange(i, value) || atomic.compareAndSetIdentity(
                   root.ref, rootNode, rootNode, current.ref,
@@ -618,14 +614,13 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
             failingPut(hash, key, value) // root retry
           else
             singleChildPut(rootNode, current, shift, hash, key, value, failures + 1) // local retry
-        }
-        case branch: Branch[A, B] => {
+
+        case branch: Branch[A, B] =>
           val b = if (branch.gen == rootNode.gen) branch else singleUnshare(rootNode.gen, current, branch)
           if (b != null)
             singleChildPut(rootNode, b.children(indexFor(shift, hash)), shift + LogBF, hash, key, value, failures)
           else
             singleChildPut(rootNode, current, shift, hash, key, value, failures + 1) // failure, try again
-        }
       }
     } else
       failingPut(hash, key, value)
@@ -636,25 +631,24 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   @tailrec private def singleRootRemove(hash: Int, key: A, failures: Int): Option[B] = {
     if (failures < 10) {
       root() match {
-        case leaf: Leaf[A, B] => {
+        case leaf: Leaf[A, B] =>
           val i = leaf.find(hash, key)
           if (i < 0 || root.compareAndSetIdentity(leaf, leaf.withRemove(i)))
             leaf.get(i) // success, read from old leaf
           else
             singleRootRemove(hash, key, failures + 1)
-        }
-        case branch: Branch[A, B] => {
+
+        case branch: Branch[A, B] =>
           val i = indexFor(0, hash)
           if (branch.frozen && !singleContains(branch, branch.children(i), LogBF, hash, key))
             None
           else {
             val b = if (!branch.frozen) branch else singleUnshare(branch.gen + 1, root, branch)
             if (b != null)
-              singleChildRemove(b, b.children(i), LogBF, hash, key, (b ne branch), 0)
+              singleChildRemove(b, b.children(i), LogBF, hash, key, b ne branch, 0)
             else
               singleRootRemove(hash, key, failures + 1)
           }
-        }
       }
     } else
       failingRemove(hash, key)
@@ -674,7 +668,7 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
                                          failures: Int): Option[B] = {
     if (failures < 10) {
       current() match {
-        case leaf: Leaf[A, B] => {
+        case leaf: Leaf[A, B] =>
           val i = leaf.find(hash, key)
           if (i < 0)
             None // no change, key wasn't present
@@ -684,8 +678,8 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
             failingRemove(hash, key) // root retry
           else
             singleChildRemove(rootNode, current, shift, hash, key, checked, failures + 1) // local retry
-        }
-        case branch: Branch[A, B] => {
+
+        case branch: Branch[A, B] =>
           val i = indexFor(shift, hash)
           if (!checked && branch.gen != rootNode.gen && !singleContains(rootNode, branch.children(i), shift + LogBF, hash, key))
             None // child is absent
@@ -696,7 +690,6 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
             else
               singleChildRemove(rootNode, current, shift, hash, key, checked, failures + 1)
           }
-        }
       }
     } else
       failingRemove(hash, key)
@@ -710,9 +703,9 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   protected def txnIsEmpty(implicit txn: InTxn): Boolean = root().txnIsEmpty
 
-  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn) { root().keyForeach(f) }
+  protected def txnSetForeach[U](f: A => U)(implicit txn: InTxn): Unit = { root().keyForeach(f) }
 
-  protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn) { root().mapForeach(f) }
+  protected def txnMapForeach[U](f: ((A, B)) => U)(implicit txn: InTxn): Unit = { root().mapForeach(f) }
 
   //////////////// per-key operations when an InTxn is available
 
@@ -729,12 +722,12 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   @tailrec private def txnGetOrThrow(n: Ref[Node[A, B]], shift: Int, hash: Int, key: A)(implicit txn: InTxn): B = {
     n() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         val i = leaf.find(hash, key)
         if (i < 0)
           throw new NoSuchElementException("key not found: " + key)
         leaf.getValue(i)
-      }
+
       case branch: Branch[A, B] => txnGetOrThrow(branch.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key)(txn)
     }
   }
@@ -752,20 +745,19 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   private def txnRootPut(hash: Int, key: A, value: B)(implicit txn: InTxn): Option[B] = {
     root() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         val i = leaf.find(hash, key)
         if (!leaf.noChange(i, value))
           set(root.ref, leaf.withPut(0L, 0, hash, key, value, i, isContended))
         leaf.get(i)
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val b = if (!branch.frozen) branch else txnUnshare(branch.gen + 1, root.ref, branch)
         txnChildPut(b.gen, b.children(indexFor(0, hash)).ref, LogBF, hash, key, value)(txn)
-      }
     }
   }
 
-  private def set(ref: Ref[Node[A, B]], node: Node[A, B])(implicit txn: InTxn) {
+  private def set(ref: Ref[Node[A, B]], node: Node[A, B])(implicit txn: InTxn): Unit = {
     if (!ref.trySet(node)) {
       recordContention()
       ref() = node
@@ -782,16 +774,15 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
   @tailrec private def txnChildPut(rootGen: Long, current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, value: B
           )(implicit txn: InTxn): Option[B] = {
     current() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         val i = leaf.find(hash, key)
         if (!leaf.noChange(i, value))
           set(current, leaf.withPut(rootGen, shift, hash, key, value, i, isContended))
         leaf.get(i)
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val b = if (branch.gen == rootGen) branch else txnUnshare(rootGen, current, branch)
         txnChildPut(rootGen, b.children(indexFor(shift, hash)).ref, shift + LogBF, hash, key, value)(txn)
-      }
     }
   }
 
@@ -799,34 +790,33 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
 
   private def txnRootRemove(hash: Int, key: A)(implicit txn: InTxn): Option[B] = {
     root() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         val i = leaf.find(hash, key)
         if (i >= 0)
           set(root.ref, leaf.withRemove(i))
         leaf.get(i)
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val i = indexFor(0, hash)
         if (branch.frozen && !txnContains(branch.children(i).ref, LogBF, hash, key))
           None
         else {
           val b = if (!branch.frozen) branch else txnUnshare(branch.gen + 1, root.ref, branch)
-          txnChildRemove(b.gen, b.children(i).ref, LogBF, hash, key, (b ne branch))(txn)
+          txnChildRemove(b.gen, b.children(i).ref, LogBF, hash, key, b ne branch)(txn)
         }
-      }
     }
   }
 
   @tailrec private def txnChildRemove(rootGen: Long, current: Ref[Node[A, B]], shift: Int, hash: Int, key: A, checked: Boolean
           )(implicit txn: InTxn): Option[B] = {
     current() match {
-      case leaf: Leaf[A, B] => {
+      case leaf: Leaf[A, B] =>
         val i = leaf.find(hash, key)
         if (i >= 0)
           set(current, leaf.withRemove(i))
         leaf.get(i)
-      }
-      case branch: Branch[A, B] => {
+
+      case branch: Branch[A, B] =>
         val i = indexFor(shift, hash)
         if (!checked && branch.gen != rootGen && !txnContains(branch.children(i).ref, shift + LogBF, hash, key))
           None // child is absent
@@ -834,7 +824,6 @@ private[skel] abstract class TxnHashTrie[A, B](protected var root: Ref.View[TxnH
           val b = if (branch.gen == rootGen) branch else txnUnshare(rootGen, current, branch)
           txnChildRemove(rootGen, b.children(i).ref, shift + LogBF, hash, key, checked || (b ne branch))(txn)
         }
-      }
     }
   }
 }

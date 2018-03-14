@@ -50,48 +50,47 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
           Right(body(txn))
         }
       } catch {
-        case x: Throwable => {
+        case x: Throwable =>
           state match {
-            case Active => {
+            case Active =>
               // txn rolled back before involving external decider, all
               // members must be rolled back
               cancelAll(MemberUncaughtExceptionCause(x))
               throw x
-            }
-            case MemberWaiting => {
+
+            case MemberWaiting =>
               // interrupt during ExternalDecider, all already cancelled
               assert(x.isInstanceOf[InterruptedException])
               assert(groupState.isInstanceOf[Cancelled])
               throw x
-            }
-            case Cancelled(cause) => {
+
+            case Cancelled(cause) =>
               // barrier state already updated
               Left(cause)
-            }
-            case Committed => {
+
+            case Committed =>
               // control flow exception as part of group commit, tricky!
               throw x
-            }
           }
-        }
+
       } finally {
         target = null
       }
     }
 
-    private def markCancelled(cause: CancelCause, isLocal: Boolean) {
+    private def markCancelled(cause: CancelCause, isLocal: Boolean): Unit = {
       val firstCause = groupState match {
         case c: Cancelled => c
         case _ => Cancelled(cause)
       }
 
       state match {
-        case Active => {
+        case Active =>
           state = firstCause
           activeCount -= 1
           checkBarrierCommit_nl()
-        }
-        case MemberWaiting => {
+
+        case MemberWaiting =>
           state = firstCause
           activeCount -= 1
           waitingCount -= 1
@@ -99,17 +98,17 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             // this member should exit its external decider
             lock.notifyAll()
           }
-        }
-        case Cancelled(_) => {}
-        case Committed => {
+
+        case Cancelled(_) =>
+
+        case Committed =>
           throw new IllegalStateException("can't cancel member after commit")
-        }
       }
     }
 
-    private[CommitBarrierImpl] def cancelImpl(cause: CancelCause) {
+    private[CommitBarrierImpl] def cancelImpl(cause: CancelCause): Unit = {
       lock.synchronized {
-        markCancelled(cause, false)
+        markCancelled(cause, isLocal = false)
       }
       val t = target
       if (t != null) {
@@ -118,12 +117,13 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
       }
     }
 
-    def cancel(cause: UserCancel) {
+    def cancel(cause: UserCancel): Unit =
       cancelImpl(cause)
-    }
 
     def shouldCommit(implicit txn: InTxnEnd): Boolean = {
-      var cause = lock.synchronized { shouldCommit_nl() }
+      val cause = lock.synchronized {
+        shouldCommit_nl()
+      }
       if (cause != null)
         txn.rollback(cause)
       true
@@ -141,17 +141,17 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
       (while (true) {
         // cancelImpl is a no-op if we're already cancelled
         groupState match {
-          case Cancelled(cause) => markCancelled(cause, true)
-          case Committed if state == MemberWaiting => {
+          case Cancelled(cause) => markCancelled(cause, isLocal = true)
+          case Committed if state == MemberWaiting =>
             state = Committed
             return null
-          }
-          case _ => {}
+
+          case _ =>
         }
 
         state match {
           case Cancelled(_) => return Txn.UncaughtExceptionCause(MemberCancelException)
-          case MemberWaiting => {}
+          case MemberWaiting =>
           case _ => throw new Error("impossible state " + state)
         }
 
@@ -166,7 +166,7 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             val remaining = (t0 + timeoutNanos) - now
             if (remaining <= 0) {
               cancelAll(Timeout)
-              markCancelled(Timeout, true)
+              markCancelled(Timeout, isLocal = true)
               return Txn.UncaughtExceptionCause(MemberCancelException)
             } else {
               val millis = TimeUnit.NANOSECONDS.toMillis(remaining)
@@ -177,40 +177,38 @@ private[ccstm] class CommitBarrierImpl(timeoutNanos: Long) extends CommitBarrier
             blocking { lock.wait() }
           }
         } catch {
-          case x: InterruptedException => {
+          case x: InterruptedException =>
             // don't cancel ourself so we can throw InterruptedException
             cancelAll(MemberUncaughtExceptionCause(x))
             return Txn.UncaughtExceptionCause(x)
-          }
         }
       }).asInstanceOf[Nothing]
     }
   }
 
-  private def checkBarrierCommit_nl() {
+  private def checkBarrierCommit_nl(): Unit =
     groupState match {
-      case Active => {
+      case Active =>
         if (activeCount == waitingCount && activeCount > 0) {
           groupState = Committed
           lock.notifyAll()
         }
-      }
-      case _ => {}
-    }
-  }
 
-  private[ccstm] def cancelAll(cause: CancelCause) {
+      case _ =>
+    }
+
+  private[ccstm] def cancelAll(cause: CancelCause): Unit =
     lock.synchronized {
       groupState match {
-        case Active => {
+        case Active =>
           groupState = Cancelled(cause)
           lock.notifyAll()
-        }
-        case Cancelled(_) => {}
+
+        case Cancelled(_) =>
+
         case _ => throw new Error("impossible groupState " + groupState)
       }
     }
-  }
 
   def addMember(cancelOnLocalRollback: Boolean)(implicit txn: MaybeTxn): Member = {
     lock.synchronized {

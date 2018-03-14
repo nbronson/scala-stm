@@ -14,8 +14,8 @@ object DiningPhilosophers {
   }
 
   class PhilosopherThread(meals: Int, left: Fork, right: Fork) extends Thread {
-    override def run() {
-      for (m <- 0 until meals) {
+    override def run(): Unit = {
+      for (_ <- 0 until meals) {
         // THINK
         pickUpBothForks()
         // EAT
@@ -24,7 +24,7 @@ object DiningPhilosophers {
       }
     }
 
-    def pickUpBothForks() {
+    def pickUpBothForks(): Unit = {
       atomic { implicit txn =>
         if (left.inUse() || right.inUse())
           retry
@@ -33,7 +33,7 @@ object DiningPhilosophers {
       }
     }
 
-    def putDown(f: Fork) {
+    def putDown(f: Fork): Unit = {
       f.inUse.single() = false
     }
   }
@@ -47,9 +47,9 @@ object DiningPhilosophers {
     System.currentTimeMillis - start
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val meals = 100000
-    for (p <- 0 until 3) {
+    for (_ <- 0 until 3) {
       val elapsed = time(5, meals)
       printf("%3.1f usec/meal\n", (elapsed * 1000.0) / meals)
     }

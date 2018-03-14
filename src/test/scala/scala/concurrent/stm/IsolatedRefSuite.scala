@@ -5,6 +5,8 @@ package scala.concurrent.stm
 import org.scalatest.FunSuite
 import java.util.concurrent.TimeUnit
 
+import scala.reflect.ClassTag
+
 
 /** Performs single-threaded tests of `Ref`. */
 class IsolatedRefSuite extends FunSuite {
@@ -16,7 +18,7 @@ class IsolatedRefSuite extends FunSuite {
     override def toString() = "Primitive"
   }
 
-  class KnownGenericFactory[A : ClassManifest] extends (A => Ref[A]) {
+  class KnownGenericFactory[A : ClassTag] extends (A => Ref[A]) {
     def apply(v0: A) = Ref(v0)
     override def toString() = "KnownGeneric"
   }
@@ -26,8 +28,8 @@ class IsolatedRefSuite extends FunSuite {
     override def toString() = "UnknownGeneric"
   }
 
-  class ArrayElementFactory[A : ClassManifest] extends (A => Ref[A]) {
-    def apply(v0: A) = {
+  class ArrayElementFactory[A : ClassTag] extends (A => Ref[A]) {
+    def apply(v0: A): Ref[A] = {
       val ref = TArray.ofDim[A](10).refs(5)
       ref.single() = v0
       ref
@@ -39,15 +41,15 @@ class IsolatedRefSuite extends FunSuite {
   // This implements Ref.View, but requires a surrounding InTxn context and
   // forwards to Ref's methods.
   class DynamicView[A](val ref: Ref[A]) extends Ref.View[A] {
-    implicit def txn = Txn.findCurrent.get
+    implicit def txn: InTxn = Txn.findCurrent(MaybeTxn.unknown).get
 
     def get: A = ref.get
     def getWith[Z](f: A => Z): Z = ref.getWith(f)
     def relaxedGet(equiv: (A, A) => Boolean): A = ref.relaxedGet(equiv)
-    def await(f: A => Boolean) { if (!f(get)) retry }
+    def await(f: A => Boolean): Unit = { if (!f(get)) retry }
     def tryAwait(timeout: Long, unit: TimeUnit)(f: A => Boolean): Boolean = f(get) || { retryFor(timeout, unit) ; false }
-    def set(v: A) { ref.set(v) }
-    def trySet(v: A) = ref.trySet(v)
+    def set(v: A): Unit = ref.set(v)
+    def trySet(v: A): Boolean = ref.trySet(v)
     def swap(v: A): A = ref.swap(v)
     def compareAndSet(before: A, after: A): Boolean = {
       if (get == before) { set(after) ; true } else false
@@ -55,16 +57,16 @@ class IsolatedRefSuite extends FunSuite {
     def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = {
       if (before eq get.asInstanceOf[AnyRef]) { set(after) ; true } else false
     }
-    def transform(f: A => A) { ref.transform(f) }
+    def transform(f: A => A): Unit = ref.transform(f)
     def getAndTransform(f: A => A): A = ref.getAndTransform(f)
     def transformAndGet(f: A => A): A = ref.transformAndGet(f)
     override def transformAndExtract[B](f: A => (A,B)): B = ref.transformAndExtract(f)
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = ref.transformIfDefined(pf)
 
-    override def +=(rhs: A)(implicit num: Numeric[A]) { ref += rhs }
-    override def -=(rhs: A)(implicit num: Numeric[A]) { ref -= rhs }
-    override def *=(rhs: A)(implicit num: Numeric[A]) { ref *= rhs }
-    override def /=(rhs: A)(implicit num: Numeric[A]) { ref /= rhs }
+    override def +=(rhs: A)(implicit num: Numeric[A]): Unit = ref += rhs
+    override def -=(rhs: A)(implicit num: Numeric[A]): Unit = ref -= rhs
+    override def *=(rhs: A)(implicit num: Numeric[A]): Unit = ref *= rhs
+    override def /=(rhs: A)(implicit num: Numeric[A]): Unit = ref /= rhs
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -84,23 +86,23 @@ class IsolatedRefSuite extends FunSuite {
     def get: A = wrap { view.get }
     def getWith[Z](f: A => Z): Z = wrap { view.getWith(f) }
     def relaxedGet(equiv: (A, A) => Boolean): A = wrap { view.relaxedGet(equiv) }
-    def await(f: (A) => Boolean) { wrap { view.await(f) } }
+    def await(f: (A) => Boolean): Unit = wrap { view.await(f) }
     def tryAwait(timeout: Long, unit: TimeUnit)(f: (A) => Boolean): Boolean = wrap { view.tryAwait(timeout, unit)(f) }
-    def set(v: A) { wrap { view.set(v) } }
-    def trySet(v: A) = wrap { view.trySet(v) }
+    def set(v: A): Unit = wrap { view.set(v) }
+    def trySet(v: A): Boolean = wrap { view.trySet(v) }
     def swap(v: A): A = wrap { view.swap(v) }
     def compareAndSet(before: A, after: A): Boolean = wrap { view.compareAndSet(before, after) }
     def compareAndSetIdentity[B <: A with AnyRef](before: B, after: A): Boolean = wrap { view.compareAndSetIdentity(before, after) }
-    def transform(f: A => A) { wrap { view.transform(f) } }
+    def transform(f: A => A): Unit = wrap { view.transform(f) }
     def getAndTransform(f: A => A): A = wrap { view.getAndTransform(f) }
     def transformAndGet(f: A => A): A = wrap { view.transformAndGet(f) }
     override def transformAndExtract[B](f: A => (A,B)): B = wrap { view.transformAndExtract(f) }
     def transformIfDefined(pf: PartialFunction[A, A]): Boolean = wrap { view.transformIfDefined(pf) }
 
-    override def +=(rhs: A)(implicit num: Numeric[A]) { wrap { view += rhs } }
-    override def -=(rhs: A)(implicit num: Numeric[A]) { wrap { view -= rhs } }
-    override def *=(rhs: A)(implicit num: Numeric[A]) { wrap { view *= rhs } }
-    override def /=(rhs: A)(implicit num: Numeric[A]) { wrap { view /= rhs } }
+    override def +=(rhs: A)(implicit num: Numeric[A]): Unit = wrap { view += rhs }
+    override def -=(rhs: A)(implicit num: Numeric[A]): Unit = wrap { view -= rhs }
+    override def *=(rhs: A)(implicit num: Numeric[A]): Unit = wrap { view *= rhs }
+    override def /=(rhs: A)(implicit num: Numeric[A]): Unit = wrap { view /= rhs }
 
     override def hashCode: Int = ref.hashCode
     override def equals(rhs: Any): Boolean = ref == rhs
@@ -112,7 +114,7 @@ class IsolatedRefSuite extends FunSuite {
 
   object SingleAccess extends ViewFactory {
     def apply[A](ref: Ref[A], innerDepth: Int): Ref.View[A] = new TestingView[A](innerDepth, ref) {
-      protected def view = ref.single
+      protected def view: Ref.View[A] = ref.single
     }
     override def toString = "Single"
   }
@@ -137,7 +139,7 @@ class IsolatedRefSuite extends FunSuite {
   // Now we enumerate the environments, generating a set of tests for each
   // configuration.
 
-  private def createTests[A : ClassManifest](name: String, v0: A)(block: (() => Ref.View[A]) => Unit) {
+  private def createTests[A : ClassTag](name: String, v0: A)(block: (() => Ref.View[A]) => Unit): Unit = {
     test(name) {
       for (outerLevels <- 0 until 2;
            innerLevels <- 0 until 2;
@@ -148,12 +150,13 @@ class IsolatedRefSuite extends FunSuite {
         try {
           val ref = refFactory(v0)
           def getView = viewFactory(ref, innerLevels)
-          nest(outerLevels) { block(getView _) }
+          nest(outerLevels) {
+            block(getView _)
+          }
         } catch {
-          case x: Throwable => {
+          case x: Throwable =>
             println(name + " failed for " + current)
             fail(current + ": " + name + " failure", x)
-          }
         }
       }
     }
@@ -165,7 +168,7 @@ class IsolatedRefSuite extends FunSuite {
     assert(PrimitiveIntFactory(10).getClass === g(10).getClass)
   }
 
-  private def nest(depth: Int)(block: => Unit) {
+  private def nest(depth: Int)(block: => Unit): Unit = {
     if (depth == 0)
       block
     else
@@ -249,14 +252,13 @@ class IsolatedRefSuite extends FunSuite {
   createTests("transformIfDefined", 1) { view =>
     for (i <- 1 until 10) {
       assert(view()() === i)
-      assert(!(view().transformIfDefined {
+      assert(!view().transformIfDefined {
         case 0 => -1
-      }))
+      })
       assert(view().transformIfDefined {
-        case x if x > 0 => {
+        case x if x > 0 =>
           assert(x === i)
           x + 1
-        }
       })
     }
     assert(view()() === 10)
@@ -279,7 +281,7 @@ class IsolatedRefSuite extends FunSuite {
   }
 
   createTests("*= 2", 1) { view =>
-    for (i <- 1 until 10) {
+    for (_ <- 1 until 10) {
       view() *= 2
     }
     assert(view()() === 512)
@@ -329,7 +331,7 @@ class IsolatedRefSuite extends FunSuite {
 
   createTests("excepting transform", 1) { view =>
     intercept[UserException] {
-      view().transform(v => throw new UserException)
+      view().transform(_ => throw new UserException)
     }
     assert(view().get === 1)
     view().transform(_ + 1)
@@ -436,7 +438,7 @@ class IsolatedRefSuite extends FunSuite {
     assert(view().dbgValue === 11)
   }
 
-  private def perTypeTests[A : ClassManifest](v0: A, v1: A) {
+  private def perTypeTests[A : ClassTag](v0: A, v1: A): Unit = {
     val name = v0.asInstanceOf[AnyRef].getClass.getSimpleName
 
     createTests(name + " simple get+set", v0) { view =>
@@ -544,14 +546,14 @@ class IsolatedRefSuite extends FunSuite {
     def get(implicit txn: InTxn) = throw new AbstractMethodError
     def getWith[Z](f: (A) => Z)(implicit txn: InTxn) = throw new AbstractMethodError
     def relaxedGet(equiv: (A, A) => Boolean)(implicit txn: InTxn) = throw new AbstractMethodError
-    def set(v: A)(implicit txn: InTxn) { throw new AbstractMethodError }
+    def set(v: A)(implicit txn: InTxn): Unit = throw new AbstractMethodError
     def trySet(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
     def swap(v: A)(implicit txn: InTxn) = throw new AbstractMethodError
-    def transform(f: (A) => A)(implicit txn: InTxn) { throw new AbstractMethodError }
+    def transform(f: (A) => A)(implicit txn: InTxn): Unit = throw new AbstractMethodError
     def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxn) = throw new AbstractMethodError
 
-    override def hashCode = underlying.hashCode
-    override def equals(rhs: Any) = underlying.equals(rhs)
+    override def hashCode: Int = underlying.hashCode
+    override def equals(rhs: Any): Boolean = underlying.equals(rhs)
   }
 
   test("proxy Ref equality") {

@@ -3,7 +3,7 @@
 package scala.concurrent.stm
 
 import impl.{RefFactory, STMImpl}
-import reflect.{AnyValManifest, OptManifest}
+import reflect.{AnyValManifest, ClassTag, OptManifest}
 
 /** `object Ref` contains factory methods that allocate an STM-managed memory
  *  location and return a `Ref` instance that provides access to that location.
@@ -70,7 +70,7 @@ object Ref extends RefCompanion {
      *  @param f a function that is safe to call multiple times, and safe to
      *      call later during the enclosing atomic block, if any.
      */
-    def transform(f: A => A)
+    def transform(f: A => A): Unit
 
     /** Atomically replaces the value ''v'' stored in the `Ref` with
      *  `f`(''v''), returning the old value.  `transform` should be preferred
@@ -119,7 +119,7 @@ object Ref extends RefCompanion {
      *
      *  @param rhs the quantity by which to increment the value of `ref`.
      */
-    def += (rhs: A)(implicit num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
+    def += (rhs: A)(implicit num: Numeric[A]): Unit = transform { v => num.plus(v, rhs) }
 
     /** Transforms the value stored in the `Ref` by decrementing it.
      *
@@ -128,7 +128,7 @@ object Ref extends RefCompanion {
      *
      *  @param rhs the quantity by which to decrement the value of `ref`.
      */
-    def -= (rhs: A)(implicit num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
+    def -= (rhs: A)(implicit num: Numeric[A]): Unit = transform { v => num.minus(v, rhs) }
 
     /** Transforms the value stored in the `Ref` by multiplying it.
      *
@@ -137,7 +137,7 @@ object Ref extends RefCompanion {
      *
      *  @param rhs the quantity by which to multiple the value of `ref`.
      */
-    def *= (rhs: A)(implicit num: Numeric[A]) { transform { v => num.times(v, rhs) } }
+    def *= (rhs: A)(implicit num: Numeric[A]): Unit = transform { v => num.times(v, rhs) }
 
     /** Transforms the value stored in `ref` by performing a division on it,
      *  throwing away the remainder if division is not exact for instances of
@@ -152,14 +152,13 @@ object Ref extends RefCompanion {
      *
      *  @param rhs the quantity by which to divide the value of `ref`.
      */
-    def /= (rhs: A)(implicit num: Numeric[A]) {
+    def /= (rhs: A)(implicit num: Numeric[A]): Unit =
       num match {
         //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
         case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }
         //case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
         case numI: Integral[_] => transform { v => numI.asInstanceOf[Integral[A]].quot(v, rhs) }
       }
-    }
 
     // If you implement a Ref.View proxy, you should define a hashCode and
     // equals that delegate to the underlying Ref or Ref.View.  Ref and
@@ -184,7 +183,7 @@ trait RefCompanion {
    *  `Ref(v0)` should be preferred.
    */
   def make[A]()(implicit om: OptManifest[A]): Ref[A] = (om match {
-    case m: ClassManifest[_] => m.newArray(0).asInstanceOf[AnyRef] match {
+    case m: ClassTag[_] => m.newArray(0).asInstanceOf[AnyRef] match {
       // these can be reordered, so long as Unit comes before AnyRef
       case _: Array[Boolean] => apply(false)
       case _: Array[Byte]    => apply(0 : Byte)
@@ -195,9 +194,9 @@ trait RefCompanion {
       case _: Array[Long]    => apply(0 : Long)
       case _: Array[Double]  => apply(0 : Double)
       case _: Array[Unit]    => apply(())
-      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[A])(m.asInstanceOf[ClassManifest[A]])
+      case _: Array[AnyRef]  => factory.newRef(null.asInstanceOf[A])(m.asInstanceOf[ClassTag[A]])
     }
-    case _ => factory.newRef(null.asInstanceOf[Any])(implicitly[ClassManifest[Any]])
+    case _ => factory.newRef(null.asInstanceOf[Any])(implicitly[ClassTag[Any]])
   }).asInstanceOf[Ref[A]]
 
   /** Returns a `Ref` instance that manages a newly allocated memory location,
@@ -212,8 +211,8 @@ trait RefCompanion {
    */
   def apply[A](initialValue: A)(implicit om: OptManifest[A]): Ref[A] = om match {
     case m: AnyValManifest[_] => newPrimitiveRef(initialValue, m)
-    case m: ClassManifest[_] => factory.newRef(initialValue)(m.asInstanceOf[ClassManifest[A]])
-    case _ => factory.newRef[Any](initialValue).asInstanceOf[Ref[A]]
+    case m: ClassTag[_]       => factory.newRef(initialValue)(m.asInstanceOf[ClassTag[A]])
+    case _                    => factory.newRef[Any](initialValue).asInstanceOf[Ref[A]]
   }
 
   private def newPrimitiveRef[A](initialValue: A, m: AnyValManifest[_]): Ref[A] = {

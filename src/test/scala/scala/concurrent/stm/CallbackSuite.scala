@@ -15,7 +15,7 @@ class CallbackSuite extends FunSuite {
     val x = Ref(0)
     atomic { implicit t =>
       x() = 1
-      for (i <- 0 until 10000)
+      for (_ <- 0 until 10000)
         Txn.afterCommit { _ => n += 1 }
     }
     assert(n === 10000)
@@ -42,7 +42,7 @@ class CallbackSuite extends FunSuite {
     val x = Ref(0)
     val b = Array.tabulate(n) { _ => new CountDownLatch(1) }
     val t = new Thread("trigger") {
-      override def run() {
+      override def run(): Unit = {
         for (i <- 0 until n) {
           b(i).await()
           Thread.sleep(5)
@@ -149,7 +149,7 @@ class CallbackSuite extends FunSuite {
       }
       if (x() == 10) {
         val adversary = new Thread {
-          override def run() {
+          override def run(): Unit = {
             x.single.transform(_ + 1)
           }
         }
@@ -201,7 +201,7 @@ class CallbackSuite extends FunSuite {
     val handler = new Function1[InTxn, Unit] {
       var count = 0
 
-      def apply(txn: InTxn) {
+      def apply(txn: InTxn): Unit = {
         if (txn eq null) {
           // this is the after-atomic check
           assert(count === 1000)
@@ -325,9 +325,9 @@ class CallbackSuite extends FunSuite {
     val notifier = new scala.concurrent.forkjoin.LinkedTransferQueue[Int]()
     val EOF = -1
 
-    for (i <- 1 to numThreads) {
-      (new Thread {
-        override def run() {
+    for (_ <- 1 to numThreads) {
+      new Thread {
+        override def run(): Unit = {
           try {
             startingGate.await()
             for (i <- 1 to numPutsPerThread) {
@@ -344,10 +344,10 @@ class CallbackSuite extends FunSuite {
           } catch {
             case xx: Throwable => failure.single() = xx
           }
-          if (active.single.transformAndGet( _ - 1 ) == 0)
+          if (active.single.transformAndGet(_ - 1) == 0)
             notifier.put(EOF)
         }
-      }).start()
+      }.start()
     }
 
     startingGate.countDown()
@@ -468,7 +468,7 @@ class CallbackSuite extends FunSuite {
   test("rethrown exception from whileCommitting handler") {
     val x = Ref(0)
     intercept[UserException] {
-      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      val customAtomic = atomic.withPostDecisionFailureHandler { (_, failure) => throw failure }
       customAtomic { implicit txn =>
         Txn.whileCommitting { _ => throw new UserException }
         x() = 1
@@ -496,7 +496,7 @@ class CallbackSuite extends FunSuite {
   test("rethrown exception from afterCommit handler") {
     val x = Ref(0)
     intercept[UserException] {
-      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      val customAtomic = atomic.withPostDecisionFailureHandler { (_, failure) => throw failure }
       customAtomic { implicit txn =>
         Txn.afterCommit { _ => throw new UserException }
         x() = 1
@@ -524,7 +524,7 @@ class CallbackSuite extends FunSuite {
   test("rethrown exception from afterRollback handler") {
     val x = Ref(0)
     intercept[UserException] {
-      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      val customAtomic = atomic.withPostDecisionFailureHandler { (_, failure) => throw failure }
       customAtomic { implicit txn =>
         Txn.afterRollback { _ => throw new UserException }
         x() = 1
@@ -556,7 +556,7 @@ class CallbackSuite extends FunSuite {
   test("rethrow afterRollback exception cancels retry") {
     val x = Ref(0)
     intercept[UserException] {
-      val customAtomic = atomic.withPostDecisionFailureHandler { (status, failure) => throw failure }
+      val customAtomic = atomic.withPostDecisionFailureHandler { (_, failure) => throw failure }
       customAtomic { implicit txn =>
         Txn.afterRollback { _ => throw new UserException }
         if (x() == 0)
@@ -570,7 +570,7 @@ class CallbackSuite extends FunSuite {
     val x = Ref(0)
     intercept[UserException] {
       val customAtomic = atomic.withControlFlowRecognizer {
-        case x: UserException => true
+        case _: UserException => true
       }
       customAtomic { implicit txn =>
         x() = 1

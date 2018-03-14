@@ -16,14 +16,16 @@ private[ccstm] class TxnLocalImpl[A](init: => A,
 
   //////// stateless Handle
 
+  // TODO: Return types should probably not be refined from Unit to Nothing
+
   def meta: Long = CCSTM.txnLocalMeta
-  def meta_=(v: Long) = throw new Error
+  def meta_=(v: Long): Nothing = throw new Error
   def metaCAS(before: Long, after: Long): Boolean = throw new Error
   def base: AnyRef = this
   def offset: Int = 0
   def metaOffset: Int = 0
   def data: A = throw new Error
-  def data_=(v: A) {}
+  def data_=(v: A): Unit = ()
 
 
   //////// TxnLocal
@@ -55,7 +57,7 @@ private[ccstm] class TxnLocalImpl[A](init: => A,
     v
   }
 
-  private def registerCallbacks(impl: InTxnImpl) {
+  private def registerCallbacks(impl: InTxnImpl): Unit = {
     // need to do afterRollback and afterCompletion first so that if there is a
     // remote txn cancel we've got them in place
     if (afterRollback != null)
@@ -83,7 +85,7 @@ private[ccstm] class TxnLocalImpl[A](init: => A,
 
   //////// SinkLike
 
-  def set(v: A)(implicit txn: InTxnEnd) = {
+  def set(v: A)(implicit txn: InTxnEnd): Unit = {
     val impl = txn.asInstanceOf[InTxnImpl]
     val i = impl.txnLocalFind(this)
     if (i >= 0)
@@ -100,7 +102,7 @@ private[ccstm] class TxnLocalImpl[A](init: => A,
 
   def swap(v: A)(implicit txn: InTxnEnd): A = { val z = get ; set(v) ; z }
 
-  def transform(f: (A) => A)(implicit txn: InTxnEnd) { set(f(get)) }
+  def transform(f: (A) => A)(implicit txn: InTxnEnd): Unit = set(f(get))
 
   def transformIfDefined(pf: PartialFunction[A, A])(implicit txn: InTxnEnd): Boolean = {
     val v0 = get

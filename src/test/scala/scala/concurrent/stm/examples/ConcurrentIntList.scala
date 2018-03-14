@@ -6,14 +6,14 @@ import scala.concurrent.stm._
 
 class ConcurrentIntList {
   private class Node(val elem: Int, prev0: Node, next0: Node) {
-    val isHeader = prev0 == null
+    val isHeader: Boolean = prev0 == null
     val prev = Ref(if (isHeader) this else prev0)
     val next = Ref(if (isHeader) this else next0)
   }
 
   private val header = new Node(-1, null, null)
 
-  def addLast(elem: Int) {
+  def addLast(elem: Int): Unit = {
     atomic { implicit txn =>
       val p = header.prev()
       val newNode = new Node(elem, p, header)
@@ -22,16 +22,16 @@ class ConcurrentIntList {
     }
   }
 
-  def addLast(e1: Int, e2: Int, elems: Int*) {
+  def addLast(e1: Int, e2: Int, elems: Int*): Unit = {
     atomic { implicit txn =>
       addLast(e1)
       addLast(e2)
-      elems foreach { addLast(_) }
+      elems.foreach(addLast)
     }
   }
 
   //def isEmpty = atomic { implicit t => header.next() == header }
-  def isEmpty = header.next.single() == header
+  def isEmpty: Boolean = header.next.single() == header
 
   def removeFirst(): Int = atomic { implicit txn =>
     val n = header.next()
@@ -51,7 +51,7 @@ class ConcurrentIntList {
     }
   }
 
-  override def toString: String = {
+  override def toString: String =
     atomic { implicit txn =>
       val buf = new StringBuilder("ConcurrentIntList(")
       var n = header.next()
@@ -60,9 +60,8 @@ class ConcurrentIntList {
         n = n.next()
         if (n != header) buf ++= ","
       }
-      buf ++= ")" toString
+      buf.++=(")").toString
     }
-  }
 }
 
 object ConcurrentIntList {

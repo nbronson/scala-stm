@@ -17,11 +17,11 @@ private[ccstm] object Handle {
 
     override def equals(rhs: Any): Boolean = {
       (this eq rhs.asInstanceOf[AnyRef]) || (rhs match {
-        case r: Handle.Provider[_] => {
+        case r: Handle.Provider[_] =>
           val h1 = handle
           val h2 = r.handle
           (h1.base eq h2.base) && (h1.offset == h2.offset)
-        }
+
         case r: Ref[_] => r equals this
         case v: Ref.View[_] => v equals this
         case _ => false
@@ -42,11 +42,11 @@ private[ccstm] object Handle {
  */
 private[ccstm] abstract class Handle[T] {
   def meta: Long
-  def meta_=(v: Long)
+  def meta_=(v: Long): Unit
   def metaCAS(before: Long, after: Long): Boolean
   def base: AnyRef
   def offset: Int
   def metaOffset: Int
   def data: T
-  def data_=(v: T)
+  def data_=(v: T): Unit
 }

@@ -197,9 +197,8 @@ object Txn {
    *  @param unit the units in which to measure `timeout`, by default
    *      milliseconds.
    */
-  def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: InTxn) {
+  def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: InTxn): Unit =
     txn.retryFor(unit.toNanos(timeout))
-  }
 
   /** Causes the current nesting level to be rolled back due to the specified
    *  `cause`.  This method may only be called by the thread executing the
@@ -225,7 +224,7 @@ object Txn {
    *    and
    *  - before-commit handlers will be executed in their registration order.
    */
-  def beforeCommit(handler: InTxn => Unit)(implicit txn: InTxn) { txn.beforeCommit(handler) }
+  def beforeCommit(handler: InTxn => Unit)(implicit txn: InTxn): Unit = txn.beforeCommit(handler)
 
   /** (rare) Arranges for `handler` to be called after the `Ref` reads and
    *  writes have been checked for serializability, but before the decision has
@@ -237,7 +236,7 @@ object Txn {
    *  - handlers may be registered while the transaction is active, or from a
    *    while-preparing callback during the `Preparing` phase.
    */
-  def whilePreparing(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd) { txn.whilePreparing(handler) }
+  def whilePreparing(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd): Unit = txn.whilePreparing(handler)
 
   /** (rare) Arranges for `handler` to be called after (if) it has been decided
    *  that the current transaction will commit, but before the writes made by
@@ -250,7 +249,7 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `RolledBack` or `Committed`.
    */
-  def whileCommitting(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd) { txn.whileCommitting(handler) }
+  def whileCommitting(handler: InTxnEnd => Unit)(implicit txn: InTxnEnd): Unit = txn.whileCommitting(handler)
 
   /** Arranges for `handler` to be executed as soon as possible after the
    *  current transaction is committed, if this nesting level is part of the
@@ -264,7 +263,7 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `RolledBack` or `Committed`.
    */
-  def afterCommit(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCommit(handler) }
+  def afterCommit(handler: Status => Unit)(implicit txn: InTxnEnd): Unit = txn.afterCommit(handler)
 
   /** Arranges for `handler` to be executed as soon as possible after the
    *  current nesting level is rolled back, or runs the handler immediately if
@@ -277,7 +276,7 @@ object Txn {
    *  - handlers may be registered so long as the current transaction status is
    *    not `Committed`.
    */
-  def afterRollback(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterRollback(handler) }
+  def afterRollback(handler: Status => Unit)(implicit txn: InTxnEnd): Unit = txn.afterRollback(handler)
 
   /** Arranges for `handler` to be called as both an after-commit and
    *  after-rollback handler.
@@ -287,7 +286,7 @@ object Txn {
    *     afterCommit(handler)
    *  }}}
    */
-  def afterCompletion(handler: Status => Unit)(implicit txn: InTxnEnd) { txn.afterCompletion(handler) }
+  def afterCompletion(handler: Status => Unit)(implicit txn: InTxnEnd): Unit = txn.afterCompletion(handler)
 
 
   /** An `ExternalDecider` is given the final control over the decision of
@@ -321,5 +320,5 @@ object Txn {
    *      nesting level from which `setExternalDecider(d)` was called has not
    *      rolled back.
    */
-  def setExternalDecider(decider: ExternalDecider)(implicit txn: InTxnEnd) { txn.setExternalDecider(decider) }
+  def setExternalDecider(decider: ExternalDecider)(implicit txn: InTxnEnd): Unit = txn.setExternalDecider(decider)
 }

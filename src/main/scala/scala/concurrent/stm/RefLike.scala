@@ -27,7 +27,7 @@ trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Contex
    *      call later during the transaction.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def transform(f: A => A)(implicit txn: Context)
+  def transform(f: A => A)(implicit txn: Context): Unit
 
   /** Transforms the value referenced by this `Ref` by applying the function
    *  `f`, and returns the new value.
@@ -73,7 +73,7 @@ trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Contex
    *
    *  @param rhs the quantity by which to increment the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def += (rhs: A)(implicit txn: Context, num: Numeric[A]) { transform { v => num.plus(v, rhs) } }
+  def += (rhs: A)(implicit txn: Context, num: Numeric[A]): Unit = transform { v => num.plus(v, rhs) }
 
   /** Transforms the value stored in the `Ref` by decrementing it.
    *
@@ -82,7 +82,7 @@ trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Contex
    *
    *  @param rhs the quantity by which to decrement the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active. */
-  def -= (rhs: A)(implicit txn: Context, num: Numeric[A]) { transform { v => num.minus(v, rhs) } }
+  def -= (rhs: A)(implicit txn: Context, num: Numeric[A]): Unit = transform { v => num.minus(v, rhs) }
 
   /** Transforms the value stored in the `Ref` by multiplying it.
    *
@@ -92,7 +92,7 @@ trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Contex
    *  @param rhs the quantity by which to multiply the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def *= (rhs: A)(implicit txn: Context, num: Numeric[A]) { transform { v => num.times(v, rhs) } }
+  def *= (rhs: A)(implicit txn: Context, num: Numeric[A]): Unit = transform { v => num.times(v, rhs) }
 
   /** Transforms the value stored the `Ref` by performing a division on it,
    *  throwing away the remainder if division is not exact for instances of
@@ -108,12 +108,11 @@ trait RefLike[A, Context] extends SourceLike[A, Context] with SinkLike[A, Contex
    *  @param rhs the quantity by which to divide the value of this `Ref`.
    *  @throws IllegalStateException if `txn` is not active.
    */
-  def /= (rhs: A)(implicit txn: Context, num: Numeric[A]) {
+  def /= (rhs: A)(implicit txn: Context, num: Numeric[A]): Unit =
     num match {
       //case numF: Fractional[A] => transform { v => numF.div(v, rhs) }
       case numF: Fractional[_] => transform { v => numF.asInstanceOf[Fractional[A]].div(v, rhs) }
       //case numI: Integral[A] => transform { v => numI.quot(v, rhs) }
       case numI: Integral[_] => transform { v => numI.asInstanceOf[Integral[A]].quot(v, rhs) }
     }
-  }
 }

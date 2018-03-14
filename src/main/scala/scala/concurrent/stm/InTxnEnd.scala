@@ -20,12 +20,12 @@ trait InTxnEnd extends MaybeTxn {
   protected[stm] def currentLevel: NestingLevel
   protected[stm] def rollback(cause: RollbackCause): Nothing
   protected[stm] def retry(): Nothing
-  protected[stm] def retryFor(timeoutNanos: Long)
-  protected[stm] def beforeCommit(handler: InTxn => Unit)
-  protected[stm] def whilePreparing(handler: InTxnEnd => Unit)
-  protected[stm] def whileCommitting(handler: InTxnEnd => Unit)
-  protected[stm] def afterCommit(handler: Status => Unit)
-  protected[stm] def afterRollback(handler: Status => Unit)
-  protected[stm] def afterCompletion(handler: Status => Unit)
-  protected[stm] def setExternalDecider(decider: ExternalDecider)
+  protected[stm] def retryFor(timeoutNanos: Long): Unit
+  protected[stm] def beforeCommit(handler: InTxn => Unit): Unit
+  protected[stm] def whilePreparing(handler: InTxnEnd => Unit): Unit
+  protected[stm] def whileCommitting(handler: InTxnEnd => Unit): Unit
+  protected[stm] def afterCommit(handler: Status => Unit): Unit
+  protected[stm] def afterRollback(handler: Status => Unit): Unit
+  protected[stm] def afterCompletion(handler: Status => Unit): Unit
+  protected[stm] def setExternalDecider(decider: ExternalDecider): Unit
 }

@@ -11,8 +11,8 @@ object Sink {
 
     /** Returns a `Sink` that accesses the same memory location as this view.
      *  The returned `Sink` might be the original reference that was used to
-     *  construct this view, or it might be a `Sink` that is equivalent (and
-     *  `==`) to the original.
+     *  construct this view, or it might be a `Sink` that is equivalent
+     *  (and `==`) to the original.
      *  @return a `Sink` that accesses the same memory location as this view.
      */
     def ref: Sink[A]
@@ -22,10 +22,10 @@ object Sink {
      *  as part of the transaction, otherwise it will act as if it was
      *  performed inside a new atomic block.  Equivalent to `set(v)`.
      */
-    def update(v: A) { set(v) }
+    def update(v: A): Unit = set(v)
 
     /** Performs an atomic write; equivalent to `update(v)`. */
-    def set(v: A)
+    def set(v: A): Unit
 
     /** Performs an atomic write and returns true, or returns false.  The
      *  STM implementation may choose to return false to reduce (not

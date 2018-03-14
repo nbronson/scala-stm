@@ -2,8 +2,10 @@
 name               := "scala-stm"
 organization       := "org.scala-stm"
 version            := "0.8-SNAPSHOT"
+def mimaVersion     = "0.8"
 scalaVersion       := "2.12.4"
 crossScalaVersions := Seq("2.11.12", "2.12.4", "2.13.0-M3")
+scalacOptions     ++= Seq("-deprecation", "-feature")
 
 javacOptions in (Compile, compile) ++= {
   val javaVersion = if (scalaVersion.value.startsWith("2.11")) "1.6" else "1.8"
@@ -16,6 +18,8 @@ libraryDependencies += {
 }
 
 libraryDependencies += ("junit" % "junit" % "4.12" % "test")
+
+mimaPreviousArtifacts := Set(organization.value %% name.value % mimaVersion)
 
 // skip exhaustive tests
 testOptions += Tests.Argument("-l", "slow")
@@ -61,14 +65,14 @@ publishTo := {
 // exclude scalatest from the Maven POM
 pomPostProcess := { xi: scala.xml.Node =>
     import scala.xml._
-    val badDeps = (xi \\ "dependency") filter {
+    val badDeps = (xi \\ "dependency").filter {
       x => (x \ "artifactId").text != "scala-library"
-    } toSet
+    } .toSet
     def filt(root: Node): Node = root match {
-      case x: Elem => {
-        val ch = x.child filter { !badDeps(_) } map { filt(_) }
-        Elem(x.prefix, x.label, x.attributes, x.scope, ch: _*)
-      }
+      case x: Elem =>
+        val ch = x.child.filter(!badDeps(_)).map(filt)
+        Elem(x.prefix, x.label, x.attributes, x.scope, ch.isEmpty, ch: _*)
+
       case x => x
     }
     filt(xi)

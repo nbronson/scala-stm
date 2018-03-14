@@ -3,16 +3,16 @@
 package scala.concurrent.stm
 package skel
 
-import scala.collection.mutable.Builder
+import scala.collection.mutable
 
 private[stm] object HashTrieTMap {
   
   def empty[A, B]: TMap[A, B] = new HashTrieTMap(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
 
-  def newBuilder[A, B] = new Builder[(A, B), TMap[A, B]] {
-    var root = TxnHashTrie.emptyMapBuildingNode[A, B]
+  def newBuilder[A, B]: mutable.Builder[(A, B), TMap[A, B]] = new mutable.Builder[(A, B), TMap[A, B]] {
+    var root: TxnHashTrie.BuildingNode[A, B] = TxnHashTrie.emptyMapBuildingNode[A, B]
 
-    def clear() { root = TxnHashTrie.emptyMapBuildingNode[A, B] }
+    def clear(): Unit = { root = TxnHashTrie.emptyMapBuildingNode[A, B] }
 
     def += (kv: (A, B)): this.type = { root = TxnHashTrie.buildingPut(root, kv._1, kv._2) ; this }
 
@@ -30,7 +30,7 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
   //// construction
 
   override def empty: TMap.View[A, B] = new HashTrieTMap(Ref(TxnHashTrie.emptyMapNode[A, B]).single)
-  override def clone(): HashTrieTMap[A, B] = new HashTrieTMap(cloneRoot)
+  override def clone: HashTrieTMap[A, B] = new HashTrieTMap(cloneRoot)
 
   //// TMap.View aggregates
 
@@ -39,9 +39,9 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
   override def iterator: Iterator[(A, B)] = mapIterator
   override def keysIterator: Iterator[A] = mapKeyIterator
   override def valuesIterator: Iterator[B] = mapValueIterator
-  override def foreach[U](f: ((A, B)) => U) { singleMapForeach(f) }
+  override def foreach[U](f: ((A, B)) => U): Unit = singleMapForeach(f)
 
-  override def clear() { root() = TxnHashTrie.emptyMapNode[A, B] }
+  override def clear(): Unit = { root() = TxnHashTrie.emptyMapNode[A, B] }
 
   //// TMap.View per-element
 
@@ -50,7 +50,7 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
   def get(key: A): Option[B] = singleGet(key)
 
   override def put(key: A, value: B): Option[B] = singlePut(key, value)
-  override def update(key: A, value: B) { singlePut(key, value) }
+  override def update(key: A, value: B): Unit = singlePut(key, value)
   override def += (kv: (A, B)): this.type = { singlePut(kv._1, kv._2) ; this }
 
   override def remove(key: A): Option[B] = singleRemove(key)
@@ -60,7 +60,7 @@ private[skel] class HashTrieTMap[A, B] private (root0: Ref.View[TxnHashTrie.Node
 
   def isEmpty(implicit txn: InTxn): Boolean = txnIsEmpty
   def size(implicit txn: InTxn): Int = singleSize
-  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn) = txnMapForeach(f)
+  def foreach[U](f: ((A, B)) => U)(implicit txn: InTxn): Unit = txnMapForeach(f)
 
   def contains(key: A)(implicit txn: InTxn): Boolean = txnContains(key)
   def apply(key: A)(implicit txn: InTxn): B = txnGetOrThrow(key)

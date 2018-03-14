@@ -18,8 +18,8 @@ object RealityShowPhilosophers {
   class PhilosopherThread(val name: String, val meals: Int, left: Fork, right: Fork) extends Thread {
     val mealsEaten = Ref(0)
 
-    override def run() {
-      for (m <- 0 until meals) {
+    override def run(): Unit = {
+      for (_ <- 0 until meals) {
         // thinking
         atomic { implicit txn =>
           if (!(left.owner().isEmpty && right.owner().isEmpty))
@@ -36,16 +36,15 @@ object RealityShowPhilosophers {
       }
     }
 
-    def done = mealsEaten.single() == meals
+    def done: Boolean = mealsEaten.single() == meals
 
-    override def toString = {
+    override def toString: String =
       "%s is %5.2f%% done".format(name, mealsEaten.single() * 100.0 / meals)
-    }
   }
 
   class CameraThread(intervalMilli: Int, forks: Seq[Fork], philosophers: Seq[PhilosopherThread]) extends Thread {
 
-    @tailrec final override def run() {
+    @tailrec final override def run(): Unit = {
       Thread.sleep(intervalMilli)
       val (str, done) = image
       println(str)
@@ -58,7 +57,7 @@ object RealityShowPhilosophers {
      */
     def image: (String, Boolean) = atomic { implicit txn =>
       val buf = new StringBuilder
-      for (i <- 0 until forks.length)
+      for (i <- forks.indices)
         buf ++= "fork %d is owned by %s\n".format(i, forks(i).owner.single())
       var done = true
       for (p <- philosophers) {
@@ -82,9 +81,9 @@ object RealityShowPhilosophers {
     elapsed
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val meals = 100000
-    for (p <- 0 until 3) {
+    for (_ <- 0 until 3) {
       val elapsed = time(List("Aristotle", "Hippocrates", "Plato", "Pythagoras", "Socrates"), meals)
       printf("%3.1f usec/meal\n", (elapsed * 1000.0) / meals)
     }

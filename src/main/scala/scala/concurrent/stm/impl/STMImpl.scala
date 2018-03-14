@@ -73,10 +73,10 @@ object STMImpl {
    *  `IllegalStateException` if a different STM implementation has already
    *  been selected
    */
-  def select(implClassName: String) {
+  def select(implClassName: String): Unit = {
     if (!trySelect(implClassName)) {
       throw new IllegalStateException(
-          "unable to select STMImpl class " + implClassName + ", " + instance + " already installed");
+          "unable to select STMImpl class " + implClassName + ", " + instance + " already installed")
     }
   }
 
@@ -85,11 +85,11 @@ object STMImpl {
    *  selected instance, throwing `IllegalStateException` if an STM
    *  implementation has already been selected and `impl != instance`
    */
-  def select(impl: STMImpl) {
+  def select(impl: STMImpl): Unit = {
     explicitChoice = impl
     if (impl != instance) {
       throw new IllegalStateException(
-          "unable to select STMImpl " + impl + ", " + instance + " already installed");
+          "unable to select STMImpl " + impl + ", " + instance + " already installed")
     }
   }
 
@@ -104,12 +104,12 @@ object STMImpl {
       choice = explicitChoice
 
     if (choice == null) {
-      choice = (try {
+      choice = try {
         val fc = Class.forName("scala.concurrent.stm.impl.DefaultFactory")
         fc.newInstance().asInstanceOf[STMImpl.Factory].createInstance()
       } catch {
         case _: ClassNotFoundException => "scala.concurrent.stm.ccstm.CCSTM"
-      })
+      }
     }
 
     choice match {

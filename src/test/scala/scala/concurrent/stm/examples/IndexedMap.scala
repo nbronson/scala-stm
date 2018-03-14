@@ -8,16 +8,16 @@ import util.Random
 class IndexedMap[A, B] {
 
   private class Index[C](view: (A, B) => Iterable[C]) extends (C => Map[A, B]) {
-    val mapping = TMap.empty[C, Map[A, B]]
+    val mapping: TMap[C, Map[A, B]] = TMap.empty
 
-    def apply(derived: C) = mapping.single.getOrElse(derived, Map.empty[A, B])
+    def apply(derived: C): Map[A, B] = mapping.single.getOrElse(derived, Map.empty[A, B])
 
-    def += (kv: (A, B))(implicit txn: InTxn) {
+    def += (kv: (A, B))(implicit txn: InTxn): Unit = {
       for (c <- view(kv._1, kv._2))
         mapping(c) = apply(c) + kv
     }
 
-    def -= (kv: (A, B))(implicit txn: InTxn) {
+    def -= (kv: (A, B))(implicit txn: InTxn): Unit = {
       for (c <- view(kv._1, kv._2)) {
         val after = mapping(c) - kv._1
         if (after.isEmpty)
@@ -62,8 +62,8 @@ object IndexedMap {
   case class User(id: Int, name: String, likes: Set[String])
 
   val users = new IndexedMap[Int, User]
-  val byName = users.addIndex { (id, u) => Some(u.name) }
-  val byLike = users.addIndex { (id, u) => u.likes }
+  val byName: String => Map[Int, User] = users.addIndex { (_, u) => Some(u.name) }
+  val byLike: String => Map[Int, User] = users.addIndex { (_, u) => u.likes }
 
   //////// data
 
@@ -81,7 +81,7 @@ object IndexedMap {
 
   def pick[A](a: Array[A])(implicit rand: Random) = a(rand.nextInt(a.length))
 
-  def newName(id: Int)(implicit rand: Random) {
+  def newName(id: Int)(implicit rand: Random): Unit = {
     atomic { implicit txn =>
       val before = users.get(id).getOrElse(User(id, "John Doe", Set.empty))
       val after = before copy (name = pick(topBabyNames))
@@ -89,7 +89,7 @@ object IndexedMap {
     }
   }
 
-  def newLikes(id: Int)(implicit rand: Random) {
+  def newLikes(id: Int)(implicit rand: Random): Unit = {
     atomic { implicit txn =>
       val before = users.get(id).getOrElse(User(id, "John Doe", Set.empty))
       val after = before copy (likes = Set(pick(languages), pick(sports)))
@@ -97,7 +97,7 @@ object IndexedMap {
     }
   }
 
-  def randomOp(implicit rand: Random) {
+  def randomOp()(implicit rand: Random): Unit = {
     val pct = rand.nextInt(100)
     if (pct < 10) {
       // query by ID
@@ -118,8 +118,8 @@ object IndexedMap {
     }
   }
 
-  def populate() {
-    implicit val rand = new Random
+  def populate(): Unit = {
+    implicit val rand: Random = new Random
     for (id <- 0 until numIDs) {
       newName(id)
       newLikes(id)
@@ -129,22 +129,22 @@ object IndexedMap {
   def run(numThreads: Int, opsPerThread: Int): Long = {
     val threads = Array.tabulate(numThreads) { _ =>
       new Thread() {
-        override def run {
-          implicit val rand = new Random
-          for (i <- 0 until opsPerThread) randomOp
+        override def run(): Unit = {
+          implicit val rand: Random = new Random
+          for (_ <- 0 until opsPerThread) randomOp()
         }
       }
     }
     val begin = System.currentTimeMillis
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
     System.currentTimeMillis - begin
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     populate()
 
-    for (pass <- 0 until 3; tc <- List(1, 2, 4, 8)) {
+    for (_ <- 0 until 3; tc <- List(1, 2, 4, 8)) {
       val elapsed = run(tc, 1000000 / tc)
       printf("%d thread: %4.2f usec/op total throughput (90%% read)\n", tc, elapsed * 0.001)
     }
