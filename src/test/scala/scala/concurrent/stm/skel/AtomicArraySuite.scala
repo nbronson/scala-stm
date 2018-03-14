@@ -5,6 +5,8 @@ package skel
 
 import org.scalatest.FunSuite
 
+import scala.reflect.ClassTag
+
 class AtomicArraySuite extends FunSuite {
 
   test("Unit") {
@@ -44,16 +46,16 @@ class AtomicArraySuite extends FunSuite {
   }
 
   test("AnyRef") {
-    runIsolatedTest((10 until 20) map { i => ("x" + i) : AnyRef })
+    runIsolatedTest((10 until 20) map { i => "x" + i : AnyRef })
   }
 
   test("Any") {
     runIsolatedTest[Any]((10 until 20) map { i => i : Any })
   }
 
-  def runIsolatedTest[A](values: Seq[A])(implicit am: ClassManifest[A]) {
+  def runIsolatedTest[A](values: Seq[A])(implicit am: ClassTag[A]): Unit = {
     val singleton = AtomicArray[A](1)
-    if (am != implicitly[ClassManifest[Unit]])
+    if (am != implicitly[ClassTag[Unit]])
       assert(singleton(0) === am.newArray(1)(0))
 
     val aa = AtomicArray(values)

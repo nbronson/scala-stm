@@ -11,7 +11,7 @@ class WriteSkewSuite extends FunSuite {
   test("write skew test 1K") { runTest(1000) }
   test("write skew test 1M", Slow) { runTest(1000000) }
 
-  def runTest(incrCount: Int) {
+  def runTest(incrCount: Int): Unit = {
     // Two threads, each of which increments its own Ref if the other Ref is
     // even.  Neither thread should ever observe that both Refs are odd.
     // MVCC STMs will require the addition of something like Clojure's "ensure"
@@ -25,9 +25,9 @@ class WriteSkewSuite extends FunSuite {
         val self = refs(id)
         val other = refs(1 - id)
 
-        override def run {
+        override def run(): Unit = {
           try {
-            for (i <- 0 until incrCount) {
+            for (_ <- 0 until incrCount) {
               if (null != failure)
                 return
               atomic { implicit t =>
@@ -40,18 +40,17 @@ class WriteSkewSuite extends FunSuite {
               }
             }
           } catch {
-            case x: Throwable => {
+            case x: Throwable =>
               if (null == failure)
                 failure = x
-            }
           }
         }
       }
     }
 
     val begin = System.currentTimeMillis
-    for (t <- threads) t.start
-    for (t <- threads) t.join
+    for (t <- threads) t.start()
+    for (t <- threads) t.join()
 
     if (null != failure)
       throw failure

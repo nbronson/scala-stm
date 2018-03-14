@@ -3,7 +3,10 @@
 package scala.concurrent.stm
 
 import java.util.concurrent.CyclicBarrier
+
 import org.scalatest.FunSuite
+
+import scala.collection.immutable
 
 
 /** Flipper is derived from a test originally used for the ATLAS HTM prototype.
@@ -17,16 +20,19 @@ class FlipperSuite extends FunSuite {
   val DEFAULT_THREAD_COUNT = 4
   val DEFAULT_WORD_COUNT = 4096
   val DEFAULT_FLIP_PROB = 0.5f
-  val DEFAULT_REF_ARRAY_FACTORY = { (n: Int) => (Array.tabulate[Ref[Int]](n) { _ => Ref(0) }) : IndexedSeq[Ref[Int]] }
-  val DEFAULT_MASKED_READER = { (r: Ref[Int], m: Int) => r.single() & m }
+  val DEFAULT_REF_ARRAY_FACTORY: Int => IndexedSeq[Ref[Int]] = { n =>
+    Array.tabulate[Ref[Int]](n) { _ => Ref(0) }
+  }
 
-  val TARRAY_REF_ARRAY_FACTORY = { (n: Int) => TArray.ofDim[Int](n).refs }
+  val DEFAULT_MASKED_READER: (Ref[Int], Int) => Int = { (r, m) => r.single() & m }
 
-  val GET_WITH_MASKED_READER = { (r: Ref[Int], m: Int) => r.single.getWith( _ & m ) }
-  val RELAXED_GET_MASKED_READER = { (r: Ref[Int], m: Int) =>
+  val TARRAY_REF_ARRAY_FACTORY: Int => immutable.IndexedSeq[Ref[Int]] = { n => TArray.ofDim[Int](n).refs }
+
+  val GET_WITH_MASKED_READER: (Ref[Int], Int) => Int = { (r, m) => r.single.getWith( _ & m ) }
+  val RELAXED_GET_MASKED_READER: (Ref[Int], Int) => Int = { (r, m) =>
     r.single.relaxedGet({ (seen, correct) => (seen & m) == (correct & m) }) & m
   }
-  val TRANSFORM_IF_DEFINED_MASKED_READER = { (r: Ref[Int], m: Int) =>
+  val TRANSFORM_IF_DEFINED_MASKED_READER: (Ref[Int], Int) => Int = { (r, m) =>
     val f = r.single.transformIfDefined { case v if (v & m) != 0 => v }
     if (f) m else 0
   }
@@ -123,7 +129,7 @@ class FlipperSuite extends FunSuite {
   }
 
   test("random flipper test", Slow) {
-    for (i <- 0 until 1) {
+    for (_ <- 0 until 1) {
       Config(
         DEFAULT_SYNC_COUNT,
         DEFAULT_TRANS_COUNT,
@@ -147,16 +153,17 @@ class FlipperSuite extends FunSuite {
                     refArrayFactory: Int => IndexedSeq[Ref[Int]],
                     maskedReader: (Ref[Int], Int) => Int) {
 
-    private val len = syncCount*transCount*instrCount*threadCount
-    private val rand = new java.util.Random(randSeed)
-    val R = Array.tabulate(len)({ _ => rand.nextInt(wordCount) })
-    val F = Array.tabulate(len)({ _ => rand.nextDouble() < flipProb })
+    private val len   = syncCount*transCount*instrCount*threadCount
+    private val rand  = new java.util.Random(randSeed)
+
+    val R: Array[Int]     = Array.tabulate(len)({ _ => rand.nextInt(wordCount) })
+    val F: Array[Boolean] = Array.tabulate(len)({ _ => rand.nextDouble() < flipProb })
      
-    def index(id: Int, sync: Int, trans: Int, instr: Int) = {
+    def index(id: Int, sync: Int, trans: Int, instr: Int): Int = {
       ((id*syncCount+sync)*transCount+trans)*instrCount+instr
     }
 
-    def runTest() {
+    def runTest(): Unit = {
       println(this)
 
       print("computing sequentially...")
@@ -171,7 +178,7 @@ class FlipperSuite extends FunSuite {
       val actual = computeParallelTxn(this, P)
 
       println()      
-      for (i <- 0 until expected.length) {
+      for (i <- expected.indices) {
         assert(expected(i).single.get === actual(i).single.get)
       }
     }
@@ -183,13 +190,13 @@ class FlipperSuite extends FunSuite {
                              val computeP: Boolean,
                              val id: Int,
                              val sync: Int) extends (() => Unit) {
-    def doWork(task: => Unit)
+    def doWork(task: => Unit): Unit
 
     def maskedRead(ref: Ref[Int], mask: Int): Int = config.maskedReader(ref, mask)
     def read[T](ref: Ref[T]): T
-    def write[T](ref: Ref[T], v: T)
+    def write[T](ref: Ref[T], v: T): Unit
 
-    def apply() {
+    def apply(): Unit = {
       val mask = 1 << id
       for (trans <- 0 until config.transCount) {
         doWork {
@@ -227,8 +234,8 @@ class FlipperSuite extends FunSuite {
       for (thread <- 0 until config.threadCount) {
         (new FlipperTask(config, A, P, true, thread, sync) {
           def read[T](ref: Ref[T]): T = ref.single()
-          def write[T](ref: Ref[T], v: T) { ref.single() = v }
-          def doWork(task: => Unit) { task }
+          def write[T](ref: Ref[T], v: T): Unit = { ref.single() = v }
+          def doWork(task: => Unit): Unit = task
         })()
       }
     }
@@ -238,13 +245,16 @@ class FlipperSuite extends FunSuite {
   def computeParallelTxn(config: Config, P: Array[Ref[Boolean]]): IndexedSeq[Ref[Int]] = {
     val A = config.refArrayFactory(config.wordCount)
     for (sync <- 0 until config.syncCount) {
-      val tasks = (for (thread <- 0 until config.threadCount) yield {
+      val tasks = for (thread <- 0 until config.threadCount) yield {
         new FlipperTask(config, A, P, false, thread, sync) {
           implicit var txn: InTxn = null
 
           def read[T](ref: Ref[T]): T = ref()
-          def write[T](ref: Ref[T], v: T) { ref() = v }
-          def doWork(task: => Unit) {
+
+          def write[T](ref: Ref[T], v: T): Unit =
+            ref() = v
+
+          def doWork(task: => Unit): Unit = {
             atomic { t =>
               txn = t
               task
@@ -252,25 +262,24 @@ class FlipperSuite extends FunSuite {
             txn = null
           }
         }
-      })
+      }
       parallelRun(tasks)
     }
     A
   }
 
-  private def parallelRun(tasks: Iterable[() => Unit]) {
+  private def parallelRun(tasks: Iterable[() => Unit]): Unit = {
     val barrier = new CyclicBarrier(tasks.size)
     var failure: Throwable = null
     val threads = for (task <- tasks.toList) yield new Thread {
-      override def run() {
+      override def run(): Unit = {
         barrier.await
         try {
           task()
         } catch {
-          case x: Throwable => {
+          case x: Throwable =>
             x.printStackTrace()
             failure = x
-          }
         }
       }
     }

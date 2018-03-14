@@ -21,15 +21,15 @@ private[ccstm] trait RefOps[T] extends Ref[T] with Handle.Provider[T] {
   //////////////// Sink stuff
 
 
-  override def update(v: T)(implicit txn: InTxn) { impl.set(handle, v) }
-  def set(v: T)(implicit txn: InTxn) { impl.set(handle, v) }
+  override def update(v: T)(implicit txn: InTxn): Unit = impl.set(handle, v)
+  def set(v: T)(implicit txn: InTxn): Unit = impl.set(handle, v)
   def trySet(v: T)(implicit txn: InTxn): Boolean = impl.trySet(handle, v)
 
   //////////////// Ref stuff
 
   def swap(v: T)(implicit txn: InTxn): T = impl.swap(handle, v)
 
-  def transform(f: T => T)(implicit txn: InTxn) {
+  def transform(f: T => T)(implicit txn: InTxn): Unit = {
     // only sub-types of Ref actually perform deferral, the base implementation
     // evaluates f immediately
     impl.getAndTransform(handle, f)

@@ -6,9 +6,9 @@ package ccstm
 import scala.util.control.ControlThrowable
 
 private[ccstm] object CCSTMExecutor {
-  val DefaultControlFlowTest = { x: Throwable => x.isInstanceOf[ControlThrowable] }
+  val DefaultControlFlowTest: Throwable => Boolean = _.isInstanceOf[ControlThrowable]
 
-  val DefaultPostDecisionFailureHandler = { (status: Txn.Status, x: Throwable) =>
+  val DefaultPostDecisionFailureHandler: (Txn.Status, Throwable) => Unit = { (status, x) =>
     new Exception("status=" + status, x).printStackTrace()
   }
 }
@@ -25,9 +25,8 @@ private[ccstm] case class CCSTMExecutor private (
 
   def oneOf[Z](blocks: (InTxn => Z)*)(implicit mt: MaybeTxn): Z = InTxnImpl().atomicOneOf(this, blocks)
 
-  def unrecorded[Z](block: InTxn => Z, outerFailure: Txn.RollbackCause => Z)(implicit mt: MaybeTxn) = {
+  def unrecorded[Z](block: InTxn => Z, outerFailure: Txn.RollbackCause => Z)(implicit mt: MaybeTxn): Z =
     InTxnImpl().unrecorded(this, block, outerFailure)
-  }
 
   def pushAlternative[Z](mt: MaybeTxn, block: (InTxn) => Z): Boolean = InTxnImpl().pushAlternative(block)
 
@@ -93,12 +92,12 @@ private[ccstm] case class CCSTMExecutor private (
   }
 
   override def toString: String = {
-    ("CCSTMExecutor@" + hashCode.toHexString +
+    "CCSTMExecutor@" + hashCode.toHexString +
       "(retryTimeoutNanos=" + retryTimeoutNanos +
       ", controlFlowTest=" +
       (if (controlFlowTest eq CCSTMExecutor.DefaultControlFlowTest) "default" else controlFlowTest) +
       ", postDecisionFailureHandler=" +
       (if (postDecisionFailureHandler eq CCSTMExecutor.DefaultPostDecisionFailureHandler) "default" else postDecisionFailureHandler) +
-      ")")
+      ")"
   }
 }

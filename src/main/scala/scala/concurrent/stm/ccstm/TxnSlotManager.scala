@@ -43,7 +43,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
       if (tries > 100) {
         if (Thread.interrupted)
           throw new InterruptedException
-        Thread.`yield`
+        Thread.`yield`()
       }
     }
     s
@@ -79,11 +79,10 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
     }
   }
 
-  def endLookup(slot: Int, observed: T) {
+  def endLookup(slot: Int, observed: T): Unit =
     if (null != observed) release(slot)
-  }
 
-  def release(slot: Int) {
+  def release(slot: Int): Unit = {
     var e: AnyRef = null
     do {
       e = slots.get(slot)
@@ -94,7 +93,7 @@ private[ccstm] final class TxnSlotManager[T <: AnyRef](range: Int, reservedSlots
     e match {
       case SlotLock(txn, 1) => txn
       case SlotLock(txn, rc) => SlotLock(txn, rc - 1)
-      case txn => null
+      case _ => null
     }
   }
 

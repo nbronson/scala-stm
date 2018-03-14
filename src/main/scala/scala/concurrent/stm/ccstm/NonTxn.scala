@@ -3,8 +3,6 @@
 package scala.concurrent.stm
 package ccstm
 
-import annotation.tailrec
-
 
 /** The object that contains the code for non-transactional read and write
  *  barriers.
@@ -17,16 +15,16 @@ private[ccstm] object NonTxn {
   //////////////// lock waiting
 
   @throws(classOf[InterruptedException])
-  private def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
+  private def weakAwaitUnowned(handle: Handle[_], m0: Meta): Unit = {
     CCSTM.weakAwaitUnowned(handle, m0, null)
   }
 
   //////////////// value waiting
 
   @throws(classOf[InterruptedException])
-  private def weakAwaitNewVersion(handle: Handle[_], m0: Meta) {
+  private def weakAwaitNewVersion(handle: Handle[_], m0: Meta): Unit = {
     // spin a bit
-    var m = 0L
+    val m = 0L
     var spins = 0
     do {
       val m = handle.meta
@@ -35,14 +33,14 @@ private[ccstm] object NonTxn {
 
       spins += 1
       if (spins > SpinCount)
-        Thread.`yield`
+        Thread.`yield`()
     } while (spins < SpinCount + YieldCount)
 
     weakNoSpinAwaitNewVersion(handle, m)
   }
 
   @throws(classOf[InterruptedException])
-  private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta) {
+  private def weakNoSpinAwaitNewVersion(handle: Handle[_], m0: Meta): Unit = {
     val event = wakeupManager.subscribe
     event.addSource(handle)
     do {
@@ -56,7 +54,7 @@ private[ccstm] object NonTxn {
       if (pendingWakeups(m) || handle.metaCAS(m, withPendingWakeups(m))) {
         // after the block, things will have changed with reasonably high
         // likelihood (spurious wakeups are okay)
-        event.await
+        event.await()
         return
       }
     } while (!event.triggered)
@@ -67,7 +65,7 @@ private[ccstm] object NonTxn {
   @throws(classOf[InterruptedException])
   private def weakAwaitNewVersion(handle: Handle[_], m0: Meta, nanoDeadline: Long): Boolean = {
     // spin a bit
-    var m = 0L
+    val m = 0L
     var spins = 0
     do {
       val m = handle.meta
@@ -78,16 +76,16 @@ private[ccstm] object NonTxn {
       if (spins > SpinCount) {
         if (System.nanoTime >= nanoDeadline)
           return false
-        Thread.`yield`
+        Thread.`yield`()
       }
     } while (spins < SpinCount + YieldCount)
 
     if (changing(m)) {
       // ignore deadline for this, it should be fast
       weakAwaitUnowned(handle, m)
-      return true
+      true
     } else {
-      return weakNoSpinAwaitNewVersion(handle, m, nanoDeadline)
+      weakNoSpinAwaitNewVersion(handle, m, nanoDeadline)
     }
   }
 
@@ -109,7 +107,7 @@ private[ccstm] object NonTxn {
         return event.tryAwaitUntil(nanoDeadline)
       }
     } while (!event.triggered)
-    return true
+    true
   }
 
   //////////////// lock acquisition
@@ -139,7 +137,7 @@ private[ccstm] object NonTxn {
 
     if (!handle.metaCAS(m0, m1)) return 0L
 
-    return m1
+    m1
   }
 
   private def upgradeLock(handle: Handle[_], m0: Meta): Meta = {
@@ -152,26 +150,24 @@ private[ccstm] object NonTxn {
     withChanging(before)
   }
 
-  private def commitUpdate[T](handle: Handle[T], m0: Meta, newData: T) {
+  private def commitUpdate[T](handle: Handle[T], m0: Meta, newData: T): Unit = {
     val newVersion = CCSTM.nonTxnWriteVersion(version(m0))
     handle.data = newData
     releaseLock(handle, m0, newVersion)
   }
 
-  private def discardLock(handle: Handle[_], m0: Meta) {
+  private def discardLock(handle: Handle[_], m0: Meta): Unit =
     releaseLock(handle, m0, version(m0))
-  }
 
-  private def releaseLock(handle: Handle[_], m0: Meta, newVersion: Version) {
+  private def releaseLock(handle: Handle[_], m0: Meta, newVersion: Version): Unit = {
     handle.meta = withCommit(m0, newVersion)
 
     if (pendingWakeups(m0))
       triggerWakeups(handle)
   }
 
-  private def triggerWakeups(handle: Handle[_]) {
+  private def triggerWakeups(handle: Handle[_]): Unit =
     wakeupManager.trigger(wakeupManager.prepareToTrigger(handle))
-  }
 
   //////////////// public interface
 
@@ -192,19 +188,19 @@ private[ccstm] object NonTxn {
       }
       tries += 1
     }
-    return lockedGet(handle)
+    lockedGet(handle)
   }
 
   @throws(classOf[InterruptedException])
   private def lockedGet[T](handle: Handle[T]): T = {
-    val m0 = acquireLock(handle, false)
+    val m0 = acquireLock(handle, exclusive = false)
     val z = handle.data
     discardLock(handle, m0)
     z
   }
 
   @throws(classOf[InterruptedException])
-  def await[T](handle: Handle[T], pred: T => Boolean) {
+  def await[T](handle: Handle[T], pred: T => Boolean): Unit = {
     while (true) {
       val m0 = handle.meta
       if (changing(m0)) {
@@ -257,14 +253,14 @@ private[ccstm] object NonTxn {
   }
 
   @throws(classOf[InterruptedException])
-  def set[T](handle: Handle[T], v: T) {
-    val m0 = acquireLock(handle, true)
+  def set[T](handle: Handle[T], v: T): Unit = {
+    val m0 = acquireLock(handle, exclusive = true)
     commitUpdate(handle, m0, v)
   }
 
   @throws(classOf[InterruptedException])
   def swap[T](handle: Handle[T], v: T): T = {
-    val m0 = acquireLock(handle, true)
+    val m0 = acquireLock(handle, exclusive = true)
     val z = handle.data
     commitUpdate(handle, m0, v)
     z
@@ -331,7 +327,7 @@ private[ccstm] object NonTxn {
 
     // don't go directly to changing, because we can't run user code
     // (before.equals) there
-    val m2 = acquireLock(handle, false)
+    val m2 = acquireLock(handle, exclusive = false)
     var success = false
     try {
       if (version(m2) == version(m1) || before == handle.data) {
@@ -372,7 +368,7 @@ private[ccstm] object NonTxn {
     if (before eq get(handle).asInstanceOf[AnyRef]) {
       // CASI is different than CAS, because we don't have to invoke user code to
       // perform the comparison
-      val m0 = acquireLock(handle, true)
+      val m0 = acquireLock(handle, exclusive = true)
       if (before eq handle.data.asInstanceOf[AnyRef]) {
         commitUpdate(handle, m0, after)
         true
@@ -387,9 +383,8 @@ private[ccstm] object NonTxn {
   }
 
   @throws(classOf[InterruptedException])
-  def getAndTransform[T](handle: Handle[T], f: T => T): T = {
-    getAndTransformImpl(handle, f, acquireLock(handle, false))
-  }
+  def getAndTransform[T](handle: Handle[T], f: T => T): T =
+    getAndTransformImpl(handle, f, acquireLock(handle, exclusive = false))
 
   private def getAndTransformImpl[T](handle: Handle[T], f: T => T, m0: Meta): T = {
     val v0 = handle.data
@@ -400,9 +395,8 @@ private[ccstm] object NonTxn {
   }
 
   @throws(classOf[InterruptedException])
-  def transformAndGet[T](handle: Handle[T], f: T => T): T = {
-    transformAndGetImpl(handle, f, acquireLock(handle, false))
-  }
+  def transformAndGet[T](handle: Handle[T], f: T => T): T =
+    transformAndGetImpl(handle, f, acquireLock(handle, exclusive = false))
 
   private def transformAndGetImpl[T](handle: Handle[T], f: T => T, m0: Meta): T = {
     val repl = try { f(handle.data) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
@@ -413,7 +407,7 @@ private[ccstm] object NonTxn {
 
   @throws(classOf[InterruptedException])
   def transformAndExtract[T,V](handle: Handle[T], f: T => (T,V)): V = {
-    val m0 = acquireLock(handle, false)
+    val m0 = acquireLock(handle, exclusive = false)
     val pair = try { f(handle.data) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
     val m1 = upgradeLock(handle, m0)
     commitUpdate(handle, m1, pair._1)
@@ -423,7 +417,7 @@ private[ccstm] object NonTxn {
   @throws(classOf[InterruptedException])
   def transformIfDefined[T](handle: Handle[T], pf: PartialFunction[T,T]): Boolean = {
     if (pf.isDefinedAt(get(handle))) {
-      val m0 = acquireLock(handle, false)
+      val m0 = acquireLock(handle, exclusive = false)
       val v = handle.data
       if (try { pf.isDefinedAt(v) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }) {
         val repl = try { pf(v) } catch { case x: Throwable => discardLock(handle, m0) ; throw x }
@@ -448,7 +442,7 @@ private[ccstm] object NonTxn {
     var mB0: Long = 0L
     var tries = 0
     do {
-      mA0 = acquireLock(handleA, true)
+      mA0 = acquireLock(handleA, exclusive = true)
       mB0 = tryAcquireExclusiveLock(handleB)
       if (mB0 == 0) {
         // tryAcquire failed
@@ -460,7 +454,7 @@ private[ccstm] object NonTxn {
           return fallbackTransform2(handleA, handleB, f)
 
         // try it in the opposite direction
-        mB0 = acquireLock(handleB, true)
+        mB0 = acquireLock(handleB, exclusive = true)
         mA0 = tryAcquireExclusiveLock(handleA)
 
         if (mA0 == 0) {
@@ -478,20 +472,19 @@ private[ccstm] object NonTxn {
     val (a, b, z) = try {
       f(handleA.data, handleB.data)
     } catch {
-      case x: Throwable => {
+      case x: Throwable =>
         discardLock(handleA, mA0)
         discardLock(handleB, mB0)
         throw x
-      }
     }
 
     handleA.data = a
     handleB.data = b
 
-    val wv = CCSTM.nonTxnWriteVersion(math.max(version(mA0), version(mB0)))
+    val wv: Meta = CCSTM.nonTxnWriteVersion(math.max(version(mA0), version(mB0)))
     releaseLock(handleA, mA0, wv)
     releaseLock(handleB, mB0, wv)
-    return z
+    z
   }
 
   @throws(classOf[InterruptedException])
@@ -512,7 +505,7 @@ private[ccstm] object NonTxn {
     var tries = 0
     while (tries < 10) {
       // acquire exclusive ownership of B, then decide
-      val mB0 = acquireLock(handleB, true)
+      val mB0 = acquireLock(handleB, exclusive = true)
       if (b0 ne handleB.data.asInstanceOf[AnyRef]) {
         // b doesn't match
         discardLock(handleB, mB0)
@@ -549,7 +542,7 @@ private[ccstm] object NonTxn {
     }
 
     // fall back on a transaction
-    return atomic { t =>
+    atomic { t =>
       val txn = t.asInstanceOf[InTxnImpl]
       (txn.get(handleA) eq a0) && (txn.get(handleB) eq b0) && { txn.set(handleB, b1) ; true }
     }
@@ -578,7 +571,7 @@ private[ccstm] object NonTxn {
     }
 
     // fall back on a transaction
-    return atomic { t =>
+    atomic { t =>
       val txn = t.asInstanceOf[InTxnImpl]
       (txn.get(handleA) eq a0) && (txn.get(handleB) eq b0)
     }
@@ -586,7 +579,7 @@ private[ccstm] object NonTxn {
 
   @throws(classOf[InterruptedException])
   def getAndAdd(handle: Handle[Int], delta: Int): Int = {
-    val m0 = acquireLock(handle, true)
+    val m0 = acquireLock(handle, exclusive = true)
     val v0 = handle.data
     commitUpdate(handle, m0, v0 + delta)
     v0

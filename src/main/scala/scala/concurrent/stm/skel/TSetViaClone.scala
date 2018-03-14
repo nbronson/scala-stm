@@ -11,7 +11,7 @@ private[stm] object TSetViaClone {
     override def size: Int = self.size
     def contains(key: A): Boolean = self.contains(key)
     def iterator: Iterator[(A)] = self.iterator
-    override def foreach[U](f: A => U) { self foreach f }
+    override def foreach[U](f: A => U): Unit = { self foreach f }
     def + (x: A): immutable.Set[A] = new FrozenMutableSet(self.clone() += x)
     def - (x: A): immutable.Set[A] = new FrozenMutableSet(self.clone() -= x)
   }
@@ -57,7 +57,7 @@ private[stm] trait TSetViaClone[A] extends TSet.View[A] with TSet[A] {
 
   //////////// atomic compound ops
 
-  override def retain(p: A => Boolean) {
+  override def retain(p: A => Boolean): Unit = {
     atomic { implicit txn =>
       for (x <- tset)
         if (!p(x))

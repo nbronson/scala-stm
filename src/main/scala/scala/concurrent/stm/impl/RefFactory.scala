@@ -3,7 +3,8 @@
 package scala.concurrent.stm
 package impl
 
-import scala.collection.mutable.Builder
+import scala.collection.mutable
+import scala.reflect.ClassTag
 
 /** `RefFactory` is responsible for creating concrete `Ref` instances. */ 
 trait RefFactory {
@@ -20,7 +21,7 @@ trait RefFactory {
   /** `T` will not be one of the primitive types (for which a `newRef`
    *  specialization exists).
    */ 
-  def newRef[A : ClassManifest](v0: A): Ref[A]
+  def newRef[A : ClassTag](v0: A): Ref[A]
 
   def newTxnLocal[A](init: => A,
                      initialValue: InTxn => A,
@@ -31,12 +32,12 @@ trait RefFactory {
                      afterRollback: Txn.Status => Unit,
                      afterCompletion: Txn.Status => Unit): TxnLocal[A]
 
-  def newTArray[A : ClassManifest](length: Int): TArray[A]
-  def newTArray[A : ClassManifest](xs: TraversableOnce[A]): TArray[A]
+  def newTArray[A : ClassTag](length: Int): TArray[A]
+  def newTArray[A : ClassTag](xs: TraversableOnce[A]): TArray[A]
 
   def newTMap[A, B]: TMap[A, B]
-  def newTMapBuilder[A, B]: Builder[(A, B), TMap[A, B]]
+  def newTMapBuilder[A, B]: mutable.Builder[(A, B), TMap[A, B]]
 
   def newTSet[A]: TSet[A]
-  def newTSetBuilder[A]: Builder[A, TSet[A]]
+  def newTSetBuilder[A]: mutable.Builder[A, TSet[A]]
 }

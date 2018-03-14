@@ -11,24 +11,24 @@ import annotation.tailrec
  *  @author Nathan Bronson
  */
 private[ccstm] final class RetrySetBuilder {
+  private final val InitialCap = 16
   private var _size = 0
   private var _handles = new Array[Handle[_]](maxSizeForCap(InitialCap) + 1)
   private var _versions = new Array[CCSTM.Version](maxSizeForCap(InitialCap) + 1)
   private var _next = new Array[Int](maxSizeForCap(InitialCap) + 1)
   private var _dispatch = new Array[Int](InitialCap)
 
-  private final val InitialCap = 16
   private def maxSizeForCap(cap: Int) = cap - (cap / 4)
 
-  def size = _size
+  def size: Int = _size
 
-  def += (handle: Handle[_], version: CCSTM.Version) {
+  def += (handle: Handle[_], version: CCSTM.Version): Unit = {
     val slot = CCSTM.hash(handle.base, handle.offset) & (_dispatch.length - 1)
     addImpl(slot, _dispatch(slot), handle, version)
   }
 
   @tailrec
-  private def addImpl(slot: Int, i: Int, handle: Handle[_], version: CCSTM.Version) {
+  private def addImpl(slot: Int, i: Int, handle: Handle[_], version: CCSTM.Version): Unit = {
     if (i == 0)
       append(slot, handle, version)
     else if (!hEq(_handles(i - 1), handle))
@@ -36,7 +36,7 @@ private[ccstm] final class RetrySetBuilder {
     // else it is a duplicate
   }
 
-  private def append(slot: Int, handle: Handle[_], version: CCSTM.Version) {
+  private def append(slot: Int, handle: Handle[_], version: CCSTM.Version): Unit = {
     val i = _size + 1
     _size = i
     _handles(i - 1) = handle
@@ -47,7 +47,7 @@ private[ccstm] final class RetrySetBuilder {
       grow()
   }
 
-  private def grow() {
+  private def grow(): Unit = {
     // store the current contents
     val s = _size
     val hh = _handles

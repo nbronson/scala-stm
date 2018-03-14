@@ -2,7 +2,8 @@
 
 package scala.concurrent.stm
 
-import scala.collection.{mutable, immutable}
+import scala.collection.{immutable, mutable}
+import scala.reflect.ClassTag
 
 object TArray {
 
@@ -28,7 +29,7 @@ object TArray {
      *  performed as part of the transaction, otherwise it will act as if it
      *  was performed inside a new atomic block.
      */
-    def update(index: Int, v: A)
+    def update(index: Int, v: A): Unit
 
     /** Returns a sequence of `Ref.View` that are backed by the elements of
      *  `array`.  All operations on the contained `Ref.View`s are supported.
@@ -44,10 +45,10 @@ object TArray {
   /** Returns a new `TArray[A]` containing `length` copies of the default value
    *  for elements of type `A`.
    */
-  def ofDim[A : ClassManifest](length: Int): TArray[A] = impl.STMImpl.instance.newTArray[A](length)
+  def ofDim[A : ClassTag](length: Int): TArray[A] = impl.STMImpl.instance.newTArray[A](length)
 
   /** Returns a new `TArray[A]` containing the elements of `data`. */
-  def apply[A : ClassManifest](data: TraversableOnce[A]): TArray[A] = impl.STMImpl.instance.newTArray[A](data)
+  def apply[A : ClassTag](data: TraversableOnce[A]): TArray[A] = impl.STMImpl.instance.newTArray[A](data)
 }
 
 /** Bulk transactional storage, roughly equivalent to `Array[Ref[T]]` but
@@ -70,7 +71,7 @@ trait TArray[A] extends TxnDebuggable {
   /** Performs a transactional write to the `index`th element of this
    *  transactional array.  Equivalent to `refs(index).set(v)`.
    */
-  def update(index: Int, v: A)(implicit txn: InTxn)
+  def update(index: Int, v: A)(implicit txn: InTxn): Unit
 
   /** Returns a `TArray.View` that allows access to the contents of this
    *  `TArray` without requiring that an `InTxn` be available.  See `Ref.View`.

@@ -9,9 +9,8 @@ class SimpleRandomSuite extends FunSuite {
 
   test("nextInt") {
     val f = new SimpleRandom
-    val rand = new scala.util.Random
     var s = 0
-    for (i <- 0 until 100000) {
+    for (_ <- 0 until 100000) {
       s |= SimpleRandom.nextInt
       s |= f.nextInt
     }
@@ -21,7 +20,7 @@ class SimpleRandomSuite extends FunSuite {
   test("nextInt(n) in range") {
     val f = new SimpleRandom
     val rand = new scala.util.Random
-    for (i <- 0 until 100000) {
+    for (_ <- 0 until 100000) {
       val n = rand.nextInt(Int.MaxValue - 1) + 1
       val gr = SimpleRandom.nextInt(n)
       assert(gr >= 0 && gr < n)
@@ -32,23 +31,23 @@ class SimpleRandomSuite extends FunSuite {
 
   test("clone") {
     val f1 = new SimpleRandom
-    for (i <- 0 until 1000)
-      f1.nextInt
+    for (_ <- 0 until 1000)
+      f1.nextInt()
     val f2 = f1.clone
-    for (i <- 0 until 1000)
+    for (_ <- 0 until 1000)
       assert(f1.nextInt(9999) === f2.nextInt(9999))
   }
 
   test("seeded") {
     val f1 = new SimpleRandom(100)
     val f2 = new SimpleRandom(100)
-    for (i <- 0 until 1000)
+    for (_ <- 0 until 1000)
       assert(f1.nextInt === f2.nextInt)
   }
 
   test("global SimpleRandom distribution") {
     val buckets = new Array[Int](100)
-    for (i <- 0 until 100000)
+    for (_ <- 0 until 100000)
       buckets(SimpleRandom.nextInt(buckets.length)) += 1
     for (b <- buckets)
       assert(b > 0)
@@ -57,7 +56,7 @@ class SimpleRandomSuite extends FunSuite {
   test("local SimpleRandom distribution") {
     val f = new SimpleRandom
     val buckets = new Array[Int](100)
-    for (i <- 0 until 100000)
+    for (_ <- 0 until 100000)
       buckets(f.nextInt(buckets.length)) += 1
     for (b <- buckets)
       assert(b > 0)

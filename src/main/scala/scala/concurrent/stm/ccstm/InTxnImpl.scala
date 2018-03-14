@@ -17,7 +17,7 @@ private[ccstm] object InTxnImpl extends ThreadLocal[InTxnImpl] {
 
   def dynCurrentOrNull: InTxnImpl = active(get)
 
-  def currentOrNull(implicit mt: MaybeTxn) = active(apply())
+  def currentOrNull(implicit mt: MaybeTxn): InTxnImpl = active(apply())
 }
 
 private[stm] object RewindUnrecordedTxnError extends Error {
@@ -105,20 +105,20 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     _currentLevel
   }
 
-  override def toString = {
-    ("InTxnImpl@" + hashCode.toHexString + "(" +
-            (if (_currentLevel == null) "Detached" else status.toString) +
-            ", slot=" + _slot +
-            ", subsumptionAllowed=" + _subsumptionAllowed +
-            ", priority=" + _priority +
-            ", readCount=" + readCount  +
-            ", bargeCount=" + bargeCount +
-            ", writeCount=" + writeCount +
-            ", readVersion=0x" + _readVersion.toHexString +
-            (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") +
-            ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos +
-            ", commitBarrier=" + commitBarrier +
-            ")")
+  override def toString: String = {
+    "InTxnImpl@" + hashCode.toHexString + "(" +
+      (if (_currentLevel == null) "Detached" else status.toString) +
+      ", slot=" + _slot +
+      ", subsumptionAllowed=" + _subsumptionAllowed +
+      ", priority=" + _priority +
+      ", readCount=" + readCount +
+      ", bargeCount=" + bargeCount +
+      ", writeCount=" + writeCount +
+      ", readVersion=0x" + _readVersion.toHexString +
+      (if (_barging) ", bargingVersion=0x" + _bargeVersion.toHexString else "") +
+      ", cumulativeBlockingNanos=" + _cumulativeBlockingNanos +
+      ", commitBarrier=" + commitBarrier +
+      ")"
   }
 
 
@@ -132,7 +132,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
    *  rolled back, or it is safe to wait for `currentOwner` to be `Committed`
    *  or doomed.
    */
-  def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef) {
+  def resolveWriteWriteConflict(owningRoot: TxnLevelImpl, contended: AnyRef): Unit = {
     // if write is not allowed, throw an exception of some sort
     requireActive()
 
@@ -140,19 +140,19 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
 
     // This test is _almost_ symmetric.  Tie goes to neither.
     if (this._priority <= owningRoot.txn._priority) {
-      resolveAsWWLoser(owningRoot, contended, false, 'owner_has_priority)
+      resolveAsWWLoser(owningRoot, contended, ownerIsCommitting = false, msg = 'owner_has_priority)
     } else {
       // This will resolve the conflict regardless of whether it succeeds or fails.
       val s = owningRoot.requestRollback(OptimisticFailureCause('steal_by_higher_priority, Some(contended)))
       if (s == Preparing || s == Committing) {
         // owner can't be remotely canceled
         val msg = if (s == Preparing) 'owner_is_preparing else 'owner_is_committing
-        resolveAsWWLoser(owningRoot, contended, true, msg)
+        resolveAsWWLoser(owningRoot, contended, ownerIsCommitting = true, msg = msg)
       }
     }
   }
 
-  private def resolveAsWWLoser(owningRoot: TxnLevelImpl, contended: AnyRef, ownerIsCommitting: Boolean, msg: Symbol) {
+  private def resolveAsWWLoser(owningRoot: TxnLevelImpl, contended: AnyRef, ownerIsCommitting: Boolean, msg: Symbol): Unit = {
     if (!shouldWaitAsWWLoser(owningRoot, ownerIsCommitting)) {
       // The failed write is in the current nesting level, so we only need to
       // invalidate one nested atomic block.  Nothing will get better for us
@@ -202,7 +202,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     // just blind optimism.  Also, since barging transactions prevent (some)
     // conflicting writes, this choice means we minimize the chance that a
     // doomed transaction blocks somebody that will be able to commit.
-    return _barging
+    _barging
   }
 
 
@@ -238,7 +238,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   }
 
   @throws(classOf[InterruptedException])
-  protected[stm] def retryFor(timeoutNanos: Long) {
+  protected[stm] def retryFor(timeoutNanos: Long): Unit = {
     val effectiveTimeout = _currentLevel.minEnclosingRetryTimeout()
     if (effectiveTimeout < timeoutNanos)
       retry() // timeout imposed by TxnExecutor is tighter than this one
@@ -252,7 +252,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
 
   @throws(classOf[InterruptedException])
   def atomic[Z](exec: TxnExecutor, block: InTxn => Z): Z = {
-    if (!_alternatives.isEmpty)
+    if (_alternatives.nonEmpty)
       atomicWithAlternatives(exec, block)
     else {
       if (_currentLevel == null)
@@ -264,7 +264,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
 
   @throws(classOf[InterruptedException])
   def atomicOneOf[Z](exec: TxnExecutor, blocks: Seq[InTxn => Z]): Z = {
-    if (!_alternatives.isEmpty)
+    if (_alternatives.nonEmpty)
       throw new IllegalStateException("atomic.oneOf can't be mixed with orAtomic")
     val b = blocks.toList
     atomicImpl(exec, b.head, b.tail)
@@ -272,7 +272,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
 
   @throws(classOf[InterruptedException])
   def unrecorded[Z](exec: TxnExecutor, block: InTxn => Z, outerFailure: RollbackCause => Z): Z = {
-    if (!_alternatives.isEmpty)
+    if (_alternatives.nonEmpty)
       throw new IllegalStateException("atomic.unrecorded can't be mixed with orAtomic")
     var z: Z = null.asInstanceOf[Z]
     try {
@@ -282,9 +282,8 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       }, Nil)
     } catch {
       case RewindUnrecordedTxnError => z
-      case RollbackError if outerFailure != null => {
+      case RollbackError if outerFailure != null =>
         outerFailure(_currentLevel.statusAsCurrent.asInstanceOf[RolledBack].cause)
-      }
     }
   }
 
@@ -304,7 +303,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   //////////// per-block logic (includes reexecution loops)
 
   @throws(classOf[InterruptedException])
-  private def awaitRetry(timeoutNanos: Long) {
+  private def awaitRetry(timeoutNanos: Long): Unit = {
     assert(_slot >= 0)
     val rs = takeRetrySet(_slot)
     detach()
@@ -324,7 +323,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
 
   private def isExplicitRetry(cause: RollbackCause): Boolean = cause.isInstanceOf[ExplicitRetryCause]
 
-  private def clearAttemptHistory() {
+  private def clearAttemptHistory(): Unit = {
     _subsumptionAllowed = true
     _cumulativeBlockingNanos = 0L
     commitBarrier = null
@@ -347,12 +346,11 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       try {
         block(this)
       } catch {
-        case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) => {
+        case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) =>
           // partial rollback is required, but we can't do it here
           _subsumptionAllowed = false
           _currentLevel.forceRollback(OptimisticFailureCause('restart_to_enable_partial_rollback, Some(x)))
           throw RollbackError
-        }
       }
     } finally {
       if (outermost)
@@ -476,7 +474,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       // them the same as a regular block with no alternatives.
       val phantom = reusedReadThreshold >= 0
       minRetryTimeout = level.minRetryTimeoutNanos
-      if (!phantom && !alternatives.isEmpty) {
+      if (!phantom && alternatives.nonEmpty) {
         // rerun a phantom
         reusedReadThreshold = level.prevReadCount
       } else {
@@ -499,9 +497,8 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     }).asInstanceOf[Nothing]
   }
 
-  private def recordAlternatives(alternatives: List[_]) {
+  private def recordAlternatives(alternatives: List[_]): Unit =
     (if (_currentLevel == null) Stats.top else Stats.nested).alternatives += alternatives.size
-  }
 
   //////////// per-attempt logic
 
@@ -530,7 +527,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     }
   }
 
-  private def checkBarging(prevFailures: Int) {
+  private def checkBarging(prevFailures: Int): Unit = {
     // once we start barging we will use the original read version
     if (prevFailures == 0)
       _bargeVersion = _readVersion
@@ -541,7 +538,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     _barging = prevFailures >= BargeRecentThreshold
   }
 
-  private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int) {
+  private def nestedBegin(child: TxnLevelImpl, reusedReadThreshold: Int): Unit = {
     // link to child races with remote rollback. pushIfActive detects the race
     // and returns false
     if (!_currentLevel.pushIfActive(child)) {
@@ -556,7 +553,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
   }
 
   @throws(classOf[InterruptedException])
-  private def topLevelBegin(child: TxnLevelImpl) {
+  private def topLevelBegin(child: TxnLevelImpl): Unit = {
     if (_slot < 0) {
       _priority = skel.SimpleRandom.nextInt()
       _slot = slotManager.assign(child, ~_slot)
@@ -570,25 +567,23 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     try {
       block(this)
     } catch {
-      case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) => {
+      case x if x != RollbackError && !_currentLevel.executor.isControlFlow(x) =>
         _currentLevel.forceRollback(UncaughtExceptionCause(x))
         null.asInstanceOf[Z]
-      }
     }
   }
 
-  private def rethrowFromStatus(status: Status) {
+  private def rethrowFromStatus(status: Status): Unit =
     status match {
-      case rb: RolledBack => {
+      case rb: RolledBack =>
         rb.cause match {
           case UncaughtExceptionCause(x) => throw x
           case _: UnrecordedTxnCause[_] => throw RewindUnrecordedTxnError
           case _: TransientRollbackCause => throw RollbackError
         }
-      }
+
       case _ =>
     }
-  }
 
   //////////// completion
 
@@ -629,7 +624,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     }
   }
 
-  private def finishTopLevelCommit() {
+  private def finishTopLevelCommit(): Unit = {
     resetAccessHistory()
     val handlers = resetCallbacks()
     val exec = _currentLevel.executor
@@ -640,7 +635,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     fireAfterCompletionAndThrow(handlers, exec, Committed, f)
   }
 
-  private def finishTopLevelRollback(s: Status, c: RollbackCause) {
+  private def finishTopLevelRollback(s: Status, c: RollbackCause): Unit = {
     rollbackAccessHistory(_slot, c)
     val handlers = rollbackCallbacks()
     val exec = _currentLevel.executor
@@ -651,7 +646,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     fireAfterCompletionAndThrow(handlers, exec, s, f)
   }
 
-  private def finishTopLevelRetry(s: Status, c: RollbackCause) {
+  private def finishTopLevelRetry(s: Status, c: RollbackCause): Unit = {
     rollbackAccessHistory(_slot, c)
     val handlers = rollbackCallbacks()
 
@@ -672,7 +667,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     }
   }
 
-  private def detach() {
+  private def detach(): Unit = {
     //assert(_slot >= 0 && readCount == 0 && bargeCount == 0 && writeCount == 0)
     slotManager.release(_slot)
     _slot = ~_slot
@@ -722,10 +717,10 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     commitWrites(cv)
     root.setCommitted()
 
-    return true
+    true
   }
 
-  private def releaseBargeLocks() {
+  private def releaseBargeLocks(): Unit = {
     var i = bargeCount - 1
     while (i >= 0) {
       rollbackHandle(bargeHandle(i), _slot)
@@ -747,7 +742,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
       } while (!changing(m) && !handle.metaCAS(m, withChanging(m)))
       i -= 1
     }
-    return true
+    true
   }
 
   private def consultExternalDecider(): Boolean = {
@@ -760,7 +755,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
     this.status eq Prepared
   }
 
-  private def commitWrites(cv: Long) {
+  private def commitWrites(cv: Long): Unit = {
     var wakeups = 0L
     var i = writeCount - 1
     while (i >= 0) {
@@ -883,7 +878,7 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
 
   //////////// implementations of InTnRefOps abstract operations
 
-  override def requireActive() {
+  override def requireActive(): Unit = {
     val cur = _currentLevel
     if (cur == null)
       throw new IllegalStateException("no active transaction")
@@ -897,18 +892,16 @@ private[ccstm] class InTxnImpl extends InTxnRefOps {
    *  all reads will have been validated against the new read version.  Throws
    *  `RollbackError` if invalid.
    */
-  protected def revalidate(minReadVersion: Version) {
+  protected def revalidate(minReadVersion: Version): Unit = {
     _readVersion = freshReadVersion(minReadVersion)
     if (!revalidateImpl())
       throw RollbackError
   }
 
-  protected def forceRollback(cause: RollbackCause) {
+  protected def forceRollback(cause: RollbackCause): Unit =
     _currentLevel.forceRollback(cause)
-  }
 
   @throws(classOf[InterruptedException])
-  protected def weakAwaitUnowned(handle: Handle[_], m0: Meta) {
+  protected def weakAwaitUnowned(handle: Handle[_], m0: Meta): Unit =
     CCSTM.weakAwaitUnowned(handle, m0, _currentLevel)
-  }
 }

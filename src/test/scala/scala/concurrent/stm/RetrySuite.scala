@@ -2,20 +2,20 @@
 
 package scala.concurrent.stm
 
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+
 import org.scalatest.FunSuite
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
 
 /** Contains extended tests of `retry`, `retryFor` and `tryAwait`.  Some basic
  *  tests are included in `TxnSuite`.
  */
 class RetrySuite extends FunSuite {
 
-  def timingAssert(ok: Boolean) {
+  def timingAssert(ok: Boolean): Unit =
     if (!ok) {
       val x = new Exception("timing-sensitive check failed, continuing")
       x.printStackTrace()
     }
-  }
 
   test("retry set accumulation across alternatives") {
     val x = Ref(false)
@@ -23,12 +23,12 @@ class RetrySuite extends FunSuite {
 
     // this prevents the test from deadlocking
     new Thread("trigger") {
-      override def run {
+      override def run(): Unit = {
         b.await()
         Thread.sleep(10)
         x.single() = true
       }
-    } start
+    } .start()
 
     atomic { implicit t =>
       // The following txn and its alternative decode the value of x that was
@@ -185,10 +185,12 @@ class RetrySuite extends FunSuite {
     val begin = System.currentTimeMillis
     var lastRetryForElapsed = 0L
 
-    (new Thread { override def run {
-      b.await()
-      x.single() = 1
-    } }).start
+    new Thread {
+      override def run(): Unit = {
+        b.await()
+        x.single() = 1
+      }
+    }.start()
 
     val buf = new StringBuilder
     atomic { implicit txn =>
@@ -213,10 +215,12 @@ class RetrySuite extends FunSuite {
     val begin = System.currentTimeMillis
     var totalRetryForElapsed = 0L
 
-    (new Thread { override def run {
-      Thread.sleep(200) ;
-      x.single() = 1
-    } }).start
+    new Thread {
+      override def run(): Unit = {
+        Thread.sleep(200)
+        x.single() = 1
+      }
+    }.start()
 
     val buf = new StringBuilder
     atomic { implicit txn =>
@@ -250,8 +254,8 @@ class RetrySuite extends FunSuite {
     val b1 = new CountDownLatch(1)
     val b2 = new CountDownLatch(1)
 
-    (new Thread {
-      override def run {
+    new Thread {
+      override def run(): Unit = {
         b1.await()
         Thread.sleep(10)
         x.single() = 1
@@ -259,7 +263,8 @@ class RetrySuite extends FunSuite {
         Thread.sleep(100)
         x.single += 1
       }
-    }).start
+    }.start()
+
     atomic { implicit txn =>
       x() = x() + 10
       if (x() == 10) {
@@ -276,14 +281,15 @@ class RetrySuite extends FunSuite {
 
   test("retryFor via View await") {
     val x = Ref(0)
-    (new Thread {
-      override def run {
+    new Thread {
+      override def run(): Unit = {
         Thread.sleep(50)
         x.single() = 1
         Thread.sleep(100)
         x.single += 1
       }
-    }).start
+    }.start()
+
     atomic { implicit txn =>
       x() = x() + 10
       x.single.await( _ == 11 )
@@ -330,12 +336,14 @@ class RetrySuite extends FunSuite {
     val z = Ref(0)
     val b = new CountDownLatch(1)
 
-    (new Thread { override def run {
-      b.await()
-      Thread.sleep(10)
-      x.single() = 1
-      y.single() = 1
-    } }).start
+    new Thread {
+      override def run(): Unit = {
+        b.await()
+        Thread.sleep(10)
+        x.single() = 1
+        y.single() = 1
+      }
+    }.start()
 
     atomic { implicit txn =>
       z() = 2
@@ -360,11 +368,13 @@ class RetrySuite extends FunSuite {
     var tries = 0
     val refs = Array.tabulate(10000) { _ => Ref(0) }
 
-    (new Thread { override def run {
-      b.await()
-      Thread.sleep(10)
-      refs(500).single() = 1
-    } }).start
+    new Thread {
+      override def run(): Unit = {
+        b.await()
+        Thread.sleep(10)
+        refs(500).single() = 1
+      }
+    }.start()
 
     atomic { implicit txn =>
       tries += 1
@@ -384,11 +394,13 @@ class RetrySuite extends FunSuite {
     var tries = 0
     val refs = TArray.ofDim[Int](10000).refs
 
-    (new Thread { override def run {
-      b.await()
-      Thread.sleep(10)
-      refs(500).single() = 1
-    } }).start
+    new Thread {
+      override def run(): Unit = {
+        b.await()
+        Thread.sleep(10)
+        refs(500).single() = 1
+      }
+    }.start()
 
     atomic { implicit txn =>
       tries += 1
@@ -501,10 +513,13 @@ class RetrySuite extends FunSuite {
 
   test("non-timeout elapsed") {
     val x = Ref(0)
-    (new Thread { override def run {
-      Thread.sleep(100)
-      x.single() = 1
-    } }).start
+    new Thread {
+      override def run(): Unit = {
+        Thread.sleep(100)
+        x.single() = 1
+      }
+    }.start()
+
     intercept[InterruptedException] {
       atomic { implicit txn =>
         atomic.withRetryTimeout(200) { implicit txn =>

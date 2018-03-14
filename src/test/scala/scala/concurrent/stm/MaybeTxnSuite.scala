@@ -21,7 +21,7 @@ class MaybeTxnSuite extends FunSuite {
 
   test("InTxn is found") {
     atomic { t0 =>
-      implicit val t = t0
+      implicit val t: InTxn = t0
       assert(context eq t)
     }
     atomic { implicit t =>
@@ -53,7 +53,7 @@ class MaybeTxnSuite extends FunSuite {
   test("Dynamic nesting lookup") {
     val x = Ref(10)
     val xs = x.single
-    def loop(expected: Int) {
+    def loop(expected: Int): Unit = {
       atomic { implicit t =>
         assert(x() === expected)
         assert(xs() === expected)

@@ -4,7 +4,8 @@ package scala.concurrent.stm
 package impl
 
 import org.scalatest.FunSuite
-import java.lang.String
+
+import scala.reflect.ClassTag
 
 class RefFactorySuite extends FunSuite {
 
@@ -24,7 +25,7 @@ class RefFactorySuite extends FunSuite {
     override def newRef(v0: Long): Ref[Long] = called("Long")
     override def newRef(v0: Double): Ref[Double] = called("Double")
     override def newRef(v0: Unit): Ref[Unit] = called("Unit")
-    override def newRef[T](v0: T)(implicit m: ClassManifest[T]): Ref[T] = called("Any")
+    override def newRef[T](v0: T)(implicit m: ClassTag[T]): Ref[T] = called("Any")
   }
 
   object TestRef extends RefCompanion {
@@ -79,7 +80,7 @@ class RefFactorySuite extends FunSuite {
   }
 
   test("dynamic specialization") {
-    def go[T : ClassManifest](v0: T, which: String) {
+    def go[T : ClassTag](v0: T, which: String): Unit = {
       TestRef.factory = Fact(which)
       TestRef(v0)
     }
@@ -101,7 +102,7 @@ class RefFactorySuite extends FunSuite {
   }
 
   test("default value specialization") {
-    def go[T : ClassManifest](default: T, which: String) {
+    def go[T : ClassTag](default: T, which: String): Unit = {
       TestRef.factory = Fact(which)
       TestRef.make[T]()
       //assert(x.single() == default)

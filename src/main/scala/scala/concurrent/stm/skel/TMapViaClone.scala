@@ -11,7 +11,7 @@ private[stm] object TMapViaClone {
     override def size: Int = self.size
     def get(key: A): Option[B] = self.get(key)
     def iterator: Iterator[(A, B)] = self.iterator
-    override def foreach[U](f: ((A, B)) => U) { self foreach f }
+    override def foreach[U](f: ((A, B)) => U): Unit = { self foreach f }
     def + [B1 >: B](kv: (A, B1)): immutable.Map[A, B1] =
         new FrozenMutableMap(self.clone().asInstanceOf[mutable.Map[A, B1]] += kv)
     def - (k: A): immutable.Map[A, B] = new FrozenMutableMap(self.clone() -= k)
@@ -34,7 +34,7 @@ private[stm] trait TMapViaClone[A, B] extends TMap.View[A, B] with TMap[A, B] {
   def single: TMap.View[A, B] = this
 
   /** Something like `"TMap[size=1]((1 -> 10))"`, stopping after 1K chars */
-  def dbgStr: String = atomic.unrecorded({ txn =>
+  def dbgStr: String = atomic.unrecorded({ _ =>
     mkStringPrefix("TMap", single.view.map { kv => kv._1 + " -> " + kv._2 })
   }, { _.toString })
 

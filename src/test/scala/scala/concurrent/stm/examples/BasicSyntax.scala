@@ -12,7 +12,7 @@ object BasicSyntax {
   val left = Ref(origin)
   val right = Ref(origin)
 
-  def updateExtremes(p: Point) {
+  def updateExtremes(p: Point): Unit = {
     atomic { implicit txn =>
       if (p.x < left().x)
         left() = p
@@ -25,7 +25,7 @@ object BasicSyntax {
     }
   }
 
-  def alternatives {
+  def alternatives(): Unit = {
     val z = atomic { implicit txn =>
       if (!(left().x < -100))
         retry

@@ -15,7 +15,7 @@ private[stm] trait AbstractInTxn extends InTxn {
 
   //////////// implementation of functionality for the InTxn implementer
 
-  protected def requireActive() {
+  protected def requireActive(): Unit = {
     internalCurrentLevel.status match {
       case Active =>
       case RolledBack(_) => throw RollbackError
@@ -23,7 +23,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     }
   }
 
-  protected def requireNotDecided() {
+  protected def requireNotDecided(): Unit = {
     internalCurrentLevel.status match {
       case s if !s.decided =>
       case RolledBack(_) => throw RollbackError
@@ -31,7 +31,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     }
   }
 
-  protected def requireNotCompleted() {
+  protected def requireNotCompleted(): Unit = {
     internalCurrentLevel.status match {
       case s if !s.completed =>
       case RolledBack(_) => throw RollbackError
@@ -40,7 +40,7 @@ private[stm] trait AbstractInTxn extends InTxn {
   }
 
   private var _decider: ExternalDecider = null
-  protected def externalDecider = _decider
+  protected def externalDecider: ExternalDecider = _decider
 
   /** Set to true if any callbacks are registered. */
   private var _callbacksPresent = false
@@ -61,12 +61,12 @@ private[stm] trait AbstractInTxn extends InTxn {
     !_whilePreparingList.isEmpty || !_whileCommittingList.isEmpty || externalDecider != null
   }
 
-  protected def fireBeforeCommitCallbacks() {
+  protected def fireBeforeCommitCallbacks(): Unit = {
     if (_callbacksPresent)
       _beforeCommitList.fire(internalCurrentLevel, this)
   }
 
-  protected def fireWhilePreparingCallbacks() {
+  protected def fireWhilePreparingCallbacks(): Unit = {
     if (_callbacksPresent && !_whilePreparingList.isEmpty)
       _whilePreparingList.fire(internalCurrentLevel, this)
   }
@@ -88,7 +88,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     failure
   }
 
-  protected def fireAfterCompletionAndThrow(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, pendingFailure: Throwable) {
+  protected def fireAfterCompletionAndThrow(handlers: Array[Status => Unit], exec: TxnExecutor, s: Status, pendingFailure: Throwable): Unit = {
     val f = if (handlers != null) fireAfterCompletion(handlers, exec, s, pendingFailure) else pendingFailure
     if (f != null)
       throw f
@@ -113,23 +113,22 @@ private[stm] trait AbstractInTxn extends InTxn {
       handler(arg)
       f
     } catch {
-      case x: Throwable => {
+      case x: Throwable =>
         try {
           exec.postDecisionFailureHandler(s, x)
           f
         } catch {
           case xx: Throwable => xx
         }
-      }
     }
   }
 
-  protected def checkpointCallbacks() {
+  protected def checkpointCallbacks(): Unit = {
     if (_callbacksPresent)
       checkpointCallbacksImpl()
   }
 
-  private def checkpointCallbacksImpl() {
+  private def checkpointCallbacksImpl(): Unit = {
     val level = internalCurrentLevel
     level._beforeCommitSize = _beforeCommitList.size
     level._whileValidatingSize = _whileValidatingList.size
@@ -168,13 +167,13 @@ private[stm] trait AbstractInTxn extends InTxn {
     _afterCommitList.truncate(0)
   }
 
-  protected def fireWhileValidating() {
+  protected def fireWhileValidating(): Unit = {
     val n = _whileValidatingList.size
     if (n > 0)
       fireWhileValidating(n - 1, internalCurrentLevel)
   }
 
-  @tailrec private def fireWhileValidating(i: Int, level: AbstractNestingLevel) {
+  @tailrec private def fireWhileValidating(i: Int, level: AbstractNestingLevel): Unit = {
     if (i >= 0) {
       if (i < level._whileValidatingSize)
         fireWhileValidating(i, level.parLevel)
@@ -195,55 +194,54 @@ private[stm] trait AbstractInTxn extends InTxn {
 
   override def rootLevel: AbstractNestingLevel = internalCurrentLevel.root
 
-  def beforeCommit(handler: InTxn => Unit) {
+  def beforeCommit(handler: InTxn => Unit): Unit = {
     requireActive()
     _callbacksPresent = true
     _beforeCommitList += handler
   }
 
-  def whileValidating(handler: NestingLevel => Unit) {
+  def whileValidating(handler: NestingLevel => Unit): Unit = {
     requireActive()
     _callbacksPresent = true
     _whileValidatingList += handler
   }
 
-  def whilePreparing(handler: InTxnEnd => Unit) {
+  def whilePreparing(handler: InTxnEnd => Unit): Unit = {
     requireNotDecided()
     _callbacksPresent = true
     _whilePreparingList += handler
   }
 
-  def whileCommitting(handler: InTxnEnd => Unit) {
+  def whileCommitting(handler: InTxnEnd => Unit): Unit = {
     requireNotCompleted()
     _callbacksPresent = true
     _whileCommittingList += handler
   }
 
-  def afterCommit(handler: Status => Unit) {
+  def afterCommit(handler: Status => Unit): Unit = {
     requireNotCompleted()
     _callbacksPresent = true
     _afterCommitList += handler
   }
 
-  def afterRollback(handler: Status => Unit) {
+  def afterRollback(handler: Status => Unit): Unit = {
     try {
       requireNotCompleted()
     } catch {
-      case RollbackError => {
+      case RollbackError =>
         handler(internalCurrentLevel.status)
         throw RollbackError
-      }
     }
     _callbacksPresent = true
     _afterRollbackList += handler
   }
 
-  def afterCompletion(handler: Status => Unit) {
+  def afterCompletion(handler: Status => Unit): Unit = {
     afterRollback(handler)
     _afterCommitList += handler
   }
 
-  def setExternalDecider(decider: ExternalDecider) {
+  def setExternalDecider(decider: ExternalDecider): Unit = {
     if (status.decided)
       throw new IllegalArgumentException("can't set ExternalDecider after decision, status = " + status)
 
@@ -253,7 +251,7 @@ private[stm] trait AbstractInTxn extends InTxn {
     } else {
       _decider = decider
       // the decider should be unregistered after either rollback or commit
-      afterCompletion { status =>
+      afterCompletion { _ =>
         assert(_decider eq decider)
         _decider = null
       }

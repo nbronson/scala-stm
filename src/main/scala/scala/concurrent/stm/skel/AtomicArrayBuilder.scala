@@ -2,81 +2,77 @@
 
 package scala.concurrent.stm.skel
 
-import scala.collection.mutable.Builder
-import java.util.concurrent.atomic.{AtomicReferenceArray, AtomicLongArray, AtomicIntegerArray}
+import java.util.concurrent.atomic.{AtomicIntegerArray, AtomicLongArray, AtomicReferenceArray}
 
-trait AtomicArrayBuilder[A] extends Builder[A, AtomicArray[A]]
+import scala.collection.mutable
+import scala.reflect.ClassTag
+
+trait AtomicArrayBuilder[A] extends mutable.Builder[A, AtomicArray[A]]
 
 object AtomicArrayBuilder {
-  def of[T](m: ClassManifest[T]): Builder[T, AtomicArray[T]] = {
+  def of[T](m: ClassTag[T]): mutable.Builder[T, AtomicArray[T]] = {
     (m.newArray(0).asInstanceOf[AnyRef] match {
-      case x: Array[Boolean] => new ofBoolean
-      case x: Array[Byte] => new ofByte
-      case x: Array[Short] => new ofShort
-      case x: Array[Char] => new ofChar
-      case x: Array[Int] => new ofInt
-      case x: Array[Float] => new ofFloat
-      case x: Array[Long] => new ofLong
-      case x: Array[Double] => new ofDouble
-      case x: Array[Unit] => new ofUnit
-      case x: Array[AnyRef] => new ofRef[AnyRef]
+      case _: Array[Boolean]  => new ofBoolean
+      case _: Array[Byte]     => new ofByte
+      case _: Array[Short]    => new ofShort
+      case _: Array[Char]     => new ofChar
+      case _: Array[Int]      => new ofInt
+      case _: Array[Float]    => new ofFloat
+      case _: Array[Long]     => new ofLong
+      case _: Array[Double]   => new ofDouble
+      case _: Array[Unit]     => new ofUnit
+      case _: Array[AnyRef]   => new ofRef[AnyRef]
     }).asInstanceOf[AtomicArrayBuilder[T]]
   }
 
-  private val EmptyIntArray = new Array[Int](0)
-  private val EmptyLongArray = new Array[Long](0)
-  private val EmptyRefArray = new Array[AnyRef](0)
+  private val EmptyIntArray   = new Array[Int](0)
+  private val EmptyLongArray  = new Array[Long](0)
+  private val EmptyRefArray   = new Array[AnyRef](0)
 
   abstract class IntBacked[T] extends AtomicArrayBuilder[T] {
-    protected var elems = EmptyIntArray
+    protected var elems: Array[Int] = EmptyIntArray
     protected var size: Int = 0
 
-    protected def setCapacity(newCap: Int) {
+    protected def setCapacity(newCap: Int): Unit =
       if (newCap != elems.length) {
         val newElems = new Array[Int](newCap)
         if (size > 0) Array.copy(elems, 0, newElems, 0, size)
         elems = newElems
       }
-    }
 
-    override def sizeHint(sizeHint: Int) {
+    override def sizeHint(sizeHint: Int): Unit =
       if (elems.length < sizeHint) setCapacity(sizeHint)
-    }
 
-    protected def ensureSpace() {
+    protected def ensureSpace(): Unit = {
       val cap = elems.length
       if (size == cap) setCapacity(if (cap == 0) 16 else cap * 2)
     }
 
-    def clear() {
+    def clear(): Unit =
       size = 0
-    }
   }
 
   abstract class LongBacked[T] extends AtomicArrayBuilder[T] {
-    protected var elems = EmptyLongArray
+    protected var elems: Array[Long] = EmptyLongArray
     protected var size: Int = 0
 
-    protected def setCapacity(newCap: Int) {
+    protected def setCapacity(newCap: Int): Unit =
       if (newCap != elems.length) {
         val newElems = new Array[Long](newCap)
         if (size > 0) Array.copy(elems, 0, newElems, 0, size)
         elems = newElems
       }
-    }
 
-    override def sizeHint(sizeHint: Int) {
+    override def sizeHint(sizeHint: Int): Unit =
       if (elems.length < sizeHint) setCapacity(sizeHint)
-    }
 
-    protected def ensureSpace() {
+    protected def ensureSpace(): Unit = {
       val cap = elems.length
       if (size == cap) setCapacity(if (cap == 0) 16 else cap * 2)
     }
 
-    def clear() {
+    def clear(): Unit =
       size = 0
-    }
   }
 
 
@@ -201,10 +197,10 @@ object AtomicArrayBuilder {
   }
 
   class ofRef[T <: AnyRef] extends AtomicArrayBuilder[T] {
-    protected var elems = EmptyRefArray
+    protected var elems: Array[AnyRef] = EmptyRefArray
     protected var size: Int = 0
 
-    protected def setCapacity(newCap: Int) {
+    protected def setCapacity(newCap: Int): Unit = {
       if (newCap != elems.length) {
         val newElems = new Array[AnyRef](newCap)
         if (size > 0) Array.copy(elems, 0, newElems, 0, size)
@@ -212,18 +208,17 @@ object AtomicArrayBuilder {
       }
     }
 
-    override def sizeHint(sizeHint: Int) {
+    override def sizeHint(sizeHint: Int): Unit = {
       if (elems.length < sizeHint) setCapacity(sizeHint)
     }
 
-    protected def ensureSpace() {
+    protected def ensureSpace(): Unit = {
       val cap = elems.length
       if (size == cap) setCapacity(if (cap == 0) 16 else cap * 2)
     }
 
-    def clear() {
+    def clear(): Unit =
       size = 0
-    }
 
     def +=(elem: T): this.type = {
       ensureSpace()

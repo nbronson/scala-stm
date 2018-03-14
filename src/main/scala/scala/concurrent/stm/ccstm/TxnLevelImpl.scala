@@ -18,21 +18,21 @@ private[ccstm] object TxnLevelImpl {
    */
   @volatile private var _blockedBarrierMembers = Map.empty[InTxnImpl, TxnLevelImpl]
 
-  def notifyBlockedBarrierMembers() {
+  def notifyBlockedBarrierMembers(): Unit = {
     val m = _blockedBarrierMembers
-    if (!m.isEmpty) {
+    if (m.nonEmpty) {
       for (v <- m.values)
         v.synchronized { v.notifyAll() }
     }
   }
 
-  def addBlockedBarrierMember(waiter: InTxnImpl, monitor: TxnLevelImpl) {
+  def addBlockedBarrierMember(waiter: InTxnImpl, monitor: TxnLevelImpl): Unit = {
     synchronized {
       _blockedBarrierMembers += (waiter -> monitor)
     }
   }
 
-  def removeBlockedBarrierMember(waiter: InTxnImpl) {
+  def removeBlockedBarrierMember(waiter: InTxnImpl): Unit = {
     synchronized {
       _blockedBarrierMembers -= waiter
     }
@@ -95,11 +95,10 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
       raw.asInstanceOf[Txn.Status]
   }
 
-  def setCommitting() {
+  def setCommitting(): Unit =
     _state = Txn.Committing
-  }
 
-  def setCommitted() {
+  def setCommitted(): Unit = {
     _state = Txn.Committed
     notifyCompleted()
   }
@@ -133,7 +132,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
       raw.asInstanceOf[Txn.Status]
   }
 
-  private def notifyCompleted() {
+  private def notifyCompleted(): Unit = {
     if (_waiters)
       synchronized { notifyAll() }
   }
@@ -167,7 +166,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
    *  has been rolled back.
    */
   @throws(classOf[InterruptedException])
-  def awaitCompleted(waiter: TxnLevelImpl, debugInfo: Any) {
+  def awaitCompleted(waiter: TxnLevelImpl, debugInfo: Any): Unit = {
     assert(parUndo == null)
 
     _waiters = true
@@ -212,21 +211,19 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   }
 
 
-  def requireActive() {
+  def requireActive(): Unit = {
     if (_state != null)
       slowRequireActive()
   }
 
-  private def slowRequireActive() {
+  private def slowRequireActive(): Unit =
     status match {
       case Txn.RolledBack(_) => throw RollbackError
       case s => throw new IllegalStateException(s.toString)
     }
-  }
 
-  def pushIfActive(child: TxnLevelImpl): Boolean = {
+  def pushIfActive(child: TxnLevelImpl): Boolean =
     stateUpdater.compareAndSet(this, null, child)
-  }
 
   def attemptMerge(): Boolean = {
     // First we need to set the current state to forwarding.  Regardless of
@@ -242,7 +239,7 @@ private[ccstm] class TxnLevelImpl(val txn: InTxnImpl,
   }
 
   /** Must be called from the transaction's thread. */
-  def forceRollback(cause: Txn.RollbackCause) {
+  def forceRollback(cause: Txn.RollbackCause): Unit = {
     val s = rollbackImpl(Txn.RolledBack(cause))
     assert(s.isInstanceOf[Txn.RolledBack])
   }

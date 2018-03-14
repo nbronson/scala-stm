@@ -22,7 +22,7 @@ private[ccstm] class RetrySet(val size: Int,
     val d = begin + timeoutNanos
     val deadline = if (d < 0) Long.MaxValue else d // handle arithmetic overflow
 
-    val timeoutExceeded = !attemptAwait(deadline)
+    attemptAwait(deadline)
 
     val actualElapsed = System.nanoTime - begin
 
@@ -50,13 +50,13 @@ private[ccstm] class RetrySet(val size: Int,
         return true
       spins += size
       if (spins > SpinCount) {
-        Thread.`yield`
+        Thread.`yield`()
         if (nanoDeadline != Long.MaxValue && System.nanoTime > nanoDeadline)
           return false
       }
     }
 
-    return blockingAttemptAwait(nanoDeadline)
+    blockingAttemptAwait(nanoDeadline)
   }
 
   @throws(classOf[InterruptedException])
@@ -101,7 +101,7 @@ private[ccstm] class RetrySet(val size: Int,
         return true
       i -= 1
     }
-    return false
+    false
   }
 
 }

@@ -105,7 +105,7 @@ class UnrecordedTxnSuite extends FunSuite {
     val x = Ref(0)
 
     new Thread {
-      override def run() {
+      override def run(): Unit = {
         b.await()
         x.single() = 1
         e.countDown()
@@ -138,7 +138,7 @@ class UnrecordedTxnSuite extends FunSuite {
         val level = NestingLevel.root
         val done = new CountDownLatch(1)
         new Thread {
-          override def run() {
+          override def run(): Unit = {
             level.requestRollback(Txn.UncaughtExceptionCause(new TestException))
             done.countDown()
           }

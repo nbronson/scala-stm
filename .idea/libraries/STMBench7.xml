@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="STMBench7">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/stmbench7-VELOX-1.2.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

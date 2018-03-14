@@ -86,7 +86,7 @@ class TxnSuite extends FunSuite {
     val y = Ref(false)
     val b = new CountDownLatch(1)
     new Thread {
-      override def run() {
+      override def run(): Unit = {
         b.await()
         Thread.sleep(10)
         y.single() = true
@@ -107,7 +107,7 @@ class TxnSuite extends FunSuite {
     val y = Ref(false)
     val b = new CountDownLatch(1)
     new Thread {
-      override def run() {
+      override def run(): Unit = {
         b.await()
         Thread.sleep(10)
         y.single() = true
@@ -152,7 +152,7 @@ class TxnSuite extends FunSuite {
     val refs = Array(Ref(false), Ref(false), Ref(false))
     for (w <- 0 until 3) {
       new Thread("wakeup") {
-        override def run() {
+        override def run(): Unit = {
           Thread.sleep(200)
           refs(w).single() = true
         }
@@ -165,7 +165,7 @@ class TxnSuite extends FunSuite {
     val refs = Array(Ref(false), Ref(false), Ref(false))
     for (w <- 0 until 3) {
       new Thread("wakeup") {
-        override def run() {
+        override def run(): Unit = {
           Thread.sleep(200)
           refs(w).single() = true
         }
@@ -180,7 +180,7 @@ class TxnSuite extends FunSuite {
     val refs = Array(Ref(false), Ref(false), Ref(false))
     for (w <- 0 until 3) {
       new Thread("wakeup") {
-        override def run() {
+        override def run(): Unit = {
           Thread.sleep(200)
           refs(w).single() = true
         }
@@ -198,13 +198,13 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  private def oneOfExpect(refs: Array[Ref[Boolean]], which: Int, sleeps: Array[Int]) {
+  private def oneOfExpect(refs: Array[Ref[Boolean]], which: Int, sleeps: Array[Int]): Unit = {
     val result = Ref(-1)
     atomic.oneOf(
-        { t: InTxn => implicit val txn = t; result() = 0 ; if (!refs(0)()) retry },
-        { t: InTxn => implicit val txn = t; if (refs(1)()) result() = 1 else retry },
-        { t: InTxn => implicit val txn = t; if (refs(2)()) result() = 2 else retry },
-        { t: InTxn => implicit val txn = t; sleeps(0) += 1 ; retry }
+        { t: InTxn => implicit val txn: InTxn = t; result() = 0 ; if (!refs(0)()) retry },
+        { t: InTxn => implicit val txn: InTxn = t; if (refs(1)()) result() = 1 else retry },
+        { t: InTxn => implicit val txn: InTxn = t; if (refs(2)()) result() = 2 else retry },
+        { t: InTxn => implicit val txn: InTxn = t; sleeps(0) += 1 ; retry }
       )
     refs(which).single() = false
     assert(result.single.get === which)
@@ -286,7 +286,11 @@ class TxnSuite extends FunSuite {
     val x = Ref(0)
     val y = Ref(0)
 
-    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start()
+    new Thread {
+      override def run(): Unit = {
+        Thread.sleep(100); y.single() = 1
+      }
+    }.start()
 
     atomic { implicit t =>
       x()
@@ -397,7 +401,11 @@ class TxnSuite extends FunSuite {
     val y = Ref(0)
     var ytries = 0
 
-    (new Thread { override def run() { Thread.sleep(100) ; y.single() = 1 } }).start()
+    new Thread {
+      override def run(): Unit = {
+        Thread.sleep(100); y.single() = 1
+      }
+    }.start()
 
     atomic { implicit txn =>
       xtries += 1
@@ -421,7 +429,7 @@ class TxnSuite extends FunSuite {
     val x = Ref(0)
 
     new Thread {
-      override def run() {
+      override def run(): Unit = {
         Thread.sleep(50)
         x.single() = 1
         Thread.sleep(50)
@@ -442,12 +450,12 @@ class TxnSuite extends FunSuite {
     }
     assert(x.single() === 1)
 
-    for (i <- 0 until 100) {
+    for (_ <- 0 until 100) {
       intercept[UserException] {
         atomic { implicit txn =>
           val active = NestingLevel.current
           new Thread {
-            override def run() {
+            override def run(): Unit = {
               val cause = Txn.UncaughtExceptionCause(new UserException)
               assert(finished.requestRollback(cause) === Txn.Committed)
               assert(active.requestRollback(cause) == Txn.RolledBack(cause))
@@ -471,7 +479,7 @@ class TxnSuite extends FunSuite {
     }
     assert(x.single() === 1)
 
-    for (i <- 0 until 100) {
+    for (_ <- 0 until 100) {
       intercept[UserException] {
         atomic { implicit txn =>
           // this is to force true nesting for CCSTM, but the test should pass for any STM
@@ -479,7 +487,7 @@ class TxnSuite extends FunSuite {
 
           val active = NestingLevel.current
           new Thread {
-            override def run() {
+            override def run(): Unit = {
               Thread.`yield`()
               Thread.`yield`()
               val cause = Txn.UncaughtExceptionCause(new UserException)
@@ -499,13 +507,13 @@ class TxnSuite extends FunSuite {
   test("remote cancel of child") {
     val x = Ref(0)
 
-    for (i <- 0 until 100) {
+    for (_ <- 0 until 100) {
       intercept[UserException] {
         atomic { implicit txn =>
           atomic { implicit txn =>
             val active = NestingLevel.current
             new Thread {
-              override def run() {
+              override def run(): Unit = {
                 Thread.`yield`()
                 Thread.`yield`()
                 val cause = Txn.UncaughtExceptionCause(new UserException)
@@ -523,20 +531,20 @@ class TxnSuite extends FunSuite {
   }
 
   test("toString") {
-    (atomic { implicit txn =>
+    atomic { implicit txn =>
       txn.toString
       txn
-    }).toString
-    (atomic { implicit txn =>
+    }.toString
+    atomic { implicit txn =>
       NestingLevel.current.toString
       NestingLevel.current
-    }).toString
+    }.toString
   }
 
   test("many simultaneous Txns", Slow) {
     // CCSTM supports 2046 simultaneous transactions
     val threads = Array.tabulate(2500) { _ => new Thread {
-      override def run() { atomic { implicit txn => Thread.sleep(1000) } }
+      override def run(): Unit = { atomic { implicit txn => Thread.sleep(1000) } }
     }}
     val begin = System.currentTimeMillis
     for (t <- threads) t.start()
@@ -545,7 +553,7 @@ class TxnSuite extends FunSuite {
     println(threads.length + " empty sleep(1000) txns took " + elapsed + " millis")
   }
 
-  perfTest("uncontended R+W txn perf") { (x, y) =>
+  perfTest("uncontended R+W txn perf") { (x, _) =>
     var i = 0
     while (i < 5) {
       i += 1
@@ -561,7 +569,7 @@ class TxnSuite extends FunSuite {
   }
 
   for (depth <- List(0, 1, 2, 8)) {
-    perfTest("uncontended R+W txn perf: nesting depth " + depth) { (x, y) =>
+    perfTest("uncontended R+W txn perf: nesting depth " + depth) { (x, _) =>
       var i = 0
       while (i < 5) {
         i += 1
@@ -614,7 +622,7 @@ class TxnSuite extends FunSuite {
 //    }
 //  }
 
-  private def nested(depth: Int)(body: InTxn => Unit) {
+  private def nested(depth: Int)(body: InTxn => Unit): Unit = {
     atomic { implicit txn =>
       if (depth == 0)
         body(txn)
@@ -623,12 +631,12 @@ class TxnSuite extends FunSuite {
     }
   }
 
-  private def perfTest(name: String)(runTen: (Ref[String], Ref[Int]) => Unit) {
+  private def perfTest(name: String)(runTen: (Ref[String], Ref[Int]) => Unit): Unit = {
     test(name, Slow) {
       val x = Ref("abc")
       val y = Ref(10)
       var best = java.lang.Long.MAX_VALUE
-      for (pass <- 0 until 50000) {
+      for (_ <- 0 until 50000) {
         val begin = System.nanoTime
         runTen(x, y)
         val elapsed = System.nanoTime - begin

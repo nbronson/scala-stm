@@ -4,6 +4,8 @@ package scala.concurrent
 
 import java.util.concurrent.TimeUnit
 
+import scala.language.implicitConversions
+
 package object stm {
 
   /** Atomically executes atomic blocks using the default `TxnExecutor`.  See
@@ -15,10 +17,9 @@ package object stm {
   def retry(implicit txn: scala.concurrent.stm.InTxn): Nothing = scala.concurrent.stm.Txn.retry
 
   /** Equivalent to `Txn.retryFor(timeout, unit)`. */
-  def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: scala.concurrent.stm.InTxn) {
+  def retryFor(timeout: Long, unit: TimeUnit = TimeUnit.MILLISECONDS)(implicit txn: scala.concurrent.stm.InTxn): Unit =
     scala.concurrent.stm.Txn.retryFor(timeout, unit)
-  }
 
   /** This is the first half of the machinery for implementing `orAtomic`. */
-  implicit def wrapChainedAtomic[A](lhs: => A) = new scala.concurrent.stm.PendingAtomicBlock(lhs)
+  implicit def wrapChainedAtomic[A](lhs: => A): PendingAtomicBlock[A] = new PendingAtomicBlock(lhs)
 }

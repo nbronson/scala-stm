@@ -20,19 +20,19 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
 
   protected def isNewerThanReadVersion(version: Version): Boolean
 
-  protected def revalidate(minNewReadVersion: Version)
+  protected def revalidate(minNewReadVersion: Version): Unit
 
-  protected def forceRollback(cause: RollbackCause)
+  protected def forceRollback(cause: RollbackCause): Unit
 
-  protected def weakAwaitUnowned(handle: Handle[_], m0: Meta)
+  protected def weakAwaitUnowned(handle: Handle[_], m0: Meta): Unit
 
   //////// lock management - similar to NonTxn but we also check for remote rollback
 
   /** Calls revalidate(version) if version > _readVersion. */
-  private def revalidateIfRequired(version: Version) {
-    if (isNewerThanReadVersion(version))
+  private def revalidateIfRequired(version: Version): Unit =
+    if (isNewerThanReadVersion(version)) {
       revalidate(version)
-  }
+    }
 
   /** Returns the pre-acquisition metadata. */
   @throws(classOf[InterruptedException])
@@ -85,19 +85,18 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
     // Stable read.  The second read of handle.meta is required for
     // opacity, and it also enables the read-only commit optimization.
     recordRead(handle, version(m1))
-    return value
+    value
   }
 
-  private def readShouldBarge(meta: Meta): Boolean = {
+  private def readShouldBarge(meta: Meta): Boolean =
     _barging && version(meta) >= _bargeVersion
-  }
 
   @throws(classOf[InterruptedException])
   private def bargingRead[T](handle: Handle[T]): T = {
     val mPrev = acquireOwnership(handle)
     recordBarge(handle)
     revalidateIfRequired(version(mPrev))
-    return handle.data
+    handle.data
   }
 
   @throws(classOf[InterruptedException])
@@ -110,12 +109,12 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
     val result = f(u.value)
     if (!u.recorded) {
       val callback = new Function[NestingLevel, Unit] {
-        var _latestRead = u
+        var _latestRead: UnrecordedRead[T] = u
 
-        def apply(level: NestingLevel) {
-          if (!isValid)
+        def apply(level: NestingLevel): Unit =
+          if (!isValid) {
             level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-        }
+          }
 
         private def isValid: Boolean = {
           if (_latestRead == null || _latestRead.stillValid)
@@ -128,13 +127,13 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
             // read we should go to handle.data, which has the most recent
             // value from which we should read.
             _latestRead = null
-            return (result == f(handle.data))
+            return result == f(handle.data)
           }
 
           // reread, and see if that changes the result
           _latestRead = unrecordedRead(handle)
 
-          return (result == f(_latestRead.value))
+          result == f(_latestRead.value)
         }
       }
 
@@ -146,7 +145,7 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
       whileValidating(callback)
     }
 
-    return result
+    result
   }
 
   @throws(classOf[InterruptedException])
@@ -159,9 +158,9 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
     val snapshot = u.value
     if (!u.recorded) {
       val callback = new Function[NestingLevel, Unit] {
-        var _latestRead = u
+        var _latestRead: UnrecordedRead[T] = u
 
-        def apply(level: NestingLevel) {
+        def apply(level: NestingLevel): Unit = {
           if (!isValid)
             level.requestRollback(OptimisticFailureCause('invalid_relaxed_get, Some(handle)))
         }
@@ -183,7 +182,7 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
           // reread, and see if that changes the result
           _latestRead = unrecordedRead(handle)
 
-          return equiv(snapshot, _latestRead.value)
+          equiv(snapshot, _latestRead.value)
         }
       }
 
@@ -195,7 +194,7 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
       whileValidating(callback)
     }
 
-    return snapshot
+    snapshot
   }
 
   @throws(classOf[InterruptedException])
@@ -206,7 +205,7 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
 
     var m1 = handle.meta
     var v: T = null.asInstanceOf[T]
-    val rec = (if (owner(m1) == _slot) {
+    val rec = if (owner(m1) == _slot) {
       v = stableGet(handle)
       true
     } else {
@@ -234,22 +233,22 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
         m1 = handle.meta
       } while (changingAndVersion(m0) != changingAndVersion(m1))
       false
-    })
+    }
 
     new UnrecordedRead[T] {
       def value: T = v
-      def stillValid = {
+      def stillValid: Boolean = {
         val m = handle.meta
         version(m) == version(m1) && (!changing(m) || owner(m) == _slot)
       }
-      def recorded = rec
+      def recorded: Boolean = rec
     }
   }
 
   private def freshOwner(mPrev: Meta) = owner(mPrev) == unownedSlot
 
   @throws(classOf[InterruptedException])
-  def set[T](handle: Handle[T], v: T) {
+  def set[T](handle: Handle[T], v: T): Unit = {
     requireActive()
     val mPrev = acquireOwnership(handle)
     val f = freshOwner(mPrev)
@@ -285,15 +284,15 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
 
     val m0 = handle.meta
     if (owner(m0) == _slot) {
-      put(handle, false, v)
+      put(handle, freshOwner = false, value = v)
       return true
     }
 
     if (!tryAcquireOwnership(handle, m0))
       return false
-    put(handle, true, v)
+    put(handle, freshOwner = true, value = v)
     revalidateIfRequired(version(m0))
-    return true
+    true
   }
 
   @throws(classOf[InterruptedException])
@@ -327,7 +326,7 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
   @throws(classOf[InterruptedException])
   private def unrecordedCASI[T, R <: T with AnyRef](handle: Handle[T], before: R, after: T): Boolean = {
     transformIfDefined(handle, new PartialFunction[T,T] {
-      def isDefinedAt(v: T): Boolean = (before eq v.asInstanceOf[AnyRef])
+      def isDefinedAt(v: T): Boolean = before eq v.asInstanceOf[AnyRef]
       def apply(v: T): T = after
     })
   }
@@ -373,12 +372,12 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
       // make sure it stays undefined
       if (!u.recorded) {        
         val callback = new Function[NestingLevel, Unit] {
-          var _latestRead = u
+          var _latestRead: UnrecordedRead[T] = u
 
-          def apply(level: NestingLevel) {
-            if (!isValid)
+          def apply(level: NestingLevel): Unit =
+            if (!isValid) {
               level.requestRollback(OptimisticFailureCause('invalid_getWith, Some(handle)))
-          }
+            }
 
           private def isValid: Boolean = {
             if (!_latestRead.stillValid) {
@@ -425,6 +424,10 @@ private[ccstm] abstract class InTxnRefOps extends AccessHistory with AbstractInT
 
   def txnLocalFind(local: TxnLocalImpl[_]): Int = findWrite(local)
   def txnLocalGet[T](index: Int): T = getWriteSpecValue[T](index)
-  def txnLocalInsert[T](local: TxnLocalImpl[T], v: T) { writeAppend(local, false, v) }
-  def txnLocalUpdate[T](index: Int, v: T) { writeUpdate(index, v) }
+
+  def txnLocalInsert[T](local: TxnLocalImpl[T], v: T): Unit =
+    writeAppend(local, freshOwner = false, value = v)
+
+  def txnLocalUpdate[T](index: Int, v: T): Unit =
+    writeUpdate(index, v)
 }

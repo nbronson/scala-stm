@@ -3,6 +3,7 @@
 package scala.concurrent.stm
 
 import java.util.concurrent.CyclicBarrier
+
 import org.scalatest.{FunSuite, Tag}
 
 
@@ -11,10 +12,10 @@ class HistogramSuite extends FunSuite {
   for ((opsPerTest, name, slow) <- List((10000, "10K", false),
                                         (1000000, "1M", true))) {
     for (buckets <- List(1, 30, 10000)) {
-      for (threads <- List(1, 2, 4, 8, 16, 32, 64, 128, 256, 512) if (threads <= 2*Runtime.getRuntime.availableProcessors)) {
+      for (threads <- List(1, 2, 4, 8, 16, 32, 64, 128, 256, 512) if threads <= 2 * Runtime.getRuntime.availableProcessors) {
         for (useTArray <- List(false, true)) {
-          val str = ("" + buckets + " buckets, " + threads + " threads, " +
-                  (if (useTArray) "TArray[Int]" else "Array[Ref[Int]]"))
+          val str = "" + buckets + " buckets, " + threads + " threads, " +
+            (if (useTArray) "TArray[Int]" else "Array[Ref[Int]]")
           addTest("single-op-txn, " + str + ", " + name, Slow) {
             histogram(buckets, threads, opsPerTest / threads, useTArray, 100, 1)
           }
@@ -33,24 +34,25 @@ class HistogramSuite extends FunSuite {
     }
   }
 
-  private def addTest(name: String, tags: Tag*)(block: => Unit) { test(name, tags:_*)(block) }
+  private def addTest(name: String, tags: Tag*)(block: => Unit): Unit =
+    test(name, tags:_*)(block)
 
   def histogram(bucketCount: Int,
                 workerCount: Int,
                 samplesPerWorker: Int,
                 useTArray: Boolean,
                 singlePct: Int,
-                samplesPerTxn: Int) {
+                samplesPerTxn: Int): Unit = {
 
-    val buckets: IndexedSeq[Ref[Int]] = (if (useTArray) {
+    val buckets: IndexedSeq[Ref[Int]] = if (useTArray) {
       TArray.ofDim[Int](bucketCount).refs
     } else {
-      Array.tabulate(bucketCount)({ _ => Ref(0)})
-    })
+      Array.tabulate(bucketCount)({ _ => Ref(0) })
+    }
     val threads = new Array[Thread](workerCount)
     val barrier = new CyclicBarrier(workerCount, new Runnable {
       var start = 0L
-      def run {
+      def run(): Unit = {
         val now = System.nanoTime
         if (start == 0) {
           start = now
@@ -68,7 +70,7 @@ class HistogramSuite extends FunSuite {
     
     for (worker <- 0 until workerCount) {
       val work = new Runnable {
-        def run {
+        def run(): Unit = {
           barrier.await
           var i = 0
           while (i < samplesPerWorker) {
@@ -100,15 +102,15 @@ class HistogramSuite extends FunSuite {
       }
       if (worker < workerCount - 1) {
         threads(worker) = new Thread(work, "worker " + worker)
-        threads(worker).start
+        threads(worker).start()
       } else {
-        work.run
+        work.run()
       }
     }
 
-    for (worker <- 0 until workerCount - 1) threads(worker).join
+    for (worker <- 0 until workerCount - 1) threads(worker).join()
 
-    val sum = buckets.map(_.single.get).reduceLeft(_+_)
+    val sum = buckets.map(_.single.get).sum
     assert(samplesPerWorker * workerCount === sum)
   }
 
